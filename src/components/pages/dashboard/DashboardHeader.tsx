@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/utils/routes";
 import { LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,7 +21,7 @@ export function DashboardHeader({setSidebarOpen}: {setSidebarOpen: Dispatch<SetS
                 </Button>
                 <div className="ml-auto flex items-center space-x-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <Link href="/login">
+                        <Link href={ROUTES.LOGIN}>
                             <LogOut className="h-5 w-5" />
                             <span className="sr-only">Logout</span>
                         </Link>

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/utils/routes";
 import { Building2, Calendar, Home, Package, UserRound, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,32 +11,32 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>
     const routes = [
         {
             name: "Dashboard",
-            href: "/dashboard",
+            href: ROUTES.DASHBOARD,
             icon: Home,
         },
         {
             name: "Clientes",
-            href: "/dashboard/clientes",
+            href: ROUTES.CUSTOMERS,
             icon: Users,
         },
         {
             name: "Equipamentos",
-            href: "/dashboard/equipamentos",
+            href: ROUTES.GEARS,
             icon: Package,
         },
         {
             name: "Regionais",
-            href: "/dashboard/regionais",
+            href: ROUTES.REGIONALS,
             icon: Building2,
         },
         {
             name: "Funcionários",
-            href: "/dashboard/funcionarios",
+            href: ROUTES.EMPLOYEES,
             icon: UserRound,
         },
         {
             name: "Agendamentos",
-            href: "/dashboard/agendamentos",
+            href: ROUTES.BOOKINGS,
             icon: Calendar,
         },
     ];
