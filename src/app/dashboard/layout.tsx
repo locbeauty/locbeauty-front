@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardHeader } from "@/components/pages/DashboardHeader";
+import { DashboardHeader } from "@/components/pages/dashboard/DashboardHeader";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
