@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/utils/routes";
 import { Home } from "lucide-react";
 import Link from "next/link";
 
@@ -23,7 +24,7 @@ export default function NotFound() {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                     <Button asChild size="lg" className="gap-2">
-                        <Link href="/dashboard">
+                        <Link href={ROUTES.DASHBOARD}>
                             <Home className="h-4 w-4" />
                             Ir para o Dashboard
                         </Link>

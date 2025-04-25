@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Package, Building2, UserRound, Calendar, Globe } from "lucide-react";
+import { ROUTES } from "@/utils/routes";
+import { Users, Package, Building2, UserRound, Calendar } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -13,7 +14,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Link href="/dashboard/clientes">
+                <Link href={ROUTES.CUSTOMERS}>
                     <Card className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-lg font-medium">Clientes</CardTitle>
@@ -25,7 +26,7 @@ export default function DashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/dashboard/equipamentos">
+                <Link href={ROUTES.GEARS}>
                     <Card className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-lg font-medium">Equipamentos</CardTitle>
@@ -37,7 +38,7 @@ export default function DashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/dashboard/filiais">
+                <Link href={ROUTES.REGIONALS}>
                     <Card className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-lg font-medium">Filiais</CardTitle>
@@ -49,7 +50,7 @@ export default function DashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/dashboard/funcionarios">
+                <Link href={ROUTES.EMPLOYEES}>
                     <Card className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-lg font-medium">Funcionários</CardTitle>
@@ -61,19 +62,7 @@ export default function DashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/dashboard/regionais">
-                    <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-lg font-medium">Regionais</CardTitle>
-                            <Globe className="size-5"/>
-                        </CardHeader>
-                        <CardContent>
-                            <CardDescription>Gerenciar cadastro de regionais</CardDescription>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href="/dashboard/agendamentos">
+                <Link href={ROUTES.BOOKINGS}>
                     <Card className="hover:shadow-md transition-shadow cursor-pointer">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-lg font-medium">Agendamentos</CardTitle>

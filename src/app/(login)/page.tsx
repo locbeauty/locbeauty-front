@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import Image from "next/image";
+import { ROUTES } from "@/utils/routes";
 
 export default function RegisterPage() {
     return (
@@ -37,7 +38,7 @@ export default function RegisterPage() {
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-4">
                         <Button className="w-full" asChild>
-                            <Link href="/dashboard">Entrar</Link>
+                            <Link href={ROUTES.DASHBOARD}>Entrar</Link>
                         </Button>
                     </CardFooter>
                 </Card>
