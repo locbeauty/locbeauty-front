@@ -22,6 +22,8 @@ const eslintConfig = [
 
             "camelcase": ["error", { properties: "always" }],
             "no-multiple-empty-lines": ["error", { max: 1 }],
+            "react/jsx-curly-spacing": ["error", { "when": "always", "children": true }],
+            "object-curly-spacing": ["error", "always"],
         }
     }),
 ];
