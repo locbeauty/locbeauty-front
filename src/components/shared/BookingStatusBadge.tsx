@@ -13,8 +13,8 @@ export function BookingStatusBadge({
     };
 
     return (
-        <Badge className={variants[status]} variant="secondary">
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+        <Badge className={ variants[status] } variant="secondary">
+            { status.charAt(0).toUpperCase() + status.slice(1) }
         </Badge>
     );
 }
