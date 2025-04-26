@@ -1,6 +1,10 @@
 import { Badge } from "../ui/badge";
 
-export function StatusBadge({ status }: { status: "ativo" | "inativo" | "inadimplente" | "bloqueado" }) {
+export function CustomerStatusBadge({
+    status,
+}: {
+  status: "ativo" | "inativo" | "inadimplente" | "bloqueado";
+}) {
     const variants = {
         ativo: "bg-green-500/10 text-green-600 hover:bg-green-500/20",
         inativo: "bg-gray-500/10 text-gray-600 hover:bg-gray-500/20",

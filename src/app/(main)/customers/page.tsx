@@ -1,7 +1,13 @@
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { ROUTES } from "@/utils/routes";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
@@ -12,12 +18,14 @@ export default function ClientesPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
-                    <p className="text-muted-foreground">Gerencie o cadastro de clientes</p>
+                    <p className="text-muted-foreground">
+            Gerencie o cadastro de clientes
+                    </p>
                 </div>
                 <Button asChild>
                     <Link href={ROUTES.CREATE_CUSTOMER}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Novo Cliente
+            Novo Cliente
                     </Link>
                 </Button>
             </div>
@@ -25,7 +33,11 @@ export default function ClientesPage() {
             <div className="flex items-center gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input type="search" placeholder="Buscar clientes..." className="pl-8" />
+                    <Input
+                        type="search"
+                        placeholder="Buscar clientes..."
+                        className="pl-8"
+                    />
                 </div>
                 <Select defaultValue="todos">
                     <SelectTrigger className="w-[180px]">
@@ -60,7 +72,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -71,7 +83,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="bloqueado" />
+                                <CustomerStatusBadge status="bloqueado" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -82,7 +94,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -93,7 +105,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -104,7 +116,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="inadimplente" />
+                                <CustomerStatusBadge status="inadimplente" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -115,7 +127,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -126,7 +138,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="inativo" />
+                                <CustomerStatusBadge status="inativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -137,7 +149,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -148,7 +160,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -159,7 +171,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -170,7 +182,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -181,7 +193,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -192,7 +204,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -203,7 +215,7 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
@@ -214,15 +226,13 @@ export default function ClientesPage() {
                             <td className="p-3">joao@email.com</td>
                             <td className="p-3">(11) 98765-4321</td>
                             <td className="p-3">
-                                <StatusBadge status="ativo" />
+                                <CustomerStatusBadge status="ativo" />
                             </td>
                             <td className="p-3">10/03/2023</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-
         </div>
     );
 }
-
