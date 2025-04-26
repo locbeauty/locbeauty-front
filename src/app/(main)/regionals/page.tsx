@@ -9,13 +9,13 @@ export default function FiliaisPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Filiais</h1>
-                    <p className="text-muted-foreground">Gerencie o cadastro de filiais</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Regionais</h1>
+                    <p className="text-muted-foreground">Gerencie o cadastro de regionais</p>
                 </div>
                 <Button asChild>
                     <Link href={ROUTES.CREATE_REGIONAL}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Nova Filial
+                        Nova regional
                     </Link>
                 </Button>
             </div>

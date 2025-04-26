@@ -17,14 +17,14 @@ export default function NovaFilialPage() {
                     </Link>
                 </Button>
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Nova Filial</h1>
-                    <p className="text-muted-foreground">Cadastre uma nova filial no sistema</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Nova Regional</h1>
+                    <p className="text-muted-foreground">Cadastre uma nova regional no sistema</p>
                 </div>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Dados da Filial</CardTitle>
+                    <CardTitle>Dados da regional</CardTitle>
                     <CardDescription>Preencha os dados da filial</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
