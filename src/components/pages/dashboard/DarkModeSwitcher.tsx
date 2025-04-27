@@ -3,9 +3,13 @@
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
+import { useMounted } from "@/hooks/useMounted";
 
 export function DarkModeSwitcher() {
     const { theme, setTheme } = useTheme();
+    const mounted = useMounted();
+
+    if(!mounted) return null;
 
     return (
         <Button
