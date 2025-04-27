@@ -25,10 +25,10 @@ export default function EmployeesPage() {
                         Gerencie o cadastro de funcionários
                     </p>
                 </div>
-                <Button asChild>
+                <Button className="flex justify-center items-center" asChild>
                     <Link href={ ROUTES.CREATE_EMPLOYEE }>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Novo Funcionário
+                        <Plus className="" />
+                        <span className="hidden md:inline">Novo Funcionário</span>
                     </Link>
                 </Button>
             </div>

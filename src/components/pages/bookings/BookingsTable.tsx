@@ -2,7 +2,7 @@ import { BookingStatusBadge } from "@/components/shared/BookingStatusBadge";
 
 export function BookingsTable() {
     return (
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto">
             <table className="w-full">
                 <thead className="bg-muted">
                     <tr>

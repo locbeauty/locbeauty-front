@@ -45,7 +45,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>
     ];
 
     return (
-        <aside className={ cn("flex flex-col border-r bg-primary dark:bg-primary-foreground text-primary-foreground fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out md:translate-x-0", className) }>
+        <aside className={ cn("flex flex-col border-r bg-primary dark:bg-primary-foreground text-primary-foreground fixed inset-y-0 left-0 z-50 w-48 transform transition-transform duration-200 ease-in-out md:translate-x-0", className) }>
             <div className="flex h-16 items-center border-b border-primary-foreground/10 px-4">
                 <div className="flex items-center justify-center gap-4 w-full">
                     <div className="w-8 h-8 bg-white dark:bg-locbeauty rounded-full flex items-center justify-center">

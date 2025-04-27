@@ -18,10 +18,10 @@ export default function GearsPage() {
                         Gerencie o cadastro de equipamentos
                     </p>
                 </div>
-                <Button asChild>
+                <Button className="flex justify-center items-center" asChild>
                     <Link href={ ROUTES.CREATE_GEAR }>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Novo Equipamento
+                        <Plus className="" />
+                        <span className="hidden">Novo Equipamento</span>
                     </Link>
                 </Button>
             </div>
