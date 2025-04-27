@@ -23,10 +23,10 @@ export default function CustomersPage() {
                         Gerencie o cadastro de clientes
                     </p>
                 </div>
-                <Button asChild>
+                <Button className="flex justify-center items-center" asChild>
                     <Link href={ ROUTES.CREATE_CUSTOMER }>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Novo Cliente
+                        <Plus className="" />
+                        <span className="hidden md:inline">Novo Cliente</span>
                     </Link>
                 </Button>
             </div>

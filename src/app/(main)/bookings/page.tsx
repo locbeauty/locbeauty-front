@@ -23,10 +23,10 @@ export default function BookingsPage() {
                         Gerencie os agendamentos de locações de equipamentos
                     </p>
                 </div>
-                <Button asChild>
-                    <Link href={ ROUTES.CREATE_BOOKING }>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Novo Agendamento
+                <Button className="flex justify-center items-center" asChild>
+                    <Link className="flex justify-center items-center" href={ ROUTES.CREATE_BOOKING }>
+                        <Plus className="" />
+                        <span className="hidden md:inline">Novo Agendamento</span>
                     </Link>
                 </Button>
             </div>

@@ -15,10 +15,10 @@ export default function RegionalsPage() {
                         Gerencie o cadastro de regionais
                     </p>
                 </div>
-                <Button asChild>
+                <Button className="flex justify-center items-center" asChild>
                     <Link href={ ROUTES.CREATE_REGIONAL }>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nova regional
+                        <Plus className="" />
+                        <span className="hidden md:inline">Nova regional</span>
                     </Link>
                 </Button>
             </div>

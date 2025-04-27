@@ -18,7 +18,7 @@ export default function DashboardLayout({
                 className={ cn(sidebarOpen ? "translate-x-0" : "-translate-x-full") }
             />
 
-            <div className="flex-1 md:ml-64">
+            <div className="flex-1 md:ml-48">
                 <DashboardHeader setSidebarOpen={ setSidebarOpen } />
                 <main className="p-6">{ children }</main>
             </div>

@@ -1,9 +1,12 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/utils/routes";
 import { LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect } from "react";
+import { DarkModeSwitcher } from "./DarkModeSwitcher";
 
 export function DashboardHeader({ setSidebarOpen }: {setSidebarOpen: Dispatch<SetStateAction<boolean>>}) {
     const pathname = usePathname();
@@ -20,6 +23,7 @@ export function DashboardHeader({ setSidebarOpen }: {setSidebarOpen: Dispatch<Se
                     <span className="sr-only">Toggle sidebar</span>
                 </Button>
                 <div className="ml-auto flex items-center space-x-4">
+                    <DarkModeSwitcher />
                     <Button variant="ghost" size="icon" asChild>
                         <Link href={ ROUTES.LOGIN }>
                             <LogOut className="h-5 w-5" />
