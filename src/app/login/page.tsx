@@ -13,7 +13,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ROUTES } from "@/utils/routes";
 
-export default function RegisterPage() {
+export default function LoginPage() {
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-background">
             <div className="w-full max-w-md p-6">

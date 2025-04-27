@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/utils/routes";
 import { Building2, Calendar, Home, Package, UserRound, Users } from "lucide-react";
