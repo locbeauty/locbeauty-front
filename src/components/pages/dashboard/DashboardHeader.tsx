@@ -15,7 +15,7 @@ export function DashboardHeader({ setSidebarOpen }: {setSidebarOpen: Dispatch<Se
     return (
         <header className="sticky top-0 z-40 border-b bg-background">
             <div className="flex h-16 items-center px-4">
-                <Button variant="destructive" size="icon" className="md:hidden mr-2 text-red-500" onClick={ () => setSidebarOpen(prev => !prev) }>
+                <Button variant="outline" size="icon" className="md:hidden bg-primary text-white mr-2" onClick={ () => setSidebarOpen(prev => !prev) }>
                     <Menu className="h-6 w-6" />
                     <span className="sr-only">Toggle sidebar</span>
                 </Button>

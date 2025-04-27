@@ -19,7 +19,7 @@ export default function RegisterPage() {
             <div className="w-full max-w-md p-6">
                 <div className="flex flex-col items-center space-y-2 mb-6">
                     <div className="size-36 bg-primary rounded-full flex items-center justify-center">
-                        <Image src="/logo.png" alt="logo" width={ 100 } height={ 100 } />
+                        <Image src="/logo.png" alt="logo" width={ 100 } height={ 100 } className="text-green-500" />
                     </div>
                     <h1 className="text-3xl font-bold text-primary">Sistema de Gestão</h1>
                 </div>

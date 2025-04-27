@@ -6,7 +6,7 @@ import { ROUTES } from "@/utils/routes";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 
-const BookingFilterStatusTypes = [
+export const BookingFilterStatusTypes = [
     "Todos",
     "Pendente",
     "Concluído",

@@ -61,7 +61,7 @@ export default function DashboardPage() {
                                 <CardTitle className="text-lg font-medium">
                                     { card.title }
                                 </CardTitle>
-                                <card.icon className="size-5 text-accent" />
+                                <card.icon className="size-5 text-primary" />
                             </CardHeader>
                             <CardContent>
                                 <CardDescription>{ card.description }</CardDescription>

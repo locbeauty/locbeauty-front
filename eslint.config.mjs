@@ -10,6 +10,9 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+    {
+        ignores: ["**/node_modules/**", "**/build/**", "**/.next/**", "**/components/ui/**"], // tira o components/ui daqui!
+    },
     ...compat.config({
         extends: ["next/core-web-vitals", "next/typescript"],
         rules: {
@@ -26,6 +29,7 @@ const eslintConfig = [
             "object-curly-spacing": ["error", "always"],
         }
     }),
+
 ];
 
 export default eslintConfig;

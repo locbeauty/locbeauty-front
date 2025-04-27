@@ -1,7 +1,7 @@
 import { CreateBookingForm } from "@/components/pages/bookings/CreateBookingForm";
 import { CreationPageFooter } from "@/components/shared/CreationPageFooter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { ROUTES } from "@/utils/routes";
 import { ArrowLeft } from "lucide-react";
@@ -32,9 +32,7 @@ export default function CreateBookingPage() {
                     <CardTitle>Dados do Agendamento</CardTitle>
                     <CardDescription>Preencha os dados do agendamento</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <CreateBookingForm />
-                </CardContent>
+                <CreateBookingForm />
             </Card>
 
             <CreationPageFooter cancelUrl={ ROUTES.BOOKINGS } />
