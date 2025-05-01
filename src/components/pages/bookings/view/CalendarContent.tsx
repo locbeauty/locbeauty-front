@@ -9,9 +9,10 @@ interface CalendarContentProps {
     viewType: "semana" | "dia" | "mes"
     currentDate: Date
     openAgendamentoDetails: (_agendamento: Agendamento) => void
+    isMobile: boolean
 }
 
-export function CalendarContent({ viewType, currentDate, openAgendamentoDetails }: CalendarContentProps) {
+export function CalendarContent({ viewType, currentDate, openAgendamentoDetails, isMobile }: CalendarContentProps) {
     return(
         <CardContent className="p-0">
             { viewType === "dia" && (
@@ -19,16 +20,17 @@ export function CalendarContent({ viewType, currentDate, openAgendamentoDetails 
                     currentDate={ currentDate }
                     agendamentos={ agendamentos }
                     openAgendamentoDetails={ openAgendamentoDetails }
+                    isMobile={ isMobile }
                 />
             ) }
-            { viewType === "semana" && (
+            { viewType === "semana" && !isMobile && (
                 <WeekView
                     currentDate={ currentDate }
                     agendamentos={ agendamentos }
                     openAgendamentoDetails={ openAgendamentoDetails }
                 />
             ) }
-            { viewType === "mes" && (
+            { viewType === "mes" && !isMobile && (
                 <MonthView
                     currentDate={ currentDate }
                     agendamentos={ agendamentos }

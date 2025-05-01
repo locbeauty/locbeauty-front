@@ -39,7 +39,7 @@ interface BookingDetailsDialogProps {
 export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen, selectedAgendamento }: BookingDetailsDialogProps) {
     return(
         <Dialog open={ isBookingDetailsDialogOpen } onOpenChange={ setBookingDetailsDialogOpen }>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-scroll">
                 { selectedAgendamento && (
                     <>
                         <DialogHeader>
@@ -154,13 +154,13 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
                         <DialogFooter className="flex flex-row gap-3 justify-center sm:justify-center items-center w-full">
                             <Button variant="outline" className="" asChild>
                                 <Link href={ `/dashboard/agendamentos/editar/${selectedAgendamento.id}` }>
-                                    <Edit className="mr-2 h-4 w-4" />
-                    Editar
+                                    <Edit className="" />
+                                    Editar
                                 </Link>
                             </Button>
-                            <Button variant="destructive" className="sm:w-auto w-full cursor-pointer">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Cancelar Agendamento
+                            <Button variant="destructive" className="flex items-center justify-center cursor-pointer">
+                                <Trash2 className="" />
+                                <span className="md:block hidden">Cancelar Agendamento</span>
                             </Button>
                         </DialogFooter>
                     </>

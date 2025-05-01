@@ -2,17 +2,21 @@ import { cn } from "@/lib/utils";
 import { formatCurrency, formatDayName, formatTime, isSameDay, isToday } from "./bookingViewHelpers";
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
+import { MobileDayView } from "./MobileDayView";
 
+interface DayViewProps {
+        currentDate: Date
+        agendamentos: Agendamento[]
+        openAgendamentoDetails: (_agendamento: Agendamento) => void
+        isMobile: boolean
+}
 // Componente de visualização diária
 export function DayView({
     currentDate,
     agendamentos,
     openAgendamentoDetails,
-}: {
-  currentDate: Date
-  agendamentos: Agendamento[]
-  openAgendamentoDetails: (_agendamento: Agendamento) => void
-}) {
+    isMobile
+}: DayViewProps) {
     // Horas do dia para exibição
     const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7h às 20h
 
@@ -20,6 +24,12 @@ export function DayView({
     const dayAgendamentos = agendamentos.filter((agendamento) => {
         return isSameDay(agendamento.startDate, currentDate);
     });
+
+    if(isMobile) {
+        return (
+            <MobileDayView agendamentos={ agendamentos } currentDate={ currentDate } openAgendamentoDetails={ openAgendamentoDetails } />
+        );
+    }
 
     return (
         <div className="min-w-full">

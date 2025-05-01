@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -11,7 +11,7 @@ import {
 import Link from "next/link";
 import { ROUTES } from "@/utils/routes";
 import { useRouter } from "next/navigation";
-import { formatMonthYear, goToToday, nextWeek, prevWeek } from "@/components/pages/bookings/view/bookingViewHelpers";
+import { formatMonthYear, goToToday, nextDay, nextWeek, prevDay, prevWeek } from "@/components/pages/bookings/view/bookingViewHelpers";
 import { Agendamento } from "../page";
 import { BookingDetailsDialog } from "@/components/pages/bookings/view/BookingDetailsDialog";
 import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
@@ -27,6 +27,8 @@ export default function AgendamentosPage() {
     const [isBookingDetailsDialogOpen, setBookingDetailsDialogOpen] = useState(false);
     // Adicione um novo estado para controlar o tipo de visualização
     const [viewType, setViewType] = useState<"dia" | "semana" | "mes">("semana");
+    // Estado para controlar se está em modo mobile
+    const [isMobile, setIsMobile] = useState(true);
 
     const router = useRouter();
 
@@ -35,6 +37,29 @@ export default function AgendamentosPage() {
         setSelectedAgendamento(agendamento);
         setBookingDetailsDialogOpen(true);
     };
+
+    // Detectar se é mobile ao carregar e quando a janela for redimensionada
+    useEffect(() => {
+        const checkIfMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        // Verificar inicialmente
+        checkIfMobile();
+
+        // Adicionar listener para redimensionamento
+        window.addEventListener("resize", checkIfMobile);
+
+        // Limpar listener ao desmontar
+        return () => window.removeEventListener("resize", checkIfMobile);
+    }, []);
+
+    // Ajustar visualização padrão para mobile
+    // useEffect(() => {
+    //     if (isMobile) {
+    //         setViewType("dia");
+    //     }
+    // }, [isMobile]);
 
     return (
         <div className="space-y-6">
@@ -62,25 +87,29 @@ export default function AgendamentosPage() {
 
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={ () => prevWeek(currentDate, setCurrentDate) }>
+                    <Button variant="outlineMobile" size="icon" onClick={ () => viewType === "dia" ? prevDay(currentDate, setCurrentDate) : prevWeek(currentDate, setCurrentDate) }>
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" onClick={ () => goToToday(setCurrentDate) }>
+                    <Button variant="outlineMobile" onClick={ () => goToToday(setCurrentDate) }>
                         Hoje
                     </Button>
-                    <Button variant="outline" size="icon" onClick={ () => nextWeek(currentDate, setCurrentDate) }>
+                    <Button variant="outlineMobile" size="icon" onClick={ () => viewType === "dia" ? nextDay(currentDate, setCurrentDate) : nextWeek(currentDate, setCurrentDate) }>
                         <ChevronRight className="h-4 w-4" />
                     </Button>
                     <h2 className="text-xl font-semibold">{ formatMonthYear(currentDate) }</h2>
                 </div>
+                {
+                    !isMobile && (
 
-                <div className="flex items-center gap-2">
-                    <SelectCalendarViewType viewType={ viewType } setViewType={ setViewType } />
-                </div>
+                        <div className="flex items-center gap-2">
+                            <SelectCalendarViewType viewType={ viewType } setViewType={ setViewType } />
+                        </div>
+                    )
+                }
             </div>
 
             <Card className="overflow-hidden">
-                <CalendarContent currentDate={ currentDate } openAgendamentoDetails={ openAgendamentoDetails } viewType={ viewType } />
+                <CalendarContent isMobile={ isMobile } currentDate={ currentDate } openAgendamentoDetails={ openAgendamentoDetails } viewType={ viewType } />
             </Card>
             <CalendarFooter />
 

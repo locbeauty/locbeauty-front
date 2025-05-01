@@ -95,4 +95,20 @@ export const agendamentos: Agendamento[] = [
         PaymentStatus: "Pagamento parcial",
         observations: "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
+    {
+        id: 7,
+        gear: "Galaxy Fiber",
+        customer: "Cliente Z",
+        customerEmail: "contato@reformasrapidas.com",
+        customerCellphone: "(11) 3333-4444",
+        city: "São Bernardo",
+        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
+        startDate: createDate(3, 9, 30), // Daqui a 3 dias às 9:30h
+        endDate: createDate(3, 15, 30), // Daqui a 3 dias às 15:30h
+        totalDuration: 4,
+        price: 420.0,
+        bookingStatus: "Concluído",
+        PaymentStatus: "Pagamento parcial",
+        observations: "Cliente solicitou demonstração do equipamento antes do início do serviço.",
+    },
 ];
