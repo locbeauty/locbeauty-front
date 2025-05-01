@@ -74,7 +74,8 @@
   --accent: #27446a;
   --accent-foreground: #ffffff;
 
-  --destructive: hsl(var(--destructive));
+  /* --destructive: hsl(var(--destructive)); */
+  --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: hsl(var(--destructive-foreground));
 
   --border: oklch(0.922 0 0);
