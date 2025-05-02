@@ -1,34 +1,24 @@
 import { cn } from "@/lib/utils";
 import { formatTime, getMonthDays, isSameDay, isToday } from "./bookingViewHelpers";
 import { Agendamento } from "@/app/(main)/bookings/page";
+import { CalendarMonthHeader } from "./CalendarMonthHeader";
 
-// Componente de visualização mensal
-export function MonthView({
-    currentDate,
-    agendamentos,
-    openAgendamentoDetails,
-}: {
-  currentDate: Date
-  agendamentos: Agendamento[]
-  openAgendamentoDetails: (_agendamento: Agendamento) => void
-}) {
-    // Obter dias do mês atual
-    const monthDays = getMonthDays(currentDate);
+interface MonthViewProps {
+    currentDate: Date
+    agendamentos: Agendamento[]
+    openAgendamentoDetails: (_agendamento: Agendamento) => void
+}
+
+export function MonthView({ currentDate, agendamentos, openAgendamentoDetails }: MonthViewProps) {
+    const daysInCurrentMonth = getMonthDays(currentDate);
 
     return (
-        <div className="min-w-full">
-            { /* Cabeçalho com os dias da semana */ }
-            <div className="grid grid-cols-7 border-b">
-                { ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((day, index) => (
-                    <div key={ index } className="p-2 text-center border-r font-medium bg-muted/50">
-                        { day }
-                    </div>
-                )) }
-            </div>
+        <div className="hidden md:block min-w-full">
+            <CalendarMonthHeader />
 
             { /* Grade do mês */ }
             <div className="grid grid-cols-7">
-                { monthDays.map((day, index) => {
+                { daysInCurrentMonth.map((day, index) => {
                     // Filtrar agendamentos para este dia
                     const dayAgendamentos = agendamentos.filter((agendamento) => isSameDay(agendamento.startDate, day));
 
@@ -39,7 +29,8 @@ export function MonthView({
                         <div
                             key={ index }
                             className={ cn(
-                                "min-h-[120px] border-r border-b p-1 relative",
+                                "min-h-[120px] border-r border-b p-1 relative max-h-[100px]",
+                                dayAgendamentos.length > 3 && "overflow-y-scroll",
                                 isToday(day) ? "bg-primary/5" : "",
                                 !isCurrentMonth ? "bg-muted/20 text-muted-foreground" : "",
                             ) }
@@ -49,33 +40,30 @@ export function MonthView({
                             </div>
 
                             <div className="space-y-1 mt-1">
-                                { dayAgendamentos.slice(0, 3).map((agendamento) => {
-                                    // Determinar a cor com base na duração
-                                    let bgColor = "";
-                                    if (agendamento.totalDuration === 4) {
-                                        bgColor = "bg-yellow-100 border-yellow-300 text-yellow-800";
-                                    } else if (agendamento.totalDuration === 6) {
-                                        bgColor = "bg-pink-100 border-pink-300 text-pink-800";
-                                    } else if (agendamento.totalDuration >= 8 && agendamento.totalDuration <= 12) {
-                                        bgColor = "bg-green-100 border-green-300 text-green-800";
-                                    } else {
-                                        bgColor = "bg-blue-100 border-blue-300 text-blue-800";
-                                    }
+                                { dayAgendamentos.sort((item1, item2) => item1.startDate.getHours() - item2.startDate.getHours()).map((agendamento) => {
 
                                     return (
                                         <div
                                             key={ agendamento.id }
-                                            className={ cn("text-xs p-1 rounded border-l-2 cursor-pointer truncate", bgColor) }
+                                            className={ cn("text-xs p-1 rounded border-l-2 cursor-pointer truncate",
+                                                // Default colors for bookings with durations different than 4, 6 and 8-12 hours
+                                                "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
+                                                // Colors for 4h bookings duration
+                                                agendamento.totalDuration === 4 &&
+                                                    "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
+                                                // Colors for 6h bookings duration
+                                                agendamento.totalDuration === 6 &&
+                                                    "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
+                                                // Colors for 8 to 12 hours bookings duration
+                                                agendamento.totalDuration >= 8 && agendamento.totalDuration <= 12 &&
+                                                    "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
+                                            ) }
                                             onClick={ () => openAgendamentoDetails(agendamento) }
                                         >
                                             { formatTime(agendamento.startDate) } - { agendamento.gear }
                                         </div>
                                     );
                                 }) }
-
-                                { dayAgendamentos.length > 3 && (
-                                    <div className="text-xs text-center text-muted-foreground">+{ dayAgendamentos.length - 3 } mais</div>
-                                ) }
                             </div>
                         </div>
                     );

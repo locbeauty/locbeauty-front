@@ -1,119 +1,118 @@
+"use client";
+
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatDayName, formatTime, isSameDay, isToday } from "./bookingViewHelpers";
-import { Agendamento } from "@/app/(main)/bookings/page";
+import {
+    formatCurrency,
+    formatTime,
+    getDistanceFromTop,
+    getEventBoxHeigh,
+    isSameDay,
+    workingHours,
+    groupOverlappingEvents,
+} from "./bookingViewHelpers";
+import type { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { MobileDayView } from "./MobileDayView";
+import { BookingStatusBadge } from "../BookingStatusBadge";
+import { BookingPaymentStatusBadge } from "../BookingPaymentStatusBadge";
+import { CalendarDayHeader } from "./CalendarDayHeader";
 
 interface DayViewProps {
-        currentDate: Date
-        agendamentos: Agendamento[]
-        openAgendamentoDetails: (_agendamento: Agendamento) => void
-        isMobile: boolean
+  currentDate: Date
+  agendamentos: Agendamento[]
+  openAgendamentoDetails: (_agendamento: Agendamento) => void
 }
-// Componente de visualização diária
-export function DayView({
-    currentDate,
-    agendamentos,
-    openAgendamentoDetails,
-    isMobile
-}: DayViewProps) {
-    // Horas do dia para exibição
-    const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7h às 20h
 
-    // Filtrar agendamentos para o dia atual
-    const dayAgendamentos = agendamentos.filter((agendamento) => {
-        return isSameDay(agendamento.startDate, currentDate);
-    });
+export function DayView({ currentDate, agendamentos, openAgendamentoDetails }: DayViewProps) {
+    // Filtrar agendamentos do dia atual
+    const dayAgendamentos = agendamentos.filter((agendamento) =>
+        isSameDay(agendamento.startDate, currentDate)
+    );
 
-    if(isMobile) {
-        return (
-            <MobileDayView agendamentos={ agendamentos } currentDate={ currentDate } openAgendamentoDetails={ openAgendamentoDetails } />
-        );
-    }
+    // Agrupar agendamentos que se sobrepõem
+    const agendamentoGroups = groupOverlappingEvents(dayAgendamentos);
 
     return (
-        <div className="min-w-full">
-            { /* Cabeçalho com o dia */ }
-            <div className="grid grid-cols-2 border-b">
-                <div className="p-2 border-r bg-muted/50"></div>
-                <div
-                    className={ cn("p-2 text-center border-r font-medium", isToday(currentDate) ? "bg-primary/10" : "bg-muted/50") }
-                >
-                    <div>{ formatDayName(currentDate) }</div>
-                    <div className={ cn("text-lg", isToday(currentDate) ? "text-primary font-bold" : "") }>
-                        { currentDate.getDate() }
-                    </div>
+        <>
+            <MobileDayView
+                agendamentos={ agendamentos }
+                currentDate={ currentDate }
+                openAgendamentoDetails={ openAgendamentoDetails }
+            />
+            <div className="hidden md:block min-w-full">
+                { /* Cabeçalho do dia */ }
+                <CalendarDayHeader currentDate={ currentDate } />
+
+                { /* Grade de horários */ }
+                <div className="relative">
+                    { workingHours.map((hour) => (
+                        <div key={ hour } className="grid grid-cols-2 border-b">
+                            <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">
+                                { `${hour}:00` }
+                            </div>
+                            <div className="h-16 border-r relative"></div>
+                        </div>
+                    )) }
+
+                    { /* Renderização dos agendamentos agrupados */ }
+                    { agendamentoGroups.map((group) =>
+                        group.map((agendamento, index) => {
+                            const startHour = agendamento.startDate.getHours();
+                            const startMinute = agendamento.startDate.getMinutes();
+
+                            const top = getDistanceFromTop(startHour, startMinute);
+                            const height = getEventBoxHeigh(agendamento.totalDuration);
+
+                            const width = `calc((50% - 6px) / ${group.length})`;
+                            const left = `calc(50% + 2px + (${index} * ${width}))`;
+
+                            return (
+                                <div
+                                    key={ agendamento.id }
+                                    className={ cn("absolute rounded-md border-l-4 p-2 overflow-auto shadow-sm cursor-pointer hover:shadow-md transition-shadow",
+                                        "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
+                                        agendamento.totalDuration === 4 &&
+                                            "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
+                                        agendamento.totalDuration === 6 &&
+                                            "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
+                                        agendamento.totalDuration >= 8 && agendamento.totalDuration <= 12 &&
+                                            "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
+                                    ) }
+                                    style={ {
+                                        top: `${top}px`,
+                                        height: `${height}px`,
+                                        left: left,
+                                        width: width,
+                                    } }
+                                    onClick={ () => openAgendamentoDetails(agendamento) }
+                                >
+                                    <div className="font-medium text-sm truncate">{ agendamento.gear }</div>
+                                    <div className="flex items-center text-xs gap-1 truncate">
+                                        <User className="h-3 w-3" />
+                                        { agendamento.customer }
+                                    </div>
+                                    <div className="flex items-center text-xs gap-1 truncate">
+                                        <MapPin className="h-3 w-3" />
+                                        { agendamento.city }
+                                    </div>
+                                    <div className="flex items-center text-xs gap-1 truncate">
+                                        <Clock className="h-3 w-3" />
+                                        { formatTime(agendamento.startDate) } - { formatTime(agendamento.endDate) }
+                                    </div>
+                                    <div className="flex items-center text-xs gap-1 truncate">
+                                        <DollarSign className="h-3 w-3" />
+                                        { formatCurrency(agendamento.price) }
+                                    </div>
+                                    <div className={ cn("flex gap-2 mt-2", group.length > 1 ? "flex-col" : "") }>
+                                        <BookingStatusBadge status={ agendamento.bookingStatus } />
+                                        <BookingPaymentStatusBadge status={ agendamento.paymentStatus } />
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) }
                 </div>
             </div>
-
-            { /* Grade de horários */ }
-            <div className="relative">
-                { /* Linhas de horas */ }
-                { hours.map((hour) => (
-                    <div key={ hour } className="grid grid-cols-2 border-b">
-                        <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">{ `${hour}:00` }</div>
-                        <div className="h-16 border-r relative"></div>
-                    </div>
-                )) }
-
-                { /* Agendamentos */ }
-                { dayAgendamentos.map((agendamento) => {
-                    const startHour = agendamento.startDate.getHours();
-                    const startMinute = agendamento.startDate.getMinutes();
-                    const durationInHours = agendamento.totalDuration;
-
-                    // Calcular posição e altura
-                    const top = (startHour - 7) * 64 + (startMinute / 60) * 64; // 64px é a altura de cada hora
-                    const height = durationInHours * 64;
-
-                    // Determinar a cor com base na duração
-                    let bgColor = "";
-                    if (durationInHours === 4) {
-                        bgColor = "bg-yellow-100 border-yellow-300 text-yellow-800";
-                    } else if (durationInHours === 6) {
-                        bgColor = "bg-pink-100 border-pink-300 text-pink-800";
-                    } else if (durationInHours >= 8 && durationInHours <= 12) {
-                        bgColor = "bg-green-100 border-green-300 text-green-800";
-                    } else {
-                        bgColor = "bg-blue-100 border-blue-300 text-blue-800";
-                    }
-
-                    return (
-                        <div
-                            key={ agendamento.id }
-                            className={ cn(
-                                "absolute rounded-md border-l-4 p-2 overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow",
-                                bgColor,
-                            ) }
-                            style={ {
-                                top: `${top}px`,
-                                height: `${height}px`,
-                                left: "calc(50% + 2px)",
-                                width: "calc(50% - 6px)",
-                            } }
-                            onClick={ () => openAgendamentoDetails(agendamento) }
-                        >
-                            <div className="font-medium text-sm truncate">{ agendamento.gear }</div>
-                            <div className="flex items-center text-xs gap-1 truncate">
-                                <User className="h-3 w-3" />
-                                { agendamento.customer }
-                            </div>
-                            <div className="flex items-center text-xs gap-1 truncate">
-                                <MapPin className="h-3 w-3" />
-                                { agendamento.city }
-                            </div>
-                            <div className="flex items-center text-xs gap-1 truncate">
-                                <Clock className="h-3 w-3" />
-                                { formatTime(agendamento.startDate) } - { formatTime(agendamento.endDate) }
-                            </div>
-                            <div className="flex items-center text-xs gap-1 truncate">
-                                <DollarSign className="h-3 w-3" />
-                                { formatCurrency(agendamento.price) }
-                            </div>
-                        </div>
-                    );
-                }) }
-            </div>
-        </div>
+        </>
     );
 }

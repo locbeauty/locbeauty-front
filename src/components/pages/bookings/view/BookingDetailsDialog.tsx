@@ -28,6 +28,7 @@ import Link from "next/link";
 import { formatCurrency, formatDate, formatTime } from "@/components/pages/bookings/view/bookingViewHelpers";
 import { BookingStatusBadge } from "@/components/pages/bookings/BookingStatusBadge";
 import { Agendamento } from "@/app/(main)/bookings/page";
+import { BookingPaymentStatusBadge } from "../BookingPaymentStatusBadge";
 
 interface BookingDetailsDialogProps {
     setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>
@@ -39,7 +40,7 @@ interface BookingDetailsDialogProps {
 export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen, selectedAgendamento }: BookingDetailsDialogProps) {
     return(
         <Dialog open={ isBookingDetailsDialogOpen } onOpenChange={ setBookingDetailsDialogOpen }>
-            <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-scroll">
+            <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-scroll dark:bg-gray-900">
                 { selectedAgendamento && (
                     <>
                         <DialogHeader>
@@ -54,7 +55,12 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
                                     <Package className="h-5 w-5 text-primary" />
                                     <h3 className="text-lg font-semibold">{ selectedAgendamento.gear }</h3>
                                 </div>
-                                <BookingStatusBadge status={ selectedAgendamento.bookingStatus } />
+                                <div className="flex gap-2">
+                                    <BookingStatusBadge status={ selectedAgendamento.bookingStatus } />
+                                    <BookingPaymentStatusBadge
+                                        status={ selectedAgendamento.paymentStatus }
+                                    />
+                                </div>
                             </div>
 
                             <Separator />
@@ -142,8 +148,8 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
                                 <div className="space-y-2">
                                     <h4 className="font-medium text-sm text-muted-foreground">OBSERVAÇÕES</h4>
                                     <div className="bg-muted/30 p-3 rounded-md">
-                                        <div className="flex items-start gap-2">
-                                            <ClipboardList className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div className="flex items-center gap-2">
+                                            <ClipboardList className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                             <span>{ selectedAgendamento.observations }</span>
                                         </div>
                                     </div>

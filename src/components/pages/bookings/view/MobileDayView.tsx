@@ -1,28 +1,44 @@
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatDayName, formatTime, isSameDay, isToday } from "./bookingViewHelpers";
+import {
+    formatCurrency,
+    formatDayName,
+    formatTime,
+    isSameDay,
+    isToday,
+} from "./bookingViewHelpers";
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { BookingStatusBadge } from "../BookingStatusBadge";
+import { BookingPaymentStatusBadge } from "../BookingPaymentStatusBadge";
 
 interface MobileDayViewProps {
-    currentDate: Date
-    agendamentos: Agendamento[]
-    openAgendamentoDetails: (_agendamento: Agendamento) => void
+  currentDate: Date;
+  agendamentos: Agendamento[];
+  openAgendamentoDetails: (_agendamento: Agendamento) => void;
 }
 
 export function MobileDayView({ agendamentos, currentDate, openAgendamentoDetails }: MobileDayViewProps) {
-
     const dayAgendamentos = agendamentos.filter((agendamento) => {
         return isSameDay(agendamento.startDate, currentDate);
     });
 
     return (
-        <div className="min-w-full">
+        <div className="md:hidden block min-w-full">
             { /* Cabeçalho com o dia */ }
             <div className="grid grid-cols-1 border-b">
-                <div className={ cn("p-2 text-center font-medium", isToday(currentDate) ? "bg-primary/10" : "bg-muted/50") }>
+                <div
+                    className={ cn(
+                        "p-2 text-center font-medium",
+                        isToday(currentDate) ? "bg-primary/10" : "bg-muted/50"
+                    ) }
+                >
                     <div>{ formatDayName(currentDate) }</div>
-                    <div className={ cn("text-lg", isToday(currentDate) ? "text-primary font-bold" : "") }>
+                    <div
+                        className={ cn(
+                            "text-lg",
+                            isToday(currentDate) ? "text-primary font-bold" : ""
+                        ) }
+                    >
                         { currentDate.getDate() }
                     </div>
                 </div>
@@ -31,36 +47,41 @@ export function MobileDayView({ agendamentos, currentDate, openAgendamentoDetail
             { /* Lista de agendamentos do dia */ }
             <div className="divide-y">
                 { dayAgendamentos.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground">Nenhum agendamento para este dia</div>
+                    <div className="p-4 text-center text-muted-foreground">
+            Nenhum agendamento para este dia
+                    </div>
                 ) : (
                     dayAgendamentos.map((agendamento) => {
-                        // Determinar a cor com base na duração
-                        let bgColor = "";
-                        if (agendamento.totalDuration === 4) {
-                            bgColor = "border-yellow-300 bg-yellow-50";
-                        } else if (agendamento.totalDuration === 6) {
-                            bgColor = "border-pink-300 bg-pink-50";
-                        } else if (agendamento.totalDuration >= 8 && agendamento.totalDuration <= 12) {
-                            bgColor = "border-green-300 bg-green-50";
-                        } else {
-                            bgColor = "border-blue-300 bg-blue-50";
-                        }
-
                         return (
                             <div
                                 key={ agendamento.id }
-                                className={ cn("p-3 border-l-4 cursor-pointer hover:bg-muted/20 transition-colors", bgColor) }
+                                className={ cn("p-3 border-l-4 cursor-pointer hover:bg-muted/20 transition-colors",
+                                    // Default colors for bookings with durations different than 4, 6 and 8-12 hours
+                                    "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
+                                    // Colors for 4h bookings duration
+                                    agendamento.totalDuration === 4 &&
+                                        "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
+                                    // Colors for 6h bookings duration
+                                    agendamento.totalDuration === 6 &&
+                                        "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
+                                    // Colors for 8 to 12 hours bookings duration
+                                    agendamento.totalDuration >= 8 && agendamento.totalDuration <= 12 &&
+                                        "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
+                                ) }
                                 onClick={ () => openAgendamentoDetails(agendamento) }
                             >
                                 <div className="font-medium">{ agendamento.gear }</div>
-                                <div className="text-sm text-muted-foreground mt-1">
+                                <div className="text-sm text-muted-foreground mt-1 dark:text-muted">
                                     <div className="flex items-center gap-1">
                                         <Clock className="h-3.5 w-3.5" />
-                                        { formatTime(agendamento.startDate) } - { formatTime(agendamento.endDate) }
+                                        { formatTime(agendamento.startDate) } -{ " " }
+                                        { formatTime(agendamento.endDate) }
                                     </div>
                                     <div className="flex items-center gap-1 mt-1 max-w-[80vw]">
                                         <User className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="truncate whitespace-nowrap max-w-full overflow-hidden text-ellipsis">{ agendamento.customer }</span>
+                                        <span className="truncate whitespace-nowrap max-w-full overflow-hidden text-ellipsis">
+                                            { agendamento.customer }
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
                                         <MapPin className="h-3.5 w-3.5" />
@@ -72,8 +93,15 @@ export function MobileDayView({ agendamentos, currentDate, openAgendamentoDetail
                                     </div>
                                 </div>
                                 <div className="mt-2 flex justify-between items-center">
-                                    <BookingStatusBadge status={ agendamento.bookingStatus } />
-                                    <span className="text-xs text-muted-foreground">{ agendamento.totalDuration }h</span>
+                                    <div className="flex gap-2">
+                                        <BookingStatusBadge status={ agendamento.bookingStatus } />
+                                        <BookingPaymentStatusBadge
+                                            status={ agendamento.paymentStatus }
+                                        />
+                                    </div>
+                                    <span className="text-xs text-muted-foreground dark:text-muted">
+                                        { agendamento.totalDuration }h
+                                    </span>
                                 </div>
                             </div>
                         );

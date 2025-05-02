@@ -22,21 +22,21 @@ export const FilterBookingPaymentStatusTypes = [
 
 // Tipos para os agendamentos
 export type Agendamento = {
-  id: number
-  gear: string
-  customer: string
-  customerEmail?: string
-  customerCellphone?: string
-  city: string
-  address?: string
-  startDate: Date
-  endDate: Date
-  totalDuration: number // em horas
-  price: number
-  bookingStatus: "Não iniciado" | "Concluído" | "Cancelado",
-  PaymentStatus: "Não pago" | "Pagamento parcial" | "Pago";
-  observations?: string
-}
+  id: number;
+  gear: string;
+  customer: string;
+  customerEmail?: string;
+  customerCellphone?: string;
+  city: string;
+  address?: string;
+  startDate: Date;
+  endDate: Date;
+  totalDuration: number; // em horas
+  price: number;
+  bookingStatus: "Não iniciado" | "Concluído" | "Cancelado";
+  paymentStatus: "Não pago" | "Pagamento parcial" | "Pago";
+  observations?: string;
+};
 
 export default function BookingsPage() {
     return (
@@ -45,18 +45,28 @@ export default function BookingsPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
                     <p className="text-muted-foreground">
-                        Gerencie os agendamentos de locações de equipamentos
+            Gerencie os agendamentos de locações de equipamentos
                     </p>
                 </div>
                 <div className="flex gap-4">
                     <Button className="flex justify-center items-center" asChild>
-                        <Link className="flex justify-center items-center" href={ ROUTES.CREATE_BOOKING }>
+                        <Link
+                            className="flex justify-center items-center"
+                            href={ ROUTES.CREATE_BOOKING }
+                        >
                             <Plus className="" />
                             <span className="hidden md:inline">Novo Agendamento</span>
                         </Link>
                     </Button>
-                    <Button variant="outline" className="flex justify-center items-center" asChild>
-                        <Link className="flex justify-center items-center" href={ ROUTES.VIEW_CALENDAR }>
+                    <Button
+                        variant="outline"
+                        className="flex justify-center items-center"
+                        asChild
+                    >
+                        <Link
+                            className="flex justify-center items-center"
+                            href={ ROUTES.VIEW_CALENDAR }
+                        >
                             <Eye className="" />
                             <span className="hidden md:inline">Visualizar Agenda</span>
                         </Link>

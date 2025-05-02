@@ -3,6 +3,23 @@ import { createDate } from "@/components/pages/bookings/view/bookingViewHelpers"
 
 export const agendamentos: Agendamento[] = [
     {
+        id: 2,
+        gear: "Ultraformer",
+        customer:
+      "Empresa ABC LtdaEmpresa ABC LtdaEmpresa ABC LtdaEmpresa ABC Ltda",
+        customerEmail: "contato@empresaabc.com",
+        customerCellphone: "(11) 3456-7890",
+        city: "Campinas",
+        address: "Rua das Indústrias, 500, Campinas - SP",
+        startDate: createDate(0, 14, 0), // Hoje às 14h
+        endDate: createDate(0, 20, 0), // Hoje às 20h
+        totalDuration: 6,
+        price: 800.0,
+        bookingStatus: "Concluído",
+        paymentStatus: "Pago",
+        observations: "Aguardando confirmação de pagamento. Cliente é recorrente.",
+    },
+    {
         id: 1,
         gear: "Lavieen",
         customer: "João Silva",
@@ -15,27 +32,27 @@ export const agendamentos: Agendamento[] = [
         totalDuration: 4,
         price: 1200.0,
         bookingStatus: "Concluído",
-        PaymentStatus: "Não pago",
-        observations: "Cliente solicitou entrega do equipamento no city. Acesso pela entrada lateral do terreno.",
+        paymentStatus: "Não pago",
+        observations:
+    "Cliente solicitou entrega do equipamento no city. Acesso pela entrada lateral do terreno.",
     },
     {
-        id: 2,
-        gear: "Ultraformer",
-        customer: "Empresa ABC LtdaEmpresa ABC LtdaEmpresa ABC LtdaEmpresa ABC Ltda",
-        customerEmail: "contato@empresaabc.com",
-        customerCellphone: "(11) 3456-7890",
-        city: "Campinas",
-        address: "Rua das Indústrias, 500, Campinas - SP",
-        startDate: createDate(0, 14, 0), // Hoje às 14h
-        endDate: createDate(0, 20, 0), // Hoje às 20h
-        totalDuration: 6,
-        price: 800.0,
+        id: 33,
+        gear: "Delight",
+        customer: "Maria Oliveira",
+        customerEmail: "maria@email.com",
+        customerCellphone: "(11) 91234-5678",
+        city: "Guarulhos",
+        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
+        startDate: createDate(1, 8, 0), // Amanhã às 8h
+        endDate: createDate(1, 16, 0), // Amanhã às 16h
+        totalDuration: 8,
+        price: 650.0,
         bookingStatus: "Concluído",
-        PaymentStatus: "Pago",
-        observations: "Aguardando confirmação de pagamento. Cliente é recorrente.",
+        paymentStatus: "Pago",
     },
     {
-        id: 3,
+        id: 34,
         gear: "Delight",
         customer: "Maria Oliveira",
         customerEmail: "maria@email.com",
@@ -47,7 +64,82 @@ export const agendamentos: Agendamento[] = [
         totalDuration: 8,
         price: 650.0,
         bookingStatus: "Não iniciado",
-        PaymentStatus: "Pago",
+        paymentStatus: "Pago",
+    },
+    {
+        id: 349,
+        gear: "Delight",
+        customer: "Maria Oliveira",
+        customerEmail: "maria@email.com",
+        customerCellphone: "(11) 91234-5678",
+        city: "Guarulhos",
+        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
+        startDate: createDate(1, 8, 0), // Amanhã às 8h
+        endDate: createDate(1, 16, 0), // Amanhã às 16h
+        totalDuration: 8,
+        price: 650.0,
+        bookingStatus: "Não iniciado",
+        paymentStatus: "Pago",
+    },
+    {
+        id: 3429,
+        gear: "Delight",
+        customer: "Maria Oliveira",
+        customerEmail: "maria@email.com",
+        customerCellphone: "(11) 91234-5678",
+        city: "Guarulhos",
+        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
+        startDate: createDate(1, 8, 0), // Amanhã às 8h
+        endDate: createDate(1, 16, 0), // Amanhã às 16h
+        totalDuration: 8,
+        price: 650.0,
+        bookingStatus: "Não iniciado",
+        paymentStatus: "Pago",
+    },
+    {
+        id: 34292,
+        gear: "Delight",
+        customer: "Maria Oliveira",
+        customerEmail: "maria@email.com",
+        customerCellphone: "(11) 91234-5678",
+        city: "Guarulhos",
+        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
+        startDate: createDate(1, 8, 0), // Amanhã às 8h
+        endDate: createDate(1, 16, 0), // Amanhã às 16h
+        totalDuration: 8,
+        price: 650.0,
+        bookingStatus: "Não iniciado",
+        paymentStatus: "Pago",
+    },
+    {
+        id: 342922,
+        gear: "Delight",
+        customer: "Maria Oliveira",
+        customerEmail: "maria@email.com",
+        customerCellphone: "(11) 91234-5678",
+        city: "Guarulhos",
+        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
+        startDate: createDate(1, 18, 0), // Amanhã às 8h
+        endDate: createDate(1, 22, 0), // Amanhã às 16h
+        totalDuration: 4,
+        price: 650.0,
+        bookingStatus: "Não iniciado",
+        paymentStatus: "Pago",
+    },
+    {
+        id: 3,
+        gear: "Delight",
+        customer: "Maria Oliveira",
+        customerEmail: "maria@email.com",
+        customerCellphone: "(11) 91234-5678",
+        city: "Guarulhos",
+        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
+        startDate: createDate(1, 6, 0), // Amanhã às 8h
+        endDate: createDate(1, 10, 0), // Amanhã às 16h
+        totalDuration: 4,
+        price: 650.0,
+        bookingStatus: "Cancelado",
+        paymentStatus: "Pago",
     },
     {
         id: 4,
@@ -59,10 +151,10 @@ export const agendamentos: Agendamento[] = [
         address: "Rua das Obras, 123, Santo André - SP",
         startDate: createDate(2, 10, 0), // Depois de amanhã às 10h
         endDate: createDate(2, 22, 0), // Depois de amanhã às 22h
-        totalDuration: 12,
+        totalDuration: 2,
         price: 1500.0,
         bookingStatus: "Não iniciado",
-        PaymentStatus: "Não pago",
+        paymentStatus: "Não pago",
     },
     {
         id: 5,
@@ -77,7 +169,7 @@ export const agendamentos: Agendamento[] = [
         totalDuration: 4,
         price: 350.0,
         bookingStatus: "Cancelado",
-        PaymentStatus: "Pago",
+        paymentStatus: "Pago",
     },
     {
         id: 6,
@@ -91,9 +183,10 @@ export const agendamentos: Agendamento[] = [
         endDate: createDate(3, 15, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        PaymentStatus: "Pagamento parcial",
-        observations: "Cliente solicitou demonstração do equipamento antes do início do serviço.",
+        bookingStatus: "Cancelado",
+        paymentStatus: "Não pago",
+        observations:
+      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
     {
         id: 7,
@@ -104,11 +197,63 @@ export const agendamentos: Agendamento[] = [
         city: "São Bernardo",
         address: "Av. Industrial, 789, São Bernardo do Campo - SP",
         startDate: createDate(3, 9, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(3, 15, 30), // Daqui a 3 dias às 15:30h
+        endDate: createDate(3, 17, 30), // Daqui a 3 dias às 15:30h
+        totalDuration: 9,
+        price: 420.0,
+        bookingStatus: "Concluído",
+        paymentStatus: "Pagamento parcial",
+        observations:
+      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
+    },
+    {
+        id: 72,
+        gear: "Galaxy Fiber",
+        customer: "Cliente Z",
+        customerEmail: "contato@reformasrapidas.com",
+        customerCellphone: "(11) 3333-4444",
+        city: "São Bernardo",
+        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
+        startDate: createDate(3, 16, 30), // Daqui a 3 dias às 9:30h
+        endDate: createDate(3, 20, 30), // Daqui a 3 dias às 15:30h
+        totalDuration: 2,
+        price: 420.0,
+        bookingStatus: "Concluído",
+        paymentStatus: "Pagamento parcial",
+        observations:
+      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
+    },
+    {
+        id: 721,
+        gear: "Galaxy Fiber",
+        customer: "Cliente Z",
+        customerEmail: "contato@reformasrapidas.com",
+        customerCellphone: "(11) 3333-4444",
+        city: "São Bernardo",
+        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
+        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
+        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 4,
         price: 420.0,
         bookingStatus: "Concluído",
-        PaymentStatus: "Pagamento parcial",
-        observations: "Cliente solicitou demonstração do equipamento antes do início do serviço.",
+        paymentStatus: "Pagamento parcial",
+        observations:
+      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
+    },
+    {
+        id: 722,
+        gear: "Galaxy Fiber",
+        customer: "Cliente Z",
+        customerEmail: "contato@reformasrapidas.com",
+        customerCellphone: "(11) 3333-4444",
+        city: "São Bernardo",
+        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
+        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
+        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
+        totalDuration: 6,
+        price: 420.0,
+        bookingStatus: "Concluído",
+        paymentStatus: "Pagamento parcial",
+        observations:
+      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
 ];

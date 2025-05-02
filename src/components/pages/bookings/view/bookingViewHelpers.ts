@@ -152,66 +152,45 @@ export const goToToday = (setCurrentDate: Dispatch<SetStateAction<Date>>) => {
     setCurrentDate(new Date());
 };
 
-// Função para agrupar agendamentos sobrepostos
 export function groupOverlappingEvents(events: Agendamento[]): Agendamento[][] {
     if (events.length === 0) return [];
 
-    // Ordenar agendamentos por hora de início
-    const sortedEvents = [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-
+    const sorted = [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
     const groups: Agendamento[][] = [];
-    const currentGroup: Agendamento[] = [];
 
-    // Para cada agendamento
-    sortedEvents.forEach((event) => {
-    // Se o grupo atual estiver vazio ou se o evento não se sobrepõe a nenhum evento no grupo atual
-        if (currentGroup.length === 0 || !currentGroup.some((groupEvent) => doEventsOverlap(groupEvent, event))) {
-            // Adicionar ao grupo atual
-            currentGroup.push(event);
-        } else {
-            // Caso contrário, criar um novo grupo para eventos sobrepostos
-            const overlappingGroup = currentGroup.filter((groupEvent) => doEventsOverlap(groupEvent, event));
+    for (const event of sorted) {
+        let placed = false;
 
-            // Se já existe um grupo com eventos sobrepostos, adicionar a ele
-            const existingGroupIndex = groups.findIndex((group) =>
-                group.some((groupEvent) => overlappingGroup.includes(groupEvent)),
-            );
-
-            if (existingGroupIndex !== -1) {
-                groups[existingGroupIndex].push(event);
-            } else {
-                // Caso contrário, criar um novo grupo
-                groups.push([...overlappingGroup, event]);
+        for (const group of groups) {
+            const last = group[group.length - 1];
+            if (event.startDate < last.endDate) {
+                group.push(event);
+                placed = true;
+                break;
             }
         }
-    });
 
-    // Adicionar o grupo atual se não estiver vazio e não estiver já incluído nos grupos
-    if (
-        currentGroup.length > 0 &&
-    !groups.some((group) => group.some((groupEvent) => currentGroup.includes(groupEvent)))
-    ) {
-        groups.push(currentGroup);
+        if (!placed) {
+            groups.push([event]);
+        }
     }
-
-    // Se não houver grupos sobrepostos, retornar cada evento em seu próprio grupo
-    if (groups.length === 0) {
-        return sortedEvents.map((event) => [event]);
-    }
-
-    // Verificar eventos que não estão em nenhum grupo
-    const eventsInGroups = new Set(groups.flat().map((event) => event.id));
-    const ungroupedEvents = sortedEvents.filter((event) => !eventsInGroups.has(event.id));
-
-    // Adicionar eventos não agrupados como grupos individuais
-    ungroupedEvents.forEach((event) => {
-        groups.push([event]);
-    });
 
     return groups;
 }
 
-// Função para verificar se dois agendamentos se sobrepõem
-function doEventsOverlap(event1: Agendamento, event2: Agendamento): boolean {
-    return event1.startDate < event2.endDate && event2.startDate < event1.endDate;
+// calcular as horas do dia para exibição no calendário(expediente),
+// assim como a posição dos EventBoxes automaticamente, mudando apenas o firstHourOfTheDay e o lastHourOfTheDay
+const hourHeighInPixels = 64;
+const firstHourOfTheDay = 5;
+const lastHourOfTheDay = 22;
+const workingHoursLength = lastHourOfTheDay - firstHourOfTheDay + 1;
+
+export const workingHours = Array.from({ length: workingHoursLength }, (_, i) => i + firstHourOfTheDay);
+
+export function getDistanceFromTop(startHour: number, startMinute: number) {
+    return (startHour - firstHourOfTheDay) * hourHeighInPixels + (startMinute / 60) * hourHeighInPixels;
+}
+
+export function getEventBoxHeigh(durationInHours: number) {
+    return durationInHours * hourHeighInPixels;
 }
