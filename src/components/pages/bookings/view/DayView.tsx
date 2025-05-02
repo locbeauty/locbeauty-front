@@ -50,7 +50,7 @@ export function DayView({
                 { /* Grade de horários */ }
                 <div className="relative">
                     { workingHours.map((hour) => (
-                        <div key={ hour } className="grid grid-cols-2 border-b">
+                        <div key={ hour } className="grid grid-cols-2 border-b"  style={ { gridTemplateColumns: "100px repeat(1, 1fr)" } }>
                             <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">
                                 { `${hour}:00` }
                             </div>
@@ -67,8 +67,9 @@ export function DayView({
                             const top = getDistanceFromTop(startHour, startMinute);
                             const height = getEventBoxHeigh(agendamento.totalDuration);
 
-                            const width = `calc((50% - 6px) / ${group.length})`;
-                            const left = `calc(50% + 2px + (${index} * ${width}))`;
+                            const width = group.length > 1 ? `calc((100% - 100px - 6px) / ${group.length})` : "calc(100% - 100px - 6px)";
+                            const baseLeft = "calc(100px + 2px)";
+                            const left = group.length > 1 ? `calc(${baseLeft} + (${index} * ${width}))` : baseLeft;
 
                             return (
                                 <div

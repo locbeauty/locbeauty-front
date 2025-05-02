@@ -10,29 +10,30 @@ export function isSameDay(date1: Date, date2: Date): boolean {
     );
 }
 
-// Função para obter os dias do mês (incluindo dias do mês anterior e próximo para preencher a grade)
 export function getMonthDays(date: Date): Date[] {
     const year = date.getFullYear();
     const month = date.getMonth();
 
-    // Primeiro dia do mês
-    const firstDay = new Date(year, month, 1);
-    // Último dia do mês
-    // const lastDay = new Date(year, month + 1, 0);
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
 
-    // Ajustar para começar na segunda-feira (0 = Domingo, 1 = Segunda, ...)
-    const firstDayOfGrid = new Date(firstDay);
-    const dayOfWeek = firstDay.getDay() || 7; // Converter domingo (0) para 7
-    firstDayOfGrid.setDate(firstDay.getDate() - (dayOfWeek - 1));
+    // Ajustar início para a segunda-feira anterior ou igual ao primeiro dia do mês
+    const start = new Date(firstDayOfMonth);
+    const startDay = start.getDay() === 0 ? 7 : start.getDay(); // Domingo vira 7
+    start.setDate(start.getDate() - (startDay - 1));
 
-    // Criar array com todos os dias
+    // Ajustar fim para o domingo seguinte ou igual ao último dia do mês
+    const end = new Date(lastDayOfMonth);
+    const endDay = end.getDay() === 0 ? 7 : end.getDay(); // Domingo vira 7
+    end.setDate(end.getDate() + (7 - endDay));
+
+    // Gerar os dias
     const days: Date[] = [];
+    const current = new Date(start);
 
-    // Precisamos de 6 semanas (42 dias) para garantir que cobrimos todo o mês
-    for (let i = 0; i < 42; i++) {
-        const currentDay = new Date(firstDayOfGrid);
-        currentDay.setDate(firstDayOfGrid.getDate() + i);
-        days.push(currentDay);
+    while (current <= end) {
+        days.push(new Date(current));
+        current.setDate(current.getDate() + 1);
     }
 
     return days;
@@ -146,34 +147,63 @@ export const prevDay = (currentDate: Date, setCurrentDate: Dispatch<SetStateActi
     prevDate.setDate(currentDate.getDate() - 1);
     setCurrentDate(prevDate);
 };
+export const prevMonth = ( currentDate: Date, setCurrentDate: Dispatch<SetStateAction<Date>> ) => {
+    const prevDate = new Date(currentDate);
+    prevDate.setMonth(prevDate.getMonth() - 1);
+    setCurrentDate(prevDate);
+};
+
+export const nextMonth = ( currentDate: Date, setCurrentDate: Dispatch<SetStateAction<Date>> ) => {
+    const nextDate = new Date(currentDate);
+    nextDate.setMonth(nextDate.getMonth() + 1);
+    setCurrentDate(nextDate);
+};
 
 // Função para ir para a data atual
 export const goToToday = (setCurrentDate: Dispatch<SetStateAction<Date>>) => {
     setCurrentDate(new Date());
 };
 
+// Função para verificar se dois eventos se sobrepõem no tempo
+export function doEventsOverlap(event1: Agendamento, event2: Agendamento): boolean {
+    // Dois eventos se sobrepõem se:
+    // 1. O evento1 começa antes do término do evento2, E
+    // 2. O evento1 termina depois do início do evento2
+    return event1.startDate < event2.endDate && event1.endDate > event2.startDate;
+}
+
+// Função para agrupar eventos que se sobrepõem no tempo
 export function groupOverlappingEvents(events: Agendamento[]): Agendamento[][] {
     if (events.length === 0) return [];
 
-    const sorted = [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    // Ordenar eventos por horário de início
+    const sortedEvents = [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+    // Array para armazenar os grupos de eventos sobrepostos
     const groups: Agendamento[][] = [];
 
-    for (const event of sorted) {
-        let placed = false;
+    // Para cada evento, verificar se ele se sobrepõe com algum grupo existente
+    sortedEvents.forEach((event) => {
+        // Verificar se o evento se sobrepõe com algum evento em algum grupo existente
+        let foundGroup = false;
 
         for (const group of groups) {
-            const last = group[group.length - 1];
-            if (event.startDate < last.endDate) {
+        // Verificar se o evento se sobrepõe com algum evento no grupo atual
+            const overlapsWithGroup = group.some((groupEvent) => doEventsOverlap(event, groupEvent));
+
+            if (overlapsWithGroup) {
+                // Se sobrepõe, adicionar ao grupo
                 group.push(event);
-                placed = true;
+                foundGroup = true;
                 break;
             }
         }
 
-        if (!placed) {
+        // Se não encontrou nenhum grupo com sobreposição, criar um novo grupo
+        if (!foundGroup) {
             groups.push([event]);
         }
-    }
+    });
 
     return groups;
 }
@@ -187,8 +217,16 @@ const workingHoursLength = lastHourOfTheDay - firstHourOfTheDay + 1;
 
 export const workingHours = Array.from({ length: workingHoursLength }, (_, i) => i + firstHourOfTheDay);
 
-export function getDistanceFromTop(startHour: number, startMinute: number) {
-    return (startHour - firstHourOfTheDay) * hourHeighInPixels + (startMinute / 60) * hourHeighInPixels;
+export function getDistanceFromTop(hour: number, minute: number): number {
+    // Altura de cada hora em pixels
+    const hourHeight = 64;
+
+    // Calcular a posição relativa ao início do horário de trabalho (7h)
+    const hoursFromStart = hour - workingHours[0];
+
+    // Calcular a posição considerando horas e minutos
+    // Cada minuto representa 1/60 da altura de uma hora
+    return hoursFromStart * hourHeight + (minute / 60) * hourHeight;
 }
 
 export function getEventBoxHeigh(durationInHours: number) {

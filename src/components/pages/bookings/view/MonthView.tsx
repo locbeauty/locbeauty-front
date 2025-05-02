@@ -43,7 +43,7 @@ export function MonthView({
                                 "min-h-[120px] border-r border-b p-1 relative max-h-[100px]",
                                 dayAgendamentos.length > 3 && "overflow-y-scroll",
                                 isToday(day) ? "bg-primary/5" : "",
-                                !isCurrentMonth ? "bg-muted/20 text-muted-foreground" : ""
+                                !isCurrentMonth ? "bg-gray-100 text-red-300" : ""
                             ) }
                         >
                             <div

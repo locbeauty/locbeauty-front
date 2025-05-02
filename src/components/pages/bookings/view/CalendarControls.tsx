@@ -3,8 +3,10 @@ import {
     formatMonthYear,
     goToToday,
     nextDay,
+    nextMonth,
     nextWeek,
     prevDay,
+    prevMonth,
     prevWeek,
 } from "@/utils/bookingViewHelpers";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -30,11 +32,15 @@ export function CalendarControls({
                 <Button
                     variant="outlineMobile"
                     size="icon"
-                    onClick={ () =>
-                        viewType === "dia"
-                            ? prevDay(currentDate, setCurrentDate)
-                            : prevWeek(currentDate, setCurrentDate)
-                    }
+                    onClick={ () => {
+                        if (viewType === "dia") {
+                            prevDay(currentDate, setCurrentDate);
+                        } else if (viewType === "semana") {
+                            prevWeek(currentDate, setCurrentDate);
+                        } else if (viewType === "mes") {
+                            prevMonth(currentDate, setCurrentDate);
+                        }
+                    } }
                 >
                     <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -47,11 +53,15 @@ export function CalendarControls({
                 <Button
                     variant="outlineMobile"
                     size="icon"
-                    onClick={ () =>
-                        viewType === "dia"
-                            ? nextDay(currentDate, setCurrentDate)
-                            : nextWeek(currentDate, setCurrentDate)
-                    }
+                    onClick={ () => {
+                        if (viewType === "dia") {
+                            nextDay(currentDate, setCurrentDate);
+                        } else if (viewType === "semana") {
+                            nextWeek(currentDate, setCurrentDate);
+                        } else if (viewType === "mes") {
+                            nextMonth(currentDate, setCurrentDate);
+                        }
+                    } }
                 >
                     <ChevronRight className="h-4 w-4" />
                 </Button>

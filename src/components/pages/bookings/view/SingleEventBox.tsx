@@ -16,12 +16,9 @@ interface SingleEventBoxProps {
   openAgendamentoDetails: (_agendamento: Agendamento) => void;
 }
 
-export function SingleEventBox({
-    group,
-    dayIndex,
-    openAgendamentoDetails,
-}: SingleEventBoxProps) {
+export function SingleEventBox({ group, dayIndex, openAgendamentoDetails }: SingleEventBoxProps) {
     // Se o grupo tem apenas um evento, use a largura total
+    const hourColumnWidth = 100;
     const agendamento = group[0];
     const startHour = agendamento.startDate.getHours();
     const startMinute = agendamento.startDate.getMinutes();
@@ -29,6 +26,13 @@ export function SingleEventBox({
     // Calcular posição e altura
     const top = getDistanceFromTop(startHour, startMinute);
     const height = getEventBoxHeigh(agendamento.totalDuration);
+
+    // Calcular posição horizontal considerando a largura da coluna de horas
+    const columnWidth = hourColumnWidth ? `calc((100% - ${hourColumnWidth}px) / 7)` : "12.5%";
+    const left = hourColumnWidth
+        ? `calc(${hourColumnWidth}px + (${dayIndex} * ${columnWidth}))`
+        : `calc(12.5% + (${dayIndex} * ${columnWidth}))`;
+    const width = `calc(${columnWidth} - 2px)`;
 
     return (
         <div
@@ -51,8 +55,8 @@ export function SingleEventBox({
             style={ {
                 top: `${top}px`,
                 height: `${height}px`,
-                left: `calc(${(dayIndex + 1) * 12.5}% + 2px)`,
-                width: "calc(12.5% - 6px)",
+                left,
+                width,
             } }
             onClick={ () => openAgendamentoDetails(agendamento) }
         >

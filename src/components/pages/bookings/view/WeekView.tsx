@@ -36,10 +36,10 @@ export function WeekView({
             <div className="relative">
                 { /* Linhas de horas */ }
                 { workingHours.map((hour) => (
-                    <div key={ hour } className="grid grid-cols-8 border-b h-[64px]">
+                    <div key={ hour } className="grid border-b h-[64px]" style={ { gridTemplateColumns: "100px repeat(7, 1fr)" } }>
                         <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">{ `${hour}:00` }</div>
                         { weekDays.map((_, dayIndex) => (
-                            <div key={ dayIndex } className="h-16 border-r relative"></div>
+                            <div key={ dayIndex } className="h-16 border-r relative " />
                         )) }
                     </div>
                 )) }
