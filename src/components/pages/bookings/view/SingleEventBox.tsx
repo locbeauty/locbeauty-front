@@ -2,17 +2,25 @@ import { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { BookingStatusBadge } from "../BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../BookingPaymentStatusBadge";
-import { formatCurrency, formatTime, getDistanceFromTop, getEventBoxHeigh } from "./bookingViewHelpers";
+import {
+    formatCurrency,
+    formatTime,
+    getDistanceFromTop,
+    getEventBoxHeigh,
+} from "../../../../utils/bookingViewHelpers";
 import { cn } from "@/lib/utils";
 
 interface SingleEventBoxProps {
-    group: Agendamento[]
-    dayIndex: number
-    openAgendamentoDetails: (_agendamento: Agendamento) => void
+  group: Agendamento[];
+  dayIndex: number;
+  openAgendamentoDetails: (_agendamento: Agendamento) => void;
 }
 
-export function SingleEventBox({ group, dayIndex, openAgendamentoDetails }: SingleEventBoxProps) {
-
+export function SingleEventBox({
+    group,
+    dayIndex,
+    openAgendamentoDetails,
+}: SingleEventBoxProps) {
     // Se o grupo tem apenas um evento, use a largura total
     const agendamento = group[0];
     const startHour = agendamento.startDate.getHours();
@@ -25,18 +33,20 @@ export function SingleEventBox({ group, dayIndex, openAgendamentoDetails }: Sing
     return (
         <div
             key={ agendamento.id }
-            className={ cn("absolute rounded-md border-l-4 p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-y-auto",
+            className={ cn(
+                "absolute rounded-md border-l-4 p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-y-auto",
                 // Default colors for bookings with durations different than 4, 6 and 8-12 hours
                 "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
                 // Colors for 4h bookings duration
                 agendamento.totalDuration === 4 &&
-                    "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
+          "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
                 // Colors for 6h bookings duration
                 agendamento.totalDuration === 6 &&
-                    "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
+          "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
                 // Colors for 8 to 12 hours bookings duration
-                agendamento.totalDuration >= 8 && agendamento.totalDuration <= 12 &&
-                    "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
+                agendamento.totalDuration >= 8 &&
+          agendamento.totalDuration <= 12 &&
+          "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
             ) }
             style={ {
                 top: `${top}px`,
@@ -64,10 +74,8 @@ export function SingleEventBox({ group, dayIndex, openAgendamentoDetails }: Sing
                 { formatCurrency(agendamento.price) }
             </div>
             <div className="flex flex-col gap-1 mt-2">
-                <BookingStatusBadge status={ agendamento.bookingStatus }/>
-                <BookingPaymentStatusBadge
-                    status={ agendamento.paymentStatus }
-                />
+                <BookingStatusBadge status={ agendamento.bookingStatus } />
+                <BookingPaymentStatusBadge status={ agendamento.paymentStatus } />
             </div>
         </div>
     );

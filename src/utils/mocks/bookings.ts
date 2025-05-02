@@ -1,5 +1,5 @@
 import { Agendamento } from "@/app/(main)/bookings/page";
-import { createDate } from "@/components/pages/bookings/view/bookingViewHelpers";
+import { createDate } from "@/utils/bookingViewHelpers";
 
 export const agendamentos: Agendamento[] = [
     {
@@ -34,7 +34,7 @@ export const agendamentos: Agendamento[] = [
         bookingStatus: "Concluído",
         paymentStatus: "Não pago",
         observations:
-    "Cliente solicitou entrega do equipamento no city. Acesso pela entrada lateral do terreno.",
+      "Cliente solicitou entrega do equipamento no city. Acesso pela entrada lateral do terreno.",
     },
     {
         id: 33,

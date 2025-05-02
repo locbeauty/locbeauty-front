@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
-import { formatDayName, isToday } from "./bookingViewHelpers";
+import { formatDayName, isToday } from "../../../../utils/bookingViewHelpers";
 
 interface CalendarWeekHeaderProps {
-    weekDays: Date[]
+  weekDays: Date[];
 }
 
 export function CalendarWeekHeader({ weekDays }: CalendarWeekHeaderProps) {
@@ -12,10 +12,20 @@ export function CalendarWeekHeader({ weekDays }: CalendarWeekHeaderProps) {
             { weekDays.map((day, index) => (
                 <div
                     key={ index }
-                    className={ cn("p-2 text-center border-r font-medium", isToday(day) ? "bg-primary/10" : "bg-muted/50") }
+                    className={ cn(
+                        "p-2 text-center border-r font-medium",
+                        isToday(day) ? "bg-primary/10" : "bg-muted/50"
+                    ) }
                 >
                     <div>{ formatDayName(day) }</div>
-                    <div className={ cn("text-lg", isToday(day) ? "text-primary font-bold" : "") }>{ day.getDate() }</div>
+                    <div
+                        className={ cn(
+                            "text-lg",
+                            isToday(day) ? "text-primary font-bold" : ""
+                        ) }
+                    >
+                        { day.getDate() }
+                    </div>
                 </div>
             )) }
         </div>

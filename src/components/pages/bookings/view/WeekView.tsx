@@ -1,16 +1,26 @@
-import { getDayIndex, getWeekDays, groupOverlappingEvents, isAgendamentoInWeek, workingHours } from "./bookingViewHelpers";
+import {
+    getDayIndex,
+    getWeekDays,
+    groupOverlappingEvents,
+    isAgendamentoInWeek,
+    workingHours,
+} from "../../../../utils/bookingViewHelpers";
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { CalendarWeekHeader } from "./CalendarWeekHeader";
 import { MultipleEventBox } from "./MultipleEventBox";
 import { SingleEventBox } from "./SingleEventBox";
 
 interface WeekViewProps {
-    currentDate: Date
-    agendamentos: Agendamento[]
-    openAgendamentoDetails: (_agendamento: Agendamento) => void
+  currentDate: Date;
+  agendamentos: Agendamento[];
+  openAgendamentoDetails: (_agendamento: Agendamento) => void;
 }
 
-export function WeekView({ currentDate, agendamentos, openAgendamentoDetails }: WeekViewProps) {
+export function WeekView({
+    currentDate,
+    agendamentos,
+    openAgendamentoDetails,
+}: WeekViewProps) {
     // Gerar os dias da semana a partir da data atual
     const weekDays = getWeekDays(currentDate);
 
@@ -53,22 +63,38 @@ export function WeekView({ currentDate, agendamentos, openAgendamentoDetails }: 
                     });
 
                     // Renderizar agendamentos para cada dia
-                    return Object.entries(agendamentosByDay).flatMap(([dayIndexStr, dayAgendamentos]) => {
-                        const dayIndex = Number.parseInt(dayIndexStr);
+                    return Object.entries(agendamentosByDay).flatMap(
+                        ([dayIndexStr, dayAgendamentos]) => {
+                            const dayIndex = Number.parseInt(dayIndexStr);
 
-                        // Agrupar agendamentos sobrepostos para este dia
-                        const agendamentoGroups = groupOverlappingEvents(dayAgendamentos);
+                            // Agrupar agendamentos sobrepostos para este dia
+                            const agendamentoGroups = groupOverlappingEvents(dayAgendamentos);
 
-                        return agendamentoGroups.flatMap((group) => {
-                            // When there is only one booking starting at the time, show him with full event box width
-                            if (group.length === 1) {
-                                return <SingleEventBox key={ group[0].id } dayIndex={ dayIndex } group={ group } openAgendamentoDetails={ openAgendamentoDetails } />;
-                            } else {
-                                // When there is more than one booking starting in the same time, show them side by side
-                                return <MultipleEventBox key={ group[0].id } dayIndex={ dayIndex } group={ group } openAgendamentoDetails={ openAgendamentoDetails } />;
-                            }
-                        });
-                    });
+                            return agendamentoGroups.flatMap((group) => {
+                                // When there is only one booking starting at the time, show him with full event box width
+                                if (group.length === 1) {
+                                    return (
+                                        <SingleEventBox
+                                            key={ group[0].id }
+                                            dayIndex={ dayIndex }
+                                            group={ group }
+                                            openAgendamentoDetails={ openAgendamentoDetails }
+                                        />
+                                    );
+                                } else {
+                                    // When there is more than one booking starting in the same time, show them side by side
+                                    return (
+                                        <MultipleEventBox
+                                            key={ group[0].id }
+                                            dayIndex={ dayIndex }
+                                            group={ group }
+                                            openAgendamentoDetails={ openAgendamentoDetails }
+                                        />
+                                    );
+                                }
+                            });
+                        }
+                    );
                 })() }
             </div>
         </div>

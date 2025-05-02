@@ -5,7 +5,7 @@ import {
     formatTime,
     isSameDay,
     isToday,
-} from "./bookingViewHelpers";
+} from "../../../../utils/bookingViewHelpers";
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { BookingStatusBadge } from "../BookingStatusBadge";
@@ -17,7 +17,11 @@ interface MobileDayViewProps {
   openAgendamentoDetails: (_agendamento: Agendamento) => void;
 }
 
-export function MobileDayView({ agendamentos, currentDate, openAgendamentoDetails }: MobileDayViewProps) {
+export function MobileDayView({
+    agendamentos,
+    currentDate,
+    openAgendamentoDetails,
+}: MobileDayViewProps) {
     const dayAgendamentos = agendamentos.filter((agendamento) => {
         return isSameDay(agendamento.startDate, currentDate);
     });
@@ -55,18 +59,20 @@ export function MobileDayView({ agendamentos, currentDate, openAgendamentoDetail
                         return (
                             <div
                                 key={ agendamento.id }
-                                className={ cn("p-3 border-l-4 cursor-pointer hover:bg-muted/20 transition-colors",
+                                className={ cn(
+                                    "p-3 border-l-4 cursor-pointer hover:bg-muted/20 transition-colors",
                                     // Default colors for bookings with durations different than 4, 6 and 8-12 hours
                                     "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
                                     // Colors for 4h bookings duration
                                     agendamento.totalDuration === 4 &&
-                                        "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
+                    "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
                                     // Colors for 6h bookings duration
                                     agendamento.totalDuration === 6 &&
-                                        "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
+                    "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
                                     // Colors for 8 to 12 hours bookings duration
-                                    agendamento.totalDuration >= 8 && agendamento.totalDuration <= 12 &&
-                                        "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
+                                    agendamento.totalDuration >= 8 &&
+                    agendamento.totalDuration <= 12 &&
+                    "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
                                 ) }
                                 onClick={ () => openAgendamentoDetails(agendamento) }
                             >

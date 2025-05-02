@@ -22,30 +22,44 @@ import {
     Phone,
     Mail,
     Edit,
-    Trash2
+    Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { formatCurrency, formatDate, formatTime } from "@/components/pages/bookings/view/bookingViewHelpers";
+import {
+    formatCurrency,
+    formatDate,
+    formatTime,
+} from "@/utils/bookingViewHelpers";
 import { BookingStatusBadge } from "@/components/pages/bookings/BookingStatusBadge";
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { BookingPaymentStatusBadge } from "../BookingPaymentStatusBadge";
 
 interface BookingDetailsDialogProps {
-    setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>
-    isBookingDetailsDialogOpen: boolean
-    selectedAgendamento: Agendamento | null
-
+  setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
+  isBookingDetailsDialogOpen: boolean;
+  selectedAgendamento: Agendamento | null;
 }
 
-export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen, selectedAgendamento }: BookingDetailsDialogProps) {
-    return(
-        <Dialog open={ isBookingDetailsDialogOpen } onOpenChange={ setBookingDetailsDialogOpen }>
+export function BookingDetailsDialog({
+    isBookingDetailsDialogOpen,
+    setBookingDetailsDialogOpen,
+    selectedAgendamento,
+}: BookingDetailsDialogProps) {
+    return (
+        <Dialog
+            open={ isBookingDetailsDialogOpen }
+            onOpenChange={ setBookingDetailsDialogOpen }
+        >
             <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-scroll dark:bg-gray-900">
                 { selectedAgendamento && (
                     <>
                         <DialogHeader>
-                            <DialogTitle className="text-xl">Detalhes do Agendamento</DialogTitle>
-                            <DialogDescription>Informações completas sobre a locação do equipamento</DialogDescription>
+                            <DialogTitle className="text-xl">
+                Detalhes do Agendamento
+                            </DialogTitle>
+                            <DialogDescription>
+                Informações completas sobre a locação do equipamento
+                            </DialogDescription>
                         </DialogHeader>
 
                         <div className="space-y-4 py-4">
@@ -53,10 +67,14 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Package className="h-5 w-5 text-primary" />
-                                    <h3 className="text-lg font-semibold">{ selectedAgendamento.gear }</h3>
+                                    <h3 className="text-lg font-semibold">
+                                        { selectedAgendamento.gear }
+                                    </h3>
                                 </div>
                                 <div className="flex gap-2">
-                                    <BookingStatusBadge status={ selectedAgendamento.bookingStatus } />
+                                    <BookingStatusBadge
+                                        status={ selectedAgendamento.bookingStatus }
+                                    />
                                     <BookingPaymentStatusBadge
                                         status={ selectedAgendamento.paymentStatus }
                                     />
@@ -67,7 +85,9 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
 
                             { /* Informações do cliente */ }
                             <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">CLIENTE</h4>
+                                <h4 className="font-medium text-sm text-muted-foreground">
+                  CLIENTE
+                                </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="flex items-center gap-2">
                                         <User className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -90,7 +110,9 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
 
                             { /* Informações de local */ }
                             <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">LOCAL</h4>
+                                <h4 className="font-medium text-sm text-muted-foreground">
+                  LOCAL
+                                </h4>
                                 <div className="grid grid-cols-1 gap-3">
                                     <div className="flex items-center gap-2">
                                         <Building className="h-4 w-4 text-muted-foreground" />
@@ -107,7 +129,9 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
 
                             { /* Informações de data e hora */ }
                             <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">DATA E HORA</h4>
+                                <h4 className="font-medium text-sm text-muted-foreground">
+                  DATA E HORA
+                                </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="flex items-center gap-2">
                                         <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -116,28 +140,39 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-4 w-4 text-muted-foreground" />
                                         <span>
-                                            { formatTime(selectedAgendamento.startDate) } - { formatTime(selectedAgendamento.endDate) }
+                                            { formatTime(selectedAgendamento.startDate) } -{ " " }
+                                            { formatTime(selectedAgendamento.endDate) }
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-4 w-4 text-muted-foreground" />
-                                        <span>Duração: { selectedAgendamento.totalDuration } horas</span>
+                                        <span>
+                      Duração: { selectedAgendamento.totalDuration } horas
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
                             { /* Informações financeiras */ }
                             <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">INFORMAÇÕES FINANCEIRAS</h4>
+                                <h4 className="font-medium text-sm text-muted-foreground">
+                  INFORMAÇÕES FINANCEIRAS
+                                </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="flex items-center gap-2">
                                         <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                        <span>Valor: { formatCurrency(selectedAgendamento.price) }</span>
+                                        <span>
+                      Valor: { formatCurrency(selectedAgendamento.price) }
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                                         <span>
-                        Valor por hora: { formatCurrency(selectedAgendamento.price / selectedAgendamento.totalDuration) }
+                      Valor por hora:{ " " }
+                                            { formatCurrency(
+                                                selectedAgendamento.price /
+                          selectedAgendamento.totalDuration
+                                            ) }
                                         </span>
                                     </div>
                                 </div>
@@ -146,7 +181,9 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
                             { /* Observações */ }
                             { selectedAgendamento.observations && (
                                 <div className="space-y-2">
-                                    <h4 className="font-medium text-sm text-muted-foreground">OBSERVAÇÕES</h4>
+                                    <h4 className="font-medium text-sm text-muted-foreground">
+                    OBSERVAÇÕES
+                                    </h4>
                                     <div className="bg-muted/30 p-3 rounded-md">
                                         <div className="flex items-center gap-2">
                                             <ClipboardList className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -159,12 +196,17 @@ export function BookingDetailsDialog({ isBookingDetailsDialogOpen, setBookingDet
 
                         <DialogFooter className="flex flex-row gap-3 justify-center sm:justify-center items-center w-full">
                             <Button variant="outline" className="" asChild>
-                                <Link href={ `/dashboard/agendamentos/editar/${selectedAgendamento.id}` }>
+                                <Link
+                                    href={ `/dashboard/agendamentos/editar/${selectedAgendamento.id}` }
+                                >
                                     <Edit className="" />
-                                    Editar
+                  Editar
                                 </Link>
                             </Button>
-                            <Button variant="destructive" className="flex items-center justify-center cursor-pointer">
+                            <Button
+                                variant="destructive"
+                                className="flex items-center justify-center cursor-pointer"
+                            >
                                 <Trash2 className="" />
                                 <span className="md:block hidden">Cancelar Agendamento</span>
                             </Button>
