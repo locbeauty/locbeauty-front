@@ -1,4 +1,4 @@
-import { BookingFilterStatusTypes } from "@/app/(main)/bookings/page";
+import { FilterBookingStatusTypes } from "@/app/(main)/bookings/page";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function SelectStatus() {
@@ -9,7 +9,7 @@ export function SelectStatus() {
             </SelectTrigger>
             <SelectContent>
                 {
-                    BookingFilterStatusTypes.map(status => {
+                    FilterBookingStatusTypes.map(status => {
                         if(status !== "Todos") {
                             return (
                                 <SelectItem key={ status } value={ status.toLowerCase() }>{ status }</SelectItem>

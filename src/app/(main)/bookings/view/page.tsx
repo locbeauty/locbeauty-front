@@ -1,0 +1,83 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+    Plus, ArrowLeft
+} from "lucide-react";
+import Link from "next/link";
+import { ROUTES } from "@/utils/routes";
+import { useRouter } from "next/navigation";
+import { Agendamento } from "../page";
+import { BookingDetailsDialog } from "@/components/pages/bookings/view/BookingDetailsDialog";
+import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
+import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
+import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
+
+export default function AgendamentosPage() {
+    // Estado para controlar a semana atual
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null);
+    const [isBookingDetailsDialogOpen, setBookingDetailsDialogOpen] = useState(false);
+    const [viewType, setViewType] = useState<"dia" | "semana" | "mes">("semana");
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkIfMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkIfMobile();
+
+        window.addEventListener("resize", checkIfMobile);
+
+        return () => window.removeEventListener("resize", checkIfMobile);
+    }, []);
+
+    useEffect(() => {
+        if(isMobile) {
+            setViewType("dia");
+        } else {
+            setViewType("semana");
+        }
+    }, [isMobile]);
+
+    const router = useRouter();
+
+    const openAgendamentoDetails = (agendamento: Agendamento) => {
+        setSelectedAgendamento(agendamento);
+        setBookingDetailsDialogOpen(true);
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                    <Button onClick={ () => router.back() } variant="outline" size="icon">
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">Voltar</span>
+                    </Button>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
+                        <p className="text-muted-foreground">Visualize os agendamentos de locações</p>
+                    </div>
+                </div>
+
+                <div className="flex">
+                    <Button className="flex justify-center items-center" asChild>
+                        <Link className="flex justify-center items-center" href={ ROUTES.CREATE_BOOKING }>
+                            <Plus className="" />
+                            <span className="hidden md:inline">Novo Agendamento</span>
+                        </Link>
+                    </Button>
+                </div>
+            </div>
+
+            <CalendarControls currentDate={ currentDate } setCurrentDate={ setCurrentDate } viewType={ viewType } setViewType={ setViewType } />
+            <CalendarContent currentDate={ currentDate } openAgendamentoDetails={ openAgendamentoDetails } viewType={ viewType } />
+            <CalendarFooter />
+
+            <BookingDetailsDialog isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen } setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen } selectedAgendamento={ selectedAgendamento } />
+        </div>
+    );
+}

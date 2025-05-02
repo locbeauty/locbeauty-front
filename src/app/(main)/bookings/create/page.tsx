@@ -1,3 +1,4 @@
+"use client";
 import { CreateBookingForm } from "@/components/pages/bookings/CreateBookingForm";
 import { CreationPageFooter } from "@/components/shared/CreationPageFooter";
 import { Button } from "@/components/ui/button";
@@ -5,17 +6,19 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 import { ROUTES } from "@/utils/routes";
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function CreateBookingPage() {
+    const router = useRouter();
+
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
                 <Button variant="outline" size="icon" asChild>
-                    <Link href={ ROUTES.BOOKINGS }>
+                    <Button onClick={ () => router.back() } variant="outline" size="icon">
                         <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">Voltar</span>
-                    </Link>
+                    </Button>
                 </Button>
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">
