@@ -13,6 +13,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { ptBR } from "date-fns/locale";
 
 export function RangeDatePicker({
     className,
@@ -20,14 +21,14 @@ export function RangeDatePicker({
     const [date, setDate] = React.useState<DateRange | undefined>(undefined);
 
     return (
-        <div className={ cn("grid gap-2", className) }>
+        <div className={ cn(className) }>
             <Popover>
                 <PopoverTrigger asChild>
                     <Button
                         id="date"
                         variant={ "outline" }
                         className={ cn(
-                            "w-[300px] justify-start text-left font-normal",
+                            "flex",
                             !date && "text-muted-foreground"
                         ) }
                     >
@@ -35,14 +36,14 @@ export function RangeDatePicker({
                         { date?.from ? (
                             date.to ? (
                                 <>
-                                    { format(date.from, "LLL dd, y") } -{ " " }
-                                    { format(date.to, "LLL dd, y") }
+                                    { format(date.from, "PPP", { locale: ptBR }) } - { " " }
+                                    { format(date.to, "PPP", { locale: ptBR }) }
                                 </>
                             ) : (
-                                format(date.from, "LLL dd, y")
+                                format(date.from, "PPP", { locale: ptBR })
                             )
                         ) : (
-                            <span>Pick a date</span>
+                            <span>Escolha a data do agendamento</span>
                         ) }
                     </Button>
                 </PopoverTrigger>

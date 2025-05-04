@@ -1,4 +1,4 @@
-import { CreateCustomerForm } from "@/components/pages/customers/CreateCustomerForm";
+import { CreateCustomerForm } from "@/components/pages/customers/form/CreateCustomerForm";
 import { CreationPageFooter } from "@/components/shared/CreationPageFooter";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/utils/routes";
@@ -18,14 +18,14 @@ export default function CreateCustomerPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Novo Cliente</h1>
                     <p className="text-muted-foreground">
-                        Cadastre um novo cliente no sistema
+            Cadastre um novo cliente no sistema
                     </p>
                 </div>
             </div>
 
             <CreateCustomerForm />
 
-            <CreationPageFooter cancelUrl={ ROUTES.CUSTOMERS } />
+            <CreationPageFooter formId="create-customer-form" cancelUrl={ ROUTES.CUSTOMERS } />
         </div>
     );
 }

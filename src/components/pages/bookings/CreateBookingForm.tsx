@@ -3,8 +3,8 @@ import { Label } from "@/components/ui/label";
 import { SelectGear } from "./SelectGear";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectStatus } from "./SelectStatus";
-import { RangeDatePicker } from "@/components/ui/range-date-picker";
 import { CardContent } from "@/components/ui/card";
+import { RangeDatePicker } from "@/components/ui/range-date-picker";
 
 export function CreateBookingForm() {
     return (
