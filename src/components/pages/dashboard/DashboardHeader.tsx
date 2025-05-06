@@ -13,7 +13,7 @@ export function DashboardHeader({ setSidebarOpen }: {setSidebarOpen: Dispatch<Se
 
     useEffect(() => {
         setSidebarOpen(false);
-    }, [pathname, setSidebarOpen]);
+    }, [ pathname, setSidebarOpen ]);
 
     return (
         <header className="sticky top-0 z-40 border-b bg-background">

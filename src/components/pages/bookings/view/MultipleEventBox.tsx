@@ -7,7 +7,7 @@ import {
     formatTime,
     getDistanceFromTop,
     getEventBoxHeigh,
-} from "../../../../utils/bookingViewHelpers";
+} from "./bookingViewHelpers";
 import { cn } from "@/lib/utils";
 
 interface MultipleEventBoxProps {
@@ -16,14 +16,20 @@ interface MultipleEventBoxProps {
   openAgendamentoDetails: (_agendamento: Agendamento) => void;
 }
 
-export function MultipleEventBox({ group, dayIndex, openAgendamentoDetails }: MultipleEventBoxProps) {
+export function MultipleEventBox({
+    group,
+    dayIndex,
+    openAgendamentoDetails,
+}: MultipleEventBoxProps) {
     // Se o grupo tem múltiplos eventos, divida a largura
 
     const hourColumnWidth = 100;
     // Pegar o primeiro agendamento para calcular a posição inicial
 
     // Calcular posição horizontal considerando a largura da coluna de horas
-    const columnWidth = hourColumnWidth ? `calc((100% - ${hourColumnWidth}px) / 7)` : "12.5%";
+    const columnWidth = hourColumnWidth
+        ? `calc((100% - ${hourColumnWidth}px) / 7)`
+        : "12.5%";
     const baseLeft = hourColumnWidth
         ? `calc(${hourColumnWidth}px + (${dayIndex} * ${columnWidth}))`
         : `calc(12.5% + (${dayIndex} * ${columnWidth}))`;
@@ -31,14 +37,17 @@ export function MultipleEventBox({ group, dayIndex, openAgendamentoDetails }: Mu
     // Calcular largura para cada agendamento no grupo
     const eventWidth = `calc((${columnWidth} - 2px) / ${group.length})`;
     return group.map((agendamento, agendamentoIndex) => {
-        // Calcular altura do agendamento
+    // Calcular altura do agendamento
         const height = getEventBoxHeigh(agendamento.totalDuration);
 
         // Calcular posição horizontal para cada agendamento no grupo
         // Cada evento ocupa uma fração igual da largura disponível
         const left = `calc(${baseLeft} + (${agendamentoIndex} * ${eventWidth}))`;
         // Calcular posição inicial
-        const top = getDistanceFromTop(agendamento.startDate.getHours(), agendamento.startDate.getMinutes());
+        const top = getDistanceFromTop(
+            agendamento.startDate.getHours(),
+            agendamento.startDate.getMinutes()
+        );
 
         return (
             <div
@@ -49,13 +58,14 @@ export function MultipleEventBox({ group, dayIndex, openAgendamentoDetails }: Mu
                     "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
                     // Colors for 4h bookings duration
                     agendamento.totalDuration === 4 &&
-                        "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
+            "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
                     // Colors for 6h bookings duration
                     agendamento.totalDuration === 6 &&
-                        "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
+            "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
                     // Colors for 8 to 12 hours bookings duration
-                    agendamento.totalDuration >= 8 && agendamento.totalDuration <= 12 &&
-                        "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
+                    agendamento.totalDuration >= 8 &&
+            agendamento.totalDuration <= 12 &&
+            "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
                 ) }
                 style={ {
                     top: `${top}px`,

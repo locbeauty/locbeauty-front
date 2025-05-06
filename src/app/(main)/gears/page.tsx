@@ -6,7 +6,7 @@ import { ROUTES } from "@/utils/routes";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 
-const GearFilterStatusTypes = ["Todos", "Pequeno", "Médio", "Grande"];
+const GearFilterStatusTypes = [ "Todos", "Pequeno", "Médio", "Grande" ];
 
 export default function GearsPage() {
     return (
@@ -21,7 +21,7 @@ export default function GearsPage() {
                 <Button className="flex justify-center items-center" asChild>
                     <Link href={ ROUTES.CREATE_GEAR }>
                         <Plus className="" />
-                        <span className="hidden">Novo Equipamento</span>
+                        <span className="hidden md:inline">Novo Equipamento</span>
                     </Link>
                 </Button>
             </div>

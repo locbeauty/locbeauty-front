@@ -1,5 +1,5 @@
 import { Agendamento } from "@/app/(main)/bookings/page";
-import { createDate } from "@/utils/bookingViewHelpers";
+import { createDate } from "@/components/pages/bookings/view/bookingViewHelpers";
 
 export const agendamentos: Agendamento[] = [
     {

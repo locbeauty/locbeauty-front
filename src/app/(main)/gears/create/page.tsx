@@ -39,7 +39,7 @@ export default function CreateGearPage() {
                 <CreateGearForm />
             </Card>
 
-            <CreationPageFooter cancelUrl={ ROUTES.GEARS } />
+            <CreationPageFooter cancelUrl={ ROUTES.GEARS } formId="create-gear-form" />
         </div>
     );
 }

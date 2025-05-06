@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { formatDayName, isToday } from "../../../../utils/bookingViewHelpers";
+import { formatDayName, isToday } from "./bookingViewHelpers";
 
 interface CalendarDayHeaderProps {
   currentDate: Date;

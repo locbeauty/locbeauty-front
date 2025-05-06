@@ -9,18 +9,18 @@ import Link from "next/link";
 import { ROUTES } from "@/utils/routes";
 import { useRouter } from "next/navigation";
 import { Agendamento } from "../page";
-import { BookingDetailsDialog } from "@/components/pages/bookings/view/BookingDetailsDialog";
 import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
 import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
 import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
+import { BookingDetailsDialog } from "@/components/pages/bookings/view/details/BookingDetailsDialog";
 
 export default function AgendamentosPage() {
     // Estado para controlar a semana atual
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null);
-    const [isBookingDetailsDialogOpen, setBookingDetailsDialogOpen] = useState(false);
-    const [viewType, setViewType] = useState<"dia" | "semana" | "mes">("semana");
-    const [isMobile, setIsMobile] = useState(false);
+    const [ currentDate, setCurrentDate ] = useState(new Date());
+    const [ selectedAgendamento, setSelectedAgendamento ] = useState<Agendamento | null>(null);
+    const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] = useState(false);
+    const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("semana");
+    const [ isMobile, setIsMobile ] = useState(false);
 
     useEffect(() => {
         const checkIfMobile = () => {
@@ -40,7 +40,7 @@ export default function AgendamentosPage() {
         } else {
             setViewType("semana");
         }
-    }, [isMobile]);
+    }, [ isMobile ]);
 
     const router = useRouter();
 

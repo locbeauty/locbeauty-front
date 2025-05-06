@@ -10,7 +10,7 @@ export default function DashboardLayout({
 }: Readonly<{
     children: React.ReactNode
   }>) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [ sidebarOpen, setSidebarOpen ] = useState(false);
 
     return (
         <div className="max-h-screen flex bg-background">

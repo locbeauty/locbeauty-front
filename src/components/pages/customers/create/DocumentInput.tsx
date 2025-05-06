@@ -10,7 +10,10 @@ interface DocumentInputProps {
   register?: UseFormRegisterReturn;
 }
 
-export default function DocumentInput({ documentType, register }: DocumentInputProps) {
+export default function DocumentInput({
+    documentType,
+    register,
+}: DocumentInputProps) {
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -25,16 +28,19 @@ export default function DocumentInput({ documentType, register }: DocumentInputP
         return () => {
             mask.destroy();
         };
-    }, [documentType]);
+    }, [ documentType ]);
 
     return (
         <Input
             { ...register }
             ref={ (el) => {
-                register?.ref(el);  // RHF
-                inputRef.current = el;  // IMask
+                register?.ref(el); // RHF
+                inputRef.current = el; // IMask
             } }
-            placeholder={ documentType === "CPF" ? "000.000.000-00" : "00.000.000/0000-00" }
+            className="placeholder:text-placeholder"
+            placeholder={
+                documentType === "CPF" ? "000.000.000-00" : "00.000.000/0000-00"
+            }
         />
     );
 }

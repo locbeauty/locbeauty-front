@@ -37,6 +37,7 @@ export default function PhoneInput({ register }: PhoneInputProps) {
                 inputRef.current = el;  // IMask
             } }
             autoComplete="nope"
+            className="placeholder:text-placeholder"
             placeholder="(00) 00000-0000"
         />
     );

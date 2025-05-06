@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export function SelectGear() {
     return (
         <Select>
-            <SelectTrigger id="equipamento">
+            <SelectTrigger id="equipamento" className="data-[placeholder]:text-gray-400">
                 <SelectValue placeholder="Selecione o equipamento" />
             </SelectTrigger>
             <SelectContent>

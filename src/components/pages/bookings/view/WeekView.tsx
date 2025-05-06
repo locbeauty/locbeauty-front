@@ -4,7 +4,7 @@ import {
     groupOverlappingEvents,
     isAgendamentoInWeek,
     workingHours,
-} from "../../../../utils/bookingViewHelpers";
+} from "./bookingViewHelpers";
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { CalendarWeekHeader } from "./CalendarWeekHeader";
 import { MultipleEventBox } from "./MultipleEventBox";
@@ -36,7 +36,11 @@ export function WeekView({
             <div className="relative">
                 { /* Linhas de horas */ }
                 { workingHours.map((hour) => (
-                    <div key={ hour } className="grid border-b h-[64px]" style={ { gridTemplateColumns: "100px repeat(7, 1fr)" } }>
+                    <div
+                        key={ hour }
+                        className="grid border-b h-[64px]"
+                        style={ { gridTemplateColumns: "100px repeat(7, 1fr)" } }
+                    >
                         <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">{ `${hour}:00` }</div>
                         { weekDays.map((_, dayIndex) => (
                             <div key={ dayIndex } className="h-16 border-r relative " />
@@ -64,7 +68,7 @@ export function WeekView({
 
                     // Renderizar agendamentos para cada dia
                     return Object.entries(agendamentosByDay).flatMap(
-                        ([dayIndexStr, dayAgendamentos]) => {
+                        ([ dayIndexStr, dayAgendamentos ]) => {
                             const dayIndex = Number.parseInt(dayIndexStr);
 
                             // Agrupar agendamentos sobrepostos para este dia

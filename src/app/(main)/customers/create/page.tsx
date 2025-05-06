@@ -1,4 +1,4 @@
-import { CreateCustomerForm } from "@/components/pages/customers/form/CreateCustomerForm";
+import { CreateCustomerForm } from "@/components/pages/customers/create/CreateCustomerForm";
 import { CreationPageFooter } from "@/components/shared/CreationPageFooter";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/utils/routes";

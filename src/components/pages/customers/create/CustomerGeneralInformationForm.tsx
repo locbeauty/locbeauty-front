@@ -13,8 +13,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import PhoneInput from "./PhoneInput";
 import DocumentInput from "./DocumentInput";
 import { Controller, useFormContext } from "react-hook-form";
-import { CreateCustomerFormSchemaType } from "./CreateCustomerForm";
-import { SingleDatePicker, SingleDateYearTrigger } from "@/components/ui/single-date-picker";
+import { SelectRegional } from "../../../shared/SelectRegional";
+import { CreateCustomerFormSchemaType } from "./CreateCustomerValidation";
+import {
+    SingleDatePicker,
+    SingleDateYearTrigger,
+} from "@/components/shared/SingleDatePicker";
 
 export function CustomerGeneralInformationForm() {
     const {
@@ -33,32 +37,51 @@ export function CustomerGeneralInformationForm() {
                 <CardDescription>Preencha os dados pessoais do cliente</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="space-y-2">
-                    <Label>Tipo de Pessoa</Label>
-                    <Controller
-                        name="personType"
-                        control={ control }
-                        defaultValue="PF"
-                        render={ ({ field }) => {
-                            return (
-                                <RadioGroup
-                                    defaultValue="PF"
-                                    className="flex gap-4"
-                                    onValueChange={ field.onChange }
-                                    value={ field.value }
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="PF" id="pessoa-fisica" />
-                                        <Label htmlFor="pessoa-fisica">Pessoa Física</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="PJ" id="pessoa-juridica" />
-                                        <Label htmlFor="pessoa-juridica">Pessoa Jurídica</Label>
-                                    </div>
-                                </RadioGroup>
-                            );
-                        } }
-                    />
+                <div className="flex flex-col-reverse md:flex-row gap-4 justify-between md:items-center">
+                    <div className="space-y-4">
+                        <Label>Tipo de Pessoa</Label>
+                        <Controller
+                            name="personType"
+                            control={ control }
+                            defaultValue="PF"
+                            render={ ({ field }) => {
+                                return (
+                                    <RadioGroup
+                                        defaultValue="PF"
+                                        className="flex gap-4"
+                                        onValueChange={ field.onChange }
+                                        value={ field.value }
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="PF" id="pessoa-fisica" />
+                                            <Label htmlFor="pessoa-fisica">Pessoa Física</Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="PJ" id="pessoa-juridica" />
+                                            <Label htmlFor="pessoa-juridica">Pessoa Jurídica</Label>
+                                        </div>
+                                    </RadioGroup>
+                                );
+                            } }
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Regional</Label>
+                        <Controller
+                            name="personType"
+                            control={ control }
+                            defaultValue="PF"
+                            render={ () => {
+                                return (
+                                    <SelectRegional<CreateCustomerFormSchemaType>
+                                        control={ control }
+                                        name="regional"
+                                    />
+                                );
+                            } }
+                        />
+                    </div>
                 </div>
 
                 <div className="border p-4 rounded-md">
@@ -70,10 +93,24 @@ export function CustomerGeneralInformationForm() {
                         <div
                             className={ `space-y-4 transition-all duration-300 ease-in-out ${
                                 personType === "PF"
-                                    ? "opacity-100 max-h-[200px] visible"
+                                    ? "opacity-100 visible"
                                     : "opacity-0 max-h-0 invisible overflow-hidden"
                             }` }
                         >
+                            <div className="space-y-2">
+                                <Label htmlFor="nome">Nome Completo</Label>
+                                <Input
+                                    className="placeholder:text-placeholder"
+                                    { ...register("customerName") }
+                                    id="nome"
+                                    placeholder={ "Nome completo" }
+                                />
+                                { errors.customerName && (
+                                    <p className="text-sm font-medium text-destructive">
+                                        { errors.customerName.message }
+                                    </p>
+                                ) }
+                            </div>
                             <div className="space-y-2">
                                 <Label htmlFor="cpf">CPF</Label>
                                 <DocumentInput register={ register("CPF") } documentType="CPF" />
@@ -84,7 +121,7 @@ export function CustomerGeneralInformationForm() {
                                 ) }
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="aniversario">Aniversário</Label>
+                                <Label htmlFor="aniversario">Data de nascimento</Label>
                                 <Controller
                                     control={ control }
                                     name="birthday"
@@ -117,6 +154,7 @@ export function CustomerGeneralInformationForm() {
                             <div className="space-y-2">
                                 <Label htmlFor="empresa">Empresa</Label>
                                 <Input
+                                    className="placeholder:text-placeholder"
                                     { ...register("companyName") }
                                     id="empresa"
                                     placeholder="Nome da empresa"
@@ -140,29 +178,21 @@ export function CustomerGeneralInformationForm() {
                                     </p>
                                 ) }
                             </div>
-                        </div>
-                    </div>
 
-                    { /* Campos comuns para ambos os tipos */ }
-                    <div className="space-y-4 mt-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="nome">
-                Nome { personType === "PJ" ? "do Responsável" : "Completo" }
-                            </Label>
-                            <Input
-                                { ...register(
-                                    personType === "PF" ? "customerName" : "companyName"
+                            <div className="space-y-2">
+                                <Label htmlFor="nome">Nome do Responsável</Label>
+                                <Input
+                                    className="placeholder:text-placeholder"
+                                    { ...register("personAccountableName") }
+                                    id="personAccountableName"
+                                    placeholder={ "Nome do responsável" }
+                                />
+                                { errors.customerName && (
+                                    <p className="text-sm font-medium text-destructive">
+                                        { errors.customerName.message }
+                                    </p>
                                 ) }
-                                id="nome"
-                                placeholder={
-                                    personType === "PJ" ? "Nome do responsável" : "Nome completo"
-                                }
-                            />
-                            { errors.customerName && (
-                                <p className="text-sm font-medium text-destructive">
-                                    { errors.customerName.message }
-                                </p>
-                            ) }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -174,6 +204,7 @@ export function CustomerGeneralInformationForm() {
                             <div className="space-y-2">
                                 <Label htmlFor="email">Email</Label>
                                 <Input
+                                    className="placeholder:text-placeholder"
                                     { ...register("email") }
                                     id="email"
                                     type="email"
@@ -200,6 +231,7 @@ export function CustomerGeneralInformationForm() {
                             <Input
                                 { ...register("instagram") }
                                 id="instagram"
+                                className="text-placeholder"
                                 placeholder="@usuario"
                             />
                             { errors.instagram && (

@@ -2,10 +2,12 @@ import { z } from "zod";
 
 export const createCustomerFormSchema = z
     .object({
-        personType: z.enum(["PF", "PJ"]),
+        personType: z.enum([ "PF", "PJ" ]),
         birthday: z.date().optional(),
         customerName: z.string().trim().optional(),
+        personAccountableName: z.string().trim().optional(), // Novo campo
         companyName: z.string().trim().optional(),
+        regional: z.string(),
         email: z
             .string()
             .min(1, { message: "Email é obrigatório" })
@@ -21,6 +23,7 @@ export const createCustomerFormSchema = z
         houseNumber: z.string().min(1, { message: "Número do imóvel é obrigatório" }).trim(),
         CPF: z.string().optional(),
         CNPJ: z.string().optional(),
+        addressComplement: z.string().optional(),
     })
     .superRefine((data, ctx) => {
     // Validações para Pessoa Física (PF)
@@ -30,7 +33,14 @@ export const createCustomerFormSchema = z
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: "CPF é obrigatório para pessoa física.",
-                    path: ["CPF"],
+                    path: [ "CPF" ],
+                });
+            }
+            else if(!data.personAccountableName) {
+                ctx.addIssue({
+                    path: [ "personAccountableName" ],
+                    message: "Nome do responsável é obrigatório para pessoa jurídica",
+                    code: z.ZodIssueCode.custom,
                 });
             }
             // Validação do formato do CPF (apenas se CPF existir)
@@ -38,7 +48,7 @@ export const createCustomerFormSchema = z
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: "CPF inválido.",
-                    path: ["CPF"],
+                    path: [ "CPF" ],
                 });
             }
 
@@ -47,7 +57,7 @@ export const createCustomerFormSchema = z
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: "Nome completo é obrigatório para pessoa física.",
-                    path: ["customerName"],
+                    path: [ "customerName" ],
                 });
             }
 
@@ -56,7 +66,7 @@ export const createCustomerFormSchema = z
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: "Data de nascimento é obrigatória.",
-                    path: ["birthday"],
+                    path: [ "birthday" ],
                 });
             }
 
@@ -70,7 +80,7 @@ export const createCustomerFormSchema = z
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: "CNPJ é obrigatório para pessoa jurídica.",
-                    path: ["CNPJ"],
+                    path: [ "CNPJ" ],
                 });
             }
             // Validação do formato do CNPJ (apenas se CNPJ existir)
@@ -78,7 +88,7 @@ export const createCustomerFormSchema = z
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: "CNPJ inválido.",
-                    path: ["CNPJ"],
+                    path: [ "CNPJ" ],
                 });
             }
 
@@ -87,8 +97,12 @@ export const createCustomerFormSchema = z
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: "Nome da empresa é obrigatório para pessoa jurídica.",
-                    path: ["companyName"],
+                    path: [ "companyName" ],
                 });
             }
         }
     });
+
+export type CreateCustomerFormSchemaType = z.infer<
+  typeof createCustomerFormSchema
+>

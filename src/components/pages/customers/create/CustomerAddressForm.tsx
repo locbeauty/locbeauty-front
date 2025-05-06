@@ -10,8 +10,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
-import { CreateCustomerFormSchemaType } from "./CreateCustomerForm";
-import { StateSelect } from "./StateSelect";
+import { SelectState } from "./SelectState";
+import { Textarea } from "@/components/ui/textarea";
+import { CreateCustomerFormSchemaType } from "./CreateCustomerValidation";
 
 export function CustomerAddressForm() {
     const {
@@ -31,7 +32,12 @@ export function CustomerAddressForm() {
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="cidade">Cidade</Label>
-                        <Input { ...register("city") } placeholder="Cidade" id="cidade" />
+                        <Input
+                            { ...register("city") }
+                            placeholder="Cidade"
+                            className="text-placeholder"
+                            id="cidade"
+                        />
                         { errors.city && (
                             <p className="text-sm font-medium text-destructive">
                                 { errors.city.message }
@@ -40,7 +46,7 @@ export function CustomerAddressForm() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="estado">Estado</Label>
-                        <StateSelect />
+                        <SelectState />
                         { errors.UF && (
                             <p className="text-sm font-medium text-destructive">
                                 { errors.UF.message }
@@ -54,6 +60,7 @@ export function CustomerAddressForm() {
                     <Input
                         { ...register("neighborhood") }
                         placeholder="Bairro"
+                        className="text-placeholder"
                         id="bairro"
                     />
                     { errors.neighborhood && (
@@ -68,7 +75,7 @@ export function CustomerAddressForm() {
                         <Input
                             { ...register("street") }
                             id="rua"
-                            className=""
+                            className="text-placeholder"
                             placeholder="Nome da rua"
                         />
                         { errors.street && (
@@ -82,7 +89,7 @@ export function CustomerAddressForm() {
                         <Input
                             { ...register("houseNumber") }
                             id="number"
-                            className=""
+                            className="text-placeholder"
                             placeholder="Número"
                         />
                         { errors.houseNumber && (
@@ -91,6 +98,17 @@ export function CustomerAddressForm() {
                             </p>
                         ) }
                     </div>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="number">Complemento</Label>
+
+                    <Textarea
+                        { ...register("addressComplement") }
+                        className="h-[100px] resize-none max-w-[80vw] text-placeholder"
+                        placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência
+
+"
+                    />
                 </div>
             </CardContent>
         </Card>

@@ -2,27 +2,24 @@
 
 import { CustomerGeneralInformationForm } from "./CustomerGeneralInformationForm";
 import { CustomerAddressForm } from "./CustomerAddressForm";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
-import { createCustomerFormSchema } from "./CreateCustomerValidation";
-
-export type CreateCustomerFormSchemaType = z.infer<
-  typeof createCustomerFormSchema
->
+import { createCustomerFormSchema, CreateCustomerFormSchemaType } from "./CreateCustomerValidation";
 
 export function CreateCustomerForm() {
+    const role = "ROOT";
+    const user = { regional: "Recife" };
+
     const createCustomerMethods = useForm<CreateCustomerFormSchemaType>({
         resolver: zodResolver(createCustomerFormSchema),
         defaultValues: {
             personType: "PF",
             UF: "",
+            regional: role === "ROOT" ? "" : user.regional
         },
     });
 
-    const {
-        handleSubmit,
-    } = createCustomerMethods;
+    const { handleSubmit } = createCustomerMethods;
 
     function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
         console.log("newCustomerData: ", newCustomerData);

@@ -165,7 +165,7 @@ export function doEventsOverlap(event1: Agendamento, event2: Agendamento): boole
 export function groupOverlappingEvents(events: Agendamento[]): Agendamento[][] {
     if (events.length === 0) return [];
 
-    const sortedEvents = [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    const sortedEvents = [ ...events ].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
     const groups: Agendamento[][] = [];
 
     sortedEvents.forEach((event) => {
@@ -182,7 +182,7 @@ export function groupOverlappingEvents(events: Agendamento[]): Agendamento[][] {
         }
 
         if (!foundGroup) {
-            groups.push([event]);
+            groups.push([ event ]);
         }
     });
 

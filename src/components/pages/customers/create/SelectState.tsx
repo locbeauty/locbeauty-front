@@ -8,7 +8,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Controller, useFormContext } from "react-hook-form";
-import { CreateCustomerFormSchemaType } from "./CreateCustomerForm";
+import { CreateCustomerFormSchemaType } from "./CreateCustomerValidation";
 
 const ESTADOS_BRASILEIROS = [
     { sigla: "AC", nome: "Acre" },
@@ -40,7 +40,7 @@ const ESTADOS_BRASILEIROS = [
     { sigla: "TO", nome: "Tocantins" },
 ];
 
-export function StateSelect() {
+export function SelectState() {
     const { control } = useFormContext<CreateCustomerFormSchemaType>();
 
     return (
@@ -49,7 +49,7 @@ export function StateSelect() {
             control={ control }
             render={ ({ field }) => (
                 <Select onValueChange={ field.onChange } value={ field.value }>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full md:w-[200px] data-[placeholder]:text-placeholder">
                         <SelectValue placeholder="Selecione um estado" />
                     </SelectTrigger>
                     <SelectContent>
