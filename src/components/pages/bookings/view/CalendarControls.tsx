@@ -8,7 +8,7 @@ import {
     prevDay,
     prevMonth,
     prevWeek,
-} from "@/utils/bookingViewHelpers";
+} from "@/components/pages/bookings/view/bookingViewHelpers";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SelectCalendarViewType } from "./SelectCalendarViewType";
 import { Dispatch, SetStateAction } from "react";

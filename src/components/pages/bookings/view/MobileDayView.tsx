@@ -5,7 +5,7 @@ import {
     formatTime,
     isSameDay,
     isToday,
-} from "../../../../utils/bookingViewHelpers";
+} from "./bookingViewHelpers";
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { BookingStatusBadge } from "../BookingStatusBadge";

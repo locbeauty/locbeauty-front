@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export function SelectCustomer() {
     return (
         <Select>
-            <SelectTrigger id="customer">
+            <SelectTrigger id="customer" className="data-[placeholder]:text-placeholder">
                 <SelectValue placeholder="Selecione o cliente" />
             </SelectTrigger>
             <SelectContent>

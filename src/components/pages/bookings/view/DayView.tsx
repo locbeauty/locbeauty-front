@@ -9,7 +9,7 @@ import {
     isSameDay,
     workingHours,
     groupOverlappingEvents,
-} from "../../../../utils/bookingViewHelpers";
+} from "./bookingViewHelpers";
 import type { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { MobileDayView } from "./MobileDayView";
@@ -50,7 +50,11 @@ export function DayView({
                 { /* Grade de horários */ }
                 <div className="relative">
                     { workingHours.map((hour) => (
-                        <div key={ hour } className="grid grid-cols-2 border-b"  style={ { gridTemplateColumns: "100px repeat(1, 1fr)" } }>
+                        <div
+                            key={ hour }
+                            className="grid grid-cols-2 border-b"
+                            style={ { gridTemplateColumns: "100px repeat(1, 1fr)" } }
+                        >
                             <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">
                                 { `${hour}:00` }
                             </div>
@@ -67,9 +71,15 @@ export function DayView({
                             const top = getDistanceFromTop(startHour, startMinute);
                             const height = getEventBoxHeigh(agendamento.totalDuration);
 
-                            const width = group.length > 1 ? `calc((100% - 100px - 6px) / ${group.length})` : "calc(100% - 100px - 6px)";
+                            const width =
+                group.length > 1
+                    ? `calc((100% - 100px - 6px) / ${group.length})`
+                    : "calc(100% - 100px - 6px)";
                             const baseLeft = "calc(100px + 2px)";
-                            const left = group.length > 1 ? `calc(${baseLeft} + (${index} * ${width}))` : baseLeft;
+                            const left =
+                group.length > 1
+                    ? `calc(${baseLeft} + (${index} * ${width}))`
+                    : baseLeft;
 
                             return (
                                 <div

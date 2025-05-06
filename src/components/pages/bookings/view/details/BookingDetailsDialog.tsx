@@ -29,10 +29,10 @@ import {
     formatCurrency,
     formatDate,
     formatTime,
-} from "@/utils/bookingViewHelpers";
+} from "@/components/pages/bookings/view/bookingViewHelpers";
 import { BookingStatusBadge } from "@/components/pages/bookings/BookingStatusBadge";
 import { Agendamento } from "@/app/(main)/bookings/page";
-import { BookingPaymentStatusBadge } from "../BookingPaymentStatusBadge";
+import { BookingPaymentStatusBadge } from "../../BookingPaymentStatusBadge";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;

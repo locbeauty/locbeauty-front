@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export function SelectStatus() {
     return (
         <Select>
-            <SelectTrigger id="status">
+            <SelectTrigger>
                 <SelectValue placeholder="Selecione o status" />
             </SelectTrigger>
             <SelectContent>

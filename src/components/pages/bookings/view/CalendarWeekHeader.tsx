@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { formatDayName, isToday } from "../../../../utils/bookingViewHelpers";
+import { formatDayName, isToday } from "./bookingViewHelpers";
 
 interface CalendarWeekHeaderProps {
   weekDays: Date[];
@@ -7,7 +7,10 @@ interface CalendarWeekHeaderProps {
 
 export function CalendarWeekHeader({ weekDays }: CalendarWeekHeaderProps) {
     return (
-        <div className="grid border-b" style={ { gridTemplateColumns: "100px repeat(7, 1fr)" } }>
+        <div
+            className="grid border-b"
+            style={ { gridTemplateColumns: "100px repeat(7, 1fr)" } }
+        >
             <div className="p-2 border-r bg-muted/50 w-[100px]"></div>
             { weekDays.map((day, index) => (
                 <div

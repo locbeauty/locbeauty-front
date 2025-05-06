@@ -5,6 +5,8 @@ import { ROUTES } from "@/utils/routes";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 
+export const REGIONAIS = [ "PE" ,"CE" ,"BA" ,"RJ" ,"PA" ,"ES" ,"PI" ,"RN" ];
+
 export default function RegionalsPage() {
     return (
         <div className="space-y-6">

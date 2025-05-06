@@ -5,12 +5,12 @@ import { ThemeProvider } from "@/contexts/theme-provider";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
-    subsets: ["latin"],
+    subsets: [ "latin" ],
 });
 
 const geistMono = geistMonoFont({
     variable: "--font-geist-mono",
-    subsets: ["latin"],
+    subsets: [ "latin" ],
 });
 
 export const metadata: Metadata = {

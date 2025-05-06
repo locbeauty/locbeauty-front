@@ -4,7 +4,7 @@ import {
     getMonthDays,
     isSameDay,
     isToday,
-} from "../../../../utils/bookingViewHelpers";
+} from "./bookingViewHelpers";
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { CalendarMonthHeader } from "./CalendarMonthHeader";
 

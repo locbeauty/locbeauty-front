@@ -4,15 +4,16 @@ import { Save } from "lucide-react";
 
 interface CreationPageFooterProps {
   cancelUrl: string;
+  formId?: string
 }
 
-export function CreationPageFooter({ cancelUrl }: CreationPageFooterProps) {
+export function CreationPageFooter({ cancelUrl, formId }: CreationPageFooterProps) {
     return (
         <div className="flex justify-end gap-4">
             <Button variant="outline" asChild>
                 <Link href={ cancelUrl }>Cancelar</Link>
             </Button>
-            <Button form="new-booking-form">
+            <Button form={ formId }>
                 <Save className="mr-2 h-4 w-4" />
                 Salvar
             </Button>
