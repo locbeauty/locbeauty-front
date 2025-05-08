@@ -38,7 +38,7 @@ export default function CreateRegionalPage() {
                 <CreateRegionalForm />
             </Card>
 
-            <CreationPageFooter cancelUrl={ ROUTES.REGIONALS } />
+            <CreationPageFooter cancelUrl={ ROUTES.REGIONALS } formId="create-regional-form" />
         </div>
     );
 }

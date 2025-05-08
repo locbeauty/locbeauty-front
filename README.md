@@ -1,7 +1,7 @@
 
 ### ❓ Dúvidas Pendentes
 
-- **Qual é o intervalo de horários disponível para agendamentos?**  
+- **Qual é o intervalo de horários disponível para agendamentos? Existe possibilidade deste horário mudar?**  
   (Exemplo: dias úteis, turnos, horários específicos, fins de semana são permitidos?)
 
 - **Quem poderá criar/editar/excluir as entidades?**  

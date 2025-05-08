@@ -40,7 +40,11 @@ const ESTADOS_BRASILEIROS = [
     { sigla: "TO", nome: "Tocantins" },
 ];
 
-export function SelectState() {
+interface SelectStateProps {
+    disabled?: boolean;
+  }
+
+export function SelectState({ disabled = false }: SelectStateProps) {
     const { control } = useFormContext<CreateCustomerFormSchemaType>();
 
     return (
@@ -49,7 +53,7 @@ export function SelectState() {
             control={ control }
             render={ ({ field }) => (
                 <Select onValueChange={ field.onChange } value={ field.value }>
-                    <SelectTrigger className="w-full md:w-[200px] data-[placeholder]:text-placeholder">
+                    <SelectTrigger className="w-full md:w-[200px] data-[placeholder]:text-placeholder" disabled={ disabled }>
                         <SelectValue placeholder="Selecione um estado" />
                     </SelectTrigger>
                     <SelectContent>
