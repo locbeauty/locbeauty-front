@@ -3,26 +3,31 @@
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SelectEmployee } from "./create/SelectEmployee";
-import { RegionalAddressForm } from "./create/RegionalAddressForm";
+import { SelectEmployee } from "./SelectEmployee";
+import { RegionalAddressForm } from "./RegionalAddressForm";
 import {
     createRegionalFormSchema,
     CreateRegionalFormSchemaType,
-} from "./create/createRegionalValidation";
+} from "./createRegionalValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import { useEffect } from "react";
-import PhoneInput from "../customers/create/PhoneInput";
+import PhoneInput from "../../customers/create/PhoneInput";
 
 export function CreateRegionalForm() {
     const createRegionalMethods = useForm<CreateRegionalFormSchemaType>({
         resolver: zodResolver(createRegionalFormSchema),
         defaultValues: {
-            manager: ""
-        }
+            manager: "",
+        },
     });
 
-    const { handleSubmit, control, register, formState: { errors } } = createRegionalMethods;
+    const {
+        handleSubmit,
+        control,
+        register,
+        formState: { errors },
+    } = createRegionalMethods;
 
     useEffect(() => {
         console.log("errors: ", errors);
@@ -52,7 +57,12 @@ export function CreateRegionalForm() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input { ...register("email") } id="email" type="email" placeholder="email@exemplo.com" />
+                            <Input
+                                { ...register("email") }
+                                id="email"
+                                type="email"
+                                placeholder="email@exemplo.com"
+                            />
                             { errors.email && (
                                 <p className="text-sm font-medium text-destructive">
                                     { errors.email.message }

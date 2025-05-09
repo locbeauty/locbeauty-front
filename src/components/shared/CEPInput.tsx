@@ -37,7 +37,7 @@ export default function CEPInput({
                 register?.ref(el); // RHF
                 inputRef.current = el; // IMask
             } }
-            className="placeholder:text-placeholder w-[110px]"
+            className="placeholder:text-placeholder md:w-[110px] w-auto"
             placeholder="00000-000"
         />
     );
