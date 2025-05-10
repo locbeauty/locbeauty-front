@@ -30,9 +30,9 @@ import {
     formatDate,
     formatTime,
 } from "@/components/pages/bookings/view/bookingViewHelpers";
-import { BookingStatusBadge } from "@/components/pages/bookings/BookingStatusBadge";
+import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 import { Agendamento } from "@/app/(main)/bookings/page";
-import { BookingPaymentStatusBadge } from "../../BookingPaymentStatusBadge";
+import { BookingPaymentStatusBadge } from "../../common/BookingPaymentStatusBadge";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;

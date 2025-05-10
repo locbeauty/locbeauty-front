@@ -5,15 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import {
-    createGearFormSchema,
-    type CreateGearFormSchemaType,
-} from "./CreateGearValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SelectRegional } from "../../shared/SelectRegional";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { SelectRegional } from "@/components/shared/SelectRegional";
+import { createGearFormSchema, CreateGearFormSchemaType } from "@/lib/zod/CreateGearValidation";
 
 export function CreateGearForm() {
     const createGearMethods = useForm<CreateGearFormSchemaType>({

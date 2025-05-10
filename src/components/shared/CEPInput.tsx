@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import IMask from "imask";
 import { Input } from "@/components/ui/input";
 import { useFormContext, Controller } from "react-hook-form";
-import type { CreateCustomerFormSchemaType } from "../pages/customers/create/CreateCustomerValidation";
+import type { CreateCustomerFormSchemaType } from "../../lib/zod/CreateCustomerValidation";
 import { handleCepChange } from "@/utils/addressHandlers";
 import { Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -78,7 +78,11 @@ export default function CEPInput({ ...props }) {
                     </div>
                 )}
             </div>
-            {errors.CEP && <p className="text-sm font-medium text-destructive">{errors.CEP.message}</p>}
+            {errors.CEP && (
+                <p className="text-sm font-medium text-destructive">
+                    {errors.CEP.message}
+                </p>
+            )}
         </div>
     );
 }

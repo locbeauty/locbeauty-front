@@ -13,8 +13,8 @@ import {
 import type { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { MobileDayView } from "./MobileDayView";
-import { BookingStatusBadge } from "../BookingStatusBadge";
-import { BookingPaymentStatusBadge } from "../BookingPaymentStatusBadge";
+import { BookingStatusBadge } from "../common/BookingStatusBadge";
+import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 import { CalendarDayHeader } from "./CalendarDayHeader";
 
 interface DayViewProps {
@@ -44,26 +44,26 @@ export function DayView({
                 openAgendamentoDetails={ openAgendamentoDetails }
             />
             <div className="hidden md:block min-w-full">
-                { /* Cabeçalho do dia */ }
+                {/* Cabeçalho do dia */}
                 <CalendarDayHeader currentDate={ currentDate } />
 
-                { /* Grade de horários */ }
+                {/* Grade de horários */}
                 <div className="relative">
-                    { workingHours.map((hour) => (
+                    {workingHours.map((hour) => (
                         <div
                             key={ hour }
                             className="grid grid-cols-2 border-b"
                             style={ { gridTemplateColumns: "100px repeat(1, 1fr)" } }
                         >
                             <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">
-                                { `${hour}:00` }
+                                {`${hour}:00`}
                             </div>
                             <div className="h-16 border-r relative"></div>
                         </div>
-                    )) }
+                    ))}
 
-                    { /* Renderização dos agendamentos agrupados */ }
-                    { agendamentoGroups.map((group) =>
+                    {/* Renderização dos agendamentos agrupados */}
+                    {agendamentoGroups.map((group) =>
                         group.map((agendamento, index) => {
                             const startHour = agendamento.startDate.getHours();
                             const startMinute = agendamento.startDate.getMinutes();
@@ -104,24 +104,24 @@ export function DayView({
                                     onClick={ () => openAgendamentoDetails(agendamento) }
                                 >
                                     <div className="font-medium text-sm truncate">
-                                        { agendamento.gear }
+                                        {agendamento.gear}
                                     </div>
                                     <div className="flex items-center text-xs gap-1 truncate">
                                         <User className="h-3 w-3" />
-                                        { agendamento.customer }
+                                        {agendamento.customer}
                                     </div>
                                     <div className="flex items-center text-xs gap-1 truncate">
                                         <MapPin className="h-3 w-3" />
-                                        { agendamento.city }
+                                        {agendamento.city}
                                     </div>
                                     <div className="flex items-center text-xs gap-1 truncate">
                                         <Clock className="h-3 w-3" />
-                                        { formatTime(agendamento.startDate) } -{ " " }
-                                        { formatTime(agendamento.endDate) }
+                                        {formatTime(agendamento.startDate)} -{" "}
+                                        {formatTime(agendamento.endDate)}
                                     </div>
                                     <div className="flex items-center text-xs gap-1 truncate">
                                         <DollarSign className="h-3 w-3" />
-                                        { formatCurrency(agendamento.price) }
+                                        {formatCurrency(agendamento.price)}
                                     </div>
                                     <div
                                         className={ cn(
@@ -137,7 +137,7 @@ export function DayView({
                                 </div>
                             );
                         })
-                    ) }
+                    )}
                 </div>
             </div>
         </>

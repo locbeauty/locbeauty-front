@@ -8,11 +8,10 @@ import { RegionalAddressForm } from "./RegionalAddressForm";
 import {
     createRegionalFormSchema,
     CreateRegionalFormSchemaType,
-} from "./createRegionalValidation";
+} from "@/lib/zod/createRegionalValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
-import { useEffect } from "react";
-import PhoneInput from "../../customers/create/PhoneInput";
+import PhoneInput from "../../../shared/PhoneInput";
 
 export function CreateRegionalForm() {
     const createRegionalMethods = useForm<CreateRegionalFormSchemaType>({
@@ -45,11 +44,11 @@ export function CreateRegionalForm() {
                         <div className="space-y-2">
                             <Label htmlFor="telefone">Telefone</Label>
                             <PhoneInput register={ register("cellphone") } />
-                            { errors.cellphone && (
+                            {errors.cellphone && (
                                 <p className="text-sm font-medium text-destructive">
-                                    { errors.cellphone.message }
+                                    {errors.cellphone.message}
                                 </p>
-                            ) }
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
@@ -60,22 +59,22 @@ export function CreateRegionalForm() {
                                 placeholder="email@exemplo.com"
                                 className="placeholder:text-placeholder"
                             />
-                            { errors.email && (
+                            {errors.email && (
                                 <p className="text-sm font-medium text-destructive">
-                                    { errors.email.message }
+                                    {errors.email.message}
                                 </p>
-                            ) }
+                            )}
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="gerente">Gerente</Label>
                         <SelectEmployee control={ control } name="manager" />
-                        { errors.manager && (
+                        {errors.manager && (
                             <p className="text-sm font-medium text-destructive">
-                                { errors.manager.message }
+                                {errors.manager.message}
                             </p>
-                        ) }
+                        )}
                     </div>
 
                     <RegionalAddressForm />

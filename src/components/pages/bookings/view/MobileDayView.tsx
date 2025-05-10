@@ -8,8 +8,8 @@ import {
 } from "./bookingViewHelpers";
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
-import { BookingStatusBadge } from "../BookingStatusBadge";
-import { BookingPaymentStatusBadge } from "../BookingPaymentStatusBadge";
+import { BookingStatusBadge } from "../common/BookingStatusBadge";
+import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 
 interface MobileDayViewProps {
   currentDate: Date;
@@ -28,7 +28,7 @@ export function MobileDayView({
 
     return (
         <div className="md:hidden block min-w-full">
-            { /* Cabeçalho com o dia */ }
+            {/* Cabeçalho com o dia */}
             <div className="grid grid-cols-1 border-b">
                 <div
                     className={ cn(
@@ -36,21 +36,21 @@ export function MobileDayView({
                         isToday(currentDate) ? "bg-primary/10" : "bg-muted/50"
                     ) }
                 >
-                    <div>{ formatDayName(currentDate) }</div>
+                    <div>{formatDayName(currentDate)}</div>
                     <div
                         className={ cn(
                             "text-lg",
                             isToday(currentDate) ? "text-primary font-bold" : ""
                         ) }
                     >
-                        { currentDate.getDate() }
+                        {currentDate.getDate()}
                     </div>
                 </div>
             </div>
 
-            { /* Lista de agendamentos do dia */ }
+            {/* Lista de agendamentos do dia */}
             <div className="divide-y">
-                { dayAgendamentos.length === 0 ? (
+                {dayAgendamentos.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">
             Nenhum agendamento para este dia
                     </div>
@@ -76,26 +76,26 @@ export function MobileDayView({
                                 ) }
                                 onClick={ () => openAgendamentoDetails(agendamento) }
                             >
-                                <div className="font-medium">{ agendamento.gear }</div>
+                                <div className="font-medium">{agendamento.gear}</div>
                                 <div className="text-sm text-muted-foreground mt-1 dark:text-muted">
                                     <div className="flex items-center gap-1">
                                         <Clock className="h-3.5 w-3.5" />
-                                        { formatTime(agendamento.startDate) } -{ " " }
-                                        { formatTime(agendamento.endDate) }
+                                        {formatTime(agendamento.startDate)} -{" "}
+                                        {formatTime(agendamento.endDate)}
                                     </div>
                                     <div className="flex items-center gap-1 mt-1 max-w-[80vw]">
                                         <User className="h-3.5 w-3.5 shrink-0" />
                                         <span className="truncate whitespace-nowrap max-w-full overflow-hidden text-ellipsis">
-                                            { agendamento.customer }
+                                            {agendamento.customer}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
                                         <MapPin className="h-3.5 w-3.5" />
-                                        { agendamento.city }
+                                        {agendamento.city}
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
                                         <DollarSign className="h-3.5 w-3.5" />
-                                        { formatCurrency(agendamento.price) }
+                                        {formatCurrency(agendamento.price)}
                                     </div>
                                 </div>
                                 <div className="mt-2 flex justify-between items-center">
@@ -106,13 +106,13 @@ export function MobileDayView({
                                         />
                                     </div>
                                     <span className="text-xs text-muted-foreground dark:text-muted">
-                                        { agendamento.totalDuration }h
+                                        {agendamento.totalDuration}h
                                     </span>
                                 </div>
                             </div>
                         );
                     })
-                ) }
+                )}
             </div>
         </div>
     );

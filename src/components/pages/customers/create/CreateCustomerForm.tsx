@@ -4,8 +4,10 @@ import { CustomerGeneralInformationForm } from "./CustomerGeneralInformationForm
 import { CustomerAddressForm } from "./CustomerAddressForm";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
-import { createCustomerFormSchema, CreateCustomerFormSchemaType } from "./CreateCustomerValidation";
-import { useEffect } from "react";
+import {
+    createCustomerFormSchema,
+    CreateCustomerFormSchemaType,
+} from "@/lib/zod/CreateCustomerValidation";
 
 export function CreateCustomerForm() {
     const role = "ROOT";
@@ -19,14 +21,12 @@ export function CreateCustomerForm() {
         },
     });
 
-    const { handleSubmit, formState: { errors } } = createCustomerMethods;
-
-    useEffect(() => {
-        console.log("errors: ", errors);
-    }, [ errors ]);
+    const {
+        handleSubmit,
+    } = createCustomerMethods;
 
     function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
-        // TODO: selecionar as informações antes de enviar pra
+    // TODO: selecionar as informações antes de enviar pra
         console.log("newCustomerData: ", newCustomerData);
     }
 

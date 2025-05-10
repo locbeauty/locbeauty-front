@@ -63,7 +63,7 @@ export const createCustomerFormSchema = z
             .refine((val) => val !== undefined && val !== "", {
                 message: "Número do imóvel é obrigatório",
             }),
-        CPF: z.string().optional(),
+        CPF: z.string().length(14, { message: "CPF precisa ter 11 caracteres." }).optional(),
         CNPJ: z.string().optional(),
         addressComplement: z.string().optional(),
         birthdate: z.date().optional(),

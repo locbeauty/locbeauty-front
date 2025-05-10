@@ -1,4 +1,4 @@
-import { GearsTable } from "@/components/pages/gears/GearsTable";
+import { GearsTable } from "@/components/pages/gears/view/GearsTable";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,4 +1,4 @@
-import { BookingsTable } from "@/components/pages/bookings/BookingsTable";
+import { BookingsTable } from "@/components/pages/bookings/view/BookingsTable";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

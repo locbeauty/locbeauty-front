@@ -1,7 +1,7 @@
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
-import { BookingStatusBadge } from "../BookingStatusBadge";
-import { BookingPaymentStatusBadge } from "../BookingPaymentStatusBadge";
+import { BookingStatusBadge } from "../common/BookingStatusBadge";
+import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 import {
     formatCurrency,
     formatTime,
@@ -76,22 +76,22 @@ export function MultipleEventBox({
                 } }
                 onClick={ () => openAgendamentoDetails(agendamento) }
             >
-                <div className="font-medium text-sm truncate">{ agendamento.gear }</div>
+                <div className="font-medium text-sm truncate">{agendamento.gear}</div>
                 <div className="flex items-center text-xs gap-1 truncate">
                     <User className="h-3 w-3" />
-                    { agendamento.customer }
+                    {agendamento.customer}
                 </div>
                 <div className="flex items-center text-xs gap-1 truncate">
                     <MapPin className="h-3 w-3" />
-                    { agendamento.city }
+                    {agendamento.city}
                 </div>
                 <div className="flex items-center text-xs gap-1 truncate">
                     <Clock className="h-3 w-3" />
-                    { formatTime(agendamento.startDate) }
+                    {formatTime(agendamento.startDate)}
                 </div>
                 <div className="flex items-center text-xs gap-1 truncate">
                     <DollarSign className="h-3 w-3" />
-                    { formatCurrency(agendamento.price) }
+                    {formatCurrency(agendamento.price)}
                 </div>
                 <div className="flex flex-col gap-1 mt-2">
                     <BookingStatusBadge

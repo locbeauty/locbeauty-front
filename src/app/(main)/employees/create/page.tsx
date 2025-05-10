@@ -1,4 +1,4 @@
-import { CreateEmployeeForm } from "@/components/pages/employees/CreateEmployeeForm";
+import { CreateEmployeeForm } from "@/components/pages/employees/create/CreateEmployeeForm";
 import { CreationPageFooter } from "@/components/shared/CreationPageFooter";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,10 +24,10 @@ export default function CreateEmployeePage() {
                 </Button>
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">
-                        Novo Funcionário
+            Novo Funcionário
                     </h1>
                     <p className="text-muted-foreground">
-                        Cadastre um novo funcionário no sistema
+            Cadastre um novo funcionário no sistema
                     </p>
                 </div>
             </div>
@@ -40,7 +40,10 @@ export default function CreateEmployeePage() {
                 <CreateEmployeeForm />
             </Card>
 
-            <CreationPageFooter cancelUrl={ ROUTES.EMPLOYEES } />
+            <CreationPageFooter
+                cancelUrl={ ROUTES.EMPLOYEES }
+                formId="create-employee-form"
+            />
         </div>
     );
 }
