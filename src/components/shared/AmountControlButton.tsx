@@ -5,11 +5,19 @@ interface UnitCounterInputProps {
   value: number
   onChange: (_value: number) => void
   error?: boolean
+  min?: number,
 }
 
-export function AmountControlButton({ value, onChange, error }: UnitCounterInputProps) {
-    const handleDecrement = () => onChange(Math.max(1, (value || 1) - 1));
-    const handleIncrement = () => onChange((value || 1) + 1);
+export function AmountControlButton({ value, onChange, error, min = 0 }: UnitCounterInputProps) {
+    const handleIncrement = () => {
+        const newValue = (value !== undefined ? value : min) + 1;
+        onChange(newValue);
+    };
+
+    const handleDecrement = () => {
+        const newValue = (value !== undefined ? value : min) - 1;
+        onChange(Math.max(min, newValue));
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const numericValue = parseInt(e.target.value);
@@ -27,9 +35,10 @@ export function AmountControlButton({ value, onChange, error }: UnitCounterInput
                 <Minus className="size-4" />
             </button>
             <Input
+                disabled
                 id="availableUnits"
                 type="number"
-                min="1"
+                min="0"
                 value={ value }
                 onChange={ handleInputChange }
                 className={ `rounded-none text-center w-20 border-y border-gray-200 dark:border-gray-700 ${

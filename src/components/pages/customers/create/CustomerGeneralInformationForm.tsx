@@ -15,20 +15,20 @@ import DocumentInput from "./DocumentInput";
 import { Controller, useFormContext } from "react-hook-form";
 import { SelectRegional } from "../../../shared/SelectRegional";
 import { CreateCustomerFormSchemaType } from "./CreateCustomerValidation";
-import {
-    SingleDatePicker,
-    SingleDateYearTrigger,
-} from "@/components/shared/SingleDatePicker";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 export function CustomerGeneralInformationForm() {
     const {
         register,
         control,
         watch,
+        setValue,
+        trigger,
         formState: { errors },
     } = useFormContext<CreateCustomerFormSchemaType>();
 
     const personType = watch("personType");
+    const birthdate = watch("birthdate");
 
     return (
         <Card>
@@ -87,9 +87,8 @@ export function CustomerGeneralInformationForm() {
                 <div className="border p-4 rounded-md">
                     <h3 className="text-lg font-medium mb-4">Informações do Cliente</h3>
 
-                    { /* Área com altura fixa para os campos específicos */ }
                     <div className="relative">
-                        { /* Campos específicos de Pessoa Física */ }
+                        {/* Campos específicos de Pessoa Física */}
                         <div
                             className={ `space-y-4 transition-all duration-300 ease-in-out ${
                                 personType === "PF"
@@ -103,47 +102,59 @@ export function CustomerGeneralInformationForm() {
                                     className="placeholder:text-placeholder"
                                     { ...register("customerName") }
                                     id="nome"
-                                    placeholder={ "Nome completo" }
+                                    placeholder="Nome completo"
                                 />
-                                { errors.customerName && (
-                                    <p className="text-sm font-medium text-destructive">
-                                        { errors.customerName.message }
-                                    </p>
-                                ) }
+                                <div className="h-3">
+                                    {errors.customerName && (
+                                        <p className="text-xs font-medium text-destructive">
+                                            {errors.customerName.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="cpf">CPF</Label>
                                 <DocumentInput register={ register("CPF") } documentType="CPF" />
-                                { errors.CPF && (
-                                    <p className="text-sm font-medium text-destructive">
-                                        { errors.CPF.message }
-                                    </p>
-                                ) }
+                                <div className="h-3">
+                                    {errors.CPF && (
+                                        <p className="text-xs font-medium text-destructive">
+                                            {errors.CPF.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="aniversario">Data de nascimento</Label>
                                 <Controller
                                     control={ control }
-                                    name="birthday"
+                                    name="birthdate"
                                     render={ () => (
-                                        <SingleDatePicker
-                                            control={ control }
-                                            name="birthday"
-                                            placeholder="Selecione a data de nascimento"
-                                        >
-                                            <SingleDateYearTrigger />
-                                        </SingleDatePicker>
+                                        <DatePicker
+                                            placeholder="Escolha a data de nascimento"
+                                            value={ birthdate }
+                                            onChange={ (date) => {
+                                                setValue("birthdate", date!);
+                                                trigger("birthdate");
+                                            } }
+                                            classNames={ {
+                                                trigger:
+                                                      errors.birthdate &&
+                                                      "border-destructive focus-visible:ring-destructive",
+                                            } }
+                                        />
                                     ) }
                                 />
-                                { errors.birthday && (
-                                    <p className="text-sm font-medium text-destructive">
-                                        { errors.birthday.message }
-                                    </p>
-                                ) }
+                                <div className="h-3">
+                                    {errors.birthdate && (
+                                        <p className="text-xs font-medium text-destructive">
+                                            {errors.birthdate.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
-                        { /* Campos específicos de Pessoa Jurídica */ }
+                        {/* Campos específicos de Pessoa Jurídica */}
                         <div
                             className={ `space-y-4 transition-all duration-300 ease-in-out ${
                                 personType === "PJ"
@@ -160,11 +171,13 @@ export function CustomerGeneralInformationForm() {
                                     placeholder="Nome da empresa"
                                     disabled={ personType !== "PJ" }
                                 />
-                                { errors.companyName && (
-                                    <p className="text-sm font-medium text-destructive">
-                                        { errors.companyName.message }
-                                    </p>
-                                ) }
+                                <div className="h-3">
+                                    {errors.companyName && (
+                                        <p className="text-xs font-medium text-destructive">
+                                            {errors.companyName.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="cnpj">CNPJ</Label>
@@ -172,11 +185,13 @@ export function CustomerGeneralInformationForm() {
                                     register={ register("CNPJ") }
                                     documentType="CNPJ"
                                 />
-                                { errors.CNPJ && (
-                                    <p className="text-sm font-medium text-destructive">
-                                        { errors.CNPJ.message }
-                                    </p>
-                                ) }
+                                <div className="h-3">
+                                    {errors.CNPJ && (
+                                        <p className="text-xs font-medium text-destructive">
+                                            {errors.CNPJ.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="space-y-2">
@@ -187,11 +202,13 @@ export function CustomerGeneralInformationForm() {
                                     id="personAccountableName"
                                     placeholder={ "Nome do responsável" }
                                 />
-                                { errors.customerName && (
-                                    <p className="text-sm font-medium text-destructive">
-                                        { errors.customerName.message }
-                                    </p>
-                                ) }
+                                <div className="h-3">
+                                    {errors.customerName && (
+                                        <p className="text-xs font-medium text-destructive">
+                                            {errors.customerName.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -210,20 +227,24 @@ export function CustomerGeneralInformationForm() {
                                     type="email"
                                     placeholder="email@exemplo.com"
                                 />
-                                { errors.email && (
-                                    <p className="text-sm font-medium text-destructive">
-                                        { errors.email.message }
-                                    </p>
-                                ) }
+                                <div className="h-3">
+                                    {errors.email && (
+                                        <p className="text-xs font-medium text-destructive">
+                                            {errors.email.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="telefone">Telefone</Label>
                                 <PhoneInput register={ register("cellphone") } />
-                                { errors.cellphone && (
-                                    <p className="text-sm font-medium text-destructive">
-                                        { errors.cellphone.message }
-                                    </p>
-                                ) }
+                                <div className="h-3">
+                                    {errors.cellphone && (
+                                        <p className="text-xs font-medium text-destructive">
+                                            {errors.cellphone.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                         <div className="space-y-2">
@@ -231,14 +252,14 @@ export function CustomerGeneralInformationForm() {
                             <Input
                                 { ...register("instagram") }
                                 id="instagram"
-                                className="text-placeholder"
+                                className="placeholder:text-placeholder"
                                 placeholder="@usuario"
                             />
-                            { errors.instagram && (
-                                <p className="text-sm font-medium text-destructive">
-                                    { errors.instagram.message }
+                            {errors.instagram && (
+                                <p className="text-xs font-medium text-destructive">
+                                    {errors.instagram.message}
                                 </p>
-                            ) }
+                            )}
                         </div>
                     </div>
                 </div>

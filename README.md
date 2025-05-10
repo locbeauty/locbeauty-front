@@ -26,6 +26,10 @@
 - - checar estoque disponível;
 - - checar o tempo de deslocamento;
 
+- **Existe algum interesse em guardar endereço dos funcionários?**
+
+- **Quais são os dados necessários para cadastrar uma nova regional? Cada uma tem seu próprio CNPJ?**
+
 ---
 
 
@@ -150,3 +154,12 @@
 🔶 *Os campos marcados com "a definir" podem ser ajustados conforme regras de negócio futuras.*
 
 ---
+## Dados do funcionario logado :
+
+```ts
+interface loggedUser {
+  role: "gerente" | "comercial" | "logistica" | "financeiro",
+  regional: "PE",
+  username: string
+}
+```

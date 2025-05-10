@@ -49,7 +49,7 @@ export function SelectState({ disabled = false }: SelectStateProps) {
 
     return (
         <Controller
-            name="UF"
+            name="state"
             control={ control }
             render={ ({ field }) => (
                 <Select onValueChange={ field.onChange } value={ field.value }>

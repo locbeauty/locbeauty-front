@@ -29,10 +29,6 @@ export function CreateRegionalForm() {
         formState: { errors },
     } = createRegionalMethods;
 
-    useEffect(() => {
-        console.log("errors: ", errors);
-    }, [ errors ]);
-
     function handleCreateRegional(newRegionalData: CreateRegionalFormSchemaType) {
         console.log("newRegionalData: ", newRegionalData);
     }
@@ -62,6 +58,7 @@ export function CreateRegionalForm() {
                                 id="email"
                                 type="email"
                                 placeholder="email@exemplo.com"
+                                className="placeholder:text-placeholder"
                             />
                             { errors.email && (
                                 <p className="text-sm font-medium text-destructive">

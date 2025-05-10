@@ -1,7 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CardContent } from "@/components/ui/card";
-import { RangeDatePicker } from "@/components/ui/range-date-picker";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { SelectCustomer } from "./SelectCustomer";
@@ -57,7 +56,7 @@ export function CreateBookingForm() {
                 <div className="space-y-2">
                     <Label htmlFor="data-inicio">Data da reserva</Label>
                     <div className="flex flex-col md:flex-row items-center gap-2">
-                        <RangeDatePicker />
+                        {/* TODO: ADD <DatePicker /> */}
                         <div className="flex justify-center flex-wrap gap-2">
                             {
                                 availableHours.map(hour => (

@@ -25,7 +25,17 @@ const eslintConfig = [
 
             "camelcase": [ "error", { properties: "always" } ],
             "no-multiple-empty-lines": [ "error", { max: 1 } ],
-            "react/jsx-curly-spacing": [ "error", { "when": "always", "children": true } ],
+            "react/jsx-curly-spacing": [
+                "error",
+                {
+                    "when": "always",
+                    "children": false,
+                    "allowMultiline": true,
+                    "spacing": {
+                        "objectLiterals": "always"
+                    }
+                }
+            ],
             "object-curly-spacing": [ "error", "always" ],
             "array-bracket-spacing": [ "error", "always" ]
         }

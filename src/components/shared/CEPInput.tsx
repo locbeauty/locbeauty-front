@@ -1,19 +1,28 @@
 "use client";
 
-import { InputHTMLAttributes, useEffect, useRef } from "react";
+import { useState } from "react";
+
+import { useEffect, useRef } from "react";
 import IMask from "imask";
 import { Input } from "@/components/ui/input";
-import { UseFormRegisterReturn } from "react-hook-form";
+import { useFormContext, Controller } from "react-hook-form";
+import type { CreateCustomerFormSchemaType } from "../pages/customers/create/CreateCustomerValidation";
+import { handleCepChange } from "@/utils/addressHandlers";
+import { Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
-interface CEPInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  register?: UseFormRegisterReturn;
-}
-
-export default function CEPInput({
-    register,
-    ...props
-}: CEPInputProps) {
+export default function CEPInput({ ...props }) {
     const inputRef = useRef<HTMLInputElement>(null);
+    const [ isLoadingCep, setIsLoadingCep ] = useState(false);
+
+    const {
+        control,
+        setValue,
+        trigger,
+        setError,
+        clearErrors,
+        formState: { errors },
+    } = useFormContext<CreateCustomerFormSchemaType>();
 
     useEffect(() => {
         if (!inputRef.current) return;
@@ -30,15 +39,46 @@ export default function CEPInput({
     }, []);
 
     return (
-        <Input
-            { ...register }
-            { ...props }
-            ref={ (el) => {
-                register?.ref(el); // RHF
-                inputRef.current = el; // IMask
-            } }
-            className="placeholder:text-placeholder md:w-[110px] w-auto"
-            placeholder="00000-000"
-        />
+        <div className="space-y-2">
+            <Label htmlFor="cep">CEP</Label>
+            <div className="relative">
+                <Controller
+                    name="CEP"
+                    control={ control }
+                    render={ ({ field }) => (
+                        <Input
+                            { ...props }
+                            id="cep"
+                            value={ field.value || "" }
+                            onChange={ (e) => {
+                                field.onChange(e);
+                                handleCepChange({
+                                    e,
+                                    setIsLoadingCep,
+                                    setValue,
+                                    trigger,
+                                    setError,
+                                    clearErrors,
+                                });
+                            } }
+                            ref={ (el) => {
+                                // Atribuir ao ref do React Hook Form
+                                field.ref(el);
+                                // Atribuir ao ref local para o IMask
+                                inputRef.current = el;
+                            } }
+                            className="placeholder:text-placeholder md:w-[110px] w-auto"
+                            placeholder="00000-000"
+                        />
+                    ) }
+                />
+                {isLoadingCep && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                )}
+            </div>
+            {errors.CEP && <p className="text-sm font-medium text-destructive">{errors.CEP.message}</p>}
+        </div>
     );
 }

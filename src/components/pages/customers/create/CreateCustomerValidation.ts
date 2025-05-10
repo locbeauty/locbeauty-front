@@ -3,32 +3,90 @@ import { z } from "zod";
 export const createCustomerFormSchema = z
     .object({
         personType: z.enum([ "PF", "PJ" ]),
-        birthday: z.date().optional(),
         customerName: z.string().trim().optional(),
-        personAccountableName: z.string().trim().optional(), // Novo campo
+        personAccountableName: z.string().trim().optional(),
         companyName: z.string().trim().optional(),
-        regional: z.string(),
+        regional: z.string().optional(),
         email: z
             .string()
-            .min(1, { message: "Email é obrigatório" })
-            .email({ message: "Email inválido" }),
+            .optional()
+            .refine((val) => val !== "", { message: "Email é obrigatório" })
+            .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+                message: "Email inválido",
+            }),
         cellphone: z
             .string()
-            .min(10, { message: "Celular deve conter DDD e número" }),
+            .optional()
+            .refine(val => val !== undefined && val !== "", { message: "Telefone é obrigatório" }), // Validação será feita em outro arquivo
         instagram: z.string().trim().optional(),
-        city: z.string().min(1, { message: "Cidade é obrigatória" }).trim(),
-        UF: z.string().length(2, { message: "UF é obrigatório." }).toUpperCase(),
-        neighborhood: z.string().min(1, { message: "Bairro é obrigatório" }).trim(),
-        street: z.string().min(1, { message: "Rua é obrigatória" }).trim(),
-        houseNumber: z.string().min(1, { message: "Número do imóvel é obrigatório" }).trim(),
+        CEP: z
+            .string()
+            .optional()
+            .refine((val) => val !== undefined && val !== "", {
+                message: "CEP é obrigatório.",
+            })
+            .refine((val) => !val || val.length === 9, {
+                message: "CEP precisa ter 8 caracteres.",
+            }),
+        city: z
+            .string()
+            .trim()
+            .optional()
+            .refine((val) => val !== undefined && val !== "", {
+                message: "Cidade é obrigatória",
+            }),
+        state: z
+            .string()
+            .optional()
+            .refine((val) => val !== undefined && val !== "", {
+                message: "Estado é obrigatório.",
+            })
+            .transform((val) => (val ? val.toUpperCase() : val)),
+        neighborhood: z
+            .string()
+            .trim()
+            .optional()
+            .refine((val) => val !== undefined && val !== "", {
+                message: "Bairro é obrigatório",
+            }),
+        street: z
+            .string()
+            .trim()
+            .optional()
+            .refine((val) => val !== undefined && val !== "", {
+                message: "Rua é obrigatória",
+            }),
+        houseNumber: z
+            .string()
+            .trim()
+            .optional()
+            .refine((val) => val !== undefined && val !== "", {
+                message: "Número do imóvel é obrigatório",
+            }),
         CPF: z.string().optional(),
         CNPJ: z.string().optional(),
         addressComplement: z.string().optional(),
+        birthdate: z.date().optional(),
     })
     .superRefine((data, ctx) => {
     // Validações para Pessoa Física (PF)
         if (data.personType === "PF") {
-            // Validação de CPF obrigatório
+            if (!data.birthdate) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Data de nascimento é obrigatória.",
+                    path: [ "birthdate" ],
+                });
+            } else {
+                if (data.birthdate > new Date()) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: "Data de nascimento não pode ser no futuro.",
+                        path: [ "birthdate" ],
+                    });
+                }
+            }
+
             if (!data.CPF) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -36,23 +94,8 @@ export const createCustomerFormSchema = z
                     path: [ "CPF" ],
                 });
             }
-            else if(!data.personAccountableName) {
-                ctx.addIssue({
-                    path: [ "personAccountableName" ],
-                    message: "Nome do responsável é obrigatório para pessoa jurídica",
-                    code: z.ZodIssueCode.custom,
-                });
-            }
-            // Validação do formato do CPF (apenas se CPF existir)
-            else if (!/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/.test(data.CPF)) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: "CPF inválido.",
-                    path: [ "CPF" ],
-                });
-            }
+            // A validação do formato do CPF será feita em outro arquivo
 
-            // Validação de nome obrigatório APENAS para pessoa física
             if (!data.customerName || data.customerName.trim().length < 2) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -60,22 +103,10 @@ export const createCustomerFormSchema = z
                     path: [ "customerName" ],
                 });
             }
-
-            // Validação de data de nascimento obrigatória
-            if (!data.birthday) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: "Data de nascimento é obrigatória.",
-                    path: [ "birthday" ],
-                });
-            }
-
-            // Para PF, companyName não é validado (não é obrigatório)
         }
 
         // Validações para Pessoa Jurídica (PJ)
         if (data.personType === "PJ") {
-            // Validação de CNPJ obrigatório
             if (!data.CNPJ) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -83,16 +114,7 @@ export const createCustomerFormSchema = z
                     path: [ "CNPJ" ],
                 });
             }
-            // Validação do formato do CNPJ (apenas se CNPJ existir)
-            else if (!/^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}$/.test(data.CNPJ)) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: "CNPJ inválido.",
-                    path: [ "CNPJ" ],
-                });
-            }
 
-            // Validação de nome da empresa obrigatório APENAS para pessoa jurídica
             if (!data.companyName || data.companyName.trim().length < 2) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -100,9 +122,15 @@ export const createCustomerFormSchema = z
                     path: [ "companyName" ],
                 });
             }
+
+            if (!data.personAccountableName || data.personAccountableName.trim().length < 2) {
+                ctx.addIssue({
+                    path: [ "personAccountableName" ],
+                    message: "Nome do responsável é obrigatório para pessoa jurídica",
+                    code: z.ZodIssueCode.custom,
+                });
+            }
         }
     });
 
-export type CreateCustomerFormSchemaType = z.infer<
-  typeof createCustomerFormSchema
->
+export type CreateCustomerFormSchemaType = z.infer<typeof createCustomerFormSchema>
