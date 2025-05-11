@@ -11,8 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
-import { CreateCustomerFormSchemaType } from "../@/zod/CreateCustomerValidation";
 import CEPInput from "@/components/shared/CEPInput";
+import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 
 export function CustomerAddressForm() {
     const {
