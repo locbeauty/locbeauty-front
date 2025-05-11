@@ -11,6 +11,7 @@ import { AmountControlButton } from "@/components/shared/AmountControlButton";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { SelectRegional } from "@/components/shared/SelectRegional";
 import { createGearFormSchema, CreateGearFormSchemaType } from "@/lib/zod/CreateGearValidation";
+import { toast } from "sonner";
 
 export function CreateGearForm() {
     const createGearMethods = useForm<CreateGearFormSchemaType>({
@@ -34,8 +35,10 @@ export function CreateGearForm() {
 
     const acquisitionDate = watch("acquisitionDate");
 
-    function handleCreateGear(data: CreateGearFormSchemaType) {
-        console.log("newGearData: ", data);
+    function handleCreateGear(newGearData: CreateGearFormSchemaType) {
+        console.log("newGearData: ", newGearData);
+        toast.success("Equipamento criado com sucesso!");
+
     }
 
     return (

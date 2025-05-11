@@ -12,6 +12,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";
+import { toast } from "sonner";
 
 export function CreateRegionalForm() {
     const createRegionalMethods = useForm<CreateRegionalFormSchemaType>({
@@ -30,6 +31,7 @@ export function CreateRegionalForm() {
 
     function handleCreateRegional(newRegionalData: CreateRegionalFormSchemaType) {
         console.log("newRegionalData: ", newRegionalData);
+        toast.success("Regional criada com sucesso!");
     }
 
     return (

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { clearSelection, getBadgeStyle, handleMouseEnter, handleMouseLeave, handleTimeClick, isHourInRange, isValidEndHour } from "@/utils/create-booking-helpers";
 import { Textarea } from "@/components/ui/textarea";
 import PriceInput from "@/components/shared/PriceInput";
+import { toast } from "sonner";
 
 export const availableHours = [
     { hour: 5, available: true },
@@ -62,6 +63,7 @@ export function CreateBookingForm() {
 
     function handleCreateBooking(newBookingData: CreateBookingFormSchemaType) {
         console.log("newBookingData", newBookingData);
+        toast.success("Agendamento criado com sucesso!");
     }
 
     return (

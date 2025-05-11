@@ -2,6 +2,7 @@
 
 import { DashboardHeader } from "@/components/pages/dashboard/DashboardHeader";
 import { Sidebar } from "@/components/shared/Sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -27,6 +28,8 @@ export default function DashboardLayout({
             { sidebarOpen && (
                 <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={ () => setSidebarOpen(false) } />
             ) }
+            <Toaster />
+
         </div>
     );
 }
