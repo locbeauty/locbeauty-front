@@ -67,7 +67,7 @@ export default function CEPInput({ ...props }) {
                                 // Atribuir ao ref local para o IMask
                                 inputRef.current = el;
                             } }
-                            className="placeholder:text-placeholder md:w-[110px] w-auto"
+                            className="placeholder:text-placeholder md:w-[110px] w-full"
                             placeholder="00000-000"
                         />
                     ) }

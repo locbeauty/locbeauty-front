@@ -38,7 +38,7 @@ export default function CreateBookingPage() {
                 <CreateBookingForm />
             </Card>
 
-            <CreationPageFooter cancelUrl={ ROUTES.BOOKINGS } />
+            <CreationPageFooter cancelUrl={ ROUTES.BOOKINGS } formId="new-booking-form" />
         </div>
     );
 }

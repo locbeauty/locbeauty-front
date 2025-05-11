@@ -8,7 +8,7 @@ import {
 import React from "react";
 
 interface CustomFilterSelectProps extends React.ComponentPropsWithoutRef<typeof Select> {
-    items: string[];
+    items: readonly string[];
     placeholder?: string;
     triggerProps?: React.ComponentPropsWithoutRef<typeof SelectTrigger>;
 }

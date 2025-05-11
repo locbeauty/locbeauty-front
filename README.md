@@ -4,6 +4,8 @@
 - **Qual é o intervalo de horários disponível para agendamentos? Existe possibilidade deste horário mudar?**  
   (Exemplo: dias úteis, turnos, horários específicos, fins de semana são permitidos?)
 
+- **Os agendamentos podem ser realizados em horários quebrados? Ou só em horas fixas?**
+ 
 - **Quem poderá criar/editar/excluir as entidades?**  
 
 - **Para clientes Pessoa Jurídica (PJ), é obrigatório registrar a data de nascimento?**  

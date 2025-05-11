@@ -31,7 +31,7 @@ export function CreateEmployeeForm() {
     async function handleCreateEmployee(
         newEmployeeData: CreateEmployeeFormSchemaType
     ) {
-        console.log(newEmployeeData);
+        console.log("newEmployeeData: ", newEmployeeData);
     }
 
     return (

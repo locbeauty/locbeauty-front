@@ -29,7 +29,7 @@ export function AmountControlButton({ value, onChange, error, min = 0 }: UnitCou
             <button
                 type="button"
                 onClick={ handleDecrement }
-                className="bg-gray-100 dark:bg-gray-800 p-2 rounded-l-md border border-gray-200 dark:border-gray-700"
+                className="bg-gray-100 dark:bg-gray-800 p-2 rounded-l-md border border-gray-200 dark:border-gray-700 cursor-pointer"
                 aria-label="Diminuir quantidade"
             >
                 <Minus className="size-4" />
@@ -41,14 +41,14 @@ export function AmountControlButton({ value, onChange, error, min = 0 }: UnitCou
                 min="0"
                 value={ value }
                 onChange={ handleInputChange }
-                className={ `rounded-none text-center w-20 border-y border-gray-200 dark:border-gray-700 ${
+                className={ `rounded-none text-center md:w-20 border-y border-gray-200 dark:border-gray-700 w-full ${
                     error ? "border-destructive focus-visible:ring-destructive" : ""
                 }` }
             />
             <button
                 type="button"
                 onClick={ handleIncrement }
-                className="bg-gray-100 dark:bg-gray-800 p-2 rounded-r-md border border-gray-200 dark:border-gray-700"
+                className="bg-gray-100 dark:bg-gray-800 p-2 rounded-r-md border border-gray-200 dark:border-gray-700 cursor-pointer"
                 aria-label="Aumentar quantidade"
             >
                 <Plus className="size-4" />

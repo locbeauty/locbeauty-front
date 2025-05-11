@@ -90,7 +90,7 @@ export const createCustomerFormSchema = z
             if (!data.CPF) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
-                    message: "CPF é obrigatório para pessoa física.",
+                    message: "CPF é obrigatório para PF.",
                     path: [ "CPF" ],
                 });
             }
@@ -99,7 +99,7 @@ export const createCustomerFormSchema = z
             if (!data.customerName || data.customerName.trim().length < 2) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
-                    message: "Nome completo é obrigatório para pessoa física.",
+                    message: "Nome completo é obrigatório para PF.",
                     path: [ "customerName" ],
                 });
             }
@@ -110,7 +110,7 @@ export const createCustomerFormSchema = z
             if (!data.CNPJ) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
-                    message: "CNPJ é obrigatório para pessoa jurídica.",
+                    message: "CNPJ é obrigatório para PJ.",
                     path: [ "CNPJ" ],
                 });
             }
@@ -118,7 +118,7 @@ export const createCustomerFormSchema = z
             if (!data.companyName || data.companyName.trim().length < 2) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
-                    message: "Nome da empresa é obrigatório para pessoa jurídica.",
+                    message: "Nome da empresa é obrigatório para PJ.",
                     path: [ "companyName" ],
                 });
             }
@@ -126,7 +126,7 @@ export const createCustomerFormSchema = z
             if (!data.personAccountableName || data.personAccountableName.trim().length < 2) {
                 ctx.addIssue({
                     path: [ "personAccountableName" ],
-                    message: "Nome do responsável é obrigatório para pessoa jurídica",
+                    message: "Nome do responsável é obrigatório para PJ",
                     code: z.ZodIssueCode.custom,
                 });
             }

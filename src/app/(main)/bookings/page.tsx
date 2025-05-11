@@ -11,14 +11,14 @@ export const FilterBookingStatusTypes = [
     "Não iniciado",
     "Concluído",
     "Cancelado",
-];
+] as const;
 
 export const FilterBookingPaymentStatusTypes = [
     "Todos",
     "Não pago",
     "Pagamento parcial",
     "Pago",
-];
+] as const;
 
 // Tipos para os agendamentos
 export type Agendamento = {
