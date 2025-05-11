@@ -10,20 +10,37 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+    {
+        ignores: [ "**/node_modules/**", "**/build/**", "**/.next/**", "**/components/ui/**" ], // tira o components/ui daqui!
+    },
     ...compat.config({
-        extends: ["next/core-web-vitals", "next/typescript"],
+        extends: [ "next/core-web-vitals", "next/typescript" ],
         rules: {
-            "semi": ["warn", "always"],
-            "indent": ["error", 4],
-            "quotes": ["error", "double"],
+            "semi": [ "warn", "always" ],
+            "indent": [ "error", 4 ],
+            "quotes": [ "error", "double" ],
             "no-trailing-spaces": "error",
             "no-mixed-spaces-and-tabs": "error",
-            "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],  // Ignora args que começam com _
+            "no-unused-vars": [ "error", { argsIgnorePattern: "^_" } ],  // Ignora args que começam com _
 
-            "camelcase": ["error", { properties: "always" }],
-            "no-multiple-empty-lines": ["error", { max: 1 }],
+            "camelcase": [ "error", { properties: "always" } ],
+            "no-multiple-empty-lines": [ "error", { max: 1 } ],
+            "react/jsx-curly-spacing": [
+                "error",
+                {
+                    "when": "always",
+                    "children": false,
+                    "allowMultiline": true,
+                    "spacing": {
+                        "objectLiterals": "always"
+                    }
+                }
+            ],
+            "object-curly-spacing": [ "error", "always" ],
+            "array-bracket-spacing": [ "error", "always" ]
         }
     }),
+
 ];
 
 export default eslintConfig;

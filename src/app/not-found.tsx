@@ -24,7 +24,7 @@ export default function NotFound() {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                     <Button asChild size="lg" className="gap-2">
-                        <Link href={ROUTES.DASHBOARD}>
+                        <Link href={ ROUTES.DASHBOARD }>
                             <Home className="h-4 w-4" />
                             Ir para o Dashboard
                         </Link>

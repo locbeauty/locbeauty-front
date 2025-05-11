@@ -10,23 +10,23 @@ export default function DashboardLayout({
 }: Readonly<{
     children: React.ReactNode
   }>) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [ sidebarOpen, setSidebarOpen ] = useState(false);
 
     return (
         <div className="max-h-screen flex bg-background">
             <Sidebar
-                className={cn(sidebarOpen ? "translate-x-0" : "-translate-x-full")}
+                className={ cn(sidebarOpen ? "translate-x-0" : "-translate-x-full") }
             />
 
-            <div className="flex-1 md:ml-64">
-                <DashboardHeader setSidebarOpen={setSidebarOpen} />
-                <main className="p-6">{children}</main>
+            <div className="flex-1 md:ml-48">
+                <DashboardHeader setSidebarOpen={ setSidebarOpen } />
+                <main className="p-6">{ children }</main>
             </div>
 
-            {/* Overlay for mobile */}
-            {sidebarOpen && (
-                <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setSidebarOpen(false)} />
-            )}
+            { /* Overlay for mobile */ }
+            { sidebarOpen && (
+                <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={ () => setSidebarOpen(false) } />
+            ) }
         </div>
     );
 }

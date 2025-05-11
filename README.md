@@ -1,36 +1,167 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+### ❓ Dúvidas Pendentes
 
-First, run the development server:
+- **Qual é o intervalo de horários disponível para agendamentos? Existe possibilidade deste horário mudar?**  
+  (Exemplo: dias úteis, turnos, horários específicos, fins de semana são permitidos?)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Os agendamentos podem ser realizados em horários quebrados? Ou só em horas fixas?**
+ 
+- **Quem poderá criar/editar/excluir as entidades?**  
+
+- **Para clientes Pessoa Jurídica (PJ), é obrigatório registrar a data de nascimento?**  
+  (Ou esse campo é opcional/não utilizado em todos os casos?)
+
+- **Cada filial possui seu próprio gerente ou há um gerente responsável por múltiplas filiais(região)?**  
+  (Como é organizada a hierarquia dos gestores?)
+
+- **O setor financeiro está presente em todas as filiais ou é centralizado em uma única unidade?**
+
+- **Quando um equipamento é transferido para outra região, ele retorna à sua filial de origem?**  
+  (Ou permanece onde foi enviado, retornando apenas se houver necessidade?)
+
+- **Cada equipamento terá sua filial de origem, quantidade disponível/quantidade total?** 
+ 
+- **O equipamento é alugado pra qual fim? (Evento, estabelecimento, ...)**  
+
+- **Fluxo para agendamento de um equipamento que pode ser transferido:**  
+- - checar se equipamento está disponível no determinado dia;
+- - checar estoque disponível;
+- - checar o tempo de deslocamento;
+
+- **Existe algum interesse em guardar endereço dos funcionários?**
+
+- **Quais são os dados necessários para cadastrar uma nova regional? Cada uma tem seu próprio CNPJ?**
+
+---
+
+
+# 📍 Filiais
+
+| UF | Comercial | Logística | Financeiro |
+|----|-----------|-----------|------------|
+| PE | 2         | 1         | ✅          |
+| CE | 2         | 1         |            |
+| BA | 2         | 1         |            |
+| RJ | 2         |           |            |
+| PA | 2         |           |            |
+| ES | 2         |           |            |
+| PI | 2         |           |            |
+| RN | 2         |           |            |
+
+---
+
+# 👥 Perfis e Permissões
+
+## 🧑‍💼 Gerente
+
+| Ação        | Cliente | Equipamento | Regionais | Funcionários | Agendamento | Dashboard |
+|-------------|---------|-------------|-----------|--------------|-------------|-----------|
+| Cadastro    | ✅ (todas) | ✅ (todas)     | ✅         | ✅ (todas)      | ✅ (todas)     |           |
+| Visualizar  | ✅       | ✅           | ✅         | ✅            | ✅           | ✅         |
+| Editar      | ✅       | ✅           | ✅         | ✅            | ✅           |           |
+| Excluir     | ✅       | ✅           | ✅         | ✅            | ✅           |           |
+
+---
+
+## 💼 Comercial
+
+| Ação        | Cliente           | Equipamento | Regionais | Funcionários | Agendamento       | Dashboard |
+|-------------|-------------------|-------------|-----------|--------------|-------------------|-----------|
+| Cadastro    | ✅ (sua região)    | ❌           | ❌         | ❌            | ✅ (sua região)     |           |
+| Visualizar  | ✅                 | ✅           | ✅         | ❌            | ✅                 | ❌         |
+| Editar      | 🔶 (a definir)     | 🔶 (a definir)| 🔶 (a definir)| ❌        | ✅                 |           |
+| Excluir     | ❌                 | ❌           | ❌         | ❌            | ❌                 |           |
+
+---
+
+## 🚚 Logística
+
+| Ação        | Cliente | Equipamento | Regionais | Funcionários | Agendamento             | Dashboard |
+|-------------|---------|-------------|-----------|--------------|--------------------------|-----------|
+| Cadastro    | ❌       | ❌           | ❌         | ❌            | ❌                        |           |
+| Visualizar  | ❌       | ❌           | ❌         | ❌            | ✅ (apenas da sua filial) | ❌         |
+| Editar      | ❌       | ❌           | ❌         | ❌            | ❌                        |           |
+| Excluir     | ❌       | ❌           | ❌         | ❌            | ❌                        |           |
+
+---
+
+## 💰 Financeiro
+
+| Ação        | Cliente | Equipamento | Regionais | Funcionários | Agendamento         | Dashboard |
+|-------------|---------|-------------|-----------|--------------|----------------------|-----------|
+| Cadastro    | ❌       | ❌           | ❌         | ❌            | ❌                    |           |
+| Visualizar  | ❌       | ❌           | ❌         | ❌            | ✅ (todas as filiais) | ❌         |
+| Editar      | ❌       | ❌           | ❌         | ❌            | ❌                    |           |
+| Excluir     | ❌       | ❌           | ❌         | ❌            | ❌                    |           |
+
+---
+
+## 🚛 Motorista
+
+| Ação        | Cliente | Equipamento | Regionais | Funcionários | Agendamento                  | Dashboard |
+|-------------|---------|-------------|-----------|--------------|-------------------------------|-----------|
+| Cadastro    | ❌       | ❌           | ❌         | ❌            | ❌                             |           |
+| Visualizar  | ❌       | ❌           | ❌         | ❌            | ✅ (apenas atribuídos a ele)  | ❌         |
+| Editar      | ❌       | ❌           | ❌         | ❌            | ❌                             |           |
+| Excluir     | ❌       | ❌           | ❌         | ❌            | ❌                             |           |
+
+---
+
+# 📝 Formulários de Cliente
+
+## Pessoa Física (PF)
+
+```json
+{
+  "personType": "PF",
+  "birthday": "2025-05-08",
+  "customerName": "Ateste",
+  "companyName": "",
+  "email": "teste@teste.com",
+  "cellphone": "(11) 11111-1111",
+  "instagram": "asdasdasd",
+  "city": "teste",
+  "UF": "PE",
+  "neighborhood": "teste",
+  "street": "teste",
+  "houseNumber": "11111111",
+  "CPF": "111.111.111-11",
+  "CNPJ": ""
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Pessoa Jurídica (PJ)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```json
+{
+  "personType": "PJ",
+  "birthday": "",
+  "customerName": "",
+  "companyName": "teste",
+  "email": "teste@teste.com",
+  "cellphone": "(81) 97332-8630",
+  "instagram": "asdasdas",
+  "city": "teste",
+  "UF": "PE",
+  "neighborhood": "teste",
+  "street": "teste",
+  "houseNumber": "1123",
+  "CPF": "",
+  "CNPJ": "11.111.111/1111-11"
+}
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+🔶 *Os campos marcados com "a definir" podem ser ajustados conforme regras de negócio futuras.*
 
-To learn more about Next.js, take a look at the following resources:
+---
+## Dados do funcionario logado :
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```ts
+interface loggedUser {
+  role: "gerente" | "comercial" | "logistica" | "financeiro",
+  regional: "PE",
+  username: string
+}
+```
