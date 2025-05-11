@@ -2,23 +2,10 @@ import { BookingsTable } from "@/components/pages/bookings/view/BookingsTable";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FilterBookingPaymentStatusTypes, FilterBookingStatusTypes } from "@/utils/filterOptions";
 import { ROUTES } from "@/utils/routes";
 import { Eye, Plus, Search } from "lucide-react";
 import Link from "next/link";
-
-export const FilterBookingStatusTypes = [
-    "Todos",
-    "Não iniciado",
-    "Concluído",
-    "Cancelado",
-] as const;
-
-export const FilterBookingPaymentStatusTypes = [
-    "Todos",
-    "Não pago",
-    "Pagamento parcial",
-    "Pago",
-] as const;
 
 // Tipos para os agendamentos
 export type Agendamento = {

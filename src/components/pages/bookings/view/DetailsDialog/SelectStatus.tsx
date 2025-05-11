@@ -1,5 +1,5 @@
-import { FilterBookingStatusTypes } from "@/app/(main)/bookings/page";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FilterBookingStatusTypes } from "@/utils/filterOptions";
 
 // TODO: delete this component. CustomFilterSelect will be used instead.
 export function SelectStatus() {
