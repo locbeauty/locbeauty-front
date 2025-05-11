@@ -12,8 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
-import type { CreateRegionalFormSchemaType } from "../@/zod/createRegionalValidation";
 import CEPInput from "@/components/shared/CEPInput";
+import { CreateRegionalFormSchemaType } from "@/lib/zod/createRegionalValidation";
 
 export function RegionalAddressForm() {
     const {
