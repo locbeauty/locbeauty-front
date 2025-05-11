@@ -5,15 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import {
-    createGearFormSchema,
-    type CreateGearFormSchemaType,
-} from "./CreateGearValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SelectRegional } from "../../shared/SelectRegional";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
-import { SingleDatePicker } from "@/components/shared/SingleDatePicker";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { SelectRegional } from "@/components/shared/SelectRegional";
+import { createGearFormSchema, CreateGearFormSchemaType } from "@/lib/zod/CreateGearValidation";
 
 export function CreateGearForm() {
     const createGearMethods = useForm<CreateGearFormSchemaType>({
@@ -21,7 +18,7 @@ export function CreateGearForm() {
         defaultValues: {
             sourceRegional: "",
             canBeTransferred: false,
-            availableUnits: 1,
+            availableUnits: 0,
         },
     });
 
@@ -29,11 +26,16 @@ export function CreateGearForm() {
         control,
         register,
         handleSubmit,
+        setValue,
+        watch,
+        trigger,
         formState: { errors },
     } = createGearMethods;
 
+    const acquisitionDate = watch("acquisitionDate");
+
     function handleCreateGear(data: CreateGearFormSchemaType) {
-        console.log("data: ", data);
+        console.log("newGearData: ", data);
     }
 
     return (
@@ -53,11 +55,11 @@ export function CreateGearForm() {
                                 }` }
                                 { ...register("name") }
                             />
-                            { errors.name && (
+                            {errors.name && (
                                 <p className="text-sm text-destructive mt-2">
-                                    { errors.name.message }
+                                    {errors.name.message}
                                 </p>
-                            ) }
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label>Regional</Label>
@@ -67,11 +69,11 @@ export function CreateGearForm() {
                                     name="sourceRegional"
                                 />
                             </FormProvider>
-                            { errors.sourceRegional && (
+                            {errors.sourceRegional && (
                                 <p className="text-sm text-destructive mt-2">
-                                    { errors.sourceRegional.message }
+                                    {errors.sourceRegional.message}
                                 </p>
-                            ) }
+                            )}
                         </div>
                     </div>
                     <div className="flex flex-col gap-2">
@@ -86,11 +88,11 @@ export function CreateGearForm() {
                             }` }
                             { ...register("description") }
                         />
-                        { errors.description && (
+                        {errors.description && (
                             <p className="text-sm text-destructive">
-                                { errors.description.message }
+                                {errors.description.message}
                             </p>
-                        ) }
+                        )}
                     </div>
                 </div>
                 <div className="space-y-2 flex-1 mt-4">
@@ -100,17 +102,17 @@ export function CreateGearForm() {
                         name="availableUnits"
                         render={ ({ field }) => (
                             <AmountControlButton
-                                value={ field.value || 1 }
+                                value={ field.value || 0 }
                                 onChange={ field.onChange }
                                 error={ !!errors.availableUnits }
                             />
                         ) }
                     />
-                    { errors.availableUnits && (
+                    {errors.availableUnits && (
                         <p className="text-sm text-destructive mt-2">
-                            { errors.availableUnits.message }
+                            {errors.availableUnits.message}
                         </p>
-                    ) }
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
@@ -120,23 +122,26 @@ export function CreateGearForm() {
                             control={ control }
                             name="acquisitionDate"
                             render={ () => (
-                                <SingleDatePicker
-                                    control={ control }
-                                    name="acquisitionDate"
+                                <DatePicker
                                     placeholder="Selecione a data de aquisição"
-                                    className={ `placeholder:text-sm placeholder:text-placeholder ${
-                                        errors.acquisitionDate
-                                            ? "border-destructive focus-visible:ring-destructive"
-                                            : ""
-                                    }` }
+                                    value={ acquisitionDate }
+                                    onChange={ (date) => {
+                                        setValue("acquisitionDate", date!);
+                                        trigger("acquisitionDate");
+                                    } }
+                                    classNames={ {
+                                        trigger:
+                                          errors.acquisitionDate &&
+                                          "border-destructive focus-visible:ring-destructive",
+                                    } }
                                 />
                             ) }
                         />
-                        { errors.acquisitionDate && (
+                        {errors.acquisitionDate && (
                             <p className="text-sm text-destructive">
-                                { errors.acquisitionDate.message }
+                                {errors.acquisitionDate.message}
                             </p>
-                        ) }
+                        )}
                     </div>
                     <div>
                         <Controller

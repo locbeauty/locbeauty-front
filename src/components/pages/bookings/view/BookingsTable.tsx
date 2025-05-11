@@ -1,5 +1,5 @@
-import { BookingStatusBadge } from "@/components/pages/bookings/BookingStatusBadge";
-import { BookingPaymentStatusBadge } from "./BookingPaymentStatusBadge";
+import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
+import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 
 export function BookingsTable() {
     return (

@@ -2,7 +2,7 @@
 
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { REGIONAIS } from "@/app/(main)/regionals/page";
+import { REGIONALS } from "@/utils/regionals";
 
 type SelectRegionalProps<T extends FieldValues> = {
   control: Control<T>
@@ -22,11 +22,14 @@ export function SelectRegional<T extends FieldValues>({ control, name }: SelectR
                         />
                     </SelectTrigger>
                     <SelectContent>
-                        { REGIONAIS.map((estado) => (
-                            <SelectItem key={ estado } value={ estado }>
-                                { estado }
-                            </SelectItem>
-                        )) }
+                        { REGIONALS.map((estado) => {
+                            if(estado === "") return null;
+                            return (
+                                <SelectItem key={ estado } value={ estado }>
+                                    { estado }
+                                </SelectItem>
+                            );
+                        }) }
                     </SelectContent>
                 </Select>
             ) }

@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-    Plus, ArrowLeft
-} from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/utils/routes";
 import { useRouter } from "next/navigation";
@@ -12,13 +10,15 @@ import { Agendamento } from "../page";
 import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
 import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
 import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
-import { BookingDetailsDialog } from "@/components/pages/bookings/view/details/BookingDetailsDialog";
+import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
 
 export default function AgendamentosPage() {
     // Estado para controlar a semana atual
     const [ currentDate, setCurrentDate ] = useState(new Date());
-    const [ selectedAgendamento, setSelectedAgendamento ] = useState<Agendamento | null>(null);
-    const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] = useState(false);
+    const [ selectedAgendamento, setSelectedAgendamento ] =
+    useState<Agendamento | null>(null);
+    const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] =
+    useState(false);
     const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("semana");
     const [ isMobile, setIsMobile ] = useState(false);
 
@@ -35,7 +35,7 @@ export default function AgendamentosPage() {
     }, []);
 
     useEffect(() => {
-        if(isMobile) {
+        if (isMobile) {
             setViewType("dia");
         } else {
             setViewType("semana");
@@ -59,13 +59,18 @@ export default function AgendamentosPage() {
                     </Button>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
-                        <p className="text-muted-foreground">Visualize os agendamentos de locações</p>
+                        <p className="text-muted-foreground">
+              Visualize os agendamentos de locações
+                        </p>
                     </div>
                 </div>
 
                 <div className="flex">
                     <Button className="flex justify-center items-center" asChild>
-                        <Link className="flex justify-center items-center" href={ ROUTES.CREATE_BOOKING }>
+                        <Link
+                            className="flex justify-center items-center"
+                            href={ ROUTES.CREATE_BOOKING }
+                        >
                             <Plus className="" />
                             <span className="hidden md:inline">Novo Agendamento</span>
                         </Link>
@@ -73,11 +78,24 @@ export default function AgendamentosPage() {
                 </div>
             </div>
 
-            <CalendarControls currentDate={ currentDate } setCurrentDate={ setCurrentDate } viewType={ viewType } setViewType={ setViewType } />
-            <CalendarContent currentDate={ currentDate } openAgendamentoDetails={ openAgendamentoDetails } viewType={ viewType } />
+            <CalendarControls
+                currentDate={ currentDate }
+                setCurrentDate={ setCurrentDate }
+                viewType={ viewType }
+                setViewType={ setViewType }
+            />
+            <CalendarContent
+                currentDate={ currentDate }
+                openAgendamentoDetails={ openAgendamentoDetails }
+                viewType={ viewType }
+            />
             <CalendarFooter />
 
-            <BookingDetailsDialog isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen } setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen } selectedAgendamento={ selectedAgendamento } />
+            <BookingDetailsDialog
+                isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen }
+                setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
+                selectedAgendamento={ selectedAgendamento }
+            />
         </div>
     );
 }

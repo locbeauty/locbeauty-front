@@ -1,11 +1,9 @@
-import { RegionalsTable } from "@/components/pages/regionals/RegionalsTable";
+import { RegionalsTable } from "@/components/pages/regionals/view/RegionalsTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/utils/routes";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
-
-export const REGIONAIS = [ "PE" ,"CE" ,"BA" ,"RJ" ,"PA" ,"ES" ,"PI" ,"RN" ];
 
 export default function RegionalsPage() {
     return (

@@ -1,4 +1,4 @@
-import { CreateGearForm } from "@/components/pages/gears/CreateGearForm";
+import { CreateGearForm } from "@/components/pages/gears/create/CreateGearForm";
 import { CreationPageFooter } from "@/components/shared/CreationPageFooter";
 import { Button } from "@/components/ui/button";
 import {

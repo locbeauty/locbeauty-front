@@ -10,9 +10,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
-import { SelectState } from "./SelectState";
 import { Textarea } from "@/components/ui/textarea";
-import { CreateCustomerFormSchemaType } from "./CreateCustomerValidation";
+import { CreateCustomerFormSchemaType } from "../@/zod/CreateCustomerValidation";
+import CEPInput from "@/components/shared/CEPInput";
 
 export function CustomerAddressForm() {
     const {
@@ -29,74 +29,67 @@ export function CustomerAddressForm() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+                <CEPInput />
+
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="cidade">Cidade</Label>
                         <Input
+                            disabled
                             { ...register("city") }
                             placeholder="Cidade"
-                            className="text-placeholder"
+                            className=""
                             id="cidade"
                         />
-                        { errors.city && (
-                            <p className="text-sm font-medium text-destructive">
-                                { errors.city.message }
-                            </p>
-                        ) }
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="estado">Estado</Label>
-                        <SelectState />
-                        { errors.UF && (
-                            <p className="text-sm font-medium text-destructive">
-                                { errors.UF.message }
-                            </p>
-                        ) }
+                        <Input
+                            disabled
+                            { ...register("state") }
+                            placeholder="Estado"
+                            className=""
+                            id="cidade"
+                        />
                     </div>
                 </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="bairro">Bairro</Label>
                     <Input
+                        disabled
                         { ...register("neighborhood") }
                         placeholder="Bairro"
-                        className="text-placeholder"
+                        className="placeholder:text-placeholder"
                         id="bairro"
                     />
-                    { errors.neighborhood && (
-                        <p className="text-sm font-medium text-destructive">
-                            { errors.neighborhood.message }
-                        </p>
-                    ) }
                 </div>
-                <div className="flex md:flex-row flex-col md:items-center gap-4">
+                <div className="flex md:flex-row flex-col md:items-start gap-4">
                     <div className="space-y-2 flex-1">
                         <Label htmlFor="rua">Rua</Label>
                         <Input
+                            disabled
                             { ...register("street") }
                             id="rua"
-                            className="text-placeholder"
+                            className="placeholder:text-placeholder"
                             placeholder="Nome da rua"
                         />
-                        { errors.street && (
-                            <p className="text-sm font-medium text-destructive">
-                                { errors.street.message }
-                            </p>
-                        ) }
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="number">Número</Label>
                         <Input
                             { ...register("houseNumber") }
                             id="number"
-                            className="text-placeholder"
+                            className="placeholder:text-placeholder"
                             placeholder="Número"
                         />
-                        { errors.houseNumber && (
-                            <p className="text-sm font-medium text-destructive">
-                                { errors.houseNumber.message }
-                            </p>
-                        ) }
+                        <div className="min-h-[20px]">
+                            {errors.houseNumber && (
+                                <p className="text-sm font-medium text-destructive">
+                                    {errors.houseNumber.message}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <div className="space-y-2">
@@ -104,10 +97,8 @@ export function CustomerAddressForm() {
 
                     <Textarea
                         { ...register("addressComplement") }
-                        className="h-[100px] resize-none max-w-[80vw] text-placeholder"
-                        placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência
-
-"
+                        className="h-[120px] resize-none max-w-[80vw] placeholder:text-placeholder"
+                        placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
                     />
                 </div>
             </CardContent>

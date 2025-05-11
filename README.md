@@ -1,9 +1,11 @@
 
 ### ❓ Dúvidas Pendentes
 
-- **Qual é o intervalo de horários disponível para agendamentos?**  
+- **Qual é o intervalo de horários disponível para agendamentos? Existe possibilidade deste horário mudar?**  
   (Exemplo: dias úteis, turnos, horários específicos, fins de semana são permitidos?)
 
+- **Os agendamentos podem ser realizados em horários quebrados? Ou só em horas fixas?**
+ 
 - **Quem poderá criar/editar/excluir as entidades?**  
 
 - **Para clientes Pessoa Jurídica (PJ), é obrigatório registrar a data de nascimento?**  
@@ -25,6 +27,10 @@
 - - checar se equipamento está disponível no determinado dia;
 - - checar estoque disponível;
 - - checar o tempo de deslocamento;
+
+- **Existe algum interesse em guardar endereço dos funcionários?**
+
+- **Quais são os dados necessários para cadastrar uma nova regional? Cada uma tem seu próprio CNPJ?**
 
 ---
 
@@ -150,3 +156,12 @@
 🔶 *Os campos marcados com "a definir" podem ser ajustados conforme regras de negócio futuras.*
 
 ---
+## Dados do funcionario logado :
+
+```ts
+interface loggedUser {
+  role: "gerente" | "comercial" | "logistica" | "financeiro",
+  regional: "PE",
+  username: string
+}
+```

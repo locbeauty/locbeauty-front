@@ -1,4 +1,4 @@
-import { CreateRegionalForm } from "@/components/pages/regionals/CreateRegionalForm";
+import { CreateRegionalForm } from "@/components/pages/regionals/create/CreateRegionalForm";
 import { CreationPageFooter } from "@/components/shared/CreationPageFooter";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ export default function CreateRegionalPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Nova Regional</h1>
                     <p className="text-muted-foreground">
-                        Cadastre uma nova regional no sistema
+            Cadastre uma nova regional no sistema
                     </p>
                 </div>
             </div>
@@ -38,7 +38,10 @@ export default function CreateRegionalPage() {
                 <CreateRegionalForm />
             </Card>
 
-            <CreationPageFooter cancelUrl={ ROUTES.REGIONALS } />
+            <CreationPageFooter
+                cancelUrl={ ROUTES.REGIONALS }
+                formId="create-regional-form"
+            />
         </div>
     );
 }

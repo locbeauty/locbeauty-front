@@ -1,4 +1,4 @@
-import { CustomersTable } from "@/components/pages/customers/CustomersTable";
+import { CustomersTable } from "@/components/pages/customers/view/CustomersTable";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
