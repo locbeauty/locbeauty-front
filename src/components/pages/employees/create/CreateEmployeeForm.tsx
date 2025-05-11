@@ -13,6 +13,7 @@ import { SelectRegional } from "@/components/shared/SelectRegional";
 import DocumentInput from "../../../shared/DocumentInput";
 import { SelectRole } from "@/components/shared/SelectRole";
 import PhoneInput from "../../../shared/PhoneInput";
+import { toast } from "sonner";
 
 export function CreateEmployeeForm() {
     const {
@@ -28,10 +29,9 @@ export function CreateEmployeeForm() {
         },
     });
 
-    async function handleCreateEmployee(
-        newEmployeeData: CreateEmployeeFormSchemaType
-    ) {
+    async function handleCreateEmployee(newEmployeeData: CreateEmployeeFormSchemaType) {
         console.log("newEmployeeData: ", newEmployeeData);
+        toast.success("Funcionário criado com sucesso!");
     }
 
     return (

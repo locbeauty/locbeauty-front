@@ -8,6 +8,7 @@ import {
     createCustomerFormSchema,
     CreateCustomerFormSchemaType,
 } from "@/lib/zod/CreateCustomerValidation";
+import { toast } from "sonner";
 
 export function CreateCustomerForm() {
     const role = "ROOT";
@@ -28,6 +29,8 @@ export function CreateCustomerForm() {
     function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
     // TODO: selecionar as informações antes de enviar pra
         console.log("newCustomerData: ", newCustomerData);
+        toast.success("Cliente criado com sucesso!");
+
     }
 
     return (
