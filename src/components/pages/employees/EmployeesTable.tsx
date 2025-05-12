@@ -24,7 +24,7 @@ export function EmployeesTable() {
                     <tr className="border-t hover:bg-muted/50">
                         <td className="p-3">Fernanda Santos</td>
                         <td className="p-3">987.654.321-00</td>
-                        <td className="p-3">Analista</td>
+                        <td className="p-3">Logística</td>
                         <td className="p-3">Sul</td>
                         <td className="p-3">(51) 98765-4321</td>
                         <td className="p-3">fernanda@empresa.com</td>
@@ -32,7 +32,7 @@ export function EmployeesTable() {
                     <tr className="border-t hover:bg-muted/50">
                         <td className="p-3">Marcos Oliveira</td>
                         <td className="p-3">456.789.123-00</td>
-                        <td className="p-3">Técnico</td>
+                        <td className="p-3">Comercial</td>
                         <td className="p-3">Nordeste</td>
                         <td className="p-3">(81) 98765-4321</td>
                         <td className="p-3">marcos@empresa.com</td>
