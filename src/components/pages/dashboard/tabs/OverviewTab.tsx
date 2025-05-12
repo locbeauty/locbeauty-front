@@ -1,12 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@radix-ui/react-progress";
-import { BarChart, DollarSign, Star, Users } from "lucide-react";
+import { DollarSign, DollarSignIcon, Users } from "lucide-react";
 import { CustomAreaChart } from "../CustomAreaChart";
 import { CustomBarChart } from "../CustomBarChart";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 
-export function OverviewTab({ period }: {period: string}) {
+export function OverviewTab() {
     const receitaData = [
         { date: "Jan", Receita: 34500 },
         { date: "Fev", Receita: 42000 },
@@ -37,12 +35,26 @@ export function OverviewTab({ period }: {period: string}) {
         { date: "Dez", TaxaDeOcupacao: 94 },
     ];
 
-    const cidadesData = [
-        { name: "São Paulo", value: 1423 },
-        { name: "Rio de Janeiro", value: 952 },
-        { name: "Belo Horizonte", value: 687 },
-        { name: "Brasília", value: 532 },
-        { name: "Curitiba", value: 408 },
+    const RegionalsData = [
+        { name: "Ceará", value: 1423 },
+        { name: "Pernambuco", value: 952 },
+        { name: "Bahia", value: 687 },
+        { name: "Rio de Janeiro", value: 532 },
+        { name: "Pará", value: 408 },
+        { name: "Piauí", value: 408 },
+        { name: "Espírito Santo", value: 408 },
+        { name: "Rio Grande do Norte", value: 408 },
+    ];
+
+    const CidadesData = [
+        { name: "Vitória de Santo Antão", value: 1423 },
+        { name: "Recife", value: 952 },
+        { name: "Xique-Xique", value: 687 },
+        { name: "Fortaleza", value: 532 },
+        { name: "João Pessoa", value: 408 },
+        { name: "Bangu", value: 408 },
+        { name: "Santo André", value: 408 },
+        { name: "Natal", value: 408 },
     ];
 
     return (
@@ -55,20 +67,17 @@ export function OverviewTab({ period }: {period: string}) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">R$ 82.100,00</div>
-                        <p className="text-xs text-muted-foreground">+7,3% em relação ao mês anterior</p>
+                        <p className="mt-1 text-sm text-muted-foreground"><span className="text-destructive">-7,3%</span> em relação ao mês anterior</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Taxa de Ocupação</CardTitle>
-                        <BarChart className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">Número de inadimplências</CardTitle>
+                        <DollarSignIcon className="h-4 w-4 text-destructive" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">94%</div>
-                        <div className="mt-2">
-                            <Progress value={ 94 } className="h-2" />
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">+3% em relação ao mês anterior</p>
+                        <div className="text-2xl font-bold">12</div>
+                        <p className="mt-1 text-sm text-muted-foreground"><span className="text-destructive">+10%</span> em relação ao mês anterior</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -78,34 +87,55 @@ export function OverviewTab({ period }: {period: string}) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">1.248</div>
-                        <p className="text-xs text-muted-foreground">+12% em relação ao mês anterior</p>
+                        <p className="text-sm text-muted-foreground mt-1"><span className="text-green-500">+12%</span> em relação ao mês anterior</p>
                     </CardContent>
                 </Card>
                 <Card className="w-[89vw] md:w-auto">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Satisfação do Cliente</CardTitle>
-                        <Star className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">Clientes inativos</CardTitle>
+                        <Users className="h-4 w-4 text-destructive" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">4.7/5.0</div>
-                        <div className="mt-1 flex items-center">
-                            {[ 1, 2, 3, 4, 5 ].map((star) => (
-                                <Star
-                                    key={ star }
-                                    className={ `h-4 w-4 ${
-                                        star <= 4 ? "fill-primary text-primary" : ""
-                                    } ${star === 5 ? "fill-primary text-primary opacity-70" : ""}` }
-                                />
-                            ))}
-                        </div>
+                        <div className="text-2xl font-bold">40</div>
+                        <p className="text-sm text-muted-foreground mt-1"><span className="text-green-500">-12%</span> em relação ao mês anterior</p>
                     </CardContent>
                 </Card>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                <Card className="lg:col-span-3 md:w-auto w-[89vw]">
+                    <CardHeader>
+                        <CardTitle>Número de agendamentos/mês</CardTitle>
+                        <CardDescription className="flex items-center justify-between">Equipamentos alugados mês a mês
+                            <CustomFilterSelect
+                                items={ [ "2020", "2021", "2022", "2023", "2024", "2025" ].reverse() }
+                                placeholder="Selecione o ano"
+                                triggerProps={ { className: "w-[150px]" } }
+                            />
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <CustomAreaChart
+                            data={ ocupacaoData }
+                            dataKey="TaxaDeOcupacao"
+                            height={ 300 }
+                            stroke="hsl(var(--success, 142 76% 36%))"
+                            fill="#7f2b83"
+                            valueFormatter={ (value) => `${value}` }
+                        />
+                    </CardContent>
+                </Card>
                 <Card className="lg:col-span-4 w-[89vw] md:w-auto">
                     <CardHeader>
                         <CardTitle>Receita Total por Período</CardTitle>
-                        <CardDescription>Visualização {period} da receita gerada</CardDescription>
+                        <CardDescription className="flex items-center justify-between">
+                            Visualização mensal da receita gerada
+                            <CustomFilterSelect
+                                items={ [ "2020", "2021", "2022", "2023", "2024", "2025" ].reverse() }
+                                placeholder="Selecione o ano"
+                                triggerProps={ { className: "w-[150px]" } }
+                            />
+                        </CardDescription>
+
                     </CardHeader>
                     <CardContent>
                         <CustomAreaChart
@@ -118,92 +148,53 @@ export function OverviewTab({ period }: {period: string}) {
                         />
                     </CardContent>
                 </Card>
-                <Card className="lg:col-span-3 md:w-auto w-[89vw]">
-                    <CardHeader>
-                        <CardTitle>Taxa de Ocupação</CardTitle>
-                        <CardDescription>Equipamentos alugados ÷ total disponível</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <CustomAreaChart
-                            data={ ocupacaoData }
-                            dataKey="TaxaDeOcupacao"
-                            height={ 300 }
-                            stroke="hsl(var(--success, 142 76% 36%))"
-                            fill="#7f2b83"
-                            valueFormatter={ (value) => `${value}%` }
-                        />
-                    </CardContent>
-                </Card>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <Card className="lg:col-span-3 w-[89vw] md:w-auto">
                     <CardHeader>
-                        <CardTitle>Cidades que Mais Consomem</CardTitle>
-                        <CardDescription>Número de locações por cidade</CardDescription>
+                        <CardTitle>Ranking de filiais</CardTitle>
+                        <CardDescription className="flex items-center justify-between">
+                            Número de locações por filial
+                            <CustomFilterSelect
+                                items={ [ "2020", "2021", "2022", "2023", "2024", "2025" ].reverse() }
+                                placeholder="Selecione o ano"
+                                triggerProps={ { className: "w-[150px]" } }
+                            />
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <CustomBarChart
-                            data={ cidadesData }
+                            data={ RegionalsData }
                             dataKey="value"
                             nameKey="name"
-                            height={ 300 }
-                            fill="hsl(var(--warning, 38 92% 50%))"
+                            height={ 400 }
+                            fill="#7f2b83"
                             valueFormatter={ (value) => `${value} locações` }
                         />
+
                     </CardContent>
                 </Card>
-                <Card className="lg:col-span-4 md:w-auto w-[89vw]">
+                <Card className="lg:col-span-4 w-[89vw] md:w-auto">
                     <CardHeader>
-                        <CardTitle>Tempo Médio de Inatividade</CardTitle>
-                        <CardDescription>Tempo médio em que os equipamentos ficam sem uso</CardDescription>
+                        <CardTitle>Ranking de cidades</CardTitle>
+                        <CardDescription className="flex items-center justify-between">
+                            Cidades com mais agendamentos
+                            <CustomFilterSelect
+                                items={ [ "2020", "2021", "2022", "2023", "2024", "2025" ].reverse() }
+                                placeholder="Selecione o ano"
+                                triggerProps={ { className: "w-[150px]" } }
+                            />
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Tipo de Equipamento</TableHead>
-                                    <TableHead>Tempo Médio</TableHead>
-                                    <TableHead>Status</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell className="font-medium">Escavadeiras</TableCell>
-                                    <TableCell>2.4 dias</TableCell>
-                                    <TableCell>
-                                        <Badge className="bg-green-500">Ótimo</Badge>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className="font-medium">Tratores</TableCell>
-                                    <TableCell>3.2 dias</TableCell>
-                                    <TableCell>
-                                        <Badge className="bg-green-500">Ótimo</Badge>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className="font-medium">Compressores</TableCell>
-                                    <TableCell>1.8 dias</TableCell>
-                                    <TableCell>
-                                        <Badge className="bg-green-500">Ótimo</Badge>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className="font-medium">Geradores</TableCell>
-                                    <TableCell>4.5 dias</TableCell>
-                                    <TableCell className="w-[300px]">
-                                        <Badge className="bg-yellow-500">Regular</Badge>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className="font-medium">Plataformas</TableCell>
-                                    <TableCell>5.7 dias</TableCell>
-                                    <TableCell>
-                                        <Badge className="bg-yellow-500">Regular</Badge>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <CustomBarChart
+                            data={ CidadesData }
+                            dataKey="value"
+                            nameKey="name"
+                            height={ 400 }
+                            fill="#7f2b83"
+                            valueFormatter={ (value) => `${value} locações` }
+                        />
                     </CardContent>
                 </Card>
             </div>
