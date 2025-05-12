@@ -9,9 +9,10 @@ export function BookingsTable() {
                     <tr>
                         <th className="text-left p-3 font-medium">Cliente</th>
                         <th className="text-left p-3 font-medium">Equipamento</th>
-                        <th className="text-left p-3 font-medium">Quantidade</th>
-                        <th className="text-left p-3 font-medium">Data Início</th>
-                        <th className="text-left p-3 font-medium">Data Fim</th>
+                        <th className="text-center p-3 font-medium">Quantidade</th>
+                        <th className=" text-center p-3 font-medium">Data</th>
+                        <th className=" text-center p-3 font-medium">Horário inicial</th>
+                        <th className=" text-center p-3 font-medium">Horário final</th>
                         <th className="p-3 font-medium text-center">Status</th>
                         <th className="p-3 font-medium text-center">Pagamento</th>
                     </tr>
@@ -19,10 +20,11 @@ export function BookingsTable() {
                 <tbody>
                     <tr className="border-t hover:bg-muted/50">
                         <td className="p-3">João Silva</td>
-                        <td className="p-3">Escavadeira Hidráulica</td>
-                        <td className="p-3">1</td>
-                        <td className="p-3">15/05/2023</td>
-                        <td className="p-3">20/05/2023</td>
+                        <td className="p-3">Lavieen</td>
+                        <td className="p-3 text-center">1</td>
+                        <td className="p-3 text-center">15/05/2023</td>
+                        <td className="p-3 text-center">14:00</td>
+                        <td className="p-3 text-center">18:00</td>
                         <td className="p-3 text-center">
                             <BookingStatusBadge status="Cancelado" />
                         </td>
@@ -32,10 +34,11 @@ export function BookingsTable() {
                     </tr>
                     <tr className="border-t hover:bg-muted/50">
                         <td className="p-3">Empresa ABC Ltda</td>
-                        <td className="p-3">Compressor de Ar</td>
-                        <td className="p-3">3</td>
-                        <td className="p-3">10/06/2023</td>
-                        <td className="p-3">25/06/2023</td>
+                        <td className="p-3">Herus Hifu</td>
+                        <td className="p-3 text-center">3</td>
+                        <td className="p-3 text-center">10/06/2023</td>
+                        <td className="p-3 text-center">14:00</td>
+                        <td className="p-3 text-center">18:00</td>
                         <td className="p-3 text-center">
                             <BookingStatusBadge status="Concluído" />
                         </td>
@@ -45,10 +48,11 @@ export function BookingsTable() {
                     </tr>
                     <tr className="border-t hover:bg-muted/50">
                         <td className="p-3">Maria Oliveira</td>
-                        <td className="p-3">Furadeira Industrial</td>
-                        <td className="p-3">5</td>
-                        <td className="p-3">01/04/2023</td>
-                        <td className="p-3">15/04/2023</td>
+                        <td className="p-3">Ultraformer</td>
+                        <td className="p-3 text-center">5</td>
+                        <td className="p-3 text-center">01/04/2023</td>
+                        <td className="p-3 text-center">14:00</td>
+                        <td className="p-3 text-center">18:00</td>
                         <td className="p-3 text-center">
                             <BookingStatusBadge status="Não iniciado" />
                         </td>
@@ -58,10 +62,11 @@ export function BookingsTable() {
                     </tr>
                     <tr className="border-t hover:bg-muted/50">
                         <td className="p-3">Maria Oliveira</td>
-                        <td className="p-3">Furadeira Industrial</td>
-                        <td className="p-3">5</td>
-                        <td className="p-3">01/04/2023</td>
-                        <td className="p-3">15/04/2023</td>
+                        <td className="p-3">Delight</td>
+                        <td className="p-3 text-center">5</td>
+                        <td className="p-3 text-center">01/04/2023</td>
+                        <td className="p-3 text-center">14:00</td>
+                        <td className="p-3 text-center">18:00</td>
                         <td className="p-3 text-center">
                             <BookingStatusBadge status="Cancelado" />
                         </td>
