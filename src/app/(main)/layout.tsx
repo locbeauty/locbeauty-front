@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardHeader } from "@/components/pages/dashboard/DashboardHeader";
+import { DashboardHeader } from "@/components/shared/DashboardHeader";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";

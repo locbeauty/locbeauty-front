@@ -1,0 +1,12 @@
+clientes mais frequentes;
+equipamentos mais alugados;
+quantidade de agendamentos diário | mensal | anual;
+
+faturamento diário | mensal | anual / meta (cada uma | todas as filias);
+
+clientes que alugaram apenas uma vez | nunca alugaram;
+clientes sumidos há 6 meses ou mais;
+
+cidades | estados mais ativos;
+
+Número de inadimplencias;

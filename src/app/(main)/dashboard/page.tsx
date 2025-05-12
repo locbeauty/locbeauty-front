@@ -1,74 +1,50 @@
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { ROUTES } from "@/utils/routes";
-import { Users, Package, Building2, UserRound, Calendar } from "lucide-react";
-import Link from "next/link";
+"use client";
 
-const CardList = [
-    {
-        title: "Clientes",
-        description: "Gerenciar cadastro de clientes",
-        link: ROUTES.CUSTOMERS,
-        icon: Users,
-    },
-    {
-        title: "Equipamentos",
-        description: "Gerenciar cadastro de equipamentos",
-        link: ROUTES.GEARS,
-        icon: Package,
-    },
-    {
-        title: "Regionais",
-        description: "Gerenciar cadastro de regionais",
-        link: ROUTES.REGIONALS,
-        icon: Building2,
-    },
-    {
-        title: "Funcionários",
-        description: "Gerenciar cadastro de funcionários",
-        link: ROUTES.EMPLOYEES,
-        icon: UserRound,
-    },
-    {
-        title: "Agendamentos",
-        description: "Gerenciar agendamentos de locações",
-        link: ROUTES.BOOKINGS,
-        icon: Calendar,
-    },
-];
+import { Download } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { OverviewTab } from "@/components/pages/dashboard/tabs/OverviewTab";
+import { DetailsTab } from "@/components/pages/dashboard/tabs/DetailsTab";
+import { CustomersTab } from "@/components/pages/dashboard/tabs/CustomersTab";
+import { LocationsTab } from "@/components/pages/dashboard/tabs/LocationsTab";
 
 export default function DashboardPage() {
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                <p className="text-muted-foreground">
-                    Bem-vindo ao Sistema de Gestão. Você pode navegar pelo sistema com as
-                    opções abaixo.
-                </p>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                { CardList.map((card) => (
-                    <Link key={ card.title } href={ card.link }>
-                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-lg font-medium">
-                                    { card.title }
-                                </CardTitle>
-                                <card.icon className="size-5 text-primary" />
-                            </CardHeader>
-                            <CardContent>
-                                <CardDescription>{ card.description }</CardDescription>
-                            </CardContent>
-                        </Card>
-                    </Link>
-                )) }
+        <div className="flex flex-col">
+            <div className="">
+                <main className="flex-1 overflow-auto">
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" size="icon">
+                                    <Download className="h-4 w-4" />
+                                    <span className="sr-only">Exportar relatório</span>
+                                </Button>
+                            </div>
+                        </div>
+                        <Tabs defaultValue="overview" className="space-y-4">
+                            <TabsList className="">
+                                <TabsTrigger className="text-xs md:text-sm" value="overview">Visão Geral</TabsTrigger>
+                                <TabsTrigger className="text-xs md:text-sm" value="analytics">Análise Detalhada</TabsTrigger>
+                                <TabsTrigger className="text-xs md:text-sm" value="customers">Clientes</TabsTrigger>
+                                <TabsTrigger className="text-xs md:text-sm" value="locations">Localidades</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="overview" className="space-y-4">
+                                <OverviewTab />
+                            </TabsContent>
+                            <TabsContent value="analytics" className="space-y-4">
+                                <DetailsTab />
+                            </TabsContent>
+                            <TabsContent value="customers" className="space-y-4">
+                                <CustomersTab />
+                            </TabsContent>
+                            <TabsContent value="locations" className="space-y-4">
+                                <LocationsTab />
+                            </TabsContent>
+                        </Tabs>
+                    </div>
+                </main>
             </div>
         </div>
     );
