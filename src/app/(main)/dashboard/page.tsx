@@ -14,7 +14,7 @@ export default function DashboardPage() {
             <div className="">
                 <main className="flex-1 overflow-auto">
                     <div className="flex flex-col gap-6">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex gap-4 items-center justify-between">
                             <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="icon">
