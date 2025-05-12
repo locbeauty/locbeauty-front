@@ -62,7 +62,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>
                                 href={ route.href }
                                 className={ cn(
                                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-primary-foreground/10 dark:hover:bg-secondary-foreground/10 hover:text-white transition-colors",
-                                    pathname === route.href ? "bg-primary-foreground/10 dark:hover:text-gray-400 dark:bg-secondary-foreground/10 text-white" : "text-primary-foreground/80 dark:text-secondary-foreground",
+                                    pathname.includes(route.href) ? "bg-primary-foreground/10 dark:hover:text-gray-400 dark:bg-secondary-foreground/10 text-white" : "text-primary-foreground/80 dark:text-secondary-foreground",
                                 ) }
                             >
                                 <route.icon className="h-5 w-5" />
