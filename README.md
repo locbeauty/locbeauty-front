@@ -32,6 +32,8 @@
 
 - **Quais são os dados necessários para cadastrar uma nova regional? Cada uma tem seu próprio CNPJ?**
 
+- **Quais seriam boas métricas?**  
+
 ---
 
 
