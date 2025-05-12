@@ -4,10 +4,10 @@ import { z } from "zod";
 export const createEmployeeFormSchema = z
     .object({
         employeeName: z
-            .string({ message: "Nome do equipamento é obrigatório" })
+            .string({ message: "Nome do funcionário é obrigatório" })
             .trim()
-            .min(1, { message: "Nome do equipamento é obrigatório" })
-            .max(100, { message: "Nome do equipamento deve ter no máximo 100 caracteres" }),
+            .min(1, { message: "Nome do funcionário é obrigatório" })
+            .max(100, { message: "Nome do funcionário deve ter no máximo 100 caracteres" }),
         sourceRegional: z
             .string()
             .trim()

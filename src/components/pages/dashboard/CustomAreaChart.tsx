@@ -42,9 +42,9 @@ export const CustomAreaChart = ({
                         <stop offset="95%" stopColor={ fill } stopOpacity={ 0 } />
                     </linearGradient>
                 </defs>
-                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={ 12 } tickLine={ false } axisLine={ false } />
+                <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={ 12 } tickLine={ false } axisLine={ false } />
                 <YAxis
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke="var(--muted-foreground)"
                     fontSize={ 12 }
                     tickLine={ false }
                     axisLine={ false }
