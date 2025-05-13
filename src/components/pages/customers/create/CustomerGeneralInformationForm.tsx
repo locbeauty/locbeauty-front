@@ -84,7 +84,7 @@ export function CustomerGeneralInformationForm() {
                     </div>
                 </div>
 
-                <div className="border p-4 rounded-md md:h-auto h-[340px]">
+                <div className="border p-4 rounded-md md:h-[350px] h-[350px]">
                     <h3 className="text-lg font-medium mb-4">Informações do Cliente</h3>
 
                     <div className="relative">

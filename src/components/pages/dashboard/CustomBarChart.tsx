@@ -32,11 +32,11 @@ export const CustomBarChart = ({
 }: CustomBarChartProps) => {
     return (
         <ResponsiveContainer width="100%" height={ height }>
-            <RechartsBarChart data={ data } layout="vertical" margin={ { top: 10, right: 30, left: 80, bottom: 0 } }>
+            <RechartsBarChart data={ data } layout="vertical" margin={ { top: 10, right: 0, left: 50, bottom: 0 } }>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={ false } />
                 <XAxis
                     type="number"
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke="var(--muted-foreground)"
                     fontSize={ 12 }
                     tickLine={ false }
                     axisLine={ false }
@@ -45,10 +45,13 @@ export const CustomBarChart = ({
                 <YAxis
                     type="category"
                     dataKey={ nameKey }
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke="var(--muted-foreground)"
                     fontSize={ 12 }
                     tickLine={ false }
                     axisLine={ false }
+                    tick={ {
+                        width: 140,
+                    } }
                 />
                 <RechartsTooltip
                     content={ ({ active, payload }) => {

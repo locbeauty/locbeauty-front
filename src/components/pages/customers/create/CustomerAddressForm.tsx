@@ -97,7 +97,7 @@ export function CustomerAddressForm() {
 
                     <Textarea
                         { ...register("addressComplement") }
-                        className="h-[120px] resize-none max-w-[80vw] placeholder:text-placeholder"
+                        className="h-[100px] resize-none max-w-[80vw] placeholder:text-placeholder"
                         placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
                     />
                 </div>

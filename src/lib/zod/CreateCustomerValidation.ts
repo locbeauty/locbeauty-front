@@ -78,7 +78,7 @@ export const createCustomerFormSchema = z
                     path: [ "birthdate" ],
                 });
             } else {
-                if (data.birthdate > new Date()) {
+                if (data.birthdate >= new Date()) {
                     ctx.addIssue({
                         code: z.ZodIssueCode.custom,
                         message: "Data de nascimento não pode ser no futuro.",

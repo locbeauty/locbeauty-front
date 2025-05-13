@@ -1,8 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, DollarSignIcon, Users } from "lucide-react";
 import { CustomAreaChart } from "../CustomAreaChart";
-import { CustomBarChart } from "../CustomBarChart";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
+import { CustomBarChart } from "../CustomBarChart";
 
 export function OverviewTab() {
     const receitaData = [
