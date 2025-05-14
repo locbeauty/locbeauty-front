@@ -20,7 +20,7 @@ export type Gear = {
 export function GearCard() {
     const [ gears, setGears ] = useState<Gear[]>(gearsMock);
     const [ isDialogOpen, setIsDialogOpen ] = useState(false);
-    const [ selectedGear, setSelectedGear ] = useState<Gear | null>(null);
+    const [ , setSelectedGear ] = useState<Gear | null>(null);
     const [ editedGear, setEditedGear ] = useState<Gear | null>(null);
 
     const handleOpenDialog = (gear: Gear) => {
@@ -31,7 +31,7 @@ export function GearCard() {
 
     return (
         <div className="space-y-4 md:hidden">
-            {gears.map((gear, index) => (
+            {gears.map((gear) => (
                 // <Card key={ index } className="p-4 hover:bg-muted/50">
                 <Card key={ gear.id } className="p-4 hover:bg-muted/50 cursor-pointer" onClick={ () => handleOpenDialog(gear) }>
 
