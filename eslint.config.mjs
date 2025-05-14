@@ -14,7 +14,9 @@ const eslintConfig = [
         ignores: [ "**/node_modules/**", "**/build/**", "**/.next/**", "**/components/ui/**" ], // tira o components/ui daqui!
     },
     ...compat.config({
-        extends: [ "next/core-web-vitals", "next/typescript" ],
+        extends: [
+            "./.eslint.js", // <- Aqui vai puxar os resolvers do plugin import
+        ],
         rules: {
             "semi": [ "warn", "always" ],
             "indent": [ "error", 4 ],
