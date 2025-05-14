@@ -1,9 +1,9 @@
-import { ResponsiveContainer } from "recharts";
 import {
     Area,
     AreaChart as RechartsAreaChart, CartesianGrid, Tooltip as RechartsTooltip,
     XAxis,
-    YAxis
+    YAxis,
+    ResponsiveContainer
 } from "recharts";
 
 interface ReceitaData {

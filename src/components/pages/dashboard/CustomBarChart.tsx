@@ -1,10 +1,10 @@
-import { ResponsiveContainer } from "recharts";
 import {
     Bar,
     BarChart as RechartsBarChart,
     CartesianGrid, Tooltip as RechartsTooltip,
     XAxis,
-    YAxis
+    YAxis,
+    ResponsiveContainer
 } from "recharts";
 
 interface CustomBarChartProps {
