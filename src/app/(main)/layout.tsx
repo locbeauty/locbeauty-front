@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardHeader } from "@/components/shared/DashboardHeader";
+import { DashboardHeader } from "@/components/ui/AplicationHeader/DashboardHeader";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -9,8 +9,8 @@ import { useState } from "react";
 export default function DashboardLayout({
     children,
 }: Readonly<{
-    children: React.ReactNode
-  }>) {
+  children: React.ReactNode;
+}>) {
     const [ sidebarOpen, setSidebarOpen ] = useState(false);
 
     return (
@@ -21,15 +21,17 @@ export default function DashboardLayout({
 
             <div className="flex-1 md:ml-48">
                 <DashboardHeader setSidebarOpen={ setSidebarOpen } />
-                <main className="p-6">{ children }</main>
+                <main className="p-6">{children}</main>
             </div>
 
-            { /* Overlay for mobile */ }
-            { sidebarOpen && (
-                <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={ () => setSidebarOpen(false) } />
-            ) }
+            {/* Overlay for mobile */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/50 md:hidden"
+                    onClick={ () => setSidebarOpen(false) }
+                />
+            )}
             <Toaster />
-
         </div>
     );
 }
