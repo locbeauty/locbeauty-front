@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dispatch, SetStateAction } from "react";
 import { Gear } from "../GearCard";
 import { gears } from "@/utils/mocks/gears";
+import { REGIONALS } from "@/utils/regionals";
 
 interface EditDialogProps {
     isDialogOpen: boolean;
@@ -74,8 +75,6 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
         }
     };
 
-    const regions = [ "Pernambuco", "Bahia", "Rio de Janeiro", "Ceará", "São Paulo", "Minas Gerais" ];
-
     return (
         <Dialog open={ isDialogOpen } onOpenChange={ setIsDialogOpen }>
             <DialogContent className="sm:max-w-[600px]" aria-describedby={ undefined } onOpenAutoFocus={ (e) => e.preventDefault() }>
@@ -86,8 +85,8 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
                 {editedGear && (
                     <div className="grid gap-6 py-4">
                         <div className="grid grid-cols-1 gap-3">
-                            <Label htmlFor="name">Nome</Label>
-                            <Input id="name" name="name" value={ editedGear.name } onChange={ handleInputChange } />
+                            <Label>Nome</Label>
+                            <Input name="name" value={ editedGear.name } onChange={ handleInputChange } />
                         </div>
 
                         <div className="grid grid-cols-1 gap-3">
@@ -109,11 +108,14 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
                                         <SelectValue placeholder="Selecione uma regional" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {regions.map((region) => (
-                                            <SelectItem key={ region } value={ region }>
-                                                {region}
-                                            </SelectItem>
-                                        ))}
+                                        { REGIONALS.map((estado) => {
+                                            if(estado === "") return null;
+                                            return (
+                                                <SelectItem key={ estado } value={ estado }>
+                                                    { estado }
+                                                </SelectItem>
+                                            );
+                                        }) }
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -161,7 +163,7 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
                 )}
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={ handleCloseDialog }>
+                    <Button variant="outline" onClick={ () => handleCloseDialog() }>
               Cancelar
                     </Button>
                     <Button onClick={ handleSaveGear }>
