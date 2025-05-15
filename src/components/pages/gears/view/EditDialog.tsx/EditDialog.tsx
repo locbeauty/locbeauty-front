@@ -77,8 +77,8 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
     const regions = [ "Pernambuco", "Bahia", "Rio de Janeiro", "Ceará", "São Paulo", "Minas Gerais" ];
 
     return (
-        <Dialog open={ isDialogOpen } onOpenChange={ () => setIsDialogOpen(prev => !prev) }>
-            <DialogContent className="sm:max-w-[600px]">
+        <Dialog open={ isDialogOpen } onOpenChange={ setIsDialogOpen }>
+            <DialogContent className="sm:max-w-[600px]" aria-describedby={ undefined } onOpenAutoFocus={ (e) => e.preventDefault() }>
                 <DialogHeader>
                     <DialogTitle>Editar Equipamento</DialogTitle>
                 </DialogHeader>
