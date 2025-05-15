@@ -33,7 +33,6 @@ export function GearCard() {
     return (
         <div className="space-y-4 md:hidden">
             {gears.map((gear) => (
-                // <Card key={ index } className="p-4 hover:bg-muted/50">
                 <Card key={ gear.id } className="p-4 hover:bg-muted/50 cursor-pointer" onClick={ () => handleOpenDialog(gear) }>
 
                     <div className="flex justify-between items-start mb-2">
