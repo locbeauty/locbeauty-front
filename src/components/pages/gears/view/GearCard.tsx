@@ -19,6 +19,7 @@ export type Gear = {
 
 export function GearCard() {
     const [ gears, setGears ] = useState<Gear[]>(gearsMock);
+
     const [ isDialogOpen, setIsDialogOpen ] = useState(false);
     const [ , setSelectedGear ] = useState<Gear | null>(null);
     const [ editedGear, setEditedGear ] = useState<Gear | null>(null);
@@ -66,16 +67,16 @@ export function GearCard() {
                         <div className="font-medium">Data da aquisição:</div>
                         <div>{gear.acquisitionDate}</div>
                     </div>
-                    <EditDialog
-                        editedGear={ editedGear }
-                        isDialogOpen={ isDialogOpen }
-                        setIsDialogOpen={ setIsDialogOpen }
-                        setEditedGear={ setEditedGear }
-                        setGears={ setGears }
-                        setSelectedGear={ setSelectedGear }
-                    />
                 </Card>
             ))}
+            <EditDialog
+                editedGear={ editedGear }
+                isDialogOpen={ isDialogOpen }
+                setIsDialogOpen={ setIsDialogOpen }
+                setEditedGear={ setEditedGear }
+                setGears={ setGears }
+                setSelectedGear={ setSelectedGear }
+            />
         </div>
     );
 }
