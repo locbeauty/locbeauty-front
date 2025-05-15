@@ -16,7 +16,7 @@ import { ROUTES } from "@/utils/routes";
 export default function LoginPage() {
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-dvh flex items-center justify-center bg-background">
             <div className="w-full max-w-md p-6">
                 <div className="flex flex-col items-center space-y-2 mb-6">
                     <div className="size-36 bg-primary rounded-full flex items-center justify-center">
