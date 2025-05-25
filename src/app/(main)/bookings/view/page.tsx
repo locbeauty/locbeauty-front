@@ -15,7 +15,7 @@ import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDi
 export default function AgendamentosPage() {
     // Estado para controlar a semana atual
     const [ currentDate, setCurrentDate ] = useState(new Date());
-    const [ selectedAgendamento, setSelectedAgendamento ] =
+    const [ selectedBooking, setSelectedBooking ] =
     useState<Agendamento | null>(null);
     const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] =
     useState(false);
@@ -44,8 +44,8 @@ export default function AgendamentosPage() {
 
     const router = useRouter();
 
-    const openAgendamentoDetails = (agendamento: Agendamento) => {
-        setSelectedAgendamento(agendamento);
+    const openBookingDetails = (booking: Agendamento) => {
+        setSelectedBooking(booking);
         setBookingDetailsDialogOpen(true);
     };
 
@@ -86,7 +86,7 @@ export default function AgendamentosPage() {
             />
             <CalendarContent
                 currentDate={ currentDate }
-                openAgendamentoDetails={ openAgendamentoDetails }
+                openBookingDetails={ openBookingDetails }
                 viewType={ viewType }
             />
             <CalendarFooter />
@@ -94,7 +94,7 @@ export default function AgendamentosPage() {
             <BookingDetailsDialog
                 isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen }
                 setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
-                selectedAgendamento={ selectedAgendamento }
+                selectedAgendamento={ selectedBooking }
             />
         </div>
     );

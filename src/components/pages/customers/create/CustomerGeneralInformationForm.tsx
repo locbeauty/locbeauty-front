@@ -133,7 +133,7 @@ export function CustomerGeneralInformationForm() {
                                             placeholder="Escolha a data de nascimento"
                                             value={ birthdate }
                                             onChange={ (date) => {
-                                                setValue("birthdate", date!);
+                                                setValue("birthdate", date);
                                                 trigger("birthdate");
                                             } }
                                             classNames={ {
