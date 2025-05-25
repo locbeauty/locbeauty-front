@@ -12,14 +12,14 @@ import { SingleEventBox } from "./SingleEventBox";
 
 interface WeekViewProps {
   currentDate: Date;
-  agendamentos: Agendamento[];
-  openAgendamentoDetails: (_agendamento: Agendamento) => void;
+  bookings: Agendamento[];
+  openBookingDetails: (_agendamento: Agendamento) => void;
 }
 
 export function WeekView({
     currentDate,
-    agendamentos,
-    openAgendamentoDetails,
+    bookings,
+    openBookingDetails,
 }: WeekViewProps) {
     // Gerar os dias da semana a partir da data atual
     const weekDays = getWeekDays(currentDate);
@@ -51,30 +51,30 @@ export function WeekView({
                 { /* Agendamentos */ }
                 { (() => {
                     // Agrupar agendamentos por dia
-                    const agendamentosByDay: Record<number, Agendamento[]> = {};
+                    const bookingsByDay: Record<number, Agendamento[]> = {};
 
-                    agendamentos.forEach((agendamento) => {
-                        if (!isAgendamentoInWeek(agendamento, weekDays)) return;
+                    bookings.forEach((booking) => {
+                        if (!isAgendamentoInWeek(booking, weekDays)) return;
 
-                        const dayIndex = getDayIndex(agendamento.startDate, weekDays);
+                        const dayIndex = getDayIndex(booking.startDate, weekDays);
                         if (dayIndex === -1) return;
 
-                        if (!agendamentosByDay[dayIndex]) {
-                            agendamentosByDay[dayIndex] = [];
+                        if (!bookingsByDay[dayIndex]) {
+                            bookingsByDay[dayIndex] = [];
                         }
 
-                        agendamentosByDay[dayIndex].push(agendamento);
+                        bookingsByDay[dayIndex].push(booking);
                     });
 
                     // Renderizar agendamentos para cada dia
-                    return Object.entries(agendamentosByDay).flatMap(
+                    return Object.entries(bookingsByDay).flatMap(
                         ([ dayIndexStr, dayAgendamentos ]) => {
                             const dayIndex = Number.parseInt(dayIndexStr);
 
                             // Agrupar agendamentos sobrepostos para este dia
-                            const agendamentoGroups = groupOverlappingEvents(dayAgendamentos);
+                            const bookingGroups = groupOverlappingEvents(dayAgendamentos);
 
-                            return agendamentoGroups.flatMap((group) => {
+                            return bookingGroups.flatMap((group) => {
                                 // When there is only one booking starting at the time, show him with full event box width
                                 if (group.length === 1) {
                                     return (
@@ -82,7 +82,7 @@ export function WeekView({
                                             key={ group[0].id }
                                             dayIndex={ dayIndex }
                                             group={ group }
-                                            openAgendamentoDetails={ openAgendamentoDetails }
+                                            openBookingDetails={ openBookingDetails }
                                         />
                                     );
                                 } else {
@@ -92,7 +92,7 @@ export function WeekView({
                                             key={ group[0].id }
                                             dayIndex={ dayIndex }
                                             group={ group }
-                                            openAgendamentoDetails={ openAgendamentoDetails }
+                                            openBookingDetails={ openBookingDetails }
                                         />
                                     );
                                 }

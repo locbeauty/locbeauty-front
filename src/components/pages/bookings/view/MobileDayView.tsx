@@ -13,17 +13,17 @@ import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 
 interface MobileDayViewProps {
   currentDate: Date;
-  agendamentos: Agendamento[];
-  openAgendamentoDetails: (_agendamento: Agendamento) => void;
+  bookings: Agendamento[];
+  openBookingDetails: (_agendamento: Agendamento) => void;
 }
 
 export function MobileDayView({
-    agendamentos,
+    bookings,
     currentDate,
-    openAgendamentoDetails,
+    openBookingDetails,
 }: MobileDayViewProps) {
-    const dayAgendamentos = agendamentos.filter((agendamento) => {
-        return isSameDay(agendamento.startDate, currentDate);
+    const dayAgendamentos = bookings.filter((booking) => {
+        return isSameDay(booking.startDate, currentDate);
     });
 
     return (
@@ -74,7 +74,7 @@ export function MobileDayView({
                     agendamento.totalDuration <= 12 &&
                     "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
                                 ) }
-                                onClick={ () => openAgendamentoDetails(agendamento) }
+                                onClick={ () => openBookingDetails(agendamento) }
                             >
                                 <div className="font-medium">{agendamento.gear}</div>
                                 <div className="text-sm text-muted-foreground mt-1 dark:text-muted">

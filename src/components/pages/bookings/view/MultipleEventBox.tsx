@@ -13,13 +13,13 @@ import { cn } from "@/lib/utils";
 interface MultipleEventBoxProps {
   group: Agendamento[];
   dayIndex: number;
-  openAgendamentoDetails: (_agendamento: Agendamento) => void;
+  openBookingDetails: (_agendamento: Agendamento) => void;
 }
 
 export function MultipleEventBox({
     group,
     dayIndex,
-    openAgendamentoDetails,
+    openBookingDetails,
 }: MultipleEventBoxProps) {
     // Se o grupo tem múltiplos eventos, divida a largura
 
@@ -74,7 +74,7 @@ export function MultipleEventBox({
                     width: eventWidth,
                     overflowX: "hidden",
                 } }
-                onClick={ () => openAgendamentoDetails(agendamento) }
+                onClick={ () => openBookingDetails(agendamento) }
             >
                 <div className="font-medium text-sm truncate">{agendamento.gear}</div>
                 <div className="flex items-center text-xs gap-1 truncate">

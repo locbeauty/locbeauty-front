@@ -13,13 +13,13 @@ import { cn } from "@/lib/utils";
 interface SingleEventBoxProps {
   group: Agendamento[];
   dayIndex: number;
-  openAgendamentoDetails: (_agendamento: Agendamento) => void;
+  openBookingDetails: (_agendamento: Agendamento) => void;
 }
 
 export function SingleEventBox({
     group,
     dayIndex,
-    openAgendamentoDetails,
+    openBookingDetails,
 }: SingleEventBoxProps) {
     // Se o grupo tem apenas um evento, use a largura total
     const hourColumnWidth = 100;
@@ -64,7 +64,7 @@ export function SingleEventBox({
                 left,
                 width,
             } }
-            onClick={ () => openAgendamentoDetails(agendamento) }
+            onClick={ () => openBookingDetails(agendamento) }
         >
             <div className="font-medium text-sm truncate">{agendamento.gear}</div>
             <div className="flex items-center text-xs gap-1 truncate">

@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
-import { CreateRegionalFormSchemaType } from "@/lib/zod/createRegionalValidation";
+import { CreateRegionalFormSchemaType } from "@/lib/zod/CreateRegionalValidation";
 
 export function RegionalAddressForm() {
     const {

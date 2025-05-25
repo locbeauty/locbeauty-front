@@ -2,38 +2,38 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DayView } from "./DayView";
 import { WeekView } from "./WeekView";
 import { MonthView } from "./MonthView";
-import { agendamentos } from "@/utils/mocks/bookings";
+import { bookings } from "@/utils/mocks/bookings";
 import { Agendamento } from "@/app/(main)/bookings/page";
 
 interface CalendarContentProps {
     viewType: "semana" | "dia" | "mes"
     currentDate: Date
-    openAgendamentoDetails: (_agendamento: Agendamento) => void
+    openBookingDetails: (_agendamento: Agendamento) => void
 }
 
-export function CalendarContent({ viewType, currentDate, openAgendamentoDetails }: CalendarContentProps) {
+export function CalendarContent({ viewType, currentDate, openBookingDetails }: CalendarContentProps) {
     return(
         <Card className="overflow-hidden py-0 ">
             <CardContent className="p-0">
                 { viewType === "dia" && (
                     <DayView
                         currentDate={ currentDate }
-                        agendamentos={ agendamentos }
-                        openAgendamentoDetails={ openAgendamentoDetails }
+                        bookings={ bookings }
+                        openBookingDetails={ openBookingDetails }
                     />
                 ) }
                 { viewType === "semana" && (
                     <WeekView
                         currentDate={ currentDate }
-                        agendamentos={ agendamentos }
-                        openAgendamentoDetails={ openAgendamentoDetails }
+                        bookings={ bookings }
+                        openBookingDetails={ openBookingDetails }
                     />
                 ) }
                 { viewType === "mes" && (
                     <MonthView
                         currentDate={ currentDate }
-                        agendamentos={ agendamentos }
-                        openAgendamentoDetails={ openAgendamentoDetails }
+                        bookings={ bookings }
+                        openBookingDetails={ openBookingDetails }
                     />
                 ) }
             </CardContent>

@@ -50,7 +50,7 @@ export function BookingDetailsDialog({
             open={ isBookingDetailsDialogOpen }
             onOpenChange={ setBookingDetailsDialogOpen }
         >
-            <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-scroll dark:bg-gray-900">
+            <DialogContent className="max-h-[90vh] w-[90vw] md:w-[600px] overflow-scroll dark:bg-gray-900">
                 { selectedAgendamento && (
                     <>
                         <DialogHeader>

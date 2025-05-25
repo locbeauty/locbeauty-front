@@ -10,14 +10,14 @@ import { CalendarMonthHeader } from "./CalendarMonthHeader";
 
 interface MonthViewProps {
   currentDate: Date;
-  agendamentos: Agendamento[];
-  openAgendamentoDetails: (_agendamento: Agendamento) => void;
+  bookings: Agendamento[];
+  openBookingDetails: (_agendamento: Agendamento) => void;
 }
 
 export function MonthView({
     currentDate,
-    agendamentos,
-    openAgendamentoDetails,
+    bookings,
+    openBookingDetails,
 }: MonthViewProps) {
     const daysInCurrentMonth = getMonthDays(currentDate);
 
@@ -29,8 +29,8 @@ export function MonthView({
             <div className="grid grid-cols-7">
                 { daysInCurrentMonth.map((day, index) => {
                     // Filtrar agendamentos para este dia
-                    const dayAgendamentos = agendamentos.filter((agendamento) =>
-                        isSameDay(agendamento.startDate, day)
+                    const dayBookings = bookings.filter((booking) =>
+                        isSameDay(booking.startDate, day)
                     );
 
                     // Verificar se é do mês atual ou não
@@ -41,7 +41,7 @@ export function MonthView({
                             key={ index }
                             className={ cn(
                                 "min-h-[120px] border-r border-b p-1 relative max-h-[100px]",
-                                dayAgendamentos.length > 3 && "overflow-y-scroll",
+                                dayBookings.length > 3 && "overflow-y-scroll",
                                 isToday(day) ? "bg-primary/5" : "",
                                 !isCurrentMonth ? "bg-gray-100 text-red-300" : ""
                             ) }
@@ -56,33 +56,33 @@ export function MonthView({
                             </div>
 
                             <div className="space-y-1 mt-1">
-                                { dayAgendamentos
+                                { dayBookings
                                     .sort(
                                         (item1, item2) =>
                                             item1.startDate.getHours() - item2.startDate.getHours()
                                     )
-                                    .map((agendamento) => {
+                                    .map((booking) => {
                                         return (
                                             <div
-                                                key={ agendamento.id }
+                                                key={ booking.id }
                                                 className={ cn(
                                                     "text-xs p-1 rounded border-l-2 cursor-pointer truncate",
                                                     // Default colors for bookings with durations different than 4, 6 and 8-12 hours
                                                     "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
                                                     // Colors for 4h bookings duration
-                                                    agendamento.totalDuration === 4 &&
+                                                    booking.totalDuration === 4 &&
                             "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
                                                     // Colors for 6h bookings duration
-                                                    agendamento.totalDuration === 6 &&
+                                                    booking.totalDuration === 6 &&
                             "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
                                                     // Colors for 8 to 12 hours bookings duration
-                                                    agendamento.totalDuration >= 8 &&
-                            agendamento.totalDuration <= 12 &&
+                                                    booking.totalDuration >= 8 &&
+                            booking.totalDuration <= 12 &&
                             "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
                                                 ) }
-                                                onClick={ () => openAgendamentoDetails(agendamento) }
+                                                onClick={ () => openBookingDetails(booking) }
                                             >
-                                                { formatTime(agendamento.startDate) } - { agendamento.gear }
+                                                { formatTime(booking.startDate) } - { booking.gear }
                                             </div>
                                         );
                                     }) }

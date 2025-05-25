@@ -1,7 +1,7 @@
 import { Agendamento } from "@/app/(main)/bookings/page";
 import { createDate } from "@/components/pages/bookings/view/bookingViewHelpers";
 
-export const agendamentos: Agendamento[] = [
+export const bookings: Agendamento[] = [
     {
         id: 2,
         gear: "Ultraformer",

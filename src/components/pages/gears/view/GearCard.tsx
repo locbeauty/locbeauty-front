@@ -4,18 +4,18 @@ import { Check, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { gears as gearsMock } from "@/utils/mocks/gears";
 import { useState } from "react";
-import { EditDialog } from "./EditDialog.tsx/EditDialog";
+import { UpdateDialog } from "../update/UpdateDialog";
 
 export type Gear = {
-  id: string
-  name: string
-  description: string
-  region: string
-  availableUnits: number
-  totalUnits: number
-  acquisitionDate: string
-  transferable: boolean
-}
+  id: string;
+  name: string;
+  description: string;
+  region: string;
+  availableUnits: number;
+  totalUnits: number;
+  acquisitionDate: string;
+  transferable: boolean;
+};
 
 export function GearCard() {
     const [ gears, setGears ] = useState<Gear[]>(gearsMock);
@@ -33,11 +33,18 @@ export function GearCard() {
     return (
         <div className="space-y-4 md:hidden">
             {gears.map((gear) => (
-                <Card key={ gear.id } className="p-4 hover:bg-muted/50 cursor-pointer" onClick={ () => handleOpenDialog(gear) }>
-
+                <Card
+                    key={ gear.id }
+                    className="p-4 hover:bg-muted/50 cursor-pointer"
+                    onClick={ () => handleOpenDialog(gear) }
+                >
                     <div className="flex justify-between items-start mb-2">
                         <h3 className="font-semibold text-lg">{gear.name}</h3>
-                        <div className={ `flex items-center gap-1 ${gear.transferable ? "text-green-500" : "text-red-500"}` }>
+                        <div
+                            className={ `flex items-center gap-1 ${
+                                gear.transferable ? "text-green-500" : "text-red-500"
+                            }` }
+                        >
                             {gear.transferable ? (
                                 <>
                                     <Check className="h-5 w-5" />
@@ -51,7 +58,9 @@ export function GearCard() {
                             )}
                         </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{gear.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                        {gear.description}
+                    </p>
 
                     <div className="grid grid-cols-2 gap-y-2 text-sm">
                         <div className="font-medium">Regional:</div>
@@ -68,7 +77,7 @@ export function GearCard() {
                     </div>
                 </Card>
             ))}
-            <EditDialog
+            <UpdateDialog
                 editedGear={ editedGear }
                 isDialogOpen={ isDialogOpen }
                 setIsDialogOpen={ setIsDialogOpen }

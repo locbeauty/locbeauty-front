@@ -18,7 +18,7 @@ export function CreateCustomerForm() {
         resolver: zodResolver(createCustomerFormSchema),
         defaultValues: {
             personType: "PF",
-            regional: role === "ROOT" ? "" : user.regional,
+            regionalId: role === "ROOT" ? "" : user.regional,
         },
     });
 

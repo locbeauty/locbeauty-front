@@ -76,7 +76,7 @@ export function CustomerGeneralInformationForm() {
                                 return (
                                     <SelectRegional<CreateCustomerFormSchemaType>
                                         control={ control }
-                                        name="regional"
+                                        name="regionalId"
                                     />
                                 );
                             } }
@@ -100,14 +100,14 @@ export function CustomerGeneralInformationForm() {
                                 <Label htmlFor="nome">Nome Completo</Label>
                                 <Input
                                     className="placeholder:text-placeholder"
-                                    { ...register("customerName") }
+                                    { ...register("fullname") }
                                     id="nome"
                                     placeholder="Nome completo"
                                 />
                                 <div className="h-3">
-                                    {errors.customerName && (
+                                    {errors.fullname && (
                                         <p className="text-xs font-medium text-destructive">
-                                            {errors.customerName.message}
+                                            {errors.fullname.message}
                                         </p>
                                     )}
                                 </div>
@@ -249,17 +249,11 @@ export function CustomerGeneralInformationForm() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="instagram">Instagram</Label>
-                            <Input
-                                { ...register("instagram") }
-                                id="instagram"
-                                className="placeholder:text-placeholder"
-                                placeholder="@usuario"
-                            />
-                            {errors.instagram && (
-                                <p className="text-xs font-medium text-destructive">
-                                    {errors.instagram.message}
-                                </p>
-                            )}
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">@</span>
+                                <Input { ...register("instagram") }  id="instagram" className="pl-8 placeholder:text-placeholder" placeholder="usuario" />
+                            </div>
+                            {errors.instagram && <p className="text-xs font-medium text-destructive">{errors.instagram.message}</p>}
                         </div>
                     </div>
                 </div>

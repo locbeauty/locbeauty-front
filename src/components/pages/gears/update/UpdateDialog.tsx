@@ -1,29 +1,48 @@
-
 import { Save } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Dispatch, SetStateAction } from "react";
-import { Gear } from "../GearCard";
 import { gears } from "@/utils/mocks/gears";
-import { REGIONALS } from "@/utils/regionals";
+import { REGIONALS } from "@/utils/mocks/regionals";
+import { Gear } from "../view/GearCard";
 
-interface EditDialogProps {
-    isDialogOpen: boolean;
-    setIsDialogOpen: Dispatch<SetStateAction<boolean>>
-    editedGear: Gear | null
-    setEditedGear: Dispatch<SetStateAction<Gear | null>>
-    setSelectedGear: Dispatch<SetStateAction<Gear | null>>
-    setGears: Dispatch<SetStateAction<Gear[]>>
+interface UpdateDialogProps {
+  isDialogOpen: boolean;
+  setIsDialogOpen: Dispatch<SetStateAction<boolean>>;
+  editedGear: Gear | null;
+  setEditedGear: Dispatch<SetStateAction<Gear | null>>;
+  setSelectedGear: Dispatch<SetStateAction<Gear | null>>;
+  setGears: Dispatch<SetStateAction<Gear[]>>;
 }
 
-export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEditedGear, setSelectedGear, setGears }: EditDialogProps) {
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+export function UpdateDialog({
+    isDialogOpen,
+    setIsDialogOpen,
+    editedGear,
+    setEditedGear,
+    setSelectedGear,
+    setGears,
+}: UpdateDialogProps) {
+    const handleInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
         if (editedGear) {
             setEditedGear({
                 ...editedGear,
@@ -61,7 +80,9 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
 
     const handleSaveGear = () => {
         if (editedGear) {
-            setGears(gears.map((gear) => (gear.id === editedGear.id ? editedGear : gear)));
+            setGears(
+                gears.map((gear) => (gear.id === editedGear.id ? editedGear : gear))
+            );
             setIsDialogOpen(false);
         }
     };
@@ -77,7 +98,11 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
 
     return (
         <Dialog open={ isDialogOpen } onOpenChange={ setIsDialogOpen }>
-            <DialogContent className="sm:max-w-[600px]" aria-describedby={ undefined } onOpenAutoFocus={ (e) => e.preventDefault() }>
+            <DialogContent
+                className="sm:max-w-[600px]"
+                aria-describedby={ undefined }
+                onOpenAutoFocus={ (e) => e.preventDefault() }
+            >
                 <DialogHeader>
                     <DialogTitle>Editar Equipamento</DialogTitle>
                 </DialogHeader>
@@ -86,7 +111,11 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
                     <div className="grid gap-6 py-4">
                         <div className="grid grid-cols-1 gap-3">
                             <Label>Nome</Label>
-                            <Input name="name" value={ editedGear.name } onChange={ handleInputChange } />
+                            <Input
+                                name="name"
+                                value={ editedGear.name }
+                                onChange={ handleInputChange }
+                            />
                         </div>
 
                         <div className="grid grid-cols-1 gap-3">
@@ -103,19 +132,22 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid grid-cols-1 gap-3">
                                 <Label htmlFor="region">Regional</Label>
-                                <Select value={ editedGear.region } onValueChange={ (value) => handleSelectChange(value, "region") }>
+                                <Select
+                                    value={ editedGear.region }
+                                    onValueChange={ (value) => handleSelectChange(value, "region") }
+                                >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Selecione uma regional" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        { REGIONALS.map((estado) => {
-                                            if(estado === "") return null;
+                                        {REGIONALS.map((estado) => {
+                                            if (estado === "") return null;
                                             return (
                                                 <SelectItem key={ estado } value={ estado }>
-                                                    { estado }
+                                                    {estado}
                                                 </SelectItem>
                                             );
-                                        }) }
+                                        })}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -156,7 +188,11 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
                         </div>
 
                         <div className="flex items-center space-x-2">
-                            <Switch id="transferable" checked={ editedGear.transferable } onCheckedChange={ handleSwitchChange } />
+                            <Switch
+                                id="transferable"
+                                checked={ editedGear.transferable }
+                                onCheckedChange={ handleSwitchChange }
+                            />
                             <Label htmlFor="transferable">Pode ser transferido</Label>
                         </div>
                     </div>
@@ -164,11 +200,11 @@ export function EditDialog({ isDialogOpen, setIsDialogOpen, editedGear, setEdite
 
                 <DialogFooter>
                     <Button variant="outline" onClick={ () => handleCloseDialog() }>
-              Cancelar
+            Cancelar
                     </Button>
                     <Button onClick={ handleSaveGear }>
                         <Save className="mr-2 h-4 w-4" />
-              Salvar alterações
+            Salvar alterações
                     </Button>
                 </DialogFooter>
             </DialogContent>

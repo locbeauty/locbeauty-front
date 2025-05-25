@@ -8,7 +8,7 @@ import { RegionalAddressForm } from "./RegionalAddressForm";
 import {
     createRegionalFormSchema,
     CreateRegionalFormSchemaType,
-} from "@/lib/zod/createRegionalValidation";
+} from "@/lib/zod/CreateRegionalValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";

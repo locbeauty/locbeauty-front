@@ -3,10 +3,10 @@ import { z } from "zod";
 export const createCustomerFormSchema = z
     .object({
         personType: z.enum([ "PF", "PJ" ]),
-        customerName: z.string().trim().optional(),
+        fullname: z.string().trim().optional(),
         personAccountableName: z.string().trim().optional(),
         companyName: z.string().trim().optional(),
-        regional: z.string().optional(),
+        regionalId: z.string().optional(),
         email: z
             .string()
             .optional()
@@ -17,7 +17,9 @@ export const createCustomerFormSchema = z
         cellphone: z
             .string()
             .optional()
-            .refine(val => val !== undefined && val !== "", { message: "Telefone é obrigatório" }), // Validação será feita em outro arquivo
+            .refine((val) => val !== undefined && val !== "", {
+                message: "Telefone é obrigatório",
+            }), // Validação será feita em outro arquivo
         instagram: z.string().trim().optional(),
         CEP: z
             .string()
@@ -63,9 +65,12 @@ export const createCustomerFormSchema = z
             .refine((val) => val !== undefined && val !== "", {
                 message: "Número do imóvel é obrigatório",
             }),
-        CPF: z.string().length(14, { message: "CPF precisa ter 11 caracteres." }).optional(),
+        CPF: z
+            .string()
+            .length(14, { message: "CPF precisa ter 11 caracteres." })
+            .optional(),
         CNPJ: z.string().optional(),
-        addressComplement: z.string().optional(),
+        addressComplement: z.string().nullable(),
         birthdate: z.date().optional(),
     })
     .superRefine((data, ctx) => {
@@ -96,11 +101,11 @@ export const createCustomerFormSchema = z
             }
             // A validação do formato do CPF será feita em outro arquivo
 
-            if (!data.customerName || data.customerName.trim().length < 2) {
+            if (!data.fullname || data.fullname.trim().length < 2) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: "Nome completo é obrigatório para PF.",
-                    path: [ "customerName" ],
+                    path: [ "fullname" ],
                 });
             }
         }
@@ -123,7 +128,10 @@ export const createCustomerFormSchema = z
                 });
             }
 
-            if (!data.personAccountableName || data.personAccountableName.trim().length < 2) {
+            if (
+                !data.personAccountableName ||
+        data.personAccountableName.trim().length < 2
+            ) {
                 ctx.addIssue({
                     path: [ "personAccountableName" ],
                     message: "Nome do responsável é obrigatório para PJ",
@@ -133,4 +141,6 @@ export const createCustomerFormSchema = z
         }
     });
 
-export type CreateCustomerFormSchemaType = z.infer<typeof createCustomerFormSchema>
+export type CreateCustomerFormSchemaType = z.infer<
+  typeof createCustomerFormSchema
+>;
