@@ -13,10 +13,10 @@ export function GearsTable() {
     const [ , setSelectedGear ] = useState<Gear | null>(null);
     const [ editedGear, setEditedGear ] = useState<Gear | null>(null);
 
-    const handleOpenUpdateDialog = (gear: Gear) => {
+    const handleToggleUpdateGearDialog = (openStatus: boolean, gear: Gear) => {
+        setIsDialogOpen(openStatus);
         setSelectedGear(gear);
         setEditedGear({ ...gear });
-        setIsDialogOpen(true);
     };
 
     return (
@@ -89,7 +89,7 @@ export function GearsTable() {
                             ],
                         } }
                         rawData={ gear }
-                        handleOpenUpdateDialog={ handleOpenUpdateDialog }
+                        handleToggleDialog={ handleToggleUpdateGearDialog }
                     />
                 </Fragment>
             ))}
