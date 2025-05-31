@@ -95,7 +95,7 @@ export function CustomersTable() {
                             ],
                         } }
                         rawData={ customer }
-                        handleToggleUpdateCustomerDialog={ handleToggleUpdateCustomerDialog }
+                        handleToggleCustomerDetailsDialog={ handleToggleCustomerDetailsDialog }
                     />
                 </Fragment>
             ))}

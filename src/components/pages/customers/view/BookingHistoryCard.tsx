@@ -43,18 +43,22 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                Histórico de Agendamentos
-                    <Badge variant="secondary">{bookings.length}</Badge>
-                    {visibleBookings < bookings.length && (
-                        <Badge variant="outline" className="text-xs">
+                <CardTitle className="flex items-center md:flex-row md:items-center flex-col">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Calendar className="h-5 w-5 shrink-0" />
+                        Histórico de Agendamentos
+                        <Badge variant="secondary">{bookings.length}</Badge>
+                    </div>
+                    <div className="flex">
+                        {visibleBookings < bookings.length && (
+                            <Badge variant="outline" className="text-xs">
                     Mostrando {visibleBookings} de {bookings.length}
-                        </Badge>
-                    )}
+                            </Badge>
+                        )}
+                    </div>
                 </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
                 {bookings.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                         <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -63,7 +67,7 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                 ) : (
                     <div className="space-y-4">
                         {displayedBookings.map((booking) => (
-                            <Card key={ booking.id } className="border-l-4 border-l-blue-500">
+                            <Card key={ booking.id } className="">
                                 <CardContent className="pt-4">
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                         <div className="space-y-2">

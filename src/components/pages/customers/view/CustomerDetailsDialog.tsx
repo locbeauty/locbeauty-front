@@ -46,17 +46,17 @@ export function CustomerDetailsDialog({
                     <CustomerDetailsCard selectedCustomer={ selectedCustomer } />
 
                     <BookingHistoryCard isCustomerDetailsModalOpen={ isCustomerDetailsModalOpen } selectedCustomer={ selectedCustomer } />
+                    <DialogFooter className="border-t pt-4">
+                        <Button onClick={ handleOpenUpdateCustomerDialog } className="gap-2">
+                            <Pencil className="h-4 w-4" />
+                    Editar Cliente
+                        </Button>
+                        <Button variant="outline" onClick={ () => handleToggleCustomerDetailsDialog(false, selectedCustomer) }>
+                    Fechar
+                        </Button>
+                    </DialogFooter>
                 </div>
 
-                <DialogFooter className="border-t pt-4">
-                    <Button onClick={ handleOpenUpdateCustomerDialog } className="gap-2">
-                        <Pencil className="h-4 w-4" />
-            Editar Cliente
-                    </Button>
-                    <Button variant="outline" onClick={ () => handleToggleCustomerDetailsDialog(false, selectedCustomer) }>
-            Fechar
-                    </Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
