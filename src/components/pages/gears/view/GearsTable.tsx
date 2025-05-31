@@ -1,22 +1,30 @@
 "use client";
-import { Check, X } from "lucide-react";
+import { Check, Eye, Pencil, X } from "lucide-react";
 import { Fragment, useState } from "react";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { gears as gearsMock } from "@/utils/mocks/gears";
 import { Gear } from "./GearCard";
-import { UpdateDialog } from "../update/UpdateDialog";
+import { UpdateGearDialog } from "../update/UpdateGearDialog";
+import { Button } from "@/components/ui/button";
+import { GearDetailsDialog } from "./GearDetailsDialog";
 
 export function GearsTable() {
     const [ gears, setGears ] = useState<Gear[]>(gearsMock);
 
-    const [ isDialogOpen, setIsDialogOpen ] = useState(false);
-    const [ , setSelectedGear ] = useState<Gear | null>(null);
-    const [ editedGear, setEditedGear ] = useState<Gear | null>(null);
+    const [ isUpdateGearDialogOpen, setIsUpdateGearDialogOpen ] = useState(false);
+    const [ isGearDetailsDialogOpen, setIsGearDetailsDialogOpen ] = useState(false);
+    const [ selectedGear, setSelectedGear ] = useState<Gear | null>(null);
 
-    const handleToggleUpdateGearDialog = (openStatus: boolean, gear: Gear) => {
-        setIsDialogOpen(openStatus);
+    const handleToggleUpdateGearDialog = (openStatus: boolean, gear: Gear | null) => {
+        setIsUpdateGearDialogOpen(openStatus);
         setSelectedGear(gear);
-        setEditedGear({ ...gear });
+    };
+
+    const handleToggleGearDetailsDialog = (openStatus: boolean, gear: Gear | null) => {
+        if(openStatus) {
+            setSelectedGear(gear);
+        }
+        setIsGearDetailsDialogOpen(openStatus);
     };
 
     return (
@@ -36,6 +44,7 @@ export function GearsTable() {
                             <th className="text-center p-3 font-medium">
                 Pode ser transferido?
                             </th>
+                            <th className="text-center p-3 font-medium">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,7 +60,7 @@ export function GearsTable() {
                                 <td className="p-3 text-center">{gear.region}</td>
                                 <td className="p-3 text-center">{gear.availableUnits}</td>
                                 <td className="p-3 text-center">{gear.totalUnits}</td>
-                                <td className="p-3 text-center">{gear.acquisitionDate}</td>
+                                <td className="p-3 text-center">{gear.acquisitionDate.toLocaleDateString("pt-BR")}</td>
                                 <td className="p-0 h-full">
                                     <div className="h-full flex justify-center items-center">
                                         {gear.transferable ? (
@@ -60,6 +69,15 @@ export function GearsTable() {
                                             <X className="text-red-500" />
                                         )}
                                     </div>
+                                </td>
+                                <td className="p-3 text-center flex items-center gap-4">
+                                    <Button onClick={ () => handleToggleGearDetailsDialog(true, gear) }>
+                                        <Eye />
+                                    </Button>
+
+                                    <Button variant="outline" onClick={ () => handleToggleUpdateGearDialog(true, gear) }>
+                                        <Pencil />
+                                    </Button>
                                 </td>
                             </tr>
                         ))}
@@ -84,21 +102,27 @@ export function GearsTable() {
                                 { itemLabel: "Unidades totais:", itemInfo: gear.totalUnits },
                                 {
                                     itemLabel: "Data da aquisição:",
-                                    itemInfo: gear.acquisitionDate,
+                                    itemInfo: gear.acquisitionDate.toLocaleDateString("pt-BR"),
                                 },
                             ],
                         } }
                         rawData={ gear }
-                        handleToggleDialog={ handleToggleUpdateGearDialog }
+                        handleToggleDialog={ handleToggleGearDetailsDialog }
                     />
                 </Fragment>
             ))}
+            <GearDetailsDialog
+                handleToggleUpdateGearDialog={ handleToggleUpdateGearDialog }
+                handleToggleGearDetailsDialog={ handleToggleGearDetailsDialog }
+                isGearDetailsModalOpen={ isGearDetailsDialogOpen }
+                selectedGear={ selectedGear }
+            />
 
-            <UpdateDialog
-                editedGear={ editedGear }
-                isDialogOpen={ isDialogOpen }
-                setIsDialogOpen={ setIsDialogOpen }
-                setEditedGear={ setEditedGear }
+            <UpdateGearDialog
+                selectedGear={ selectedGear }
+                isUpdateGearDialogOpen={ isUpdateGearDialogOpen }
+                setIsUpdateGearDialogOpen={ setIsUpdateGearDialogOpen }
+                // setUpdatedGear={ setUpdatedGear }
                 setGears={ setGears }
                 setSelectedGear={ setSelectedGear }
             />

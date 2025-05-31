@@ -4,7 +4,7 @@ import { Check, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { gears as gearsMock } from "@/utils/mocks/gears";
 import { useState } from "react";
-import { UpdateDialog } from "../update/UpdateDialog";
+import { UpdateGearDialog } from "../update/UpdateGearDialog";
 
 export type Gear = {
   id: string;
@@ -12,9 +12,12 @@ export type Gear = {
   description: string;
   region: string;
   availableUnits: number;
+  outOfServiceUnits: number;
   totalUnits: number;
-  acquisitionDate: string;
+  acquisitionDate: Date;
   transferable: boolean;
+  nextMaintenance: Date | null,
+  lastMaintenance: Date | null
 };
 
 export function GearCard() {
@@ -73,15 +76,14 @@ export function GearCard() {
                         <div>{gear.totalUnits}</div>
 
                         <div className="font-medium">Data da aquisição:</div>
-                        <div>{gear.acquisitionDate}</div>
+                        <div>{gear.acquisitionDate.toLocaleString()}</div>
                     </div>
                 </Card>
             ))}
-            <UpdateDialog
-                editedGear={ editedGear }
-                isDialogOpen={ isDialogOpen }
-                setIsDialogOpen={ setIsDialogOpen }
-                setEditedGear={ setEditedGear }
+            <UpdateGearDialog
+                selectedGear={ editedGear }
+                isUpdateGearDialogOpen={ isDialogOpen }
+                setIsUpdateGearDialogOpen={ setIsDialogOpen }
                 setGears={ setGears }
                 setSelectedGear={ setSelectedGear }
             />
