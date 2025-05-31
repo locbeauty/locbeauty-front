@@ -23,29 +23,27 @@ import { gears } from "@/utils/mocks/gears";
 import { REGIONALS } from "@/utils/mocks/regionals";
 import { Gear } from "../view/GearCard";
 
-interface UpdateDialogProps {
-  isDialogOpen: boolean;
-  setIsDialogOpen: Dispatch<SetStateAction<boolean>>;
-  editedGear: Gear | null;
-  setEditedGear: Dispatch<SetStateAction<Gear | null>>;
+interface UpdateGearDialogProps {
+  isUpdateGearDialogOpen: boolean;
+  setIsUpdateGearDialogOpen: Dispatch<SetStateAction<boolean>>;
+  selectedGear: Gear | null;
   setSelectedGear: Dispatch<SetStateAction<Gear | null>>;
   setGears: Dispatch<SetStateAction<Gear[]>>;
 }
 
-export function UpdateDialog({
-    isDialogOpen,
-    setIsDialogOpen,
-    editedGear,
-    setEditedGear,
+export function UpdateGearDialog({
+    isUpdateGearDialogOpen,
+    setIsUpdateGearDialogOpen,
+    selectedGear,
     setSelectedGear,
     setGears,
-}: UpdateDialogProps) {
+}: UpdateGearDialogProps) {
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
-        if (editedGear) {
-            setEditedGear({
-                ...editedGear,
+        if (selectedGear) {
+            setSelectedGear({
+                ...selectedGear,
                 [e.target.name]: e.target.value,
             });
         }
@@ -53,9 +51,9 @@ export function UpdateDialog({
 
     // Handle number input changes
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (editedGear) {
-            setEditedGear({
-                ...editedGear,
+        if (selectedGear) {
+            setSelectedGear({
+                ...selectedGear,
                 [e.target.name]: Number.parseInt(e.target.value, 10) || 0,
             });
         }
@@ -63,41 +61,37 @@ export function UpdateDialog({
 
     // Handle select changes
     const handleSelectChange = (value: string, field: string) => {
-        if (editedGear) {
-            setEditedGear({
-                ...editedGear,
+        if (selectedGear) {
+            setSelectedGear({
+                ...selectedGear,
                 [field]: value,
             });
         }
     };
 
-    // Handle closing the dialog
-    const handleCloseDialog = () => {
-        setIsDialogOpen(false);
-        setSelectedGear(null);
-        setEditedGear(null);
-    };
-
     const handleSaveGear = () => {
-        if (editedGear) {
+        if (selectedGear) {
             setGears(
-                gears.map((gear) => (gear.id === editedGear.id ? editedGear : gear))
+                gears.map((gear) => (gear.id === selectedGear.id ? selectedGear : gear))
             );
-            setIsDialogOpen(false);
+            setIsUpdateGearDialogOpen(false);
         }
     };
 
     const handleSwitchChange = (checked: boolean) => {
-        if (editedGear) {
-            setEditedGear({
-                ...editedGear,
+        if (selectedGear) {
+            setSelectedGear({
+                ...selectedGear,
                 transferable: checked,
             });
         }
     };
 
     return (
-        <Dialog open={ isDialogOpen } onOpenChange={ setIsDialogOpen }>
+        <Dialog
+            open={ isUpdateGearDialogOpen }
+            onOpenChange={ setIsUpdateGearDialogOpen }
+        >
             <DialogContent
                 className="sm:max-w-[600px]"
                 aria-describedby={ undefined }
@@ -107,13 +101,13 @@ export function UpdateDialog({
                     <DialogTitle>Editar Equipamento</DialogTitle>
                 </DialogHeader>
 
-                {editedGear && (
+                {selectedGear && (
                     <div className="grid gap-6 py-4">
                         <div className="grid grid-cols-1 gap-3">
                             <Label>Nome</Label>
                             <Input
                                 name="name"
-                                value={ editedGear.name }
+                                value={ selectedGear.name }
                                 onChange={ handleInputChange }
                             />
                         </div>
@@ -123,7 +117,7 @@ export function UpdateDialog({
                             <Textarea
                                 id="description"
                                 name="description"
-                                value={ editedGear.description }
+                                value={ selectedGear.description }
                                 onChange={ handleInputChange }
                                 rows={ 3 }
                             />
@@ -133,7 +127,7 @@ export function UpdateDialog({
                             <div className="grid grid-cols-1 gap-3">
                                 <Label htmlFor="region">Regional</Label>
                                 <Select
-                                    value={ editedGear.region }
+                                    value={ selectedGear.region }
                                     onValueChange={ (value) => handleSelectChange(value, "region") }
                                 >
                                     <SelectTrigger>
@@ -157,31 +151,43 @@ export function UpdateDialog({
                                 <Input
                                     id="acquisitionDate"
                                     name="acquisitionDate"
-                                    value={ editedGear.acquisitionDate }
+                                    value={ selectedGear.acquisitionDate.toLocaleDateString(
+                                        "pt-BR"
+                                    ) }
                                     onChange={ handleInputChange }
                                 />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid grid-cols-1 gap-3">
-                                <Label htmlFor="availableUnits">Unidades disponíveis</Label>
-                                <Input
-                                    id="availableUnits"
-                                    name="availableUnits"
-                                    type="number"
-                                    value={ editedGear.availableUnits }
-                                    onChange={ handleNumberChange }
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-3">
+                        <div className="flex flex-col gap-3 max-w-[90%] md:max-w-[40%]">
+                            <div className="flex flex-col gap-2">
                                 <Label htmlFor="totalUnits">Unidades totais</Label>
                                 <Input
                                     id="totalUnits"
                                     name="totalUnits"
                                     type="number"
-                                    value={ editedGear.totalUnits }
+                                    value={ selectedGear.totalUnits }
+                                    onChange={ handleNumberChange }
+                                />
+                            </div>
+                            <div className="flex flex-col gap-3">
+                                <Label htmlFor="availableUnits">Unidades disponíveis</Label>
+                                <Input
+                                    id="availableUnits"
+                                    name="availableUnits"
+                                    type="number"
+                                    value={ selectedGear.availableUnits }
+                                    onChange={ handleNumberChange }
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <Label htmlFor="totalUnits">Unidades defeituosas</Label>
+                                <Input
+                                    id="totalUnits"
+                                    name="totalUnits"
+                                    type="number"
+                                    value={ selectedGear.outOfServiceUnits }
                                     onChange={ handleNumberChange }
                                 />
                             </div>
@@ -190,7 +196,7 @@ export function UpdateDialog({
                         <div className="flex items-center space-x-2">
                             <Switch
                                 id="transferable"
-                                checked={ editedGear.transferable }
+                                checked={ selectedGear.transferable }
                                 onCheckedChange={ handleSwitchChange }
                             />
                             <Label htmlFor="transferable">Pode ser transferido</Label>
@@ -199,7 +205,10 @@ export function UpdateDialog({
                 )}
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={ () => handleCloseDialog() }>
+                    <Button
+                        variant="outline"
+                        onClick={ () => setIsUpdateGearDialogOpen(false) }
+                    >
             Cancelar
                     </Button>
                     <Button onClick={ handleSaveGear }>

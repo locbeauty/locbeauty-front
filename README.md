@@ -2,6 +2,8 @@
 
 - **O que seria um cliente inativo? há muito tempo sem alugar?**
 
+- **Cada equipamento possui algum identificador único?**
+
 - **O que são os "OBS" na tabela INBOX INSTA ATUALIZADO 2025?**
 
 - **Qual é o intervalo de horários disponível para agendamentos? Existe possibilidade deste horário mudar?**  
