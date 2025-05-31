@@ -16,14 +16,14 @@ interface ResponsiveCardProps<T = unknown> {
     },
     rawData: T,
 
-    handleToggleCustomerDetailsDialog: (_openStatus: boolean, _targetData: T) => void
+    handleToggleDialog: (_openStatus: boolean, _targetData: T) => void
 }
 
-export function ResponsiveCard<T = unknown>({ handleToggleCustomerDetailsDialog, cardData: { id, title, description, transferableIndicator = false, transferable, items }, rawData }: ResponsiveCardProps<T>) {
+export function ResponsiveCard<T = unknown>({ handleToggleDialog, cardData: { id, title, description, transferableIndicator = false, transferable, items }, rawData }: ResponsiveCardProps<T>) {
 
     return (
         <div className="space-y-4 md:hidden">
-            <Card key={ id } className="p-4 hover:bg-muted/50 cursor-pointer" onClick={ () => handleToggleCustomerDetailsDialog(true, rawData) }>
+            <Card key={ id } className="p-4 hover:bg-muted/50 cursor-pointer" onClick={ () => handleToggleDialog(true, rawData) }>
 
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-lg">{title}</h3>
