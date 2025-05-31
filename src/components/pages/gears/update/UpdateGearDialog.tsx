@@ -88,7 +88,10 @@ export function UpdateGearDialog({
     };
 
     return (
-        <Dialog open={ isUpdateGearDialogOpen } onOpenChange={ setIsUpdateGearDialogOpen }>
+        <Dialog
+            open={ isUpdateGearDialogOpen }
+            onOpenChange={ setIsUpdateGearDialogOpen }
+        >
             <DialogContent
                 className="sm:max-w-[600px]"
                 aria-describedby={ undefined }
@@ -148,7 +151,9 @@ export function UpdateGearDialog({
                                 <Input
                                     id="acquisitionDate"
                                     name="acquisitionDate"
-                                    value={ selectedGear.acquisitionDate }
+                                    value={ selectedGear.acquisitionDate.toLocaleDateString(
+                                        "pt-BR"
+                                    ) }
                                     onChange={ handleInputChange }
                                 />
                             </div>
@@ -200,7 +205,10 @@ export function UpdateGearDialog({
                 )}
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={ () => setIsUpdateGearDialogOpen(false) }>
+                    <Button
+                        variant="outline"
+                        onClick={ () => setIsUpdateGearDialogOpen(false) }
+                    >
             Cancelar
                     </Button>
                     <Button onClick={ handleSaveGear }>
