@@ -44,10 +44,76 @@ export type EstadoTitle = (typeof ESTADOS_BRASILEIROS)[UF]
 
 export interface Regional {
   regionalId: string,
+  CNPJ: string,
+  description: string,
+  CEP: string,
   state: {
     UF: UF
     title: EstadoTitle
   },
   city: string,
-  manager: string
+  neighborhood: string,
+  street: string,
+  houseNumber: string,
+  addressComplement: string,
+  manager: string,
+  cellphone: string,
+  email: string
 }
+
+export const regionals: Regional[] = [
+    {
+        regionalId: "1",
+        CNPJ: "12.345.678/0001-90",
+        description: "Filial Acre",
+        CEP: "55608-477",
+        state: {
+            title: "Acre",
+            UF: "AC"
+        },
+        city: "Rio Branco",
+        neighborhood: "Boa Viagem",
+        street: "Avenida Beira Mar",
+        houseNumber: "1167",
+        addressComplement: "Perto daquela casa",
+        manager: "Chefe de tudo",
+        cellphone: "(81) 9.8776-8778",
+        email: "teste@email.com",
+    },
+    {
+        regionalId: "2",
+        CNPJ: "12.345.678/0001-90",
+        description: "Filial Pernambuco",
+        CEP: "55608-477",
+        state: {
+            title: "Pernambuco",
+            UF: "PE"
+        },
+        neighborhood: "Boa Viagem",
+        street: "Avenida Beira Mar",
+        houseNumber: "1167",
+        addressComplement: "Perto daquela casa",
+        city: "Recife",
+        manager: "Cassio Z",
+        cellphone: "(81) 9.8776-8778",
+        email: "teste@email.com",
+    },
+    {
+        regionalId: "3",
+        CNPJ: "12.345.678/0001-90",
+        description: "Filial Pernambuco",
+        CEP: "55608-477",
+        state: {
+            title: "Pernambuco",
+            UF: "PE"
+        },
+        city: "Recife",
+        neighborhood: "Boa Viagem",
+        street: "Avenida Beira Mar",
+        houseNumber: "1167",
+        addressComplement: "Perto daquela casa",
+        manager: "Fred F",
+        cellphone: "(81) 9.8776-8778",
+        email: "teste@email.com",
+    },
+];

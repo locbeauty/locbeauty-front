@@ -8,11 +8,13 @@ import { UseFormRegisterReturn } from "react-hook-form";
 interface DocumentInputProps {
   documentType: "CPF" | "CNPJ";
   register?: UseFormRegisterReturn;
+  disabled?: boolean
 }
 
 export default function DocumentInput({
     documentType,
     register,
+    disabled = false
 }: DocumentInputProps) {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -37,6 +39,7 @@ export default function DocumentInput({
                 register?.ref(el); // RHF
                 inputRef.current = el; // IMask
             } }
+            disabled={ disabled }
             className="placeholder:text-placeholder"
             placeholder={
                 documentType === "CPF" ? "000.000.000-00" : "00.000.000/0000-00"

@@ -2,13 +2,15 @@
 
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { employees } from "@/utils/mocks/employees";
 
 type SelectEmployeeProps<T extends FieldValues> = {
   control: Control<T>
   name: FieldPath<T>
+  selectedEmployeeName?: string
 }
 
-export function SelectEmployee<T extends FieldValues>({ control, name }: SelectEmployeeProps<T>) {
+export function SelectEmployee<T extends FieldValues>({ control, name, selectedEmployeeName }: SelectEmployeeProps<T>) {
     return (
         <Controller
             name={ name }
@@ -23,9 +25,12 @@ export function SelectEmployee<T extends FieldValues>({ control, name }: SelectE
                         <SelectValue placeholder="Selecione o funcionário" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="joao">João Silva</SelectItem>
-                        <SelectItem value="empresa-abc">Empresa ABC Ltda</SelectItem>
-                        <SelectItem value="maria">Maria Oliveira</SelectItem>
+                        {
+                            employees.map(employee => (
+                                <SelectItem defaultValue={ selectedEmployeeName } key={ employee.id } value={ employee.name }>{employee.name}</SelectItem>
+
+                            ))
+                        }
                     </SelectContent>
                 </Select>
             ) }
