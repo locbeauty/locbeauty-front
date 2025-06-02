@@ -13,7 +13,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
 import { Controller, useFormContext } from "react-hook-form";
-import { SelectRegional } from "../../../shared/SelectRegional";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 
@@ -61,23 +60,6 @@ export function CustomerGeneralInformationForm() {
                                             <Label htmlFor="pessoa-juridica">Pessoa Jurídica</Label>
                                         </div>
                                     </RadioGroup>
-                                );
-                            } }
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Regional</Label>
-                        <Controller
-                            name="personType"
-                            control={ control }
-                            defaultValue="PF"
-                            render={ () => {
-                                return (
-                                    <SelectRegional<CreateCustomerFormSchemaType>
-                                        control={ control }
-                                        name="regionalId"
-                                    />
                                 );
                             } }
                         />

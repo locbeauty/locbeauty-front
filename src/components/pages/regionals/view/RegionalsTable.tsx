@@ -3,10 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil } from "lucide-react";
 import { Fragment, useState } from "react";
-import { Regional, regionals } from "@/utils/mocks/regionals";
+import { regionals } from "@/utils/mocks/regionals";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { RegionalDetailsDialog } from "./RegionalDetailsDialog";
 import { UpdateRegionalDialog } from "../update/UpdateRegionalDialog";
+import { Regional } from "@/utils/@types/regionals";
 
 export function RegionalsTable() {
 
@@ -48,7 +49,7 @@ export function RegionalsTable() {
                                 <tr key={ regional.regionalId } className="border-t hover:bg-muted/50">
                                     <td className="p-3">{regional.CNPJ}</td>
                                     <td className="p-3">{regional.description}</td>
-                                    <td className="p-3">{regional.manager}</td>
+                                    <td className="p-3">{regional.manager.fullname}</td>
                                     <td className="p-3">{ regional.street }, {regional.houseNumber} - {regional.city}/{regional.state.UF} </td>
                                     <td className="p-3">{regional.cellphone}</td>
                                     <td className="p-3">{regional.email}</td>

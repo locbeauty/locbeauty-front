@@ -2,7 +2,6 @@ import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createRegionalFormSchema, CreateRegionalFormSchemaType } from "@/lib/zod/CreateRegionalValidation";
-import { Regional } from "@/utils/mocks/regionals";
 import { CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import PhoneInput from "@/components/shared/PhoneInput";
@@ -11,6 +10,7 @@ import { SelectEmployee } from "../create/SelectEmployee";
 import { RegionalAddressForm } from "../create/RegionalAddressForm";
 import DocumentInput from "@/components/shared/DocumentInput";
 import { Textarea } from "@/components/ui/textarea";
+import { Regional } from "@/utils/@types/regionals";
 
 interface UpdateRegionalFormProps {
     selectedRegional: Regional
@@ -31,7 +31,7 @@ export function UpdateRegionalForm({ selectedRegional }: UpdateRegionalFormProps
             manager: selectedRegional.manager,
             neighborhood: selectedRegional.neighborhood,
             //TODO: corrigir state, que deve receber UF e title
-            state: selectedRegional.state.title,
+            state: selectedRegional.state,
             street: selectedRegional.street
         },
     });
@@ -106,7 +106,7 @@ export function UpdateRegionalForm({ selectedRegional }: UpdateRegionalFormProps
 
                 <div className="space-y-2">
                     <Label htmlFor="gerente">Gerente</Label>
-                    <SelectEmployee selectedEmployeeName={ selectedRegional.manager } control={ control } name="manager" />
+                    <SelectEmployee selectedEmployee={ selectedRegional.manager } control={ control } name="manager" />
                     {errors.manager && (
                         <p className="text-sm font-medium text-destructive">
                             {errors.manager.message}

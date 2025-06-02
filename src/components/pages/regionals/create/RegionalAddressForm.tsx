@@ -47,10 +47,8 @@ export function RegionalAddressForm() {
                         <Label htmlFor="estado">Estado</Label>
                         <Input
                             disabled
-                            { ...register("state") }
+                            { ...register("state.title") }
                             placeholder="Estado"
-                            className=""
-                            id="cidade"
                         />
                     </div>
                 </div>

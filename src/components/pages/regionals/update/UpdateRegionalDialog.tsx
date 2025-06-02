@@ -7,8 +7,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Dispatch, SetStateAction } from "react";
-import { Regional } from "@/utils/mocks/regionals";
 import { UpdateRegionalForm } from "./UpdateRegionalForm";
+import { Regional } from "@/utils/@types/regionals";
 
 interface UpdateRegionalDialogProps {
   isUpdateRegionalDialogOpen: boolean;

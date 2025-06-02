@@ -2,8 +2,8 @@ import { Clock, FileText, Mail, Phone, User, MapPin, Building, Users, TrendingUp
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Regional } from "@/utils/mocks/regionals";
 import { Label } from "@/components/ui/label";
+import { Regional } from "@/utils/@types/regionals";
 
 interface RegionalDetailsCardProps {
     selectedRegional: Regional | null
@@ -107,7 +107,7 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                             <div className="flex items-center gap-2">
                                 <User className="h-4 w-4 text-muted-foreground" />
                                 <Label className="text-sm font-medium">Gerente:</Label>
-                                <span className="text-sm font-semibold">{selectedRegional.manager}</span>
+                                <span className="text-sm font-semibold">{selectedRegional.manager.fullname}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-muted-foreground" />

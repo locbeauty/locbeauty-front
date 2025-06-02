@@ -1,4 +1,6 @@
-export const gears = [
+import { Gear } from "../@types/gears";
+
+export const gears: Gear[] = [
     {
         id: "1",
         name: "Lavieen",

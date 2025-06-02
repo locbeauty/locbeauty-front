@@ -3,14 +3,20 @@
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { employees } from "@/utils/mocks/employees";
+import { useEffect } from "react";
+import { Employee } from "@/utils/@types/employees";
 
 type SelectEmployeeProps<T extends FieldValues> = {
   control: Control<T>
   name: FieldPath<T>
-  selectedEmployeeName?: string
+  selectedEmployee?: Employee
 }
 
-export function SelectEmployee<T extends FieldValues>({ control, name, selectedEmployeeName }: SelectEmployeeProps<T>) {
+export function SelectEmployee<T extends FieldValues>({ control, name, selectedEmployee }: SelectEmployeeProps<T>) {
+    useEffect(() => {
+        console.log("selectedEmployee: ", selectedEmployee);
+    }, [ selectedEmployee ]);
+
     return (
         <Controller
             name={ name }
@@ -27,7 +33,9 @@ export function SelectEmployee<T extends FieldValues>({ control, name, selectedE
                     <SelectContent>
                         {
                             employees.map(employee => (
-                                <SelectItem defaultValue={ selectedEmployeeName } key={ employee.id } value={ employee.name }>{employee.name}</SelectItem>
+                                <SelectItem defaultValue={ selectedEmployee?.fullname } key={ employee.employeeId } value={ employee.fullname }>
+                                    {employee.fullname}
+                                </SelectItem>
 
                             ))
                         }

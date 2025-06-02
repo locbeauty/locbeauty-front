@@ -4,9 +4,9 @@ import {
     DialogContent, DialogFooter,
     DialogTitle
 } from "@/components/ui/dialog";
-import { Regional } from "@/utils/mocks/regionals";
 import { Pencil } from "lucide-react";
 import { RegionalDetailsCard } from "./RegionalDetailsCard";
+import { Regional } from "@/utils/@types/regionals";
 
 interface RegionalDetailsDialogProps {
   handleToggleRegionalDetailsDialog: (_openStatus: boolean, _regional: Regional | null) => void;

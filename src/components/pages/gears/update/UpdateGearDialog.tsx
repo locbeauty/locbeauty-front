@@ -20,8 +20,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Dispatch, SetStateAction } from "react";
 import { gears } from "@/utils/mocks/gears";
-import { REGIONALS } from "@/utils/mocks/regionals";
-import { Gear } from "../view/GearCard";
+import { regionals } from "@/utils/mocks/regionals";
+import { Gear } from "@/utils/@types/gears";
 
 interface UpdateGearDialogProps {
   isUpdateGearDialogOpen: boolean;
@@ -134,11 +134,10 @@ export function UpdateGearDialog({
                                         <SelectValue placeholder="Selecione uma regional" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {REGIONALS.map((estado) => {
-                                            if (estado === "") return null;
+                                        {regionals.map((regional) => {
                                             return (
-                                                <SelectItem key={ estado } value={ estado }>
-                                                    {estado}
+                                                <SelectItem key={ regional.regionalId } value={ regional.title }>
+                                                    {regional.title}, {regional.state.title}
                                                 </SelectItem>
                                             );
                                         })}
@@ -151,9 +150,9 @@ export function UpdateGearDialog({
                                 <Input
                                     id="acquisitionDate"
                                     name="acquisitionDate"
-                                    value={ selectedGear.acquisitionDate.toLocaleDateString(
+                                    value={ selectedGear.acquisitionDate ? selectedGear.acquisitionDate.toLocaleDateString(
                                         "pt-BR"
-                                    ) }
+                                    ) : "Não informado" }
                                     onChange={ handleInputChange }
                                 />
                             </div>

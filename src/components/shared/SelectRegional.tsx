@@ -8,7 +8,7 @@ import {
     SelectContent,
     SelectItem,
 } from "@/components/ui/select";
-import { REGIONALS } from "@/utils/mocks/regionals";
+import { regionals } from "@/utils/mocks/regionals";
 
 type SelectRegionalProps<T extends FieldValues> = {
   control: Control<T>;
@@ -29,11 +29,10 @@ export function SelectRegional<T extends FieldValues>({
                         <SelectValue placeholder="Selecione uma regional" />
                     </SelectTrigger>
                     <SelectContent>
-                        {REGIONALS.map((estado) => {
-                            if (estado === "") return null;
+                        {regionals.map((regional) => {
                             return (
-                                <SelectItem key={ estado } value={ estado }>
-                                    {estado}
+                                <SelectItem key={ regional.city } value={ regional.city }>
+                                    {regional.city}
                                 </SelectItem>
                             );
                         })}

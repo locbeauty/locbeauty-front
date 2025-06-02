@@ -5,20 +5,7 @@ import { Card } from "@/components/ui/card";
 import { gears as gearsMock } from "@/utils/mocks/gears";
 import { useState } from "react";
 import { UpdateGearDialog } from "../update/UpdateGearDialog";
-
-export type Gear = {
-  id: string;
-  name: string;
-  description: string;
-  region: string;
-  availableUnits: number;
-  outOfServiceUnits: number;
-  totalUnits: number;
-  acquisitionDate: Date;
-  transferable: boolean;
-  nextMaintenance: Date | null,
-  lastMaintenance: Date | null
-};
+import { Gear } from "@/utils/@types/gears";
 
 export function GearCard() {
     const [ gears, setGears ] = useState<Gear[]>(gearsMock);
@@ -76,7 +63,7 @@ export function GearCard() {
                         <div>{gear.totalUnits}</div>
 
                         <div className="font-medium">Data da aquisição:</div>
-                        <div>{gear.acquisitionDate.toLocaleString()}</div>
+                        <div>{gear.acquisitionDate ? gear.acquisitionDate.toLocaleString() : "Não informado"}</div>
                     </div>
                 </Card>
             ))}
