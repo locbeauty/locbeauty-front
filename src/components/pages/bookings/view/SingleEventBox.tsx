@@ -1,4 +1,4 @@
-import { Agendamento } from "@/app/(main)/bookings/page";
+
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { BookingStatusBadge } from "../common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
@@ -9,11 +9,12 @@ import {
     getEventBoxHeigh,
 } from "./bookingViewHelpers";
 import { cn } from "@/lib/utils";
+import { Booking } from "@/utils/@types/bookings";
 
 interface SingleEventBoxProps {
-  group: Agendamento[];
+  group: Booking[];
   dayIndex: number;
-  openBookingDetails: (_agendamento: Agendamento) => void;
+  openBookingDetails: (_agendamento: Booking) => void;
 }
 
 export function SingleEventBox({

@@ -4,7 +4,7 @@ import { CustomerAddressForm } from "../create/CustomerAddressForm";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createCustomerFormSchema, CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
-import { Customer } from "@/utils/mocks/customers";
+import { Customer } from "@/utils/@types/customers";
 
 interface UpdateCustomerFormProps {
     selectedCustomer: Customer
@@ -17,7 +17,6 @@ export function UpdateCustomerForm({ selectedCustomer }: UpdateCustomerFormProps
         //TODO: corrigir para null, ao inves de undefined
         defaultValues: {
             personType: selectedCustomer.personType,
-            regionalId: selectedCustomer.regionalId,
             addressComplement: selectedCustomer.addressComplement,
             birthdate: new Date(selectedCustomer.birthdate),
             cellphone: selectedCustomer.cellphone,
@@ -32,7 +31,10 @@ export function UpdateCustomerForm({ selectedCustomer }: UpdateCustomerFormProps
             instagram: selectedCustomer.instagram || undefined,
             neighborhood: selectedCustomer.neighborhood,
             personAccountableName: selectedCustomer.personAccountableName || undefined,
-            state: selectedCustomer.UF,
+            state: {
+                UF: selectedCustomer.state.UF,
+                title: selectedCustomer.state.title,
+            },
             street: selectedCustomer.street,
 
         },

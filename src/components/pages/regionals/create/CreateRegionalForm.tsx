@@ -13,12 +13,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 export function CreateRegionalForm() {
     const createRegionalMethods = useForm<CreateRegionalFormSchemaType>({
         resolver: zodResolver(createRegionalFormSchema),
         defaultValues: {
-            manager: "",
+            manager: {
+                employeeId: "",
+                fullname: ""
+            },
         },
     });
 
@@ -66,6 +70,14 @@ export function CreateRegionalForm() {
                                     {errors.email.message}
                                 </p>
                             )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Description</Label>
+                            <Textarea
+                                { ...register("description") }
+                                placeholder="Informações adicionais sobre a filial"
+                                className="placeholder:text-placeholder max-h-[200px]"
+                            />
                         </div>
                     </div>
 

@@ -6,15 +6,16 @@ import {
     isSameDay,
     isToday,
 } from "./bookingViewHelpers";
-import { Agendamento } from "@/app/(main)/bookings/page";
+
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { BookingStatusBadge } from "../common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
+import { Booking } from "@/utils/@types/bookings";
 
 interface MobileDayViewProps {
   currentDate: Date;
-  bookings: Agendamento[];
-  openBookingDetails: (_agendamento: Agendamento) => void;
+  bookings: Booking[];
+  openBookingDetails: (_agendamento: Booking) => void;
 }
 
 export function MobileDayView({

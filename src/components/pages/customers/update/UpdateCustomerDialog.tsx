@@ -6,8 +6,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Dispatch, SetStateAction } from "react";
-import { Customer } from "@/utils/mocks/customers";
 import { UpdateCustomerForm } from "./UpdateCustomerForm";
+import { Customer } from "@/utils/@types/customers";
 
 interface UpdateCustomerDialogProps {
   isUpdateCustomerDialogOpen: boolean;

@@ -1,44 +1,107 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Eye, Pencil } from "lucide-react";
+import { Fragment, useState } from "react";
+import { regionals } from "@/utils/mocks/regionals";
+import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
+import { RegionalDetailsDialog } from "./RegionalDetailsDialog";
+import { UpdateRegionalDialog } from "../update/UpdateRegionalDialog";
+import { Regional } from "@/utils/@types/regionals";
+
 export function RegionalsTable() {
+
+    const [ isUpdateRegionalDialogOpen, setIsUpdateRegionalDialogOpen ] = useState(false);
+    const [ selectedRegional, setSelectedRegional ] = useState<Regional | null>(null);
+
+    const [ isRegionalDetailsDialogOpen, setIsRegionalDetailsDialogOpen ] = useState(false);
+
+    const handleToggleUpdateRegionalDialog = (openStatus: boolean, regional: Regional | null) => {
+        if(openStatus) {
+            setSelectedRegional(regional);
+        }
+
+        setIsUpdateRegionalDialogOpen(openStatus);
+    };
+
+    const handleToggleRegionalDetailsDialog = (openStatus: boolean, regional: Regional | null) => {
+        setSelectedRegional(regional);
+        setIsRegionalDetailsDialogOpen(openStatus);
+    };
     return (
-        <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto">
-            <table className="w-full">
-                <thead className="bg-muted">
-                    <tr>
-                        <th className="text-left p-3 font-medium">CNPJ</th>
-                        <th className="text-left p-3 font-medium">Descrição</th>
-                        <th className="text-left p-3 font-medium">Gerente</th>
-                        <th className="text-left p-3 font-medium">Endereço</th>
-                        <th className="text-left p-3 font-medium">Telefone</th>
-                        <th className="text-left p-3 font-medium">Email</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr className="border-t hover:bg-muted/50">
-                        <td className="p-3">12.345.678/0001-90</td>
-                        <td className="p-3">Filial São Paulo</td>
-                        <td className="p-3">Carlos Oliveira</td>
-                        <td className="p-3">Av. Paulista, 1000 - São Paulo/SP</td>
-                        <td className="p-3">(11) 3456-7890</td>
-                        <td className="p-3">filial.sp@empresa.com</td>
-                    </tr>
-                    <tr className="border-t hover:bg-muted/50">
-                        <td className="p-3">12.345.678/0002-71</td>
-                        <td className="p-3">Filial Rio de Janeiro</td>
-                        <td className="p-3">Ana Souza</td>
-                        <td className="p-3">Av. Rio Branco, 500 - Rio de Janeiro/RJ</td>
-                        <td className="p-3">(21) 3456-7890</td>
-                        <td className="p-3">filial.rj@empresa.com</td>
-                    </tr>
-                    <tr className="border-t hover:bg-muted/50">
-                        <td className="p-3">12.345.678/0003-52</td>
-                        <td className="p-3">Filial Belo Horizonte</td>
-                        <td className="p-3">Pedro Santos</td>
-                        <td className="p-3">Av. Afonso Pena, 300 - Belo Horizonte/MG</td>
-                        <td className="p-3">(31) 3456-7890</td>
-                        <td className="p-3">filial.bh@empresa.com</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <>
+            <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto hidden md:block">
+                <table className="w-full">
+                    <thead className="bg-muted">
+                        <tr>
+                            <th className="text-left p-3 font-medium">CNPJ</th>
+                            <th className="text-left p-3 font-medium">Descrição</th>
+                            <th className="text-left p-3 font-medium">Gerente</th>
+                            <th className="text-left p-3 font-medium">Endereço</th>
+                            <th className="text-left p-3 font-medium">Telefone</th>
+                            <th className="text-left p-3 font-medium">Email</th>
+                            <th className="text-left p-3 font-medium">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            regionals.map(regional => (
+                                <tr key={ regional.regionalId } className="border-t hover:bg-muted/50">
+                                    <td className="p-3">{regional.CNPJ}</td>
+                                    <td className="p-3">{regional.description}</td>
+                                    <td className="p-3">{regional.manager.fullname}</td>
+                                    <td className="p-3">{ regional.street }, {regional.houseNumber} - {regional.city}/{regional.state.UF} </td>
+                                    <td className="p-3">{regional.cellphone}</td>
+                                    <td className="p-3">{regional.email}</td>
+                                    <td className="p-3 flex justify-center items-center gap-4">
+                                        <Button onClick={ () => handleToggleRegionalDetailsDialog(true, regional) }>
+                                            <Eye />
+                                        </Button>
+                                        <Button variant="outline" onClick={ () => handleToggleUpdateRegionalDialog(true, regional) }>
+                                            <Pencil />
+                                        </Button>
+                                    </td>
+                                </tr>
+
+                            ))
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            {regionals.map((regional) => (
+                <Fragment key={ regional.regionalId }>
+                    <ResponsiveCard
+                        cardData={ {
+                            id: regional.regionalId,
+                            title: regional.state.title,
+                            description: regional.description,
+                            items: [
+                                { itemLabel: "Email: ", itemInfo: regional.email },
+                                {
+                                    itemLabel: "Telefone: ",
+                                    itemInfo: regional.cellphone,
+                                },
+                            ],
+                        } }
+                        rawData={ regional }
+                        handleToggleDialog={ handleToggleRegionalDetailsDialog }
+                    />
+                </Fragment>
+            ))}
+
+            <RegionalDetailsDialog
+                selectedRegional={ selectedRegional }
+                handleToggleUpdateRegionalDialog={ handleToggleUpdateRegionalDialog }
+                handleToggleRegionalDetailsDialog={ handleToggleRegionalDetailsDialog }
+                isRegionalDetailsModalOpen={ isRegionalDetailsDialogOpen } />
+
+            <UpdateRegionalDialog
+                isUpdateRegionalDialogOpen={ isUpdateRegionalDialogOpen }
+                selectedRegional={ selectedRegional! }
+                setSelectedRegional={ setSelectedRegional }
+                handleToggleUpdateRegionalDialog={ handleToggleUpdateRegionalDialog }
+            />
+        </>
     );
 }

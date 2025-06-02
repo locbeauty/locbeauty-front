@@ -10,17 +10,17 @@ import {
     workingHours,
     groupOverlappingEvents,
 } from "./bookingViewHelpers";
-import type { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { MobileDayView } from "./MobileDayView";
 import { BookingStatusBadge } from "../common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 import { CalendarDayHeader } from "./CalendarDayHeader";
+import { Booking } from "@/utils/@types/bookings";
 
 interface DayViewProps {
   currentDate: Date;
-  bookings: Agendamento[];
-  openBookingDetails: (_agendamento: Agendamento) => void;
+  bookings: Booking[];
+  openBookingDetails: (_agendamento: Booking) => void;
 }
 
 export function DayView({

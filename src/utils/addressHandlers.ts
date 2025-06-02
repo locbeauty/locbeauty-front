@@ -8,7 +8,7 @@ import {
     UseFormTrigger,
 } from "react-hook-form";
 
-export interface GetAddressDetailsResponse {
+export interface GetViaCepAddressDetailsResponse {
     cep: string;
     logradouro: string;
     complemento: string;
@@ -60,14 +60,14 @@ export async function handleCepChange<T extends FieldValues>({ e, setValue, trig
             setValue(city, "" as PathValue<T, typeof city>);
             setValue(neighborhood, "" as PathValue<T, typeof neighborhood>);
             setValue(street, "" as PathValue<T, typeof street>);
-            setValue(state, "" as PathValue<T, typeof state>);
+            setValue(state, { UF: "", title: "" } as PathValue<T, typeof state>);
             return;
         }
 
         setValue(city, response.localidade as PathValue<T, typeof city>);
         setValue(neighborhood, response.bairro as PathValue<T, typeof neighborhood>);
         setValue(street, response.logradouro as PathValue<T, typeof street>);
-        setValue(state, response.estado as PathValue<T, typeof state>);
+        setValue(state, { UF: response.uf, title: response.estado } as PathValue<T, typeof state>);
 
         trigger([ city, neighborhood, street, state ]);
     } catch (error) {
@@ -78,7 +78,7 @@ export async function handleCepChange<T extends FieldValues>({ e, setValue, trig
     }
 }
 
-export async function getAddressDetails(cep: string): Promise<GetAddressDetailsResponse | null> {
+export async function getAddressDetails(cep: string): Promise<GetViaCepAddressDetailsResponse | null> {
     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
 
     if (!response.ok) {

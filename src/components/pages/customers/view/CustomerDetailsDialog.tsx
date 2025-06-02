@@ -5,9 +5,9 @@ import {
     DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Customer } from "@/utils/mocks/customers";
 import { BookingHistoryCard } from "./BookingHistoryCard";
 import { CustomerDetailsCard } from "./CustomerDetailsCard";
+import { Customer } from "@/utils/@types/customers";
 
 interface CustomerDetailsDialogProps {
   handleToggleCustomerDetailsDialog: (_openStatus: boolean, _customer: Customer | null) => void;

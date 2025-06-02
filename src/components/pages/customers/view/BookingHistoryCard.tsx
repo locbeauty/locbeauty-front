@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentStatusBadge";
 import { BookingStatusBadge } from "../../bookings/common/BookingStatusBadge";
 import { Button } from "@/components/ui/button";
-import { Customer } from "@/utils/mocks/customers";
+import { Customer } from "@/utils/@types/customers";
 
 interface BookingHistoryCardProps {
     isCustomerDetailsModalOpen: boolean,

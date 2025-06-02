@@ -1,35 +1,4 @@
-// src/mocks/customers.ts
-
-export type PERSON_TYPE = "PF" | "PJ";
-export type CUSTOMER_STATUSES =
-  | "ATIVO"
-  | "INATIVO"
-  | "INADIMPLENTE"
-  | "BLOQUEADO";
-
-export interface Customer {
-  customerId: string;
-  personType: PERSON_TYPE;
-  status: CUSTOMER_STATUSES;
-  regionalId: string;
-  birthdate: string;
-  fullname: string | null;
-  companyName: string | null;
-  personAccountableName: string | null;
-  email: string;
-  cellphone: string;
-  instagram: string | null;
-  CEP: string;
-  UF: string;
-  city: string;
-  neighborhood: string;
-  street: string;
-  houseNumber: string;
-  addressComplement: string | null;
-  CPF: string | null;
-  CNPJ: string | null;
-  lastRecord: Date;
-}
+import { Customer } from "../@types/customers";
 
 export const mockCustomers: Customer[] = [
     {
@@ -44,7 +13,10 @@ export const mockCustomers: Customer[] = [
         cellphone: "(11) 11111-1111",
         instagram: "teste.12",
         CEP: "54430-350",
-        UF: "PE",
+        state: {
+            title: "Acre",
+            UF: "AC"
+        },
         city: "Recife",
         neighborhood: "Boa Viagem",
         street: "Avenida Beira Mar",
@@ -52,7 +24,7 @@ export const mockCustomers: Customer[] = [
         addressComplement: null,
         CPF: "111.111.111-11",
         CNPJ: null,
-        lastRecord: new Date(),
+        lastBooking: new Date(),
         regionalId: "1",
     },
     {
@@ -67,7 +39,10 @@ export const mockCustomers: Customer[] = [
         cellphone: "(11) 11111-1111",
         instagram: "teste.12",
         CEP: "54430-350",
-        UF: "PE",
+        state: {
+            title: "Acre",
+            UF: "AC"
+        },
         city: "Recife",
         neighborhood: "Boa Viagem",
         street: "Avenida Beira Mar",
@@ -75,7 +50,7 @@ export const mockCustomers: Customer[] = [
         addressComplement: "Perto daquela casa",
         CPF: null,
         CNPJ: "111.111.111-11",
-        lastRecord: new Date(),
+        lastBooking: new Date(),
         regionalId: "1",
     },
     {
@@ -90,7 +65,10 @@ export const mockCustomers: Customer[] = [
         cellphone: "(11) 11111-1111",
         instagram: "sportrecife",
         CEP: "54430-350",
-        UF: "PE",
+        state: {
+            title: "Acre",
+            UF: "AC"
+        },
         city: "Recife",
         neighborhood: "Ilha do Retiro",
         street: "Avenida Abdias de Carvalho",
@@ -98,7 +76,7 @@ export const mockCustomers: Customer[] = [
         addressComplement: null,
         CPF: null,
         CNPJ: "111.111.111-11",
-        lastRecord: new Date(),
+        lastBooking: new Date(),
         regionalId: "1",
     },
 ];

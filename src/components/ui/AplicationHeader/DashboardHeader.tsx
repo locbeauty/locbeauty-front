@@ -7,8 +7,6 @@ import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { DarkModeSwitcher } from "../../shared/DarkModeSwitcher";
 
 import { UserDropdown } from "./UserDropdown";
-import Link from "next/link";
-import { ROUTES } from "@/utils/routes";
 
 export function DashboardHeader({
   setSidebarOpen,

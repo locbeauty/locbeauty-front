@@ -5,13 +5,13 @@ import {
     isSameDay,
     isToday,
 } from "./bookingViewHelpers";
-import { Agendamento } from "@/app/(main)/bookings/page";
 import { CalendarMonthHeader } from "./CalendarMonthHeader";
+import { Booking } from "@/utils/@types/bookings";
 
 interface MonthViewProps {
   currentDate: Date;
-  bookings: Agendamento[];
-  openBookingDetails: (_agendamento: Agendamento) => void;
+  bookings: Booking[];
+  openBookingDetails: (_agendamento: Booking) => void;
 }
 
 export function MonthView({

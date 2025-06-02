@@ -1,4 +1,4 @@
-import { CUSTOMER_STATUSES } from "@/utils/mocks/customers";
+import { CUSTOMER_STATUSES } from "@/utils/@types/customers";
 import { Badge } from "../ui/badge";
 
 interface CustomerStatusBadgeProps {

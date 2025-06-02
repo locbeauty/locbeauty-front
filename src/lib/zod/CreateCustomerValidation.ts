@@ -38,12 +38,14 @@ export const createCustomerFormSchema = z
                 message: "Cidade é obrigatória",
             }),
         state: z
-            .string()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Estado é obrigatório.",
+            .object({
+                UF: z.string(),
+                title: z.string()
             })
-            .transform((val) => (val ? val.toUpperCase() : val)),
+            .optional()
+            .refine((val) => val !== undefined && val.title && val.UF !== "", {
+                message: "Estado é obrigatório.",
+            }),
         neighborhood: z
             .string()
             .trim()
