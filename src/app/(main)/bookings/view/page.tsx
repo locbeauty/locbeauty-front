@@ -6,17 +6,17 @@ import { Plus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/utils/routes";
 import { useRouter } from "next/navigation";
-import { Agendamento } from "../page";
 import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
 import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
 import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
 import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
+import { Booking } from "@/utils/@types/bookings";
 
 export default function AgendamentosPage() {
     // Estado para controlar a semana atual
     const [ currentDate, setCurrentDate ] = useState(new Date());
     const [ selectedBooking, setSelectedBooking ] =
-    useState<Agendamento | null>(null);
+    useState<Booking | null>(null);
     const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] =
     useState(false);
     const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("semana");
@@ -44,7 +44,7 @@ export default function AgendamentosPage() {
 
     const router = useRouter();
 
-    const openBookingDetails = (booking: Agendamento) => {
+    const openBookingDetails = (booking: Booking) => {
         setSelectedBooking(booking);
         setBookingDetailsDialogOpen(true);
     };

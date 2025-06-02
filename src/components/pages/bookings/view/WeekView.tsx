@@ -1,3 +1,4 @@
+import { Booking } from "@/utils/@types/bookings";
 import {
     getDayIndex,
     getWeekDays,
@@ -5,15 +6,15 @@ import {
     isAgendamentoInWeek,
     workingHours,
 } from "./bookingViewHelpers";
-import { Agendamento } from "@/app/(main)/bookings/page";
+
 import { CalendarWeekHeader } from "./CalendarWeekHeader";
 import { MultipleEventBox } from "./MultipleEventBox";
 import { SingleEventBox } from "./SingleEventBox";
 
 interface WeekViewProps {
   currentDate: Date;
-  bookings: Agendamento[];
-  openBookingDetails: (_agendamento: Agendamento) => void;
+  bookings: Booking[];
+  openBookingDetails: (_agendamento: Booking) => void;
 }
 
 export function WeekView({
@@ -51,7 +52,7 @@ export function WeekView({
                 { /* Agendamentos */ }
                 { (() => {
                     // Agrupar agendamentos por dia
-                    const bookingsByDay: Record<number, Agendamento[]> = {};
+                    const bookingsByDay: Record<number, Booking[]> = {};
 
                     bookings.forEach((booking) => {
                         if (!isAgendamentoInWeek(booking, weekDays)) return;

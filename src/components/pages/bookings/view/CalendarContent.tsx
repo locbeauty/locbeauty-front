@@ -3,12 +3,12 @@ import { DayView } from "./DayView";
 import { WeekView } from "./WeekView";
 import { MonthView } from "./MonthView";
 import { bookings } from "@/utils/mocks/bookings";
-import { Agendamento } from "@/app/(main)/bookings/page";
+import { Booking } from "@/utils/@types/bookings";
 
 interface CalendarContentProps {
     viewType: "semana" | "dia" | "mes"
     currentDate: Date
-    openBookingDetails: (_agendamento: Agendamento) => void
+    openBookingDetails: (_agendamento: Booking) => void
 }
 
 export function CalendarContent({ viewType, currentDate, openBookingDetails }: CalendarContentProps) {
