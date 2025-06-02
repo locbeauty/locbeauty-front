@@ -1,12 +1,13 @@
 "use client";
 import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
-import { Customer, mockCustomers } from "@/utils/mocks/customers";
+import { mockCustomers } from "@/utils/mocks/customers";
 import { Eye, Pencil } from "lucide-react";
 import { Fragment, useState } from "react";
 import { UpdateCustomerDialog } from "../update/UpdateCustomerDialog";
 import { CustomerDetailsDialog } from "./CustomerDetailsDialog";
 import { Button } from "@/components/ui/button";
+import { Customer } from "@/utils/@types/customers";
 
 export function CustomersTable() {
     const [ customers ] = useState<Customer[]>(mockCustomers);

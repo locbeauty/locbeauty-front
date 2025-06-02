@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { GearDetailsCard } from "./GearDetailsCard";
-import { Gear } from "./GearCard";
+import { Gear } from "@/utils/@types/gears";
 
 interface GearDetailsDialogProps {
   handleToggleGearDetailsDialog: (_openStatus: boolean, _gear: Gear | null) => void;

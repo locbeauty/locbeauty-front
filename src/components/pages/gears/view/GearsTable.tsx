@@ -3,10 +3,10 @@ import { Check, Eye, Pencil, X } from "lucide-react";
 import { Fragment, useState } from "react";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { gears as gearsMock } from "@/utils/mocks/gears";
-import { Gear } from "./GearCard";
 import { UpdateGearDialog } from "../update/UpdateGearDialog";
 import { Button } from "@/components/ui/button";
 import { GearDetailsDialog } from "./GearDetailsDialog";
+import { Gear } from "@/utils/@types/gears";
 
 export function GearsTable() {
     const [ gears, setGears ] = useState<Gear[]>(gearsMock);
@@ -60,7 +60,7 @@ export function GearsTable() {
                                 <td className="p-3 text-center">{gear.region}</td>
                                 <td className="p-3 text-center">{gear.availableUnits}</td>
                                 <td className="p-3 text-center">{gear.totalUnits}</td>
-                                <td className="p-3 text-center">{gear.acquisitionDate.toLocaleDateString("pt-BR")}</td>
+                                <td className="p-3 text-center">{gear.acquisitionDate ? gear.acquisitionDate.toLocaleDateString("pt-BR") : "Não informado"}</td>
                                 <td className="p-0 h-full">
                                     <div className="h-full flex justify-center items-center">
                                         {gear.transferable ? (
@@ -102,7 +102,7 @@ export function GearsTable() {
                                 { itemLabel: "Unidades totais:", itemInfo: gear.totalUnits },
                                 {
                                     itemLabel: "Data da aquisição:",
-                                    itemInfo: gear.acquisitionDate.toLocaleDateString("pt-BR"),
+                                    itemInfo: gear.acquisitionDate ? gear.acquisitionDate.toLocaleDateString("pt-BR") : "Não informado",
                                 },
                             ],
                         } }

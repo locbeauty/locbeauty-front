@@ -19,7 +19,10 @@ export function CreateRegionalForm() {
     const createRegionalMethods = useForm<CreateRegionalFormSchemaType>({
         resolver: zodResolver(createRegionalFormSchema),
         defaultValues: {
-            manager: "",
+            manager: {
+                employeeId: "",
+                fullname: ""
+            },
         },
     });
 

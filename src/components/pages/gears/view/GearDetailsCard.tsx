@@ -2,9 +2,9 @@ import { Clock, FileText, Calendar, TrendingUp, AlertTriangle, CheckCircle, Sett
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Gear } from "./GearCard";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Gear } from "@/utils/@types/gears";
 
 interface GearDetailsCardProps {
     selectedGear: Gear | null
@@ -55,7 +55,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Data de Aquisição:</Label>
-                                <span className="font-mono text-sm">{selectedGear.acquisitionDate.toLocaleDateString()}</span>
+                                <span className="font-mono text-sm">{selectedGear.acquisitionDate ? selectedGear.acquisitionDate.toLocaleDateString() : "Não informado"}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Transferível:</Label>
