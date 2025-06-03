@@ -50,7 +50,7 @@ export function RegionalsTable() {
                                     <td className="p-3">{regional.CNPJ}</td>
                                     <td className="p-3">{regional.description}</td>
                                     <td className="p-3">{regional.manager.fullname}</td>
-                                    <td className="p-3">{ regional.street }, {regional.houseNumber} - {regional.city}/{regional.state.UF} </td>
+                                    <td className="p-3">{ regional.address.street }, {regional.address.buildingNumber} - {regional.address.city}/{regional.address.state.UF} </td>
                                     <td className="p-3">{regional.cellphone}</td>
                                     <td className="p-3">{regional.email}</td>
                                     <td className="p-3 flex justify-center items-center gap-4">
@@ -74,7 +74,7 @@ export function RegionalsTable() {
                     <ResponsiveCard
                         cardData={ {
                             id: regional.regionalId,
-                            title: regional.state.title,
+                            title: regional.address.state.title,
                             description: regional.description,
                             items: [
                                 { itemLabel: "Email: ", itemInfo: regional.email },

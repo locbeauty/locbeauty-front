@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { addressSchema } from "./address";
 
 export const createCustomerFormSchema = z
     .object({
@@ -21,52 +22,7 @@ export const createCustomerFormSchema = z
                 message: "Telefone é obrigatório",
             }), // Validação será feita em outro arquivo
         instagram: z.string().trim().optional(),
-        CEP: z
-            .string()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "CEP é obrigatório.",
-            })
-            .refine((val) => !val || val.length === 9, {
-                message: "CEP precisa ter 8 caracteres.",
-            }),
-        city: z
-            .string()
-            .trim()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Cidade é obrigatória",
-            }),
-        state: z
-            .object({
-                UF: z.string(),
-                title: z.string()
-            })
-            .optional()
-            .refine((val) => val !== undefined && val.title && val.UF !== "", {
-                message: "Estado é obrigatório.",
-            }),
-        neighborhood: z
-            .string()
-            .trim()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Bairro é obrigatório",
-            }),
-        street: z
-            .string()
-            .trim()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Rua é obrigatória",
-            }),
-        houseNumber: z
-            .string()
-            .trim()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Número do imóvel é obrigatório",
-            }),
+        address: addressSchema,
         CPF: z
             .string()
             .length(14, { message: "CPF precisa ter 11 caracteres." })

@@ -31,8 +31,8 @@ export function SelectRegional<T extends FieldValues>({
                     <SelectContent>
                         {regionals.map((regional) => {
                             return (
-                                <SelectItem key={ regional.city } value={ regional.city }>
-                                    {regional.city}
+                                <SelectItem key={ regional.regionalId } value={ regional.regionalId }>
+                                    {regional.address.city}
                                 </SelectItem>
                             );
                         })}

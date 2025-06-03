@@ -1,4 +1,4 @@
-import { StateTitle, UF } from "./addresses";
+import { Address } from "./addresses";
 import { Employee } from "./employees";
 
 export interface Regional {
@@ -6,17 +6,7 @@ export interface Regional {
   title: string,
   CNPJ: string,
   description: string,
-  CEP: string,
-  state: {
-    stateId: string,
-    UF: UF
-    title: StateTitle
-  },
-  city: string,
-  neighborhood: string,
-  street: string,
-  houseNumber: string,
-  addressComplement: string,
+  address: Address,
   manager: Employee,
   cellphone: string,
   email: string

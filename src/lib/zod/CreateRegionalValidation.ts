@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { addressSchema } from "./address";
 
 export const createRegionalFormSchema = z
     .object({
@@ -17,24 +18,10 @@ export const createRegionalFormSchema = z
             employeeId: z.string(),
             fullname: z.string()
         }, { message: "Gerente é obrigatório." }),
-        CEP: z.string({ message: "CEP é obrigatório." }).length(9, { message: "CEP precisa ter 8 caracteres." }),
-        city: z.string().min(1, { message: "Cidade é obrigatória" }).trim(),
-        state: z
-            .object({
-                UF: z.string(),
-                title: z.string()
-            })
-            .optional()
-            .refine((val) => val !== undefined && val.title && val.UF !== "", {
-                message: "Estado é obrigatório.",
-            }),
-        neighborhood: z.string().min(1, { message: "Bairro é obrigatório" }).trim(),
-        street: z.string().min(1, { message: "Rua é obrigatória" }).trim(),
-        houseNumber: z.string().min(1, { message: "Número do imóvel é obrigatório" }).trim(),
-        addressComplement: z.string().optional(),
+        address: addressSchema,
     }).transform((data) => {
         if (!data.description || data.description.trim() === "") {
-            data.description = `Filial ${data.state}`;
+            data.description = `Filial ${data.address.state.title}`;
         }
         return data;
     });
