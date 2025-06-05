@@ -35,7 +35,7 @@ export function UpdateEmployeeForm({
             email: selectedEmployee.email,
             fullname: selectedEmployee.fullname,
             role: selectedEmployee.role,
-            sourceRegional: selectedEmployee.sourceRegional,
+            sourceRegionalId: selectedEmployee.sourceRegionalId,
         },
     });
 

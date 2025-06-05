@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { addressSchema } from "./address";
-import { regionalSchema } from "./regional";
 
 // Schema principal do Employee
 export const createEmployeeFormSchema = z.object({
@@ -20,7 +19,7 @@ export const createEmployeeFormSchema = z.object({
         .string()
         .min(1, { message: "Telefone é obrigatório" })
         .regex(/^\(\d{2}\)\s\d{4,5}\-\d{4}$/, { message: "Telefone deve ter formato válido ((00) 00000-0000)" }),
-    sourceRegional: z.string(),
+    sourceRegionalId: z.string(),
     email: z
         .string()
         .min(1, { message: "Email é obrigatório" })
@@ -30,7 +29,6 @@ export const createEmployeeFormSchema = z.object({
     birthdate: z
         .date({ message: "Data de nascimento é obrigatória" })
         .refine(date => date < new Date(), { message: "Data de nascimento deve ser no passado" }),
-    regional: regionalSchema
 });
 
 export type CreateEmployeeFormSchemaType = z.infer<typeof createEmployeeFormSchema>;
