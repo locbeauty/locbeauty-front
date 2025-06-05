@@ -29,7 +29,7 @@ export function EmployeesTable() {
     }
     return (
         <>
-            <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto">
+            <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto md:block hidden ">
                 <table className="w-full">
                     <thead className="bg-muted">
                         <tr>
