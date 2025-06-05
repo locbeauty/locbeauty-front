@@ -43,5 +43,5 @@ export type Address = {
     neighborhood: string,
     street: string,
     buildingNumber: string,
-    addressComplement: string,
+    addressComplement: string | null,
 }
