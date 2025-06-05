@@ -3,7 +3,6 @@
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { employees } from "@/utils/mocks/employees";
-import { useEffect } from "react";
 import { Employee } from "@/utils/@types/employees";
 
 type SelectEmployeeProps<T extends FieldValues> = {
@@ -13,9 +12,6 @@ type SelectEmployeeProps<T extends FieldValues> = {
 }
 
 export function SelectEmployee<T extends FieldValues>({ control, name, selectedEmployee }: SelectEmployeeProps<T>) {
-    useEffect(() => {
-        console.log("selectedEmployee: ", selectedEmployee);
-    }, [ selectedEmployee ]);
 
     return (
         <Controller

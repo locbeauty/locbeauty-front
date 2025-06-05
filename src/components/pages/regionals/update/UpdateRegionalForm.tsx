@@ -106,7 +106,7 @@ export function UpdateRegionalForm({ selectedRegional }: UpdateRegionalFormProps
 
                 <div className="space-y-2">
                     <Label htmlFor="gerente">Gerente</Label>
-                    <SelectEmployee selectedEmployee={ selectedRegional.manager } control={ control } name="manager" />
+                    <SelectEmployee selectedEmployee={ selectedRegional.manager } control={ control } name="manager.fullname" />
                     {errors.manager && (
                         <p className="text-sm font-medium text-destructive">
                             {errors.manager.message}
