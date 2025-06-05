@@ -18,12 +18,6 @@ import { Textarea } from "@/components/ui/textarea";
 export function CreateRegionalForm() {
     const createRegionalMethods = useForm<CreateRegionalFormSchemaType>({
         resolver: zodResolver(createRegionalFormSchema),
-        defaultValues: {
-            manager: {
-                employeeId: "",
-                fullname: ""
-            },
-        },
     });
 
     const {
@@ -83,10 +77,10 @@ export function CreateRegionalForm() {
 
                     <div className="space-y-2">
                         <Label htmlFor="gerente">Gerente</Label>
-                        <SelectEmployee control={ control } name="manager" />
-                        {errors.manager && (
+                        <SelectEmployee control={ control } name="managerEmployeeId" />
+                        {errors.managerEmployeeId && (
                             <p className="text-sm font-medium text-destructive">
-                                {errors.manager.message}
+                                {errors.managerEmployeeId.message}
                             </p>
                         )}
                     </div>

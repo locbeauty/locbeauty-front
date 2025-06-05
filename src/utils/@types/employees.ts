@@ -1,3 +1,5 @@
+import { Address } from "./addresses";
+
 export type ROLE = "FINANCIAL" | "MANAGER" | "COMERCIAL" | "LOGISTICS";
 
 export interface Employee {
@@ -5,4 +7,9 @@ export interface Employee {
     fullname: string,
     CPF: string,
     role: ROLE,
+    cellphone: string,
+    email: string,
+    address: Address,
+    birthdate: Date,
+    sourceRegionalId: string
 }

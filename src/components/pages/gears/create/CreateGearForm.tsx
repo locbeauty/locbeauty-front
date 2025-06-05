@@ -17,7 +17,6 @@ export function CreateGearForm() {
     const createGearMethods = useForm<CreateGearFormSchemaType>({
         resolver: zodResolver(createGearFormSchema),
         defaultValues: {
-            sourceRegional: "",
             canBeTransferred: false,
             availableUnits: 0,
         },
@@ -69,12 +68,12 @@ export function CreateGearForm() {
                             <FormProvider { ...createGearMethods }>
                                 <SelectRegional<CreateGearFormSchemaType>
                                     control={ control }
-                                    name="sourceRegional"
+                                    name="sourceRegionalId"
                                 />
                             </FormProvider>
-                            {errors.sourceRegional && (
+                            {errors.sourceRegionalId && (
                                 <p className="text-sm text-destructive mt-2">
-                                    {errors.sourceRegional.message}
+                                    {errors.sourceRegionalId.message}
                                 </p>
                             )}
                         </div>

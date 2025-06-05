@@ -1,23 +1,12 @@
-import { StateTitle, UF } from "./addresses";
-import { Employee } from "./employees";
+import { Address } from "./addresses";
 
 export interface Regional {
+  managerEmployeeId: string,
   regionalId: string,
   title: string,
   CNPJ: string,
   description: string,
-  CEP: string,
-  state: {
-    stateId: string,
-    UF: UF
-    title: StateTitle
-  },
-  city: string,
-  neighborhood: string,
-  street: string,
-  houseNumber: string,
-  addressComplement: string,
-  manager: Employee,
+  address: Address,
   cellphone: string,
   email: string
 }

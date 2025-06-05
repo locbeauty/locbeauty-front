@@ -137,7 +137,7 @@ export function UpdateGearDialog({
                                         {regionals.map((regional) => {
                                             return (
                                                 <SelectItem key={ regional.regionalId } value={ regional.title }>
-                                                    {regional.title}, {regional.state.title}
+                                                    {regional.title}, {regional.address.state.title}
                                                 </SelectItem>
                                             );
                                         })}

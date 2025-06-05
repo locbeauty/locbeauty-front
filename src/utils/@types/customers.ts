@@ -1,4 +1,4 @@
-import { State } from "./addresses";
+import { Address } from "./addresses";
 
 export type PERSON_TYPE = "PF" | "PJ";
 export type CUSTOMER_STATUSES = "ATIVO" | "INATIVO" | "INADIMPLENTE" | "BLOQUEADO";
@@ -15,13 +15,7 @@ export interface Customer {
   email: string;
   cellphone: string;
   instagram: string | null;
-  CEP: string;
-  state: State;
-  city: string;
-  neighborhood: string;
-  street: string;
-  houseNumber: string;
-  addressComplement: string | null;
+  address: Address,
   CPF: string | null;
   CNPJ: string | null;
   lastBooking: Date;

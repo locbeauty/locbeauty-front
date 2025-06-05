@@ -35,3 +35,13 @@ export type State = {
     UF: UF
     title: StateTitle
   }
+
+export type Address = {
+    zipCode: string,
+    state: State,
+    city: string,
+    neighborhood: string,
+    street: string,
+    buildingNumber: string,
+    addressComplement: string | null,
+}

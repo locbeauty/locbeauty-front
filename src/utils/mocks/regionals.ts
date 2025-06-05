@@ -6,74 +6,62 @@ export const regionals: Regional[] = [
         title: "Filial Acre",
         CNPJ: "12.345.678/0001-90",
         description: "Filial Acre",
-        CEP: "55608-477",
-        state: {
-            stateId: "1",
-            title: "Acre",
-            UF: "AC"
+        address: {
+            zipCode: "55608-477",
+            state: {
+                UF: "AC",
+                title: "Acre"
+            },
+            city: "Rio Branco",
+            neighborhood: "Boa Viagem",
+            street: "Avenida Beira Mar",
+            buildingNumber: "1167",
+            addressComplement: "Perto daquela casa"
         },
-        city: "Rio Branco",
-        neighborhood: "Boa Viagem",
-        street: "Avenida Beira Mar",
-        houseNumber: "1167",
-        addressComplement: "Perto daquela casa",
-        manager: {
-            employeeId: "1",
-            fullname: "Chefe de tudo",
-            role: "COMERCIAL",
-            CPF: "111.111.111-00"
-        },
+        managerEmployeeId: "1",
         cellphone: "(81) 9.8776-8778",
-        email: "teste@email.com",
+        email: "teste@email.com"
     },
     {
         regionalId: "2",
         title: "Filial Pernambuco",
         CNPJ: "12.345.678/0001-90",
         description: "Filial Pernambuco",
-        CEP: "55608-477",
-        state: {
-            stateId: "2",
-            title: "Pernambuco",
-            UF: "PE"
+        address: {
+            zipCode: "55608-477",
+            state: {
+                UF: "PE",
+                title: "Pernambuco"
+            },
+            city: "Recife",
+            neighborhood: "Boa Viagem",
+            street: "Avenida Beira Mar",
+            buildingNumber: "1167",
+            addressComplement: "Perto daquela casa"
         },
-        neighborhood: "Boa Viagem",
-        street: "Avenida Beira Mar",
-        houseNumber: "1167",
-        addressComplement: "Perto daquela casa",
-        city: "Recife",
-        manager: {
-            employeeId: "1",
-            fullname: "Cassio Z",
-            role: "COMERCIAL",
-            CPF: "111.111.111-00"
-        },
+        managerEmployeeId:  "1",
         cellphone: "(81) 9.8776-8778",
-        email: "teste@email.com",
+        email: "teste@email.com"
     },
     {
         regionalId: "3",
-        title: "Filial Pernambuco",
+        title: "Filial Pernambuco 2",
         CNPJ: "12.345.678/0001-90",
-        description: "Filial Pernambuco",
-        CEP: "55608-477",
-        state: {
-            stateId: "3",
-            title: "Pernambuco",
-            UF: "PE"
+        description: "Filial Pernambuco 2",
+        address: {
+            zipCode: "55608-477",
+            state: {
+                UF: "PE",
+                title: "Pernambuco"
+            },
+            city: "Recife",
+            neighborhood: "Boa Viagem",
+            street: "Avenida Beira Mar",
+            buildingNumber: "1167",
+            addressComplement: "Perto daquela casa"
         },
-        city: "Recife",
-        neighborhood: "Boa Viagem",
-        street: "Avenida Beira Mar",
-        houseNumber: "1167",
-        addressComplement: "Perto daquela casa",
-        manager: {
-            employeeId: "1",
-            fullname: "Fred F",
-            role: "COMERCIAL",
-            CPF: "111.111.111-00"
-        },
+        managerEmployeeId:  "1",
         cellphone: "(81) 9.8776-8778",
-        email: "teste@email.com",
-    },
+        email: "teste@email.com"
+    }
 ];

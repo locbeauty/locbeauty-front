@@ -3,52 +3,57 @@ import { CustomerGeneralInformationForm } from "../create/CustomerGeneralInforma
 import { CustomerAddressForm } from "../create/CustomerAddressForm";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createCustomerFormSchema, CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
+import {
+    createCustomerFormSchema,
+    CreateCustomerFormSchemaType,
+} from "@/lib/zod/CreateCustomerValidation";
 import { Customer } from "@/utils/@types/customers";
 
 interface UpdateCustomerFormProps {
-    selectedCustomer: Customer
+  selectedCustomer: Customer;
 }
 
-export function UpdateCustomerForm({ selectedCustomer }: UpdateCustomerFormProps) {
-
+export function UpdateCustomerForm({
+    selectedCustomer,
+}: UpdateCustomerFormProps) {
     const updateCustomerMethods = useForm<CreateCustomerFormSchemaType>({
         resolver: zodResolver(createCustomerFormSchema),
         //TODO: corrigir para null, ao inves de undefined
         defaultValues: {
             personType: selectedCustomer.personType,
-            addressComplement: selectedCustomer.addressComplement,
+            addressComplement: selectedCustomer.address.addressComplement,
             birthdate: new Date(selectedCustomer.birthdate),
             cellphone: selectedCustomer.cellphone,
-            CEP: selectedCustomer.CEP,
-            city: selectedCustomer.city,
+            address: {
+                zipCode: selectedCustomer.address.zipCode,
+                city: selectedCustomer.address.city,
+                buildingNumber: selectedCustomer.address.buildingNumber,
+                neighborhood: selectedCustomer.address.neighborhood,
+                street: selectedCustomer.address.street,
+                state: {
+                    UF: selectedCustomer.address.state.UF,
+                    title: selectedCustomer.address.state.title,
+                },
+            },
             CNPJ: selectedCustomer.CNPJ || undefined,
             companyName: selectedCustomer.companyName || undefined,
             CPF: selectedCustomer.CPF || undefined,
             fullname: selectedCustomer.fullname || undefined,
             email: selectedCustomer.email,
-            houseNumber: selectedCustomer.houseNumber,
             instagram: selectedCustomer.instagram || undefined,
-            neighborhood: selectedCustomer.neighborhood,
-            personAccountableName: selectedCustomer.personAccountableName || undefined,
-            state: {
-                UF: selectedCustomer.state.UF,
-                title: selectedCustomer.state.title,
-            },
-            street: selectedCustomer.street,
-
+            personAccountableName:
+            selectedCustomer.personAccountableName || undefined,
         },
     });
 
-    const {
-        handleSubmit,
-    } = updateCustomerMethods;
+    const { handleSubmit } = updateCustomerMethods;
 
-    function handleCreateCustomer(updatedCustomerData: CreateCustomerFormSchemaType) {
+    function handleCreateCustomer(
+        updatedCustomerData: CreateCustomerFormSchemaType
+    ) {
     // TODO: selecionar as informações antes de enviar pra
         console.log("updatedCustomerData: ", updatedCustomerData);
         toast.success("Cliente editado com sucesso!");
-
     }
     return (
         <form

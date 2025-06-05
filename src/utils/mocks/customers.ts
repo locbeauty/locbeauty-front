@@ -12,16 +12,19 @@ export const mockCustomers: Customer[] = [
         email: "teste@teste.com",
         cellphone: "(11) 11111-1111",
         instagram: "teste.12",
-        CEP: "54430-350",
-        state: {
-            title: "Acre",
-            UF: "AC"
+        address: {
+            zipCode: "54430-350",
+            state: {
+                title: "Acre",
+                UF: "AC"
+            },
+            city: "Recife",
+            neighborhood: "Boa Viagem",
+            street: "Avenida Beira Mar",
+            buildingNumber: "1167",
+            addressComplement: null,
+
         },
-        city: "Recife",
-        neighborhood: "Boa Viagem",
-        street: "Avenida Beira Mar",
-        houseNumber: "1167",
-        addressComplement: null,
         CPF: "111.111.111-11",
         CNPJ: null,
         lastBooking: new Date(),
@@ -38,16 +41,19 @@ export const mockCustomers: Customer[] = [
         email: "teste@teste.com",
         cellphone: "(11) 11111-1111",
         instagram: "teste.12",
-        CEP: "54430-350",
-        state: {
-            title: "Acre",
-            UF: "AC"
+        address: {
+            zipCode: "54430-350",
+            state: {
+                title: "Acre",
+                UF: "AC"
+            },
+            city: "Recife",
+            neighborhood: "Boa Viagem",
+            street: "Avenida Beira Mar",
+            buildingNumber: "1167",
+            addressComplement: "Perto daquela casa",
+
         },
-        city: "Recife",
-        neighborhood: "Boa Viagem",
-        street: "Avenida Beira Mar",
-        houseNumber: "1167",
-        addressComplement: "Perto daquela casa",
         CPF: null,
         CNPJ: "111.111.111-11",
         lastBooking: new Date(),
@@ -64,16 +70,19 @@ export const mockCustomers: Customer[] = [
         email: "teste@teste.com",
         cellphone: "(11) 11111-1111",
         instagram: "sportrecife",
-        CEP: "54430-350",
-        state: {
-            title: "Acre",
-            UF: "AC"
+        address: {
+            zipCode: "54430-350",
+            state: {
+                title: "Acre",
+                UF: "AC"
+            },
+            city: "Recife",
+            neighborhood: "Ilha do Retiro",
+            street: "Avenida Abdias de Carvalho",
+            buildingNumber: "0",
+            addressComplement: null,
+
         },
-        city: "Recife",
-        neighborhood: "Ilha do Retiro",
-        street: "Avenida Abdias de Carvalho",
-        houseNumber: "0",
-        addressComplement: null,
         CPF: null,
         CNPJ: "111.111.111-11",
         lastBooking: new Date(),
