@@ -10,26 +10,26 @@ import {
     workingHours,
     groupOverlappingEvents,
 } from "./bookingViewHelpers";
-import type { Agendamento } from "@/app/(main)/bookings/page";
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { MobileDayView } from "./MobileDayView";
 import { BookingStatusBadge } from "../common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 import { CalendarDayHeader } from "./CalendarDayHeader";
+import { Booking } from "@/utils/@types/bookings";
 
 interface DayViewProps {
   currentDate: Date;
-  agendamentos: Agendamento[];
-  openAgendamentoDetails: (_agendamento: Agendamento) => void;
+  bookings: Booking[];
+  openBookingDetails: (_agendamento: Booking) => void;
 }
 
 export function DayView({
     currentDate,
-    agendamentos,
-    openAgendamentoDetails,
+    bookings,
+    openBookingDetails,
 }: DayViewProps) {
     // Filtrar agendamentos do dia atual
-    const dayAgendamentos = agendamentos.filter((agendamento) =>
+    const dayAgendamentos = bookings.filter((agendamento) =>
         isSameDay(agendamento.startDate, currentDate)
     );
 
@@ -39,9 +39,9 @@ export function DayView({
     return (
         <>
             <MobileDayView
-                agendamentos={ agendamentos }
+                bookings={ bookings }
                 currentDate={ currentDate }
-                openAgendamentoDetails={ openAgendamentoDetails }
+                openBookingDetails={ openBookingDetails }
             />
             <div className="hidden md:block min-w-full">
                 {/* Cabeçalho do dia */}
@@ -101,7 +101,7 @@ export function DayView({
                                         left: left,
                                         width: width,
                                     } }
-                                    onClick={ () => openAgendamentoDetails(agendamento) }
+                                    onClick={ () => openBookingDetails(agendamento) }
                                 >
                                     <div className="font-medium text-sm truncate">
                                         {agendamento.gear}

@@ -13,11 +13,16 @@ import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
-import { CreateRegionalFormSchemaType } from "@/lib/zod/createRegionalValidation";
+import { CreateRegionalFormSchemaType } from "@/lib/zod/CreateRegionalValidation";
 
 export function RegionalAddressForm() {
     const {
         register,
+        trigger,
+        clearErrors,
+        control,
+        setError,
+        setValue,
         formState: { errors },
     } = useFormContext<CreateRegionalFormSchemaType>();
 
@@ -30,14 +35,21 @@ export function RegionalAddressForm() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <CEPInput />
+                <CEPInput
+                    clearErrors={ clearErrors }
+                    control={ control }
+                    setError={ setError }
+                    setValue={ setValue }
+                    trigger={ trigger }
+                    zipCodeError={ errors.address?.zipCode?.message }
+                />
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="cidade">Cidade</Label>
                         <Input
                             disabled
-                            { ...register("city") }
+                            { ...register("address.city") }
                             placeholder="Cidade"
                             className=""
                             id="cidade"
@@ -47,10 +59,8 @@ export function RegionalAddressForm() {
                         <Label htmlFor="estado">Estado</Label>
                         <Input
                             disabled
-                            { ...register("state") }
+                            { ...register("address.state.title") }
                             placeholder="Estado"
-                            className=""
-                            id="cidade"
                         />
                     </div>
                 </div>
@@ -59,7 +69,7 @@ export function RegionalAddressForm() {
                     <Label htmlFor="bairro">Bairro</Label>
                     <Input
                         disabled
-                        { ...register("neighborhood") }
+                        { ...register("address.neighborhood") }
                         placeholder="Bairro"
                         className="placeholder:text-placeholder"
                         id="bairro"
@@ -70,7 +80,7 @@ export function RegionalAddressForm() {
                         <Label htmlFor="rua">Rua</Label>
                         <Input
                             disabled
-                            { ...register("street") }
+                            { ...register("address.street") }
                             id="rua"
                             className="placeholder:text-placeholder"
                             placeholder="Nome da rua"
@@ -79,14 +89,14 @@ export function RegionalAddressForm() {
                     <div className="space-y-2">
                         <Label htmlFor="number">Número</Label>
                         <Input
-                            { ...register("houseNumber") }
+                            { ...register("address.buildingNumber") }
                             id="number"
                             className="placeholder:text-placeholder"
                             placeholder="Número"
                         />
-                        {errors.houseNumber && (
+                        {errors.address?.buildingNumber && (
                             <p className="text-sm font-medium text-destructive">
-                                {errors.houseNumber.message}
+                                {errors.address.buildingNumber.message}
                             </p>
                         )}
                     </div>
@@ -95,7 +105,7 @@ export function RegionalAddressForm() {
                     <Label htmlFor="number">Complemento</Label>
 
                     <Textarea
-                        { ...register("addressComplement") }
+                        { ...register("address.addressComplement") }
                         className="h-[120px] resize-none max-w-[80vw] placeholder:text-placeholder"
                         placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
                     />

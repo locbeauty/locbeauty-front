@@ -7,24 +7,6 @@ import { ROUTES } from "@/utils/routes";
 import { Eye, Plus, Search } from "lucide-react";
 import Link from "next/link";
 
-// Tipos para os agendamentos
-export type Agendamento = {
-  id: number;
-  gear: string;
-  customer: string;
-  customerEmail?: string;
-  customerCellphone?: string;
-  city: string;
-  address?: string;
-  startDate: Date;
-  endDate: Date;
-  totalDuration: number; // em horas
-  price: number;
-  bookingStatus: "Não iniciado" | "Concluído" | "Cancelado";
-  paymentStatus: "Não pago" | "Pagamento parcial" | "Pago";
-  observations?: string;
-};
-
 export default function BookingsPage() {
     return (
         <div className="space-y-6">

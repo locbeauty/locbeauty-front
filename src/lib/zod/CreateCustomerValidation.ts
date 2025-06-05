@@ -1,12 +1,13 @@
 import { z } from "zod";
+import { addressSchema } from "./address";
 
 export const createCustomerFormSchema = z
     .object({
         personType: z.enum([ "PF", "PJ" ]),
-        customerName: z.string().trim().optional(),
+        fullname: z.string().trim().optional(),
         personAccountableName: z.string().trim().optional(),
         companyName: z.string().trim().optional(),
-        regional: z.string().optional(),
+        regionalId: z.string().optional(),
         email: z
             .string()
             .optional()
@@ -17,55 +18,17 @@ export const createCustomerFormSchema = z
         cellphone: z
             .string()
             .optional()
-            .refine(val => val !== undefined && val !== "", { message: "Telefone é obrigatório" }), // Validação será feita em outro arquivo
+            .refine((val) => val !== undefined && val !== "", {
+                message: "Telefone é obrigatório",
+            }), // Validação será feita em outro arquivo
         instagram: z.string().trim().optional(),
-        CEP: z
+        address: addressSchema,
+        CPF: z
             .string()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "CEP é obrigatório.",
-            })
-            .refine((val) => !val || val.length === 9, {
-                message: "CEP precisa ter 8 caracteres.",
-            }),
-        city: z
-            .string()
-            .trim()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Cidade é obrigatória",
-            }),
-        state: z
-            .string()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Estado é obrigatório.",
-            })
-            .transform((val) => (val ? val.toUpperCase() : val)),
-        neighborhood: z
-            .string()
-            .trim()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Bairro é obrigatório",
-            }),
-        street: z
-            .string()
-            .trim()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Rua é obrigatória",
-            }),
-        houseNumber: z
-            .string()
-            .trim()
-            .optional()
-            .refine((val) => val !== undefined && val !== "", {
-                message: "Número do imóvel é obrigatório",
-            }),
-        CPF: z.string().length(14, { message: "CPF precisa ter 11 caracteres." }).optional(),
+            .length(14, { message: "CPF precisa ter 11 caracteres." })
+            .optional(),
         CNPJ: z.string().optional(),
-        addressComplement: z.string().optional(),
+        addressComplement: z.string().nullable(),
         birthdate: z.date().optional(),
     })
     .superRefine((data, ctx) => {
@@ -96,11 +59,11 @@ export const createCustomerFormSchema = z
             }
             // A validação do formato do CPF será feita em outro arquivo
 
-            if (!data.customerName || data.customerName.trim().length < 2) {
+            if (!data.fullname || data.fullname.trim().length < 2) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: "Nome completo é obrigatório para PF.",
-                    path: [ "customerName" ],
+                    path: [ "fullname" ],
                 });
             }
         }
@@ -123,7 +86,10 @@ export const createCustomerFormSchema = z
                 });
             }
 
-            if (!data.personAccountableName || data.personAccountableName.trim().length < 2) {
+            if (
+                !data.personAccountableName ||
+        data.personAccountableName.trim().length < 2
+            ) {
                 ctx.addIssue({
                     path: [ "personAccountableName" ],
                     message: "Nome do responsável é obrigatório para PJ",
@@ -133,4 +99,6 @@ export const createCustomerFormSchema = z
         }
     });
 
-export type CreateCustomerFormSchemaType = z.infer<typeof createCustomerFormSchema>
+export type CreateCustomerFormSchemaType = z.infer<
+  typeof createCustomerFormSchema
+>;

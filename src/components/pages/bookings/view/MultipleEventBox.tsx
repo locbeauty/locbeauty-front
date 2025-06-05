@@ -1,4 +1,4 @@
-import { Agendamento } from "@/app/(main)/bookings/page";
+
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { BookingStatusBadge } from "../common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
@@ -9,17 +9,18 @@ import {
     getEventBoxHeigh,
 } from "./bookingViewHelpers";
 import { cn } from "@/lib/utils";
+import { Booking } from "@/utils/@types/bookings";
 
 interface MultipleEventBoxProps {
-  group: Agendamento[];
+  group: Booking[];
   dayIndex: number;
-  openAgendamentoDetails: (_agendamento: Agendamento) => void;
+  openBookingDetails: (_agendamento: Booking) => void;
 }
 
 export function MultipleEventBox({
     group,
     dayIndex,
-    openAgendamentoDetails,
+    openBookingDetails,
 }: MultipleEventBoxProps) {
     // Se o grupo tem múltiplos eventos, divida a largura
 
@@ -74,7 +75,7 @@ export function MultipleEventBox({
                     width: eventWidth,
                     overflowX: "hidden",
                 } }
-                onClick={ () => openAgendamentoDetails(agendamento) }
+                onClick={ () => openBookingDetails(agendamento) }
             >
                 <div className="font-medium text-sm truncate">{agendamento.gear}</div>
                 <div className="flex items-center text-xs gap-1 truncate">

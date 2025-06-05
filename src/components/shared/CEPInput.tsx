@@ -3,24 +3,25 @@
 import { useEffect, useRef, useState } from "react";
 import IMask from "imask";
 import { Input } from "@/components/ui/input";
-import { useFormContext, Controller } from "react-hook-form";
-import type { CreateCustomerFormSchemaType } from "../../lib/zod/CreateCustomerValidation";
+import { Controller, Control, UseFormSetValue, UseFormTrigger, UseFormSetError, UseFormClearErrors, FieldValues, Path } from "react-hook-form";
 import { handleCepChange } from "@/utils/addressHandlers";
 import { Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
-export default function CEPInput({ ...props }) {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [ isLoadingCep, setIsLoadingCep ] = useState(false);
+interface CEPInputProps<T extends FieldValues> extends React.InputHTMLAttributes<HTMLInputElement> {
+    control: Control<T>;
+    setValue: UseFormSetValue<T>;
+    trigger: UseFormTrigger<T>;
+    setError: UseFormSetError<T>;
+    clearErrors: UseFormClearErrors<T>;
+    zipCodeError?: string;
+}
 
-    const {
-        control,
-        setValue,
-        trigger,
-        setError,
-        clearErrors,
-        formState: { errors },
-    } = useFormContext<CreateCustomerFormSchemaType>();
+export default function CEPInput<T extends FieldValues>({ clearErrors, control, setError, setValue, trigger, zipCodeError, ...props }: CEPInputProps<T>) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [ isLoadingZipCode, setIsLoadingZipCode ] = useState(false);
+
+    const zipCode = "address.zipCode" as Path<T>;
 
     useEffect(() => {
         if (!inputRef.current) return;
@@ -41,7 +42,7 @@ export default function CEPInput({ ...props }) {
             <Label htmlFor="cep">CEP</Label>
             <div className="relative">
                 <Controller
-                    name="CEP"
+                    name={ zipCode }
                     control={ control }
                     render={ ({ field }) => (
                         <Input
@@ -50,9 +51,9 @@ export default function CEPInput({ ...props }) {
                             value={ field.value || "" }
                             onChange={ (e) => {
                                 field.onChange(e);
-                                handleCepChange({
+                                handleCepChange<T>({
                                     e,
-                                    setIsLoadingCep,
+                                    setIsLoadingZipCode,
                                     setValue,
                                     trigger,
                                     setError,
@@ -70,15 +71,15 @@ export default function CEPInput({ ...props }) {
                         />
                     ) }
                 />
-                {isLoadingCep && (
+                {isLoadingZipCode && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                     </div>
                 )}
             </div>
-            {errors.CEP && (
+            {zipCodeError && (
                 <p className="text-sm font-medium text-destructive">
-                    {errors.CEP.message}
+                    {zipCodeError}
                 </p>
             )}
         </div>

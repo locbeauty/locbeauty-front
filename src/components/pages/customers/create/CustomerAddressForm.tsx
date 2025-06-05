@@ -17,6 +17,11 @@ import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation
 export function CustomerAddressForm() {
     const {
         register,
+        trigger,
+        clearErrors,
+        control,
+        setError,
+        setValue,
         formState: { errors },
     } = useFormContext<CreateCustomerFormSchemaType>();
 
@@ -29,14 +34,21 @@ export function CustomerAddressForm() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <CEPInput />
+                <CEPInput
+                    clearErrors={ clearErrors }
+                    control={ control }
+                    setError={ setError }
+                    setValue={ setValue }
+                    trigger={ trigger }
+                    zipCodeError={ errors.address?.zipCode?.message }
+                />
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="cidade">Cidade</Label>
                         <Input
                             disabled
-                            { ...register("city") }
+                            { ...register("address.city") }
                             placeholder="Cidade"
                             className=""
                             id="cidade"
@@ -46,10 +58,8 @@ export function CustomerAddressForm() {
                         <Label htmlFor="estado">Estado</Label>
                         <Input
                             disabled
-                            { ...register("state") }
+                            { ...register("address.state.title") }
                             placeholder="Estado"
-                            className=""
-                            id="cidade"
                         />
                     </div>
                 </div>
@@ -58,7 +68,7 @@ export function CustomerAddressForm() {
                     <Label htmlFor="bairro">Bairro</Label>
                     <Input
                         disabled
-                        { ...register("neighborhood") }
+                        { ...register("address.neighborhood") }
                         placeholder="Bairro"
                         className="placeholder:text-placeholder"
                         id="bairro"
@@ -69,7 +79,7 @@ export function CustomerAddressForm() {
                         <Label htmlFor="rua">Rua</Label>
                         <Input
                             disabled
-                            { ...register("street") }
+                            { ...register("address.street") }
                             id="rua"
                             className="placeholder:text-placeholder"
                             placeholder="Nome da rua"
@@ -78,15 +88,15 @@ export function CustomerAddressForm() {
                     <div className="space-y-2">
                         <Label htmlFor="number">Número</Label>
                         <Input
-                            { ...register("houseNumber") }
+                            { ...register("address.buildingNumber") }
                             id="number"
                             className="placeholder:text-placeholder"
                             placeholder="Número"
                         />
                         <div className="min-h-[20px]">
-                            {errors.houseNumber && (
+                            {errors.address?.buildingNumber && (
                                 <p className="text-sm font-medium text-destructive">
-                                    {errors.houseNumber.message}
+                                    {errors.address.buildingNumber.message}
                                 </p>
                             )}
                         </div>

@@ -39,7 +39,7 @@ export default function GearsPage() {
                     items={ GearFilterStatusTypes }
                     placeholder="Status"
                     triggerProps={ {
-                        className: "w-[180px]",
+                        className: "w-fit md:w-[180px]",
                         disabled: false,
                     } }
                 />

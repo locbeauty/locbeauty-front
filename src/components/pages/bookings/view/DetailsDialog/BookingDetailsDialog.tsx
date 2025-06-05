@@ -31,13 +31,13 @@ import {
     formatTime,
 } from "@/components/pages/bookings/view/bookingViewHelpers";
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
-import { Agendamento } from "@/app/(main)/bookings/page";
 import { BookingPaymentStatusBadge } from "../../common/BookingPaymentStatusBadge";
+import { Booking } from "@/utils/@types/bookings";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
   isBookingDetailsDialogOpen: boolean;
-  selectedAgendamento: Agendamento | null;
+  selectedAgendamento: Booking | null;
 }
 
 export function BookingDetailsDialog({
@@ -50,7 +50,7 @@ export function BookingDetailsDialog({
             open={ isBookingDetailsDialogOpen }
             onOpenChange={ setBookingDetailsDialogOpen }
         >
-            <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-scroll dark:bg-gray-900">
+            <DialogContent className="max-h-[90vh] w-[90vw] md:w-[600px] overflow-scroll dark:bg-gray-900">
                 { selectedAgendamento && (
                     <>
                         <DialogHeader>

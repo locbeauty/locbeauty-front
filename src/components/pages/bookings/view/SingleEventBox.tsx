@@ -1,4 +1,4 @@
-import { Agendamento } from "@/app/(main)/bookings/page";
+
 import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { BookingStatusBadge } from "../common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
@@ -9,17 +9,18 @@ import {
     getEventBoxHeigh,
 } from "./bookingViewHelpers";
 import { cn } from "@/lib/utils";
+import { Booking } from "@/utils/@types/bookings";
 
 interface SingleEventBoxProps {
-  group: Agendamento[];
+  group: Booking[];
   dayIndex: number;
-  openAgendamentoDetails: (_agendamento: Agendamento) => void;
+  openBookingDetails: (_agendamento: Booking) => void;
 }
 
 export function SingleEventBox({
     group,
     dayIndex,
-    openAgendamentoDetails,
+    openBookingDetails,
 }: SingleEventBoxProps) {
     // Se o grupo tem apenas um evento, use a largura total
     const hourColumnWidth = 100;
@@ -64,7 +65,7 @@ export function SingleEventBox({
                 left,
                 width,
             } }
-            onClick={ () => openAgendamentoDetails(agendamento) }
+            onClick={ () => openBookingDetails(agendamento) }
         >
             <div className="font-medium text-sm truncate">{agendamento.gear}</div>
             <div className="flex items-center text-xs gap-1 truncate">

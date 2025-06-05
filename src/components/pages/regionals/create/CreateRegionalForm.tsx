@@ -8,18 +8,16 @@ import { RegionalAddressForm } from "./RegionalAddressForm";
 import {
     createRegionalFormSchema,
     CreateRegionalFormSchemaType,
-} from "@/lib/zod/createRegionalValidation";
+} from "@/lib/zod/CreateRegionalValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 export function CreateRegionalForm() {
     const createRegionalMethods = useForm<CreateRegionalFormSchemaType>({
         resolver: zodResolver(createRegionalFormSchema),
-        defaultValues: {
-            manager: "",
-        },
     });
 
     const {
@@ -67,14 +65,22 @@ export function CreateRegionalForm() {
                                 </p>
                             )}
                         </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Description</Label>
+                            <Textarea
+                                { ...register("description") }
+                                placeholder="Informações adicionais sobre a filial"
+                                className="placeholder:text-placeholder max-h-[200px]"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="gerente">Gerente</Label>
-                        <SelectEmployee control={ control } name="manager" />
-                        {errors.manager && (
+                        <SelectEmployee control={ control } name="managerEmployeeId" />
+                        {errors.managerEmployeeId && (
                             <p className="text-sm font-medium text-destructive">
-                                {errors.manager.message}
+                                {errors.managerEmployeeId.message}
                             </p>
                         )}
                     </div>

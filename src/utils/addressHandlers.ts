@@ -8,7 +8,7 @@ import {
     UseFormTrigger,
 } from "react-hook-form";
 
-export interface GetAddressDetailsResponse {
+export interface GetViaCepAddressDetailsResponse {
     cep: string;
     logradouro: string;
     complemento: string;
@@ -24,62 +24,62 @@ export interface GetAddressDetailsResponse {
     siafi: string;
 }
 
-interface HandleCepChangeParams<T extends FieldValues> {
+interface HandleZipCodeChangeParams<T extends FieldValues> {
   e: React.ChangeEvent<HTMLInputElement>;
   setValue: UseFormSetValue<T>;
   trigger: UseFormTrigger<T>;
   setError: UseFormSetError<T>
-  setIsLoadingCep: (_value: boolean) => void;
+  setIsLoadingZipCode: (_value: boolean) => void;
     clearErrors: UseFormClearErrors<T>
 }
 
-export async function handleCepChange<T extends FieldValues>({ e, setValue, trigger, setIsLoadingCep, setError, clearErrors }: HandleCepChangeParams<T>) {
-    const cep = e.target.value.replace(/\D/g, "");
+export async function handleCepChange<T extends FieldValues>({ e, setValue, trigger, setIsLoadingZipCode, setError, clearErrors }: HandleZipCodeChangeParams<T>) {
+    const zipCodeParsed = e.target.value.replace(/\D/g, "");
 
     const {
-        CEP = "CEP" as Path<T>,
-        city = "city" as Path<T>,
-        state = "state" as Path<T>,
-        neighborhood = "neighborhood" as Path<T>,
-        street = "street" as Path<T>,
+        zipCode = "address.zipCode" as Path<T>,
+        city = "address.city" as Path<T>,
+        state = "address.state" as Path<T>,
+        neighborhood = "address.neighborhood" as Path<T>,
+        street = "address.street" as Path<T>,
     } = {};
-    const cepValue = e.target.value.replace(/\D/g, "");
+    const zipCodeValue = e.target.value.replace(/\D/g, "");
 
-    if (cep.length === 0) clearErrors(CEP);
-    if (cepValue.length !== 8) return;
+    if (zipCodeParsed.length === 0) clearErrors(zipCode);
+    if (zipCodeValue.length !== 8) return;
 
     try {
-        setIsLoadingCep(true);
-        clearErrors(CEP);
+        setIsLoadingZipCode(true);
+        clearErrors(zipCode);
 
-        const response = await getAddressDetails(cepValue);
+        const response = await getAddressDetails(zipCodeValue);
 
         if (!response) {
-            setError(CEP, { message: "CEP não encontrado." });
+            setError(zipCode, { message: "CEP não encontrado." });
 
             setValue(city, "" as PathValue<T, typeof city>);
             setValue(neighborhood, "" as PathValue<T, typeof neighborhood>);
             setValue(street, "" as PathValue<T, typeof street>);
-            setValue(state, "" as PathValue<T, typeof state>);
+            setValue(state, { UF: "", title: "" } as PathValue<T, typeof state>);
             return;
         }
 
         setValue(city, response.localidade as PathValue<T, typeof city>);
         setValue(neighborhood, response.bairro as PathValue<T, typeof neighborhood>);
         setValue(street, response.logradouro as PathValue<T, typeof street>);
-        setValue(state, response.estado as PathValue<T, typeof state>);
+        setValue(state, { UF: response.uf, title: response.estado } as PathValue<T, typeof state>);
 
         trigger([ city, neighborhood, street, state ]);
     } catch (error) {
-        setError(CEP, { message: "Erro ao buscar o CEP." });
+        setError(zipCode, { message: "Erro ao buscar o CEP." });
         console.warn("Error: ", error);
     } finally {
-        setIsLoadingCep(false);
+        setIsLoadingZipCode(false);
     }
 }
 
-export async function getAddressDetails(cep: string): Promise<GetAddressDetailsResponse | null> {
-    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+export async function getAddressDetails(zipCode: string): Promise<GetViaCepAddressDetailsResponse | null> {
+    const response = await fetch(`https://viacep.com.br/ws/${zipCode}/json/`);
 
     if (!response.ok) {
         console.error("Erro HTTP:", response.status);

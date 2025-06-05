@@ -1,4 +1,4 @@
-import { EmployeesTable } from "@/components/pages/employees/EmployeesTable";
+import { EmployeesTable } from "@/components/pages/employees/view/EmployeesTable";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

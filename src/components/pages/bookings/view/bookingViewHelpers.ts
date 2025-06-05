@@ -1,4 +1,4 @@
-import { Agendamento } from "@/app/(main)/bookings/page";
+import { Booking } from "@/utils/@types/bookings";
 import { Dispatch, SetStateAction } from "react";
 
 //
@@ -113,7 +113,7 @@ export function getDayIndex(date: Date, weekDays: Date[]): number {
     return -1;
 }
 
-export function isAgendamentoInWeek(agendamento: Agendamento, weekDays: Date[]): boolean {
+export function isAgendamentoInWeek(agendamento: Booking, weekDays: Date[]): boolean {
     const agendamentoDate = agendamento.startDate;
     const weekStart = new Date(weekDays[0]);
     weekStart.setHours(0, 0, 0, 0);
@@ -158,15 +158,15 @@ export function formatCurrency(value: number): string {
 // ─── EVENTOS ──────────────────────────────────────────────────────────────────────
 //
 
-export function doEventsOverlap(event1: Agendamento, event2: Agendamento): boolean {
+export function doEventsOverlap(event1: Booking, event2: Booking): boolean {
     return event1.startDate < event2.endDate && event1.endDate > event2.startDate;
 }
 
-export function groupOverlappingEvents(events: Agendamento[]): Agendamento[][] {
+export function groupOverlappingEvents(events: Booking[]): Booking[][] {
     if (events.length === 0) return [];
 
     const sortedEvents = [ ...events ].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-    const groups: Agendamento[][] = [];
+    const groups: Booking[][] = [];
 
     sortedEvents.forEach((event) => {
         let foundGroup = false;

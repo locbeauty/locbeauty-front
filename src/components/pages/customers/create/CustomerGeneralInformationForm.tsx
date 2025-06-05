@@ -13,7 +13,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
 import { Controller, useFormContext } from "react-hook-form";
-import { SelectRegional } from "../../../shared/SelectRegional";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 
@@ -65,23 +64,6 @@ export function CustomerGeneralInformationForm() {
                             } }
                         />
                     </div>
-
-                    <div className="space-y-2">
-                        <Label>Regional</Label>
-                        <Controller
-                            name="personType"
-                            control={ control }
-                            defaultValue="PF"
-                            render={ () => {
-                                return (
-                                    <SelectRegional<CreateCustomerFormSchemaType>
-                                        control={ control }
-                                        name="regional"
-                                    />
-                                );
-                            } }
-                        />
-                    </div>
                 </div>
 
                 <div className="border p-4 rounded-md md:h-[350px] h-[350px]">
@@ -100,14 +82,14 @@ export function CustomerGeneralInformationForm() {
                                 <Label htmlFor="nome">Nome Completo</Label>
                                 <Input
                                     className="placeholder:text-placeholder"
-                                    { ...register("customerName") }
+                                    { ...register("fullname") }
                                     id="nome"
                                     placeholder="Nome completo"
                                 />
                                 <div className="h-3">
-                                    {errors.customerName && (
+                                    {errors.fullname && (
                                         <p className="text-xs font-medium text-destructive">
-                                            {errors.customerName.message}
+                                            {errors.fullname.message}
                                         </p>
                                     )}
                                 </div>
@@ -133,7 +115,7 @@ export function CustomerGeneralInformationForm() {
                                             placeholder="Escolha a data de nascimento"
                                             value={ birthdate }
                                             onChange={ (date) => {
-                                                setValue("birthdate", date!);
+                                                setValue("birthdate", date);
                                                 trigger("birthdate");
                                             } }
                                             classNames={ {
@@ -249,17 +231,11 @@ export function CustomerGeneralInformationForm() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="instagram">Instagram</Label>
-                            <Input
-                                { ...register("instagram") }
-                                id="instagram"
-                                className="placeholder:text-placeholder"
-                                placeholder="@usuario"
-                            />
-                            {errors.instagram && (
-                                <p className="text-xs font-medium text-destructive">
-                                    {errors.instagram.message}
-                                </p>
-                            )}
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">@</span>
+                                <Input { ...register("instagram") }  id="instagram" className="pl-8 placeholder:text-placeholder" placeholder="usuario" />
+                            </div>
+                            {errors.instagram && <p className="text-xs font-medium text-destructive">{errors.instagram.message}</p>}
                         </div>
                     </div>
                 </div>

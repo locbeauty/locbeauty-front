@@ -6,18 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Checkbox } from "@/components/ui/checkbox";
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { SelectRegional } from "@/components/shared/SelectRegional";
 import { createGearFormSchema, CreateGearFormSchemaType } from "@/lib/zod/CreateGearValidation";
 import { toast } from "sonner";
+import { CanBeTransferredCheckbox } from "../shared/canBeTransferredCheckbox";
 
 export function CreateGearForm() {
     const createGearMethods = useForm<CreateGearFormSchemaType>({
         resolver: zodResolver(createGearFormSchema),
         defaultValues: {
-            sourceRegional: "",
             canBeTransferred: false,
             availableUnits: 0,
         },
@@ -69,12 +68,12 @@ export function CreateGearForm() {
                             <FormProvider { ...createGearMethods }>
                                 <SelectRegional<CreateGearFormSchemaType>
                                     control={ control }
-                                    name="sourceRegional"
+                                    name="sourceRegionalId"
                                 />
                             </FormProvider>
-                            {errors.sourceRegional && (
+                            {errors.sourceRegionalId && (
                                 <p className="text-sm text-destructive mt-2">
-                                    {errors.sourceRegional.message}
+                                    {errors.sourceRegionalId.message}
                                 </p>
                             )}
                         </div>
@@ -147,41 +146,7 @@ export function CreateGearForm() {
                         )}
                     </div>
                     <div>
-                        <Controller
-                            control={ control }
-                            name="canBeTransferred"
-                            render={ ({ field }) => (
-                                <div className="flex items-center h-full">
-                                    <div
-                                        className={ `bg-white dark:bg-gray-800 rounded-lg p-4 border ${
-                                            errors.canBeTransferred
-                                                ? "border-destructive"
-                                                : "border-gray-200 dark:border-gray-700"
-                                        } w-full flex items-center space-x-3` }
-                                    >
-                                        <Checkbox
-                                            id="canBeTransferred"
-                                            checked={ field.value }
-                                            onCheckedChange={ field.onChange }
-                                        />
-                                        <div className="space-y-1">
-                                            <Label
-                                                htmlFor="canBeTransferred"
-                                                className={ `font-medium cursor-pointer ${
-                                                    errors.canBeTransferred ? "text-destructive" : ""
-                                                }` }
-                                            >
-                        Pode ser transferido?
-                                            </Label>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Marque esta opção se o equipamento pode ser transferido
-                        entre regionais
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) }
-                        />
+                        <CanBeTransferredCheckbox control={ control } errors={ errors } name="canBeTransferred" />
                     </div>
                 </div>
             </form>
