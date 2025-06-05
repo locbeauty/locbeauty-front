@@ -31,5 +31,6 @@ export const addressSchema = z.object({
         .string()
         .trim()
         .max(100, { message: "Complemento deve ter no máximo 100 caracteres" })
-        .optional(),
+        .optional()
+        .nullable(),
 });
