@@ -21,7 +21,7 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
     }
 
     // Endereço completo formatado
-    const fullAddress = `${selectedRegional.street}, ${selectedRegional.houseNumber}${selectedRegional.addressComplement ? ` - ${selectedRegional.addressComplement}` : ""}, ${selectedRegional.neighborhood}, ${selectedRegional.city}/${selectedRegional.state.UF}`;
+    const fullAddress = `${selectedRegional.address.street}, ${selectedRegional.address.buildingNumber}${selectedRegional.address.addressComplement ? ` - ${selectedRegional.address.addressComplement}` : ""}, ${selectedRegional.address.neighborhood}, ${selectedRegional.address.city}/${selectedRegional.address.state.UF}`;
 
     return (
         <Card>
@@ -31,7 +31,7 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                     Regional {selectedRegional.description}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                    {selectedRegional.state.title} - {selectedRegional.city}
+                    {selectedRegional.address.state.title} - {selectedRegional.address.city}
                 </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -54,18 +54,18 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Estado:</Label>
                                 <Badge variant="outline" className="text-blue-600 border-blue-200">
-                                    {selectedRegional.state.UF} - {selectedRegional.state.title}
+                                    {selectedRegional.address.state.UF} - {selectedRegional.address.state.title}
                                 </Badge>
                             </div>
                         </div>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Cidade:</Label>
-                                <span className="text-sm">{selectedRegional.city}</span>
+                                <span className="text-sm">{selectedRegional.address.city}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Bairro:</Label>
-                                <span className="text-sm">{selectedRegional.neighborhood}</span>
+                                <span className="text-sm">{selectedRegional.address.neighborhood}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Status:</Label>
@@ -105,9 +105,10 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
+                                {/* TODO: fetch employee data */}
                                 <User className="h-4 w-4 text-muted-foreground" />
                                 <Label className="text-sm font-medium">Gerente:</Label>
-                                <span className="text-sm font-semibold">{selectedRegional.manager.fullname}</span>
+                                <span className="text-sm font-semibold">{selectedRegional.managerEmployeeId}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-muted-foreground" />
