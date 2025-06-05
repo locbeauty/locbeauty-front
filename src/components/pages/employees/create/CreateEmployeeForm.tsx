@@ -14,9 +14,6 @@ import { EmployeeAddressForm } from "../forms/EmployeeAddressForm";
 export function CreateEmployeeForm() {
     const CreateEmployeeMethods = useForm<CreateEmployeeFormSchemaType>({
         resolver: zodResolver(createEmployeeFormSchema),
-        defaultValues: {
-            sourceRegional: "",
-        },
     });
 
     const {

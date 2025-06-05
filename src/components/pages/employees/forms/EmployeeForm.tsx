@@ -55,11 +55,11 @@ export function EmployeeForm() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="nome">Regional:</Label>
-                    <SelectRegional control={ control } name="sourceRegional" />
+                    <SelectRegional control={ control } name="sourceRegionalId" />
                     <div className="h-3">
-                        {errors.sourceRegional && (
+                        {errors.sourceRegionalId && (
                             <p className="text-xs font-medium text-destructive">
-                                {errors.sourceRegional.message}
+                                {errors.sourceRegionalId.message}
                             </p>
                         )}
                     </div>
