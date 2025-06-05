@@ -9,6 +9,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { EmployeeForm } from "../forms/EmployeeForm";
+import { EmployeeAddressForm } from "../forms/EmployeeAddressForm";
 
 export function CreateEmployeeForm() {
     const CreateEmployeeMethods = useForm<CreateEmployeeFormSchemaType>({
@@ -36,6 +37,7 @@ export function CreateEmployeeForm() {
             >
                 <FormProvider { ...CreateEmployeeMethods }>
                     <EmployeeForm />
+                    <EmployeeAddressForm />
                 </FormProvider>
             </form>
         </CardContent>

@@ -17,6 +17,11 @@ import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation
 export function CustomerAddressForm() {
     const {
         register,
+        trigger,
+        clearErrors,
+        control,
+        setError,
+        setValue,
         formState: { errors },
     } = useFormContext<CreateCustomerFormSchemaType>();
 
@@ -29,7 +34,14 @@ export function CustomerAddressForm() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <CEPInput />
+                <CEPInput
+                    clearErrors={ clearErrors }
+                    control={ control }
+                    setError={ setError }
+                    setValue={ setValue }
+                    trigger={ trigger }
+                    zipCodeError={ errors.address?.zipCode?.message }
+                />
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">

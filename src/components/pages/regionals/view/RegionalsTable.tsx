@@ -49,7 +49,7 @@ export function RegionalsTable() {
                                 <tr key={ regional.regionalId } className="border-t hover:bg-muted/50">
                                     <td className="p-3">{regional.CNPJ}</td>
                                     <td className="p-3">{regional.description}</td>
-                                    <td className="p-3">{regional.manager.fullname}</td>
+                                    <td className="p-3">{regional.managerEmployeeId}</td>
                                     <td className="p-3">{ regional.address.street }, {regional.address.buildingNumber} - {regional.address.city}/{regional.address.state.UF} </td>
                                     <td className="p-3">{regional.cellphone}</td>
                                     <td className="p-3">{regional.email}</td>

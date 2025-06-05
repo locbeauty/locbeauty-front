@@ -18,12 +18,6 @@ import { Textarea } from "@/components/ui/textarea";
 export function CreateRegionalForm() {
     const createRegionalMethods = useForm<CreateRegionalFormSchemaType>({
         resolver: zodResolver(createRegionalFormSchema),
-        defaultValues: {
-            manager: {
-                employeeId: "",
-                fullname: ""
-            },
-        },
     });
 
     const {

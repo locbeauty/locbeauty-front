@@ -50,7 +50,7 @@ export function EmployeesTable() {
                                     <td className="p-3">{employee.fullname}</td>
                                     <td className="p-3">{employee.CPF}</td>
                                     <td className="p-3">{employee.role}</td>
-                                    <td className="p-3">{employee.regional.title}</td>
+                                    <td className="p-3">{employee.sourceRegionalId}</td>
                                     <td className="p-3">{employee.cellphone}</td>
                                     <td className="p-3">{employee.email}</td>
                                     <td className="p-3 flex justify-center items-center gap-4">

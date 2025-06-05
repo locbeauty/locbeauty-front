@@ -134,7 +134,8 @@ export function EmployeeDetailsCard({
                         <Building className="h-4 w-4" />
                         Informações Profissionais
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* TODO: fetch employee regional data to show here: */}
+                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Regional de Origem:</Label>
@@ -154,6 +155,30 @@ export function EmployeeDetailsCard({
                                 <Label className="text-sm font-medium">Estado:</Label>
                                 <Badge variant="outline" className="text-blue-600 border-blue-200">
                                     {selectedEmployee.regional.state.UF} - {selectedEmployee.regional.state.title}
+                                </Badge>
+                            </div>
+                        </div>
+                    </div> */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium">Regional de Origem:</Label>
+                                <span className="text-sm font-semibold">{selectedEmployee.sourceRegionalId}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium">Regional Atual:</Label>
+                                <span className="text-sm">{selectedEmployee.sourceRegionalId}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium">CNPJ Regional:</Label>
+                                <span className="font-mono text-xs">{selectedEmployee.sourceRegionalId}</span>
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium">Estado:</Label>
+                                <Badge variant="outline" className="text-blue-600 border-blue-200">
+                                    {selectedEmployee.sourceRegionalId} - {selectedEmployee.sourceRegionalId}
                                 </Badge>
                             </div>
                         </div>

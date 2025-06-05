@@ -1,5 +1,4 @@
 import { Address } from "./addresses";
-import { Regional } from "./regionals";
 
 export type ROLE = "FINANCIAL" | "MANAGER" | "COMERCIAL" | "LOGISTICS";
 
@@ -12,6 +11,5 @@ export interface Employee {
     email: string,
     address: Address,
     birthdate: Date,
-    sourceRegional: string,
-    regional: Regional
+    sourceRegionalId: string
 }

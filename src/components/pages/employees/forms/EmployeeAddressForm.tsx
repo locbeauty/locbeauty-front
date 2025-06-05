@@ -13,9 +13,9 @@ import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
-import { CreateRegionalFormSchemaType } from "@/lib/zod/CreateRegionalValidation";
+import { CreateEmployeeFormSchemaType } from "@/lib/zod/CreateEmployeeValidation";
 
-export function RegionalAddressForm() {
+export function EmployeeAddressForm() {
     const {
         register,
         trigger,
@@ -24,7 +24,7 @@ export function RegionalAddressForm() {
         setError,
         setValue,
         formState: { errors },
-    } = useFormContext<CreateRegionalFormSchemaType>();
+    } = useFormContext<CreateEmployeeFormSchemaType>();
 
     return (
         <Card>
