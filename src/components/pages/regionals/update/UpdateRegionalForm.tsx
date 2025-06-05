@@ -37,7 +37,7 @@ export function UpdateRegionalForm({
             cellphone: selectedRegional.cellphone,
             CNPJ: selectedRegional.CNPJ,
             email: selectedRegional.email,
-            manager: selectedRegional.manager,
+            managerEmployeeId: selectedRegional.managerEmployeeId,
             description: selectedRegional.description,
         },
     });
@@ -119,13 +119,13 @@ export function UpdateRegionalForm({
                 <div className="space-y-2">
                     <Label htmlFor="gerente">Gerente</Label>
                     <SelectEmployee
-                        selectedEmployee={ selectedRegional.manager }
+                        managerEmployeeId={ selectedRegional.managerEmployeeId }
                         control={ control }
-                        name="manager"
+                        name="managerEmployeeId"
                     />
-                    {errors.manager && (
+                    {errors.managerEmployeeId && (
                         <p className="text-sm font-medium text-destructive">
-                            {errors.manager.message}
+                            {errors.managerEmployeeId.message}
                         </p>
                     )}
                 </div>

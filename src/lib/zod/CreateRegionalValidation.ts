@@ -14,10 +14,7 @@ export const createRegionalFormSchema = z
             .max(15, { message: "Celular deve conter no máximo 11 dígitos" })
             .transform((val) => val.replace(/\D/g, "")),
         description: z.string().optional(),
-        manager: z.object({
-            employeeId: z.string(),
-            fullname: z.string()
-        }, { message: "Gerente é obrigatório." }),
+        managerEmployeeId: z.string({ message: "Gerente é obrigatório." }),
         address: addressSchema,
     }).transform((data) => {
         if (!data.description || data.description.trim() === "") {
