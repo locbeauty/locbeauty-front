@@ -106,7 +106,7 @@ export function CustomerAddressForm() {
                     <Label htmlFor="number">Complemento</Label>
 
                     <Textarea
-                        { ...register("addressComplement") }
+                        { ...register("address.addressComplement") }
                         className="h-[100px] resize-none max-w-[80vw] placeholder:text-placeholder"
                         placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
                     />

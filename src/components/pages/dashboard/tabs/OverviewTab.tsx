@@ -101,11 +101,11 @@ export function OverviewTab() {
                     </CardContent>
                 </Card>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="lg:col-span-3 md:w-auto w-[89vw]">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 pl-0 ml-0">
+                <Card className="lg:col-span-3 md:w-auto w-[89vw] pl-0 ml-0 h-fit">
                     <CardHeader>
                         <CardTitle>Número de agendamentos/mês</CardTitle>
-                        <CardDescription className="flex items-center justify-between">Equipamentos alugados mês a mês
+                        <CardDescription className="flex items-center justify-between p-0">Equipamentos alugados mês a mês
                             <CustomFilterSelect
                                 items={ [ "2020", "2021", "2022", "2023", "2024", "2025" ].reverse() }
                                 placeholder="Selecione o ano"
@@ -113,18 +113,18 @@ export function OverviewTab() {
                             />
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pl-0 ml-0">
                         <CustomAreaChart
                             data={ ocupacaoData }
                             dataKey="TaxaDeOcupacao"
-                            height={ 300 }
-                            stroke="hsl(var(--success, 142 76% 36%))"
+                            height={ 150 }
+                            stroke="#7f2b83"
                             fill="#7f2b83"
                             valueFormatter={ (value) => `${value}` }
                         />
                     </CardContent>
                 </Card>
-                <Card className="lg:col-span-4 w-[89vw] md:w-auto">
+                <Card className="lg:col-span-4 w-[89vw] md:w-auto h-fit">
                     <CardHeader>
                         <CardTitle>Receita Total por Período</CardTitle>
                         <CardDescription className="flex items-center justify-between">
@@ -141,7 +141,7 @@ export function OverviewTab() {
                         <CustomAreaChart
                             data={ receitaData }
                             dataKey="Receita"
-                            height={ 300 }
+                            height={ 150 }
                             stroke="#7f2b83"
                             fill="#7f2b83"
                             valueFormatter={ (value) => `R$ ${value.toLocaleString()}` }

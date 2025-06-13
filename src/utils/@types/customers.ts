@@ -1,7 +1,7 @@
 import { Address } from "./addresses";
 
 export type PERSON_TYPE = "PF" | "PJ";
-export type CUSTOMER_STATUSES = "ATIVO" | "INATIVO" | "INADIMPLENTE" | "BLOQUEADO";
+export type CUSTOMER_STATUSES = "ACTIVE" | "INACTIVE" | "DEFAULTING" | "BLOCKED";
 
 export interface Customer {
   customerId: string;

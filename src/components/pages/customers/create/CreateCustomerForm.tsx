@@ -19,6 +19,7 @@ export function CreateCustomerForm() {
         defaultValues: {
             personType: "PF",
             regionalId: role === "ROOT" ? "" : user.regional,
+            customerStatus: "ACTIVE"
         },
     });
 
@@ -26,12 +27,21 @@ export function CreateCustomerForm() {
         handleSubmit,
     } = createCustomerMethods;
 
-    function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
+    async function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
     // TODO: selecionar as informações antes de enviar pra
         console.log("newCustomerData: ", newCustomerData);
-        toast.success("Cliente criado com sucesso!");
+        // const response = fetch("http://localhost:3333/api/customers/create", {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     },
+        //     body: JSON.stringify(newCustomerData)
+        // });
 
-    }
+        // console.log("RESPONSE: ", response);
+        // toast.success("Cliente criado com sucesso!");
+
+    };
 
     return (
         <form

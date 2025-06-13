@@ -40,7 +40,7 @@ export const CustomPieChart = ({ data, dataKey, nameKey, colors, height = 300, v
                         <Cell key={ `cell-${index}` } fill={ colors ? colors[index % colors.length] : "hsl(var(--primary))" } />
                     ))}
                 </Pie>
-                <Legend />
+                <Legend align="center" />
                 <RechartsTooltip
                     content={ ({ active, payload }) => {
                         if (active && payload && payload.length) {

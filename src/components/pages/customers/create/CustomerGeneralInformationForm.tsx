@@ -49,6 +49,7 @@ export function CustomerGeneralInformationForm() {
                                         defaultValue="PF"
                                         className="flex gap-4"
                                         onValueChange={ field.onChange }
+                                        onChange={ () => (field.value === "PF" ? setValue("CNPJ", "") : setValue("CPF", "")) }
                                         value={ field.value }
                                     >
                                         <div className="flex items-center space-x-2">

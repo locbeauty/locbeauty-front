@@ -8,6 +8,7 @@ export const createCustomerFormSchema = z
         personAccountableName: z.string().trim().optional(),
         companyName: z.string().trim().optional(),
         regionalId: z.string().optional(),
+        customerStatus: z.enum([ "ACTIVE", "INACTIVE", "DEFAULTING", "BLOCKED" ]).default("ACTIVE").optional(),
         email: z
             .string()
             .optional()
@@ -28,7 +29,6 @@ export const createCustomerFormSchema = z
             .length(14, { message: "CPF precisa ter 11 caracteres." })
             .optional(),
         CNPJ: z.string().optional(),
-        addressComplement: z.string().nullable(),
         birthdate: z.date().optional(),
     })
     .superRefine((data, ctx) => {
