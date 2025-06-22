@@ -76,7 +76,7 @@ export function CustomerDetailsCard({
                         {selectedCustomer && (
                             <div className="flex items-center gap-2">
                                 <span className="font-medium">Status:</span>
-                                <CustomerStatusBadge status={ selectedCustomer.status } />
+                                <CustomerStatusBadge status={ selectedCustomer.customerStatus } />
                             </div>
                         )}
                     </div>
@@ -87,7 +87,7 @@ export function CustomerDetailsCard({
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
                     <span>
-            Último registro: {selectedCustomer?.lastBooking.toLocaleString()}
+            Último registro: {selectedCustomer?.lastBooking ? selectedCustomer?.lastBooking.toLocaleString() : "Não informado"}
                     </span>
                 </div>
             </CardContent>

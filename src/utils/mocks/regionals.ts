@@ -10,7 +10,7 @@ export const regionals: Regional[] = [
             zipCode: "55608-477",
             state: {
                 UF: "AC",
-                title: "Acre"
+                stateName: "Acre"
             },
             city: "Rio Branco",
             neighborhood: "Boa Viagem",
@@ -31,7 +31,7 @@ export const regionals: Regional[] = [
             zipCode: "55608-477",
             state: {
                 UF: "PE",
-                title: "Pernambuco"
+                stateName: "Pernambuco"
             },
             city: "Recife",
             neighborhood: "Boa Viagem",
@@ -52,7 +52,7 @@ export const regionals: Regional[] = [
             zipCode: "55608-477",
             state: {
                 UF: "PE",
-                title: "Pernambuco"
+                stateName: "Pernambuco"
             },
             city: "Recife",
             neighborhood: "Boa Viagem",

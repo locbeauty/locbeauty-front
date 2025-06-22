@@ -34,19 +34,21 @@ interface HandleZipCodeChangeParams<T extends FieldValues> {
 }
 
 export async function handleCepChange<T extends FieldValues>({ e, setValue, trigger, setIsLoadingZipCode, setError, clearErrors }: HandleZipCodeChangeParams<T>) {
+
     const zipCodeParsed = e.target.value.replace(/\D/g, "");
 
     const {
         zipCode = "address.zipCode" as Path<T>,
-        city = "address.city" as Path<T>,
-        state = "address.state" as Path<T>,
-        neighborhood = "address.neighborhood" as Path<T>,
-        street = "address.street" as Path<T>,
+        city = "address.cityName" as Path<T>,
+        state = "address.stateName" as Path<T>,
+        neighborhood = "address.neighborhoodName" as Path<T>,
+        street = "address.streetName" as Path<T>,
     } = {};
     const zipCodeValue = e.target.value.replace(/\D/g, "");
-
     if (zipCodeParsed.length === 0) clearErrors(zipCode);
-    if (zipCodeValue.length !== 8) return;
+    if (zipCodeValue.length !== 8) {
+        return;
+    };
 
     try {
         setIsLoadingZipCode(true);
@@ -67,7 +69,7 @@ export async function handleCepChange<T extends FieldValues>({ e, setValue, trig
         setValue(city, response.localidade as PathValue<T, typeof city>);
         setValue(neighborhood, response.bairro as PathValue<T, typeof neighborhood>);
         setValue(street, response.logradouro as PathValue<T, typeof street>);
-        setValue(state, { UF: response.uf, title: response.estado } as PathValue<T, typeof state>);
+        setValue(state, response.estado as PathValue<T, typeof state>);
 
         trigger([ city, neighborhood, street, state ]);
     } catch (error) {

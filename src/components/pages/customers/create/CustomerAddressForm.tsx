@@ -48,7 +48,7 @@ export function CustomerAddressForm() {
                         <Label htmlFor="cidade">Cidade</Label>
                         <Input
                             disabled
-                            { ...register("address.city") }
+                            { ...register("address.cityName") }
                             placeholder="Cidade"
                             className=""
                             id="cidade"
@@ -58,7 +58,7 @@ export function CustomerAddressForm() {
                         <Label htmlFor="estado">Estado</Label>
                         <Input
                             disabled
-                            { ...register("address.state.title") }
+                            { ...register("address.stateName") }
                             placeholder="Estado"
                         />
                     </div>
@@ -68,7 +68,7 @@ export function CustomerAddressForm() {
                     <Label htmlFor="bairro">Bairro</Label>
                     <Input
                         disabled
-                        { ...register("address.neighborhood") }
+                        { ...register("address.neighborhoodName") }
                         placeholder="Bairro"
                         className="placeholder:text-placeholder"
                         id="bairro"
@@ -79,7 +79,7 @@ export function CustomerAddressForm() {
                         <Label htmlFor="rua">Rua</Label>
                         <Input
                             disabled
-                            { ...register("address.street") }
+                            { ...register("address.streetName") }
                             id="rua"
                             className="placeholder:text-placeholder"
                             placeholder="Nome da rua"
@@ -106,7 +106,7 @@ export function CustomerAddressForm() {
                     <Label htmlFor="number">Complemento</Label>
 
                     <Textarea
-                        { ...register("addressComplement") }
+                        { ...register("address.addressComplement") }
                         className="h-[100px] resize-none max-w-[80vw] placeholder:text-placeholder"
                         placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
                     />

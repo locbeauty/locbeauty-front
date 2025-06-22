@@ -18,7 +18,7 @@ export const createRegionalFormSchema = z
         address: addressSchema,
     }).transform((data) => {
         if (!data.description || data.description.trim() === "") {
-            data.description = `Filial ${data.address.state.title}`;
+            data.description = `Filial ${data.address.stateName}`;
         }
         return data;
     });

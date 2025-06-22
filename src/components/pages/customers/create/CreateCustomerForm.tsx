@@ -11,26 +11,38 @@ import {
 import { toast } from "sonner";
 
 export function CreateCustomerForm() {
-    const role = "ROOT";
-    const user = { regional: "Recife" };
 
     const createCustomerMethods = useForm<CreateCustomerFormSchemaType>({
         resolver: zodResolver(createCustomerFormSchema),
         defaultValues: {
-            personType: "PF",
-            regionalId: role === "ROOT" ? "" : user.regional,
-        },
+            companyName: null,
+            birthdate: null,
+            instagram: null,
+            email: null
+        }
     });
 
     const {
         handleSubmit,
     } = createCustomerMethods;
 
-    function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
-    // TODO: selecionar as informações antes de enviar pra
-        console.log("newCustomerData: ", newCustomerData);
-        toast.success("Cliente criado com sucesso!");
+    async function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
+        const response = await fetch("http://localhost:3333/api/customers/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(newCustomerData)
+        });
+        const data = await response.json();
 
+        console.log("response:  ", response);
+
+        if(!response.ok) {
+            toast.warning(data.message);
+        } else {
+            toast.success("Cliente criado com sucesso!");
+        }
     }
 
     return (

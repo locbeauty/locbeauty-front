@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../../../ui/badge";
 
 interface BookingStatusBadgeProps {
-  status: "Não iniciado" | "Concluído" | "Cancelado";
+  status: "Pendente" | "Concluido" | "Cancelado";
   shrink?: boolean;
 }
 
@@ -11,12 +11,12 @@ export function BookingStatusBadge({
     shrink = false,
 }: BookingStatusBadgeProps) {
     const variants = {
-        "Não iniciado":
+        Pendente:
       "border-1 border-gray-800 bg-gray-100 text-gray-800 hover:bg-gray-200",
-        Concluído:
-      " border-1 border-green-800 bg-green-100 text-green-800 hover:bg-green-200",
+        Concluido:
+      "border-1 border-green-800 bg-green-100 text-green-800 hover:bg-green-200",
         Cancelado:
-      " border-1 border-red-800 bg-red-100 text-red-800 hover:bg-red-200",
+      "border-1 border-red-800 bg-red-100 text-red-800 hover:bg-red-200",
     };
 
     return (
