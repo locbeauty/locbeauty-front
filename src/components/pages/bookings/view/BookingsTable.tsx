@@ -29,7 +29,7 @@ export function BookingsTable() {
                             <BookingStatusBadge status="Cancelado" />
                         </td>
                         <td className="p-3 text-center">
-                            <BookingPaymentStatusBadge status="Não pago" />
+                            <BookingPaymentStatusBadge status="Pendente" />
                         </td>
                     </tr>
                     <tr className="border-t hover:bg-muted/50">
@@ -40,7 +40,7 @@ export function BookingsTable() {
                         <td className="p-3 text-center">14:00</td>
                         <td className="p-3 text-center">18:00</td>
                         <td className="p-3 text-center">
-                            <BookingStatusBadge status="Concluído" />
+                            <BookingStatusBadge status="Concluido" />
                         </td>
                         <td className="p-3 text-center">
                             <BookingPaymentStatusBadge status="Pago" />
@@ -54,10 +54,10 @@ export function BookingsTable() {
                         <td className="p-3 text-center">14:00</td>
                         <td className="p-3 text-center">18:00</td>
                         <td className="p-3 text-center">
-                            <BookingStatusBadge status="Não iniciado" />
+                            <BookingStatusBadge status="Pendente" />
                         </td>
                         <td className="p-3 text-center">
-                            <BookingPaymentStatusBadge status="Pagamento parcial" />
+                            <BookingPaymentStatusBadge status="Parcial" />
                         </td>
                     </tr>
                     <tr className="border-t hover:bg-muted/50">
@@ -71,7 +71,7 @@ export function BookingsTable() {
                             <BookingStatusBadge status="Cancelado" />
                         </td>
                         <td className="p-3 text-center">
-                            <BookingPaymentStatusBadge status="Não pago" />
+                            <BookingPaymentStatusBadge status="Pendente" />
                         </td>
                     </tr>
                 </tbody>
