@@ -46,7 +46,6 @@ export function CreateCustomerForm() {
         }
     }
 
-
     return (
         <form
             id="create-customer-form"
