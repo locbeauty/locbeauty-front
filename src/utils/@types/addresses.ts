@@ -33,7 +33,7 @@ export type StateTitle = (typeof ESTADOS_BRASILEIROS)[UF]
 
 export type State = {
     UF: UF
-    title: StateTitle
+    stateName: StateTitle
   }
 
 export type Address = {

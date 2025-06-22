@@ -13,7 +13,7 @@ export const employees: Employee[] = [
         address: {
             zipCode: "51021-000",
             state: {
-                title: "Pernambuco",
+                stateName: "Pernambuco",
                 UF: "PE"
             },
             city: "Recife",
@@ -35,7 +35,7 @@ export const employees: Employee[] = [
         address: {
             zipCode: "51011-000",
             state: {
-                title: "Pernambuco",
+                stateName: "Pernambuco",
                 UF: "PE"
             },
             city: "Recife",
@@ -57,7 +57,7 @@ export const employees: Employee[] = [
         address: {
             zipCode: "50030-000",
             state: {
-                title: "Pernambuco",
+                stateName: "Pernambuco",
                 UF: "PE"
             },
             city: "Recife",
@@ -79,7 +79,7 @@ export const employees: Employee[] = [
         address: {
             zipCode: "50050-000",
             state: {
-                title: "Pernambuco",
+                stateName: "Pernambuco",
                 UF: "PE"
             },
             city: "Recife",
@@ -101,7 +101,7 @@ export const employees: Employee[] = [
         address: {
             zipCode: "51030-000",
             state: {
-                title: "Pernambuco",
+                stateName: "Pernambuco",
                 UF: "PE"
             },
             city: "Recife",

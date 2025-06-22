@@ -2,22 +2,19 @@ import { z } from "zod";
 
 // Schema para Address
 export const addressSchema = z.object({
-    zipCode: z.string().min(1, { message: "CEP é obrigatório" }),
-    state: z.object({
-        UF: z.string().length(2, { message: "UF deve ter 2 caracteres" }),
-        title: z.string().min(1, { message: "Nome do estado é obrigatório" }),
-    }),
-    city: z
+    zipCode: z.string({ message: "CEP é obrigatório" }).trim().min(9, { message: "CEP precisa ter 7 caracteres." }),
+    stateName: z.string(),
+    cityName: z
         .string()
         .trim()
         .min(1, { message: "Cidade é obrigatória" })
         .max(100, { message: "Cidade deve ter no máximo 100 caracteres" }),
-    neighborhood: z
+    neighborhoodName: z
         .string()
         .trim()
         .min(1, { message: "Bairro é obrigatório" })
         .max(100, { message: "Bairro deve ter no máximo 100 caracteres" }),
-    street: z
+    streetName: z
         .string()
         .trim()
         .min(1, { message: "Rua é obrigatória" })

@@ -1,22 +1,17 @@
 import { Address } from "./addresses";
 
-export type PERSON_TYPE = "PF" | "PJ";
-export type CUSTOMER_STATUSES = "ACTIVE" | "INACTIVE" | "DEFAULTING" | "BLOCKED";
+export type CUSTOMER_STATUSES = "Ativo" | "Inativo" | "Inadimplente" | "Bloqueado";
 
 export interface Customer {
   customerId: string;
-  regionalId: string;
-  personType: PERSON_TYPE;
-  status: CUSTOMER_STATUSES;
-  birthdate: string;
-  fullname: string | null;
+  fullname: string;
+  documentNumber: string;
   companyName: string | null;
-  personAccountableName: string | null;
-  email: string;
-  cellphone: string;
+  customerStatus: CUSTOMER_STATUSES;
+  birthdate: string | null;
+  email: string | null;
+  cellphone: string | null;
   instagram: string | null;
   address: Address,
-  CPF: string | null;
-  CNPJ: string | null;
-  lastBooking: Date;
+  lastBooking: Date | null;
 }

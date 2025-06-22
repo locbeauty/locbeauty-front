@@ -22,14 +22,11 @@ export function UpdateEmployeeForm({
             cellphone: selectedEmployee.cellphone,
             address: {
                 zipCode: selectedEmployee.address.zipCode,
-                city: selectedEmployee.address.city,
+                cityName: selectedEmployee.address.city,
                 buildingNumber: selectedEmployee.address.buildingNumber,
                 addressComplement: selectedEmployee.address.addressComplement,
-                neighborhood: selectedEmployee.address.neighborhood,
-                state: {
-                    title: selectedEmployee.address.state.title,
-                    UF: selectedEmployee.address.state.UF,
-                },
+                neighborhoodName: selectedEmployee.address.neighborhood,
+                stateName: selectedEmployee.address.state.stateName,
             },
             CPF: selectedEmployee.CPF,
             email: selectedEmployee.email,

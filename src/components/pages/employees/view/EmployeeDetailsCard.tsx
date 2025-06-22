@@ -154,7 +154,7 @@ export function EmployeeDetailsCard({
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Estado:</Label>
                                 <Badge variant="outline" className="text-blue-600 border-blue-200">
-                                    {selectedEmployee.regional.state.UF} - {selectedEmployee.regional.state.title}
+                                    {selectedEmployee.regional.state.UF} - {selectedEmployee.regional.state.stateName}
                                 </Badge>
                             </div>
                         </div>

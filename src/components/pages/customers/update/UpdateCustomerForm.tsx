@@ -18,31 +18,23 @@ export function UpdateCustomerForm({
 }: UpdateCustomerFormProps) {
     const updateCustomerMethods = useForm<CreateCustomerFormSchemaType>({
         resolver: zodResolver(createCustomerFormSchema),
-        //TODO: corrigir para null, ao inves de undefined
         defaultValues: {
-            personType: selectedCustomer.personType,
-            addressComplement: selectedCustomer.address.addressComplement,
-            birthdate: new Date(selectedCustomer.birthdate),
+            birthdate: selectedCustomer.birthdate ? new Date(selectedCustomer.birthdate) : null,
             cellphone: selectedCustomer.cellphone,
             address: {
                 zipCode: selectedCustomer.address.zipCode,
-                city: selectedCustomer.address.city,
+                stateName: selectedCustomer.address.state.stateName,
+                cityName: selectedCustomer.address.city,
+                neighborhoodName: selectedCustomer.address.neighborhood,
+                streetName: selectedCustomer.address.street,
                 buildingNumber: selectedCustomer.address.buildingNumber,
-                neighborhood: selectedCustomer.address.neighborhood,
-                street: selectedCustomer.address.street,
-                state: {
-                    UF: selectedCustomer.address.state.UF,
-                    title: selectedCustomer.address.state.title,
-                },
+                addressComplement: selectedCustomer.address.addressComplement,
             },
-            CNPJ: selectedCustomer.CNPJ || undefined,
-            companyName: selectedCustomer.companyName || undefined,
-            CPF: selectedCustomer.CPF || undefined,
-            fullname: selectedCustomer.fullname || undefined,
+            documentNumber: selectedCustomer.documentNumber,
+            companyName: selectedCustomer.companyName,
+            fullname: selectedCustomer.fullname,
             email: selectedCustomer.email,
-            instagram: selectedCustomer.instagram || undefined,
-            personAccountableName:
-            selectedCustomer.personAccountableName || undefined,
+            instagram: selectedCustomer.instagram,
         },
     });
 

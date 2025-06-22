@@ -1,30 +1,31 @@
 "use client";
 import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
-import { mockCustomers } from "@/utils/mocks/customers";
 import { Eye, Pencil } from "lucide-react";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { UpdateCustomerDialog } from "../update/UpdateCustomerDialog";
 import { CustomerDetailsDialog } from "./CustomerDetailsDialog";
 import { Button } from "@/components/ui/button";
 import { Customer } from "@/utils/@types/customers";
 
 export function CustomersTable() {
-    const [ customers ] = useState<Customer[]>(mockCustomers);
+    const [ customers, setCustomers ] = useState<Customer[] | null>(null);
 
-    const [ isUpdateCustomerDialogOpen, setIsUpdateCustomerDialogOpen ] =
-    useState(false);
-    const [ selectedCustomer, setSelectedCustomer ] = useState<Customer | null>(
-        null
-    );
+    const [ isUpdateCustomerDialogOpen, setIsUpdateCustomerDialogOpen ] = useState(false);
+    const [ selectedCustomer, setSelectedCustomer ] = useState<Customer | null>(null);
 
-    const [ isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen ] =
-    useState(false);
+    const [ isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen ] = useState(false);
 
-    const handleToggleUpdateCustomerDialog = (
-        openStatus: boolean,
-        customer: Customer | null
-    ) => {
+    useEffect(() => {
+        async function handleGetAllCustomers() {
+            const response = await fetch("http://localhost:3333/api/customers/get-all");
+            const { data }: {data: Customer[]} = await response.json();
+            setCustomers(data);
+        }
+        handleGetAllCustomers();
+    }, []);
+
+    const handleToggleUpdateCustomerDialog = ( openStatus: boolean, customer: Customer | null ) => {
         if (openStatus) {
             setSelectedCustomer(customer);
         }
@@ -32,10 +33,7 @@ export function CustomersTable() {
         setIsUpdateCustomerDialogOpen(openStatus);
     };
 
-    const handleToggleCustomerDetailsDialog = (
-        openStatus: boolean,
-        customer: Customer | null
-    ) => {
+    const handleToggleCustomerDetailsDialog = ( openStatus: boolean, customer: Customer | null ) => {
         setSelectedCustomer(customer);
         setIsCustomerDetailsDialogOpen(openStatus);
     };
@@ -48,7 +46,6 @@ export function CustomersTable() {
                         <tr>
                             <th className="text-left p-3 font-medium">Nome</th>
                             <th className="text-center p-3 font-medium">CPF/CNPJ</th>
-                            <th className="text-center p-3 font-medium">Tipo</th>
                             <th className="text-center p-3 font-medium">Email</th>
                             <th className="text-center p-3 font-medium">Telefone</th>
                             <th className="text-center p-3 font-medium">Status</th>
@@ -57,50 +54,61 @@ export function CustomersTable() {
                         </tr>
                     </thead>
                     <tbody>
-                        {customers.map((customer) => (
-                            <tr
-                                key={ customer.customerId }
-                                className="border-t hover:bg-muted/50"
-                            >
-                                <td className="p-3">
-                                    {customer.fullname || customer.companyName}
-                                </td>
-                                <td className="p-3 text-center">
-                                    {customer.personType === "PF" ? customer.CPF : customer.CNPJ}
-                                </td>
-                                <td className="p-3 text-center">{customer.personType}</td>
-                                <td className="p-3 text-center">{customer.email}</td>
-                                <td className="p-3 text-center">{customer.cellphone}</td>
-                                <td className="p-3 text-center">
-                                    <CustomerStatusBadge status={ customer.status } />
-                                </td>
-                                <td className="p-3 text-center">
-                                    {customer.lastBooking.toLocaleDateString()}
-                                </td>
-                                <td className="p-3 flex justify-center items-center gap-4">
-                                    <Button
-                                        onClick={ () =>
-                                            handleToggleCustomerDetailsDialog(true, customer)
-                                        }
-                                    >
-                                        <Eye />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={ () =>
-                                            handleToggleUpdateCustomerDialog(true, customer)
-                                        }
-                                    >
-                                        <Pencil />
-                                    </Button>
+                        {
+                            customers?.length === 0 && (
+                                <tr>
+                                    <td className="text-center p-4" colSpan={ 8 }>
+                                        Nada a mostrar por aqui.
+                                    </td>
+                                </tr>
+                            )
+                        }
+                        {customers ? (
+                            customers.map((customer) => (
+                                <tr
+                                    key={ customer.customerId }
+                                    className="border-t hover:bg-muted/50"
+                                >
+                                    <td className="p-3">
+                                        {customer.fullname || customer.companyName}
+                                    </td>
+                                    <td className="p-3 text-center">
+                                        {customer.documentNumber}
+                                    </td>
+                                    <td className="p-3 text-center">{customer.email}</td>
+                                    <td className="p-3 text-center">{customer.cellphone}</td>
+                                    <td className="p-3 text-center">
+                                        <CustomerStatusBadge status={ customer.customerStatus } />
+                                    </td>
+                                    <td className="p-3 text-center">
+                                        {customer.lastBooking ? customer.lastBooking.toLocaleDateString() : "Não informado"}
+                                    </td>
+                                    <td className="p-3 flex justify-center items-center gap-4">
+                                        <Button onClick={ () => handleToggleCustomerDetailsDialog(true, customer) }>
+                                            <Eye />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={ () => handleToggleUpdateCustomerDialog(true, customer) }
+                                        >
+                                            <Pencil />
+                                        </Button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={ 8 } className="p-4 text-center text-muted-foreground">
+        Carregando...
                                 </td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
+
                 </table>
             </div>
 
-            {customers.map((customer) => (
+            {customers && customers.map((customer) => (
                 <Fragment key={ customer.customerId }>
                     <ResponsiveCard
                         cardData={ {
@@ -108,15 +116,15 @@ export function CustomersTable() {
                             title: customer.fullname || customer.companyName || "",
                             description: "",
                             items: [
-                                { itemLabel: "Email: ", itemInfo: customer.email },
+                                { itemLabel: "Email: ", itemInfo: customer.email || "Não informado" },
                                 {
                                     itemLabel: "Telefone: ",
-                                    itemInfo: customer.cellphone,
+                                    itemInfo: customer.cellphone || "Não informado",
                                 },
-                                { itemLabel: "Status: ", itemInfo: customer.status },
+                                { itemLabel: "Status: ", itemInfo: customer.customerStatus },
                                 {
                                     itemLabel: "Ultimo registro:",
-                                    itemInfo: customer.lastBooking.toLocaleDateString(),
+                                    itemInfo: customer.lastBooking ? customer.lastBooking.toLocaleDateString() : "Não informado",
                                 },
                             ],
                         } }

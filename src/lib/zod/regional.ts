@@ -11,8 +11,5 @@ export const regionalSchema = z.object({
     CNPJ: z
         .string()
         .min(1, { message: "CNPJ é obrigatório" }),
-    state: z.object({
-        UF: z.string().length(2, { message: "UF deve ter 2 caracteres" }),
-        title: z.string().min(1, { message: "Nome do estado é obrigatório" })
-    })
+    statename: z.string()
 });

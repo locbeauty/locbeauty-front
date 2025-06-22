@@ -49,7 +49,7 @@ export function EmployeeAddressForm() {
                         <Label htmlFor="cidade">Cidade</Label>
                         <Input
                             disabled
-                            { ...register("address.city") }
+                            { ...register("address.cityName") }
                             placeholder="Cidade"
                             className=""
                             id="cidade"
@@ -59,7 +59,7 @@ export function EmployeeAddressForm() {
                         <Label htmlFor="estado">Estado</Label>
                         <Input
                             disabled
-                            { ...register("address.state.title") }
+                            { ...register("address.stateName") }
                             placeholder="Estado"
                         />
                     </div>
@@ -69,7 +69,7 @@ export function EmployeeAddressForm() {
                     <Label htmlFor="bairro">Bairro</Label>
                     <Input
                         disabled
-                        { ...register("address.neighborhood") }
+                        { ...register("address.neighborhoodName") }
                         placeholder="Bairro"
                         className="placeholder:text-placeholder"
                         id="bairro"
@@ -80,7 +80,7 @@ export function EmployeeAddressForm() {
                         <Label htmlFor="rua">Rua</Label>
                         <Input
                             disabled
-                            { ...register("address.street") }
+                            { ...register("address.streetName") }
                             id="rua"
                             className="placeholder:text-placeholder"
                             placeholder="Nome da rua"

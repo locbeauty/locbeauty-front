@@ -74,7 +74,7 @@ export function RegionalsTable() {
                     <ResponsiveCard
                         cardData={ {
                             id: regional.regionalId,
-                            title: regional.address.state.title,
+                            title: regional.address.state.stateName,
                             description: regional.description,
                             items: [
                                 { itemLabel: "Email: ", itemInfo: regional.email },

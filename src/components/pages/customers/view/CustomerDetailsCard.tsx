@@ -1,6 +1,5 @@
 import { Clock, FileText, Mail, Phone, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 import { Separator } from "@/components/ui/separator";
 import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
@@ -25,37 +24,22 @@ export function CustomerDetailsCard({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <span className="font-medium">Tipo:</span>
-                            <Badge variant="outline">
-                                {selectedCustomer?.personType === "PF"
-                                    ? "Pessoa Física"
-                                    : "Pessoa Jurídica"}
-                            </Badge>
-                        </div>
-
-                        <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">
-                                {selectedCustomer?.personType === "PF"
-                                    ? "Nome:"
-                                    : "Responsável:"}
+                                    Nome do Responsável
                             </span>
                             <span>
-                                {selectedCustomer?.personType === "PF"
-                                    ? selectedCustomer.fullname
-                                    : selectedCustomer?.companyName}
+                                {selectedCustomer?.companyName}
                             </span>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">
-                                {selectedCustomer?.personType === "PF" ? "CPF:" : "CNPJ:"}
+                                Número do documento:
                             </span>
                             <span className="font-mono">
-                                {selectedCustomer?.personType === "PF"
-                                    ? selectedCustomer.CPF
-                                    : selectedCustomer?.CNPJ}
+                                {selectedCustomer?.documentNumber}
                             </span>
                         </div>
                     </div>
@@ -76,7 +60,7 @@ export function CustomerDetailsCard({
                         {selectedCustomer && (
                             <div className="flex items-center gap-2">
                                 <span className="font-medium">Status:</span>
-                                <CustomerStatusBadge status={ selectedCustomer.status } />
+                                <CustomerStatusBadge status={ selectedCustomer.customerStatus } />
                             </div>
                         )}
                     </div>
@@ -87,7 +71,7 @@ export function CustomerDetailsCard({
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
                     <span>
-            Último registro: {selectedCustomer?.lastBooking.toLocaleString()}
+            Último registro: {selectedCustomer?.lastBooking ? selectedCustomer?.lastBooking.toLocaleString() : "Não informado"}
                     </span>
                 </div>
             </CardContent>

@@ -6,13 +6,11 @@ import { Input } from "@/components/ui/input";
 import { UseFormRegisterReturn } from "react-hook-form";
 
 interface DocumentInputProps {
-  documentType: "CPF" | "CNPJ";
   register?: UseFormRegisterReturn;
   disabled?: boolean
 }
 
 export default function DocumentInput({
-    documentType,
     register,
     disabled = false
 }: DocumentInputProps) {
@@ -22,7 +20,7 @@ export default function DocumentInput({
         if (!inputRef.current) return;
 
         const maskOptions = {
-            mask: documentType === "CPF" ? "000.000.000-00" : "00.000.000/0000-00",
+            mask: [ "000.000.000-00", "00.000.000/0000-00" ]
         };
 
         const mask = IMask(inputRef.current, maskOptions);
@@ -30,7 +28,7 @@ export default function DocumentInput({
         return () => {
             mask.destroy();
         };
-    }, [ documentType ]);
+    }, []);
 
     return (
         <Input
@@ -41,9 +39,8 @@ export default function DocumentInput({
             } }
             disabled={ disabled }
             className="placeholder:text-placeholder"
-            placeholder={
-                documentType === "CPF" ? "000.000.000-00" : "00.000.000/0000-00"
-            }
+            placeholder="000.000.000-00 ou 00.000.000/0000-00"
+
         />
     );
 }

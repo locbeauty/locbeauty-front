@@ -19,7 +19,7 @@ export type CalendarProps = Omit<React.ComponentProps<typeof DayPicker>, "mode">
 export type DatePickerProps = {
     placeholder?: string
     modal?: boolean
-    value: Date | undefined
+    value: Date | null
     onChange: (_date: Date | undefined) => void
     min?: Date
     max?: Date
@@ -33,7 +33,7 @@ export type DatePickerProps = {
 }
 
 export type DateRenderTriggerProps = {
-    value: Date | undefined
+    value: Date | null
     open: boolean
     timezone?: string
     disabled?: boolean
@@ -56,10 +56,10 @@ export function DatePicker({
 }: DatePickerProps & CalendarProps) {
     const [ open, setOpen ] = useState(false);
     const [ monthYearPicker, setMonthYearPicker ] = useState<"month" | "year" | false>(false);
-    const initDate = useMemo(() => (value ? new TZDate(value, timezone) : undefined), [ value, timezone ]);
+    const initDate = useMemo(() => (value ? new TZDate(value, timezone) : null), [ value, timezone ]);
 
     const [ month, setMonth ] = useState<Date>(initDate || new Date());
-    const [ date, setDate ] = useState<Date | undefined>(initDate);
+    const [ date, setDate ] = useState<Date | null>(initDate);
 
     const endMonth = useMemo(() => {
         return setYear(month, getYear(month) + 1);
@@ -189,7 +189,7 @@ export function DatePicker({
                         minDate={ minDate }
                         maxDate={ maxDate }
                         timezone={ timezone }
-                        selected={ date }
+                        selected={ date ? date : undefined }
                         { ...props }
                     />
                     <div

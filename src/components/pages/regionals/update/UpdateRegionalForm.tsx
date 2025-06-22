@@ -28,11 +28,11 @@ export function UpdateRegionalForm({
             address: {
                 addressComplement: selectedRegional.address.addressComplement,
                 zipCode: selectedRegional.address.zipCode,
-                city: selectedRegional.address.city,
+                cityName: selectedRegional.address.city,
                 buildingNumber: selectedRegional.address.buildingNumber,
-                neighborhood: selectedRegional.address.neighborhood,
-                state: selectedRegional.address.state,
-                street: selectedRegional.address.street,
+                neighborhoodName: selectedRegional.address.neighborhood,
+                stateName: selectedRegional.address.state.stateName,
+                streetName: selectedRegional.address.street,
             },
             cellphone: selectedRegional.cellphone,
             CNPJ: selectedRegional.CNPJ,
@@ -67,7 +67,6 @@ export function UpdateRegionalForm({
                         <Label htmlFor="telefone">CNPJ/CPF</Label>
                         <DocumentInput
                             disabled
-                            documentType="CNPJ"
                             register={ register("CNPJ") }
                         />
                         {errors.cellphone && (

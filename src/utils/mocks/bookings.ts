@@ -15,7 +15,7 @@ export const bookings: Booking[] = [
         endDate: createDate(0, 20, 0), // Hoje às 20h
         totalDuration: 6,
         price: 800.0,
-        bookingStatus: "Concluído",
+        bookingStatus: "Concluido",
         paymentStatus: "Pago",
         observations: "Aguardando confirmação de pagamento. Cliente é recorrente.",
     },
@@ -31,8 +31,8 @@ export const bookings: Booking[] = [
         endDate: createDate(0, 13, 0), // Hoje às 13h
         totalDuration: 4,
         price: 1200.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Não pago",
+        bookingStatus: "Concluido",
+        paymentStatus: "Pendente",
         observations:
       "Cliente solicitou entrega do equipamento no city. Acesso pela entrada lateral do terreno.",
     },
@@ -48,7 +48,7 @@ export const bookings: Booking[] = [
         endDate: createDate(1, 16, 0), // Amanhã às 16h
         totalDuration: 8,
         price: 650.0,
-        bookingStatus: "Concluído",
+        bookingStatus: "Concluido",
         paymentStatus: "Pago",
     },
     {
@@ -63,7 +63,7 @@ export const bookings: Booking[] = [
         endDate: createDate(1, 16, 0), // Amanhã às 16h
         totalDuration: 8,
         price: 650.0,
-        bookingStatus: "Não iniciado",
+        bookingStatus: "Pendente",
         paymentStatus: "Pago",
     },
     {
@@ -78,7 +78,7 @@ export const bookings: Booking[] = [
         endDate: createDate(1, 16, 0), // Amanhã às 16h
         totalDuration: 8,
         price: 650.0,
-        bookingStatus: "Não iniciado",
+        bookingStatus: "Pendente",
         paymentStatus: "Pago",
     },
     {
@@ -93,7 +93,7 @@ export const bookings: Booking[] = [
         endDate: createDate(1, 16, 0), // Amanhã às 16h
         totalDuration: 8,
         price: 650.0,
-        bookingStatus: "Não iniciado",
+        bookingStatus: "Pendente",
         paymentStatus: "Pago",
     },
     {
@@ -108,7 +108,7 @@ export const bookings: Booking[] = [
         endDate: createDate(1, 16, 0), // Amanhã às 16h
         totalDuration: 8,
         price: 650.0,
-        bookingStatus: "Não iniciado",
+        bookingStatus: "Pendente",
         paymentStatus: "Pago",
     },
     {
@@ -123,7 +123,7 @@ export const bookings: Booking[] = [
         endDate: createDate(1, 22, 0), // Amanhã às 16h
         totalDuration: 4,
         price: 650.0,
-        bookingStatus: "Não iniciado",
+        bookingStatus: "Pendente",
         paymentStatus: "Pago",
     },
     {
@@ -153,8 +153,8 @@ export const bookings: Booking[] = [
         endDate: createDate(2, 22, 0), // Depois de amanhã às 22h
         totalDuration: 2,
         price: 1500.0,
-        bookingStatus: "Não iniciado",
-        paymentStatus: "Não pago",
+        bookingStatus: "Pendente",
+        paymentStatus: "Pendente",
     },
     {
         id: 5,
@@ -184,7 +184,7 @@ export const bookings: Booking[] = [
         totalDuration: 6,
         price: 420.0,
         bookingStatus: "Cancelado",
-        paymentStatus: "Não pago",
+        paymentStatus: "Pendente",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -200,8 +200,8 @@ export const bookings: Booking[] = [
         endDate: createDate(3, 17, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 9,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -217,8 +217,8 @@ export const bookings: Booking[] = [
         endDate: createDate(3, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 2,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -234,8 +234,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 4,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -251,8 +251,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -268,8 +268,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -285,8 +285,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -302,8 +302,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -319,8 +319,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -336,8 +336,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -353,8 +353,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -370,8 +370,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -387,8 +387,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
@@ -404,8 +404,8 @@ export const bookings: Booking[] = [
         endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
         totalDuration: 6,
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
+        bookingStatus: "Concluido",
+        paymentStatus: "Parcial",
         observations:
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },

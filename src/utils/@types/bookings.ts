@@ -1,5 +1,5 @@
-export type BookingStatuses = "Não iniciado" | "Concluído" | "Cancelado"
-export type PaymentStatuses = "Não pago" | "Pagamento parcial" | "Pago"
+export type BookingStatuses = "Pendente" | "Concluido" | "Cancelado"
+export type PaymentStatuses = "Pendente" | "Parcial" | "Pago"
 
 export type Booking = {
   id: number;

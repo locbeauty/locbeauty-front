@@ -3,6 +3,7 @@ import { addressSchema } from "./address";
 
 // Schema principal do Employee
 export const createEmployeeFormSchema = z.object({
+    // TODO: ADD PASSWORD
     employeeId: z.string().min(1, { message: "ID do funcionário é obrigatório" }),
     fullname: z
         .string({ message: "Nome completo é obrigatório" })

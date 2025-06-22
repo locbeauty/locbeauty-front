@@ -47,7 +47,7 @@ export default function CEPInput<T extends FieldValues>({ clearErrors, control, 
                     render={ ({ field }) => (
                         <Input
                             { ...props }
-                            id="cep"
+                            id="zipCode"
                             value={ field.value || "" }
                             onChange={ (e) => {
                                 field.onChange(e);

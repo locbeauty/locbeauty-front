@@ -18,7 +18,7 @@ export default function PhoneInput({ register }: PhoneInputProps) {
         const maskOptions = {
             mask: [
                 { mask: "(00) 0000-0000" },  // fixo
-                { mask: "(00) 00000-0000" }, // celular
+                { mask: "(00) 0.0000-0000" }, // celular
             ],
         };
 
