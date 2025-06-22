@@ -19,8 +19,7 @@ export function UpdateCustomerForm({
     const updateCustomerMethods = useForm<CreateCustomerFormSchemaType>({
         resolver: zodResolver(createCustomerFormSchema),
         defaultValues: {
-            personType: selectedCustomer.personType,
-            birthdate: new Date(selectedCustomer.birthdate),
+            birthdate: selectedCustomer.birthdate ? new Date(selectedCustomer.birthdate) : null,
             cellphone: selectedCustomer.cellphone,
             address: {
                 zipCode: selectedCustomer.address.zipCode,
@@ -31,14 +30,11 @@ export function UpdateCustomerForm({
                 buildingNumber: selectedCustomer.address.buildingNumber,
                 addressComplement: selectedCustomer.address.addressComplement,
             },
-            CNPJ: selectedCustomer.CNPJ,
+            documentNumber: selectedCustomer.documentNumber,
             companyName: selectedCustomer.companyName,
-            CPF: selectedCustomer.CPF,
             fullname: selectedCustomer.fullname,
             email: selectedCustomer.email,
             instagram: selectedCustomer.instagram,
-            personAccountableName:
-            selectedCustomer.personAccountableName,
         },
     });
 

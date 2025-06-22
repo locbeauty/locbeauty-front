@@ -21,7 +21,7 @@ export const createCustomerFormSchema = z
             .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
                 message: "Email inválido",
             }),
-        cellphone: z.string().min(14, { message: "Telefone é obrigatório" }),
+        cellphone: z.string().min(14, { message: "Telefone é obrigatório" }).nullable(),
         instagram: z.string().trim().nullable(),
         address: addressSchema,
     });
