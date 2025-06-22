@@ -119,7 +119,7 @@ export function CustomersTable() {
                                 { itemLabel: "Email: ", itemInfo: customer.email || "Não informado" },
                                 {
                                     itemLabel: "Telefone: ",
-                                    itemInfo: customer.cellphone,
+                                    itemInfo: customer.cellphone || "Não informado",
                                 },
                                 { itemLabel: "Status: ", itemInfo: customer.customerStatus },
                                 {

@@ -67,7 +67,6 @@ export function UpdateRegionalForm({
                         <Label htmlFor="telefone">CNPJ/CPF</Label>
                         <DocumentInput
                             disabled
-                            documentType="CNPJ"
                             register={ register("CNPJ") }
                         />
                         {errors.cellphone && (
