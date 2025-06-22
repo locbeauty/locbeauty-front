@@ -30,7 +30,7 @@ export const mockCustomers: Customer[] = [
         customerId: "2",
         birthdate: "2025-05-08",
         customerStatus: "Inadimplente",
-        fullname: null,
+        fullname: "nome de teste",
         companyName: "Empresa great",
         email: "teste@teste.com",
         cellphone: "(11) 11111-1111",
@@ -48,14 +48,14 @@ export const mockCustomers: Customer[] = [
             addressComplement: "Perto daquela casa",
 
         },
-        documentNumber: null,
+        documentNumber: "111.111.131-21",
         lastBooking: null,
     },
     {
         customerId: "3",
         birthdate: "2025-05-08",
         customerStatus: "Bloqueado",
-        fullname: null,
+        fullname: "nome de teste",
         companyName: "Sport Club do Recife",
         email: "teste@teste.com",
         cellphone: "(11) 11111-1111",
@@ -73,7 +73,7 @@ export const mockCustomers: Customer[] = [
             addressComplement: null,
 
         },
-        documentNumber: null,
+        documentNumber: "111.131.131-21",
         lastBooking: new Date(),
     },
 ];
