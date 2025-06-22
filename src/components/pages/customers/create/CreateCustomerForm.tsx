@@ -20,6 +20,7 @@ export function CreateCustomerForm() {
             instagram: null,
             email: null
         }
+
     });
 
     const {
@@ -44,6 +45,7 @@ export function CreateCustomerForm() {
             toast.success("Cliente criado com sucesso!");
         }
     }
+
 
     return (
         <form

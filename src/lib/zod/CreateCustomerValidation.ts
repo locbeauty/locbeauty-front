@@ -14,6 +14,7 @@ export const createCustomerFormSchema = z
                 }),
             ])
             .optional(),
+
         email: z
             .string()
             .nullable()

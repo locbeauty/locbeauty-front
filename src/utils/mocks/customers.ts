@@ -5,7 +5,7 @@ export const mockCustomers: Customer[] = [
         customerId: "1",
         customerStatus: "Ativo",
         birthdate: "2025-05-08",
-        fullname: "Atencio",
+        fullname: "Cliente 1",
         companyName: null,
         email: "teste@teste.com",
         cellphone: "(11) 11111-1111",
