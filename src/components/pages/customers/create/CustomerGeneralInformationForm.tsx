@@ -14,7 +14,6 @@ import DocumentInput from "../../../shared/DocumentInput";
 import { Controller, useFormContext } from "react-hook-form";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
@@ -30,11 +29,6 @@ export function CustomerGeneralInformationForm() {
     } = useFormContext<CreateCustomerFormSchemaType>();
 
     const birthdate = watch("birthdate");
-    const fullname = watch("fullname");
-
-    useEffect(() => {
-        console.log("fullname: ", fullname);
-    }, [ fullname ]);
 
     function clearBirthdate() {
         setValue("birthdate", null);
