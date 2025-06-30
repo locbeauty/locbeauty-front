@@ -30,11 +30,11 @@ export function EmployeeForm() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="cpf">CPF</Label>
-                    <DocumentInput register={ register("CPF") } />
+                    <DocumentInput register={ register("documentNumber") } />
                     <div className="h-3">
-                        {errors.CPF && (
+                        {errors.documentNumber && (
                             <p className="text-xs font-medium text-destructive">
-                                {errors.CPF.message}
+                                {errors.documentNumber.message}
                             </p>
                         )}
                     </div>

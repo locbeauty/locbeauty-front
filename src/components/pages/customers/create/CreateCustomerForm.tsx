@@ -18,13 +18,17 @@ export function CreateCustomerForm() {
             companyName: null,
             birthdate: null,
             instagram: null,
-            email: null
+            email: null,
+            address: {
+                addressComplement: null
+            }
         }
-
     });
 
     const {
         handleSubmit,
+        reset,
+        setError
     } = createCustomerMethods;
 
     async function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
@@ -33,16 +37,21 @@ export function CreateCustomerForm() {
             headers: {
                 "Content-Type": "application/json"
             },
+            credentials: "include",
             body: JSON.stringify(newCustomerData)
         });
         const data = await response.json();
 
-        console.log("response:  ", response);
-
         if(!response.ok) {
-            toast.warning(data.message);
+            toast.warning(data.message, { style: { fontSize: "1rem" } });
+            window.scroll({ top: 0 });
+            if(response.status === 409) {
+                setError("documentNumber", { message: "Documento já cadastrado." });
+            }
         } else {
-            toast.success("Cliente criado com sucesso!");
+            toast.success("Cliente criado com sucesso!", { style: { fontSize: "1rem" } });
+            window.scroll({ top: 0 });
+            reset();
         }
     }
 

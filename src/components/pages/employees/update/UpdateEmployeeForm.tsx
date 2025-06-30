@@ -28,7 +28,7 @@ export function UpdateEmployeeForm({
                 neighborhoodName: selectedEmployee.address.neighborhood,
                 stateName: selectedEmployee.address.state.stateName,
             },
-            CPF: selectedEmployee.CPF,
+            documentNumber: selectedEmployee.documentNumber,
             email: selectedEmployee.email,
             fullname: selectedEmployee.fullname,
             role: selectedEmployee.role,

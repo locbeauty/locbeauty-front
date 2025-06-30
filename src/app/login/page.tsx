@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -9,11 +11,49 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 import Image from "next/image";
-import { ROUTES } from "@/utils/routes";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { redirect } from "next/navigation";
+import { useState } from "react";
+import { LoaderCircle } from "lucide-react";
+import DocumentInput from "@/components/shared/DocumentInput";
+
+const LoginSchema = z.object({
+    documentNumber: z.string(),
+    password: z.string()
+});
+
+type LoginSchemaType = z.infer<typeof LoginSchema>
 
 export default function LoginPage() {
+    const [ errorMessage, setErrorMessage ] = useState("");
+
+    const { register, handleSubmit, formState: { isSubmitting } } = useForm<LoginSchemaType>({
+        resolver: zodResolver(LoginSchema)
+    });
+
+    async function handleLogin({ documentNumber, password }: LoginSchemaType) {
+        const res = await fetch("http://localhost:3000/api/login", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ documentNumber, password }),
+        });
+
+        const loginResponse = await res.json();
+
+        if(res.status !== 200) {
+            setErrorMessage(loginResponse.error);
+        }
+
+        if(loginResponse.success === true) {
+            redirect("/dashboard");
+        }
+    }
 
     return (
         <div className="h-dvh flex items-center justify-center bg-background">
@@ -33,26 +73,23 @@ export default function LoginPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form>
+                        <form id="login-form" onSubmit={ handleSubmit(handleLogin) }>
                             <div className="grid gap-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="exemplo@empresa.com"
-                                    />
+                                    <Label htmlFor="documentNumber">CPF</Label>
+                                    <DocumentInput placeholder="000.000.000-00" register={ register("documentNumber") } />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="password">Senha</Label>
-                                    <Input id="password" type="password" />
+                                    <Input { ...register("password") } name="password" id="password" type="password" />
                                 </div>
                             </div>
                         </form>
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-4">
-                        <Button className="w-full" asChild>
-                            <Link href={ ROUTES.DASHBOARD }>Entrar</Link>
+                        <span className="text-red-600 text-sm font-medium">{errorMessage && errorMessage }</span>
+                        <Button disabled={ isSubmitting } type="submit" form="login-form" className="w-full cursor-pointer">
+                            { isSubmitting ? <LoaderCircle className="animate-spin" /> : "Entrar"}
                         </Button>
                     </CardFooter>
                 </Card>
