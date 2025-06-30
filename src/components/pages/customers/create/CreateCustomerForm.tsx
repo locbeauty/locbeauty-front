@@ -37,6 +37,7 @@ export function CreateCustomerForm() {
             headers: {
                 "Content-Type": "application/json"
             },
+            credentials: "include",
             body: JSON.stringify(newCustomerData)
         });
         const data = await response.json();

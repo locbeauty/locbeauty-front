@@ -18,7 +18,7 @@ export function CustomersTable() {
 
     useEffect(() => {
         async function handleGetAllCustomers() {
-            const response = await fetch("http://localhost:3333/api/customers/get-all");
+            const response = await fetch("http://localhost:3333/api/customers", { credentials: "include" });
             const { data }: {data: Customer[]} = await response.json();
             setCustomers(data);
         }

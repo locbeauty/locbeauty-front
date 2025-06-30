@@ -8,11 +8,13 @@ import { UseFormRegisterReturn } from "react-hook-form";
 interface DocumentInputProps {
   register?: UseFormRegisterReturn;
   disabled?: boolean
+  placeholder?: string
 }
 
 export default function DocumentInput({
     register,
-    disabled = false
+    disabled = false,
+    placeholder = "000.000.000-00 ou 00.000.000/0000-00"
 }: DocumentInputProps) {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -39,7 +41,7 @@ export default function DocumentInput({
             } }
             disabled={ disabled }
             className="placeholder:text-placeholder"
-            placeholder="000.000.000-00 ou 00.000.000/0000-00"
+            placeholder={ placeholder }
 
         />
     );
