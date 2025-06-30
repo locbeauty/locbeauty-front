@@ -84,7 +84,7 @@ export function EmployeeDetailsCard({
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">CPF:</Label>
-                                <span className="font-mono text-sm">{selectedEmployee.CPF}</span>
+                                <span className="font-mono text-sm">{selectedEmployee.documentNumber}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Data de Nascimento:</Label>

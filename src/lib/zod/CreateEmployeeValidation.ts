@@ -9,7 +9,7 @@ export const createEmployeeFormSchema = z.object({
         .trim()
         .min(1, { message: "Nome completo é obrigatório" })
         .max(200, { message: "Nome completo deve ter no máximo 200 caracteres" }),
-    CPF: z
+    documentNumber: z
         .string()
         .min(1, { message: "CPF é obrigatório" })
         .regex(/^\d{3}\.\d{3}\.\d{3}\-\d{2}$/, { message: "CPF deve ter formato válido (000.000.000-00)" }),
