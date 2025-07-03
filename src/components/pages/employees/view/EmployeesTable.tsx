@@ -33,7 +33,6 @@ export function EmployeesTable() {
             const response = await fetch("http://localhost:3333/api/employees", { credentials: "include" });
 
             const { data } = await response.json();
-            console.log("data: ", data);
             setAllEmployees(data);
         }
         getEmployees();
@@ -61,7 +60,7 @@ export function EmployeesTable() {
                                 <tr key={ employee.employeeId } className="border-t hover:bg-muted/50">
                                     <td className="p-3">{employee.fullname}</td>
                                     <td className="p-3">{employee.documentNumber}</td>
-                                    <td className="p-3 text-center">{employee.role}</td>
+                                    <td className="p-3 text-center">{employee.role.roleName}</td>
                                     <td className="p-3 text-center">{employee.sourceRegionalId}</td>
                                     <td className="p-3 text-center">{employee.cellphone ?? "-"}</td>
                                     <td className="p-3 text-center">{employee.email ?? "-"}</td>
@@ -96,7 +95,7 @@ export function EmployeesTable() {
                             title: employee.fullname,
                             description: "",
                             items: [
-                                { itemLabel: "Função: ", itemInfo: employee.role },
+                                { itemLabel: "Função: ", itemInfo: employee.role.roleName },
                                 { itemLabel: "Email: ", itemInfo: employee.email },
                                 {
                                     itemLabel: "Telefone: ",

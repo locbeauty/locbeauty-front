@@ -1,12 +1,13 @@
 import { Address } from "./addresses";
 
-export type ROLE = "FINANCIAL" | "MANAGER" | "COMERCIAL" | "LOGISTICS";
-
 export interface Employee {
     employeeId: string,
     fullname: string,
     documentNumber: string,
-    role: ROLE,
+    role: {
+        roleId: string;
+        roleName: string;
+    },
     cellphone: string,
     email: string,
     address: Address,

@@ -18,11 +18,36 @@ export function CreateEmployeeForm() {
 
     const {
         handleSubmit,
+        reset,
+        setError
     } = CreateEmployeeMethods;
 
     async function handleCreateEmployee(newEmployeeData: CreateEmployeeFormSchemaType) {
-        console.log("newEmployeeData: ", newEmployeeData);
-        toast.success("Funcionário criado com sucesso!");
+        try {
+            const response = await fetch("http://localhost:3333/api/employees/create", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(newEmployeeData)
+            });
+            const data = await response.json();
+
+            if(!response.ok) {
+                toast.warning(data.message, { style: { fontSize: "1rem" } });
+                window.scroll({ top: 0 });
+                if(response.status === 409) {
+                    setError("documentNumber", { message: "Documento já cadastrado." });
+                }
+            } else {
+                toast.success("Funcionário criado com sucesso!", { style: { fontSize: "1rem" } });
+                window.scroll({ top: 0 });
+                reset();
+            }
+        } catch {
+            toast.error("Erro ao criar funcionário.");
+        }
     }
 
     return (

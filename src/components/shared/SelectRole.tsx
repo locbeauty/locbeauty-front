@@ -14,28 +14,29 @@ export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleP
         <Controller
             name={ name }
             control={ control }
-            render={ ({ field }) => (
-                <Select onValueChange={ field.onChange } value={ field.value ?? "" }>
-                    <SelectTrigger className="w-full md:w-[270px] data-[placeholder]:text-placeholder">
-                        <SelectValue
-                            placeholder="Selecione a função do funcionário"
-                            className="text-placeholder"
-                        />
-                    </SelectTrigger>
-                    <SelectContent>
-                        { ROLES.map((role) => {
-                            if (role === "") return null;
-                            return (
+            render={ ({ field }) => {
+                return (
+                    <Select onValueChange={ field.onChange } value={ field.value }>
+                        <SelectTrigger className="w-full md:w-[270px] data-[placeholder]:text-placeholder">
+                            <SelectValue
+                                placeholder="Selecione a função do funcionário"
+                                className="text-placeholder"
+                            />
+                        </SelectTrigger>
+                        <SelectContent>
+                            { ROLES.map((role) => {
+                                return (
+                                    <SelectItem key={ role.id } value={ role.id }>
+                                        { role.name }
+                                    </SelectItem>
+                                );
 
-                                <SelectItem key={ role } value={ role }>
-                                    { role }
-                                </SelectItem>
-                            );
-
-                        }) }
-                    </SelectContent>
-                </Select>
-            ) }
+                            }) }
+                        </SelectContent>
+                    </Select>
+                );
+            }
+            }
         />
     );
 
