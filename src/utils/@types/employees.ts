@@ -4,10 +4,7 @@ export interface Employee {
     employeeId: string,
     fullname: string,
     documentNumber: string,
-    role: {
-        roleId: string;
-        roleName: string;
-    },
+    roleId: string,
     cellphone: string,
     email: string,
     address: Address,

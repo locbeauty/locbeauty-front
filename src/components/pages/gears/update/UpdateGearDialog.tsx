@@ -72,7 +72,7 @@ export function UpdateGearDialog({
     const handleSaveGear = () => {
         if (selectedGear) {
             setGears(
-                gears.map((gear) => (gear.id === selectedGear.id ? selectedGear : gear))
+                gears.map((gear) => (gear.gearId === selectedGear.gearId ? selectedGear : gear))
             );
             setIsUpdateGearDialogOpen(false);
         }
@@ -127,7 +127,7 @@ export function UpdateGearDialog({
                             <div className="grid grid-cols-1 gap-3">
                                 <Label htmlFor="region">Regional</Label>
                                 <Select
-                                    value={ selectedGear.region }
+                                    value={ selectedGear.regionalId }
                                     onValueChange={ (value) => handleSelectChange(value, "region") }
                                 >
                                     <SelectTrigger>

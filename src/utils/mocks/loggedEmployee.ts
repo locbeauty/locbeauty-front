@@ -1,9 +1,8 @@
-import { ROLE } from "../@types/employees";
 
 export type LoggedEmployee = {
     employeeId: string,
     fullname: string,
-    role: ROLE,
+    role: string,
     email: string,
 }
 

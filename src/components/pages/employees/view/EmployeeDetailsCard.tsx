@@ -50,9 +50,9 @@ export function EmployeeDetailsCard({
                     {selectedEmployee.fullname}
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                    <Badge className={ getRoleBadgeColor(selectedEmployee.role) }>
+                    <Badge className={ getRoleBadgeColor(selectedEmployee.roleId) }>
                         <Award className="h-3 w-3 mr-1" />
-                        {selectedEmployee.role}
+                        {selectedEmployee.roleId}
                     </Badge>
                     <Badge variant="outline" className={ isWorkingToday ? "text-green-600 border-green-200" : "text-gray-600 border-gray-200" }>
                         {isWorkingToday ? (

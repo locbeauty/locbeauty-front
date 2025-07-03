@@ -50,7 +50,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
                                 <Label className="text-sm font-medium">Regional:</Label>
                                 <div className="flex items-center gap-1">
                                     <MapPin className="h-3 w-3 text-muted-foreground" />
-                                    <span className="font-mono text-sm">{selectedGear.region}</span>
+                                    <span className="font-mono text-sm">{selectedGear.regionalId}</span>
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">

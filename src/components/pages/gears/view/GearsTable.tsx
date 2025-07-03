@@ -1,15 +1,14 @@
 "use client";
 import { Check, Eye, Pencil, X } from "lucide-react";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
-import { gears as gearsMock } from "@/utils/mocks/gears";
 import { UpdateGearDialog } from "../update/UpdateGearDialog";
 import { Button } from "@/components/ui/button";
 import { GearDetailsDialog } from "./GearDetailsDialog";
 import { Gear } from "@/utils/@types/gears";
 
 export function GearsTable() {
-    const [ gears, setGears ] = useState<Gear[]>(gearsMock);
+    const [ gears, setGears ] = useState<Gear[]>([]);
 
     const [ isUpdateGearDialogOpen, setIsUpdateGearDialogOpen ] = useState(false);
     const [ isGearDetailsDialogOpen, setIsGearDetailsDialogOpen ] = useState(false);
@@ -26,6 +25,16 @@ export function GearsTable() {
         }
         setIsGearDetailsDialogOpen(openStatus);
     };
+
+    useEffect(() => {
+        async function getGears() {
+            const response = await fetch("http://localhost:3333/api/gears", { credentials: "include" });
+
+            const { data } = await response.json();
+            setGears(data);
+        }
+        getGears();
+    }, []);
 
     return (
         <>
@@ -50,17 +59,17 @@ export function GearsTable() {
                     <tbody>
                         {gears.map((gear) => (
                             <tr
-                                key={ gear.id }
+                                key={ gear.gearId }
                                 className="border-t hover:bg-muted/50 items-stretch"
                             >
                                 <td className="p-3">{gear.name}</td>
                                 <td className="p-3 max-w-[700px] truncate whitespace-nowrap overflow-hidden">
                                     {gear.description}
                                 </td>
-                                <td className="p-3 text-center">{gear.region}</td>
+                                <td className="p-3 text-center">{gear.regionalId}</td>
                                 <td className="p-3 text-center">{gear.availableUnits}</td>
-                                <td className="p-3 text-center">{gear.totalUnits}</td>
-                                <td className="p-3 text-center">{gear.acquisitionDate ? gear.acquisitionDate.toLocaleDateString("pt-BR") : "Não informado"}</td>
+                                <td className="p-3 text-center">{gear.availableUnits}</td>
+                                <td className="p-3 text-center">{gear.acquisitionDate ? new Date(gear.acquisitionDate).toLocaleDateString("pt-BR") : "Não informado"}</td>
                                 <td className="p-0 h-full">
                                     <div className="h-full flex justify-center items-center">
                                         {gear.transferable ? (
@@ -85,24 +94,24 @@ export function GearsTable() {
                 </table>
             </div>
             {gears.map((gear) => (
-                <Fragment key={ gear.id }>
+                <Fragment key={ gear.gearId }>
                     <ResponsiveCard
                         cardData={ {
-                            id: gear.id,
+                            id: gear.gearId,
                             title: gear.name,
                             description: gear.description,
                             transferableIndicator: true,
                             transferable: gear.transferable,
                             items: [
-                                { itemLabel: "Regional:", itemInfo: gear.region },
+                                { itemLabel: "Regional:", itemInfo: gear.regionalId },
                                 {
                                     itemLabel: "Unidades disponíveis: ",
                                     itemInfo: gear.availableUnits,
                                 },
-                                { itemLabel: "Unidades totais:", itemInfo: gear.totalUnits },
+                                { itemLabel: "Unidades totais:", itemInfo: gear.availableUnits },
                                 {
                                     itemLabel: "Data da aquisição:",
-                                    itemInfo: gear.acquisitionDate ? gear.acquisitionDate.toLocaleDateString("pt-BR") : "Não informado",
+                                    itemInfo: gear.acquisitionDate ? new Date(gear.acquisitionDate).toLocaleDateString("pt-BR") : "Não informado",
                                 },
                             ],
                         } }

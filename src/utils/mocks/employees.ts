@@ -7,7 +7,7 @@ export const employees: Employee[] = [
         sourceRegionalId: "1",
         fullname: "Funcionario 1",
         documentNumber: "999.999.999-99",
-        role: "MANAGER",
+        roleId: "cmcjvj8vl000018uyelhjfonu",
         cellphone: "(81) 9.8232-1232",
         email: "funcionario1@empresa.com",
         address: {
@@ -29,7 +29,7 @@ export const employees: Employee[] = [
         sourceRegionalId: "1",
         fullname: "Funcionario 2",
         documentNumber: "888.888.888-88",
-        role: "MANAGER",
+        roleId: "cmcjvj8vl000018uyelhjfonu",
         cellphone: "(81) 9.7654-3210",
         email: "funcionario2@empresa.com",
         address: {
@@ -51,7 +51,7 @@ export const employees: Employee[] = [
         sourceRegionalId: "1",
         fullname: "Funcionario 3",
         documentNumber: "777.777.777-77",
-        role: "LOGISTICS",
+        roleId: "cmcjvj8vl000018uyelhjfonu",
         cellphone: "(81) 9.5432-1098",
         email: "funcionario3@empresa.com",
         address: {
@@ -73,7 +73,7 @@ export const employees: Employee[] = [
         sourceRegionalId: "1",
         fullname: "Funcionário 4",
         documentNumber: "666.666.666-66",
-        role: "COMERCIAL",
+        roleId: "cmcjvj8vl000018uyelhjfonu",
         cellphone: "(81) 9.1234-5678",
         email: "funcionario4@empresa.com",
         address: {
@@ -95,7 +95,7 @@ export const employees: Employee[] = [
         sourceRegionalId: "1",
         fullname: "Funcionario 5",
         documentNumber: "555.555.555-55",
-        role: "MANAGER",
+        roleId: "cmcjvj8vl000018uyelhjfonu",
         cellphone: "(81) 9.9876-5432",
         email: "funcionario5@empresa.com",
         address: {

@@ -9,15 +9,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { SelectRegional } from "@/components/shared/SelectRegional";
-import { createGearFormSchema, CreateGearFormSchemaType } from "@/lib/zod/CreateGearValidation";
+import {
+    createGearFormSchema,
+    CreateGearFormSchemaType,
+} from "@/lib/zod/CreateGearValidation";
 import { toast } from "sonner";
-import { CanBeTransferredCheckbox } from "../shared/canBeTransferredCheckbox";
+import { TransferableCheckbox } from "../shared/canBeTransferredCheckbox";
 
 export function CreateGearForm() {
     const createGearMethods = useForm<CreateGearFormSchemaType>({
         resolver: zodResolver(createGearFormSchema),
         defaultValues: {
-            canBeTransferred: false,
+            transferable: false,
             availableUnits: 0,
         },
     });
@@ -29,15 +32,38 @@ export function CreateGearForm() {
         setValue,
         watch,
         trigger,
+        reset,
         formState: { errors },
     } = createGearMethods;
 
     const acquisitionDate = watch("acquisitionDate");
 
-    function handleCreateGear(newGearData: CreateGearFormSchemaType) {
-        console.log("newGearData: ", newGearData);
-        toast.success("Equipamento criado com sucesso!");
+    async function handleCreateGear(newGearData: CreateGearFormSchemaType) {
+        try {
+            const response = await fetch("http://localhost:3333/api/gears/create", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newGearData),
+            });
+            const data = await response.json();
 
+            if(!response.ok) {
+                toast.warning(data.message, { style: { fontSize: "1rem" } });
+                window.scroll({ top: 0 });
+                // if(response.status === 409) {
+                //     setError("documentNumber", { message: "Documento já cadastrado." });
+                // }
+            } else {
+                toast.success("Funcionário criado com sucesso!", { style: { fontSize: "1rem" } });
+                window.scroll({ top: 0 });
+                reset();
+            }
+        } catch {
+            toast.error("Erro ao criar funcionário.");
+        }
     }
 
     return (
@@ -133,8 +159,8 @@ export function CreateGearForm() {
                                     } }
                                     classNames={ {
                                         trigger:
-                                          errors.acquisitionDate &&
-                                          "border-destructive focus-visible:ring-destructive",
+                      errors.acquisitionDate &&
+                      "border-destructive focus-visible:ring-destructive",
                                     } }
                                 />
                             ) }
@@ -146,7 +172,11 @@ export function CreateGearForm() {
                         )}
                     </div>
                     <div>
-                        <CanBeTransferredCheckbox control={ control } errors={ errors } name="canBeTransferred" />
+                        <TransferableCheckbox
+                            control={ control }
+                            errors={ errors }
+                            name="transferable"
+                        />
                     </div>
                 </div>
             </form>

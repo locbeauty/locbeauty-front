@@ -24,7 +24,7 @@ export function GearCard() {
         <div className="space-y-4 md:hidden">
             {gears.map((gear) => (
                 <Card
-                    key={ gear.id }
+                    key={ gear.gearId }
                     className="p-4 hover:bg-muted/50 cursor-pointer"
                     onClick={ () => handleOpenDialog(gear) }
                 >
@@ -54,7 +54,7 @@ export function GearCard() {
 
                     <div className="grid grid-cols-2 gap-y-2 text-sm">
                         <div className="font-medium">Regional:</div>
-                        <div>{gear.region}</div>
+                        <div>{gear.regionalId}</div>
 
                         <div className="font-medium">Unidades disponíveis:</div>
                         <div>{gear.availableUnits}</div>
