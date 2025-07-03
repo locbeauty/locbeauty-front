@@ -14,7 +14,7 @@ export const createGearFormSchema = z.object({
         .refine((date) => !date || date <= new Date(), {
             message: "Data de aquisição não pode ser no futuro",
         }),
-    sourceRegionalId: z
+    sourceFilialId: z
         .string({ message: "Regional é obrigatória" })
         .trim()
         .min(1, { message: "Regional é obrigatória" }),

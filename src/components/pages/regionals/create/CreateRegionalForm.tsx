@@ -13,7 +13,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";
 import { toast } from "sonner";
-import { Textarea } from "@/components/ui/textarea";
 
 export function CreateRegionalForm() {
     const createRegionalMethods = useForm<CreateRegionalFormSchemaType>({
@@ -42,6 +41,14 @@ export function CreateRegionalForm() {
                 <CardContent className="space-y-6">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
+                            <Label htmlFor="email">Descrição</Label>
+                            <Input
+                                { ...register("description") }
+                                placeholder="Identificador da filial"
+                                className="placeholder:text-placeholder max-h-[200px]"
+                            />
+                        </div>
+                        <div className="space-y-2 w-[196px]">
                             <Label htmlFor="telefone">Telefone</Label>
                             <PhoneInput register={ register("cellphone") } />
                             {errors.cellphone && (
@@ -65,24 +72,16 @@ export function CreateRegionalForm() {
                                 </p>
                             )}
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Description</Label>
-                            <Textarea
-                                { ...register("description") }
-                                placeholder="Informações adicionais sobre a filial"
-                                className="placeholder:text-placeholder max-h-[200px]"
-                            />
-                        </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="gerente">Gerente</Label>
-                        <SelectEmployee control={ control } name="managerEmployeeId" />
-                        {errors.managerEmployeeId && (
-                            <p className="text-sm font-medium text-destructive">
-                                {errors.managerEmployeeId.message}
-                            </p>
-                        )}
+                        <div className="space-y-2">
+                            <Label htmlFor="gerente">Gerente</Label>
+                            <SelectEmployee control={ control } name="managerEmployeeId" />
+                            {errors.managerEmployeeId && (
+                                <p className="text-sm font-medium text-destructive">
+                                    {errors.managerEmployeeId.message}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <RegionalAddressForm />

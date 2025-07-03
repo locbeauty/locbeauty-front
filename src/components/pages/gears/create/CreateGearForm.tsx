@@ -94,12 +94,12 @@ export function CreateGearForm() {
                             <FormProvider { ...createGearMethods }>
                                 <SelectRegional<CreateGearFormSchemaType>
                                     control={ control }
-                                    name="sourceRegionalId"
+                                    name="sourceFilialId"
                                 />
                             </FormProvider>
-                            {errors.sourceRegionalId && (
+                            {errors.sourceFilialId && (
                                 <p className="text-sm text-destructive mt-2">
-                                    {errors.sourceRegionalId.message}
+                                    {errors.sourceFilialId.message}
                                 </p>
                             )}
                         </div>

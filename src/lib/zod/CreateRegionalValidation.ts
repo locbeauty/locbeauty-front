@@ -16,11 +16,6 @@ export const createRegionalFormSchema = z
         description: z.string().optional(),
         managerEmployeeId: z.string({ message: "Gerente é obrigatório." }),
         address: addressSchema,
-    }).transform((data) => {
-        if (!data.description || data.description.trim() === "") {
-            data.description = `Filial ${data.address.stateName}`;
-        }
-        return data;
     });
 
 export type CreateRegionalFormSchemaType = z.infer<
