@@ -10,9 +10,8 @@ export const createRegionalFormSchema = z
             .email({ message: "Email inválido" }),
         cellphone: z
             .string()
-            .min(14, { message: "Celular deve conter DDD e número" })
-            .max(15, { message: "Celular deve conter no máximo 11 dígitos" })
-            .transform((val) => val.replace(/\D/g, "")),
+            .min(15, { message: "Celular deve conter DDD e número" })
+            .max(16, { message: "Celular deve conter no máximo 11 dígitos" }),
         description: z.string().optional(),
         managerEmployeeId: z.string({ message: "Gerente é obrigatório." }),
         address: addressSchema,

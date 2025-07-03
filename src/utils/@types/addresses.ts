@@ -39,9 +39,9 @@ export type State = {
 export type Address = {
     zipCode: string,
     state: State,
-    city: string,
-    neighborhood: string,
-    street: string,
+    cityName: string,
+    neighborhoodName: string,
+    streetName: string,
     buildingNumber: string,
     addressComplement: string | null,
 }

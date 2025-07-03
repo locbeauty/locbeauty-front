@@ -6,25 +6,25 @@ import {
 } from "@/components/ui/dialog";
 import { Pencil } from "lucide-react";
 import { RegionalDetailsCard } from "./RegionalDetailsCard";
-import { Regional } from "@/utils/@types/regionals";
+import { Filial } from "@/utils/@types/regionals";
 
-interface RegionalDetailsDialogProps {
-  handleToggleRegionalDetailsDialog: (_openStatus: boolean, _regional: Regional | null) => void;
-  handleToggleUpdateRegionalDialog: (_openStatus: boolean, _regional: Regional | null) => void;
-  isRegionalDetailsModalOpen: boolean
-  selectedRegional: Regional | null
+interface FilialDetailsDialogProps {
+  handleToggleFilialDetailsDialog: (_openStatus: boolean, _regional: Filial | null) => void;
+  handleToggleUpdateFilialDialog: (_openStatus: boolean, _regional: Filial | null) => void;
+  isFilialDetailsModalOpen: boolean
+  selectedFilial: Filial | null
 }
 
-export function RegionalDetailsDialog({ handleToggleRegionalDetailsDialog, handleToggleUpdateRegionalDialog, isRegionalDetailsModalOpen, selectedRegional }: RegionalDetailsDialogProps) {
+export function RegionalDetailsDialog({ handleToggleFilialDetailsDialog, handleToggleUpdateFilialDialog, isFilialDetailsModalOpen, selectedFilial }: FilialDetailsDialogProps) {
 
-    function handleOpenUpdateRegionalDialog() {
-        handleToggleRegionalDetailsDialog(false, null);
-        handleToggleUpdateRegionalDialog(true, selectedRegional);
+    function handleOpenUpdateFilialDialog() {
+        handleToggleFilialDetailsDialog(false, null);
+        handleToggleUpdateFilialDialog(true, selectedFilial);
     }
     return (
         <Dialog
-            open={ isRegionalDetailsModalOpen }
-            onOpenChange={ (status) => handleToggleRegionalDetailsDialog(status, selectedRegional) }
+            open={ isFilialDetailsModalOpen }
+            onOpenChange={ (status) => handleToggleFilialDetailsDialog(status, selectedFilial) }
         >
             <DialogContent
                 className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
@@ -36,14 +36,14 @@ export function RegionalDetailsDialog({ handleToggleRegionalDetailsDialog, handl
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-6">
-                    <RegionalDetailsCard selectedRegional={ selectedRegional } />
+                    <RegionalDetailsCard selectedRegional={ selectedFilial } />
 
                     <DialogFooter className="border-t pt-4">
-                        <Button onClick={ handleOpenUpdateRegionalDialog } className="gap-2">
+                        <Button onClick={ handleOpenUpdateFilialDialog } className="gap-2">
                             <Pencil className="h-4 w-4" />
                     Editar Cliente
                         </Button>
-                        <Button variant="outline" onClick={ () => handleToggleRegionalDetailsDialog(false, null) }>
+                        <Button variant="outline" onClick={ () => handleToggleFilialDetailsDialog(false, null) }>
                     Fechar
                         </Button>
                     </DialogFooter>

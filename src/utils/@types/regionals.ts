@@ -1,6 +1,6 @@
 import { Address } from "./addresses";
 
-export interface Regional {
+export interface Filial {
   managerEmployeeId: string,
   regionalId: string,
   title: string,

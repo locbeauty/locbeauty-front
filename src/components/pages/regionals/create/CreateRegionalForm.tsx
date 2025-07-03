@@ -26,9 +26,32 @@ export function CreateRegionalForm() {
         formState: { errors },
     } = createRegionalMethods;
 
-    function handleCreateRegional(newRegionalData: CreateRegionalFormSchemaType) {
-        console.log("newRegionalData: ", newRegionalData);
-        toast.success("Regional criada com sucesso!");
+    async function handleCreateRegional(newRegionalData: CreateRegionalFormSchemaType) {
+        try {
+            const response = await fetch("http://localhost:3333/api/filials/create", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(newRegionalData)
+            });
+            const data = await response.json();
+
+            if(!response.ok) {
+                toast.warning(data.message, { style: { fontSize: "1rem" } });
+                window.scroll({ top: 0 });
+                // if(response.status === 409) {
+                //     setError("documentNumber", { message: "Documento já cadastrado." });
+                // }
+            } else {
+                toast.success("Filial criado com sucesso!", { style: { fontSize: "1rem" } });
+                window.scroll({ top: 0 });
+                // reset();
+            }
+        } catch {
+            toast.error("Erro ao criar filial.");
+        }
     }
 
     return (

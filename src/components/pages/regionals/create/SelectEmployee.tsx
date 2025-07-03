@@ -3,6 +3,8 @@
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { employees } from "@/utils/mocks/employees";
+import { useEffect, useState } from "react";
+import { Employee } from "@/utils/@types/employees";
 
 type SelectEmployeeProps<T extends FieldValues> = {
   control: Control<T>
@@ -13,6 +15,16 @@ type SelectEmployeeProps<T extends FieldValues> = {
 export function SelectEmployee<T extends FieldValues>({ control, name, managerEmployeeId }: SelectEmployeeProps<T>) {
 
     const selectedEmployee = employees.find(employee => employee.employeeId === managerEmployeeId);
+    const [ allEmployees, setAllEmployees ] = useState<Employee[]>([]);
+
+    useEffect(() => {
+        const getEmployees = async () => {
+            const response = await fetch("http://localhost:3333/api/employees", { credentials: "include" });
+            const { data } = await response.json();
+            setAllEmployees(data);
+        };
+        getEmployees();
+    }, []);
 
     return (
         <Controller
@@ -29,7 +41,7 @@ export function SelectEmployee<T extends FieldValues>({ control, name, managerEm
                     </SelectTrigger>
                     <SelectContent>
                         {
-                            employees.map(employee => (
+                            allEmployees.map(employee => (
                                 <SelectItem defaultValue={ selectedEmployee?.fullname } key={ employee.employeeId } value={ employee.fullname }>
                                     {employee.fullname}
                                 </SelectItem>
