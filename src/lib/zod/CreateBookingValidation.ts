@@ -4,7 +4,7 @@ export const createBookingFormSchema = z
     .object({
         customerId: z.string({ message: "Nome do cliente é obrigatório" }).trim(),
         gearName: z.string({ message: "Nome da máquina é obrigatório" }).trim(),
-        regional: z.string().optional(),
+        filialId: z.string().optional(),
         amount: z.number().min(1, { message: "Quantidade deve ser maior que zero." }),
         date: z
             .date({ message: "Data é obrigatória.", })

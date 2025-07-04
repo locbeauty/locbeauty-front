@@ -2,8 +2,7 @@ import { Address } from "./addresses";
 
 export interface Filial {
   managerEmployeeId: string,
-  regionalId: string,
-  title: string,
+  filialId: string,
   CNPJ: string,
   description: string,
   address: Address,

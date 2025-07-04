@@ -2,43 +2,41 @@ import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-    createRegionalFormSchema,
-    CreateRegionalFormSchemaType,
-} from "@/lib/zod/CreateRegionalValidation";
+    createFilialFormSchema,
+    CreateFilialFormSchemaType,
+} from "@/lib/zod/CreateFilialValidation";
 import { CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import PhoneInput from "@/components/shared/PhoneInput";
 import { Input } from "@/components/ui/input";
-import { SelectEmployee } from "../create/SelectEmployee";
-import { RegionalAddressForm } from "../create/RegionalAddressForm";
+import { SelectEmployee } from "../../../shared/SelectEmployee";
+import { FilialAddressForm } from "../create/FilialAddressForm";
 import DocumentInput from "@/components/shared/DocumentInput";
 import { Textarea } from "@/components/ui/textarea";
-import { Regional } from "@/utils/@types/regionals";
+import { Filial } from "@/utils/@types/filials";
 
-interface UpdateRegionalFormProps {
-  selectedRegional: Regional;
+interface UpdateFilialFormProps {
+  selectedFilial: Filial;
 }
 
-export function UpdateRegionalForm({
-    selectedRegional,
-}: UpdateRegionalFormProps) {
-    const updateRegionalMethods = useForm<CreateRegionalFormSchemaType>({
-        resolver: zodResolver(createRegionalFormSchema),
+export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
+    const updateFilialMethods = useForm<CreateFilialFormSchemaType>({
+        resolver: zodResolver(createFilialFormSchema),
         defaultValues: {
             address: {
-                addressComplement: selectedRegional.address.addressComplement,
-                zipCode: selectedRegional.address.zipCode,
-                cityName: selectedRegional.address.city,
-                buildingNumber: selectedRegional.address.buildingNumber,
-                neighborhoodName: selectedRegional.address.neighborhood,
-                stateName: selectedRegional.address.state.stateName,
-                streetName: selectedRegional.address.street,
+                addressComplement: selectedFilial.address.addressComplement,
+                zipCode: selectedFilial.address.zipCode,
+                cityName: selectedFilial.address.cityName,
+                buildingNumber: selectedFilial.address.buildingNumber,
+                neighborhoodName: selectedFilial.address.neighborhoodName,
+                stateName: selectedFilial.address.state.stateName,
+                streetName: selectedFilial.address.streetName,
             },
-            cellphone: selectedRegional.cellphone,
-            CNPJ: selectedRegional.CNPJ,
-            email: selectedRegional.email,
-            managerEmployeeId: selectedRegional.managerEmployeeId,
-            description: selectedRegional.description,
+            cellphone: selectedFilial.cellphone,
+            CNPJ: selectedFilial.CNPJ,
+            email: selectedFilial.email,
+            managerEmployeeId: selectedFilial.managerEmployeeId,
+            description: selectedFilial.description,
         },
     });
 
@@ -47,28 +45,23 @@ export function UpdateRegionalForm({
         register,
         control,
         formState: { errors },
-    } = updateRegionalMethods;
+    } = updateFilialMethods;
 
-    function handleUpdateRegional(
-        updatedRegionalData: CreateRegionalFormSchemaType
-    ) {
-        console.log("updatedRegionalData: ", updatedRegionalData);
-        toast.success("Regional editado com sucesso!");
+    function handleUpdateFilial(updatedFilialData: CreateFilialFormSchemaType) {
+        console.log("updatedFilialData: ", updatedFilialData);
+        toast.success("Filial editada com sucesso!");
     }
     return (
         <form
-            id="update-regional-form"
-            onSubmit={ handleSubmit(handleUpdateRegional) }
+            id="update-filial-form"
+            onSubmit={ handleSubmit(handleUpdateFilial) }
             className="flex flex-col gap-5"
         >
             <CardContent className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="telefone">CNPJ/CPF</Label>
-                        <DocumentInput
-                            disabled
-                            register={ register("CNPJ") }
-                        />
+                        <DocumentInput disabled register={ register("CNPJ") } />
                         {errors.cellphone && (
                             <p className="text-sm font-medium text-destructive">
                                 {errors.cellphone.message}
@@ -118,7 +111,7 @@ export function UpdateRegionalForm({
                 <div className="space-y-2">
                     <Label htmlFor="gerente">Gerente</Label>
                     <SelectEmployee
-                        managerEmployeeId={ selectedRegional.managerEmployeeId }
+                        managerEmployeeId={ selectedFilial.managerEmployeeId }
                         control={ control }
                         name="managerEmployeeId"
                     />
@@ -128,8 +121,8 @@ export function UpdateRegionalForm({
                         </p>
                     )}
                 </div>
-                <FormProvider { ...updateRegionalMethods }>
-                    <RegionalAddressForm />
+                <FormProvider { ...updateFilialMethods }>
+                    <FilialAddressForm />
                 </FormProvider>
             </CardContent>
         </form>

@@ -20,7 +20,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Dispatch, SetStateAction } from "react";
 import { gears } from "@/utils/mocks/gears";
-import { regionals } from "@/utils/mocks/regionals";
+import { filials } from "@/utils/mocks/filials";
 import { Gear } from "@/utils/@types/gears";
 
 interface UpdateGearDialogProps {
@@ -72,7 +72,9 @@ export function UpdateGearDialog({
     const handleSaveGear = () => {
         if (selectedGear) {
             setGears(
-                gears.map((gear) => (gear.gearId === selectedGear.gearId ? selectedGear : gear))
+                gears.map((gear) =>
+                    gear.gearId === selectedGear.gearId ? selectedGear : gear
+                )
             );
             setIsUpdateGearDialogOpen(false);
         }
@@ -125,19 +127,22 @@ export function UpdateGearDialog({
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid grid-cols-1 gap-3">
-                                <Label htmlFor="region">Regional</Label>
+                                <Label htmlFor="filial-select">Filial</Label>
                                 <Select
-                                    value={ selectedGear.regionalId }
-                                    onValueChange={ (value) => handleSelectChange(value, "region") }
+                                    value={ selectedGear.filialId }
+                                    onValueChange={ (value) => handleSelectChange(value, "filialId") }
                                 >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione uma regional" />
+                                    <SelectTrigger id="filial-select">
+                                        <SelectValue placeholder="Selecione uma filial" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {regionals.map((regional) => {
+                                        {filials.map((filial) => {
                                             return (
-                                                <SelectItem key={ regional.regionalId } value={ regional.title }>
-                                                    {regional.title}, {regional.address.state.stateName}
+                                                <SelectItem
+                                                    key={ filial.filialId }
+                                                    value={ filial.description }
+                                                >
+                                                    {filial.description}, {filial.address.state.stateName}
                                                 </SelectItem>
                                             );
                                         })}
@@ -150,9 +155,11 @@ export function UpdateGearDialog({
                                 <Input
                                     id="acquisitionDate"
                                     name="acquisitionDate"
-                                    value={ selectedGear.acquisitionDate ? selectedGear.acquisitionDate.toLocaleDateString(
-                                        "pt-BR"
-                                    ) : "Não informado" }
+                                    value={
+                                        selectedGear.acquisitionDate
+                                            ? selectedGear.acquisitionDate.toLocaleDateString("pt-BR")
+                                            : "Não informado"
+                                    }
                                     onChange={ handleInputChange }
                                 />
                             </div>

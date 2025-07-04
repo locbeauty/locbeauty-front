@@ -24,9 +24,9 @@ export function UpdateCustomerForm({
             address: {
                 zipCode: selectedCustomer.address.zipCode,
                 stateName: selectedCustomer.address.state.stateName,
-                cityName: selectedCustomer.address.city,
-                neighborhoodName: selectedCustomer.address.neighborhood,
-                streetName: selectedCustomer.address.street,
+                cityName: selectedCustomer.address.cityName,
+                neighborhoodName: selectedCustomer.address.neighborhoodName,
+                streetName: selectedCustomer.address.streetName,
                 buildingNumber: selectedCustomer.address.buildingNumber,
                 addressComplement: selectedCustomer.address.addressComplement,
             },

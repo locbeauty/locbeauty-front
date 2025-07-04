@@ -2,7 +2,8 @@
 
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { ROLES } from "@/utils/roles";
+import { ROLE } from "@/utils/roles";
+import { useEffect, useState } from "react";
 
 type SelectRoleProps<T extends FieldValues> = {
   control: Control<T>
@@ -10,6 +11,17 @@ type SelectRoleProps<T extends FieldValues> = {
 }
 
 export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleProps<T>) {
+    const [ allRoles, setAllRoles ] = useState<ROLE[]>([]);
+
+    useEffect(() => {
+        const getEmployees = async () => {
+            const response = await fetch("http://localhost:3333/api/roles", { credentials: "include" });
+            const { data } = await response.json();
+            console.log("DATA: ", data);
+            setAllRoles(data);
+        };
+        getEmployees();
+    }, []);
     return (
         <Controller
             name={ name }
@@ -24,10 +36,10 @@ export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleP
                             />
                         </SelectTrigger>
                         <SelectContent>
-                            { ROLES.map((role) => {
+                            { allRoles.map((role) => {
                                 return (
-                                    <SelectItem key={ role.id } value={ role.id }>
-                                        { role.name }
+                                    <SelectItem key={ role.roleId } value={ role.roleId }>
+                                        { role.roleName }
                                     </SelectItem>
                                 );
 

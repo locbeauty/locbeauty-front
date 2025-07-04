@@ -28,8 +28,8 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>
             icon: Package,
         },
         {
-            name: "Regionais",
-            href: ROUTES.REGIONALS,
+            name: "Filiais",
+            href: ROUTES.FILIALS,
             icon: Building2,
         },
         {

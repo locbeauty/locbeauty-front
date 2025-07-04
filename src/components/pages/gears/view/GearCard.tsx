@@ -53,8 +53,8 @@ export function GearCard() {
                     </p>
 
                     <div className="grid grid-cols-2 gap-y-2 text-sm">
-                        <div className="font-medium">Regional:</div>
-                        <div>{gear.regionalId}</div>
+                        <div className="font-medium">Filial:</div>
+                        <div>{gear.filialId}</div>
 
                         <div className="font-medium">Unidades disponíveis:</div>
                         <div>{gear.availableUnits}</div>

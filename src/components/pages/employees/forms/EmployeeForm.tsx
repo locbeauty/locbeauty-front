@@ -1,4 +1,4 @@
-import { SelectRegional } from "@/components/shared/SelectRegional";
+import { SelectFilial } from "@/components/shared/SelectFilial";
 import DocumentInput from "../../../shared/DocumentInput";
 import { SelectRole } from "@/components/shared/SelectRole";
 import PhoneInput from "../../../shared/PhoneInput";
@@ -10,14 +10,23 @@ import { useEffect, useState } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
 
 export function EmployeeForm() {
-    const { register, watch, control, setValue, setError, clearErrors, trigger, formState: { errors } } = useFormContext<CreateEmployeeFormSchemaType>();
+    const {
+        register,
+        watch,
+        control,
+        setValue,
+        setError,
+        clearErrors,
+        trigger,
+        formState: { errors },
+    } = useFormContext<CreateEmployeeFormSchemaType>();
     const [ confirmPassword, setConfirmPassword ] = useState("");
 
     const birthdate = watch("birthdate");
     const password = watch("password");
 
     useEffect(() => {
-        if((password !== confirmPassword) && confirmPassword.length > 0) {
+        if (password !== confirmPassword && confirmPassword.length > 0) {
             setError("password", { message: "Senhas não batem." });
         } else {
             clearErrors("password");
@@ -47,7 +56,10 @@ export function EmployeeForm() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="cpf">CPF</Label>
-                    <DocumentInput placeholder="000.000.000-00" register={ register("documentNumber") } />
+                    <DocumentInput
+                        placeholder="000.000.000-00"
+                        register={ register("documentNumber") }
+                    />
                     <div className="h-3">
                         {errors.documentNumber && (
                             <p className="text-xs font-medium text-destructive">
@@ -74,8 +86,8 @@ export function EmployeeForm() {
                             } }
                             classNames={ {
                                 trigger:
-                          errors.birthdate &&
-                          "border-destructive focus-visible:ring-destructive",
+                  errors.birthdate &&
+                  "border-destructive focus-visible:ring-destructive",
                             } }
                         />
                     ) }
@@ -102,12 +114,12 @@ export function EmployeeForm() {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="nome">Regional:</Label>
-                    <SelectRegional control={ control } name="sourceRegionalId" />
+                    <Label htmlFor="nome">Filial:</Label>
+                    <SelectFilial control={ control } name="sourceFilialId" />
                     <div className="h-3">
-                        {errors.sourceRegionalId && (
+                        {errors.sourceFilialId && (
                             <p className="text-xs font-medium text-destructive">
-                                {errors.sourceRegionalId.message}
+                                {errors.sourceFilialId.message}
                             </p>
                         )}
                     </div>

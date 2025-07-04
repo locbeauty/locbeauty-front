@@ -1,37 +1,60 @@
-import { Clock, FileText, Mail, Phone, User, MapPin, Building, Users, TrendingUp, Calendar, CheckCircle } from "lucide-react";
+import {
+    Clock,
+    FileText,
+    Mail,
+    Phone,
+    User,
+    MapPin,
+    Building,
+    Users,
+    TrendingUp,
+    Calendar,
+    CheckCircle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { Regional } from "@/utils/@types/regionals";
+import { Filial } from "@/utils/@types/filials";
 
-interface RegionalDetailsCardProps {
-    selectedRegional: Regional | null
+interface FilialDetailsCardProps {
+  selectedFilial: Filial | null;
 }
 
-export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardProps) {
-    if (!selectedRegional) {
+export function FilialDetailsCard({
+    selectedFilial,
+}: FilialDetailsCardProps) {
+    if (!selectedFilial) {
         return (
             <Card>
                 <CardContent className="flex items-center justify-center h-64 text-muted-foreground">
-                    Selecione uma regional para ver os detalhes
+          Selecione uma filial para ver os detalhes
                 </CardContent>
             </Card>
         );
     }
 
     // Endereço completo formatado
-    const fullAddress = `${selectedRegional.address.street}, ${selectedRegional.address.buildingNumber}${selectedRegional.address.addressComplement ? ` - ${selectedRegional.address.addressComplement}` : ""}, ${selectedRegional.address.neighborhood}, ${selectedRegional.address.city}/${selectedRegional.address.state.UF}`;
+    const fullAddress = `${selectedFilial.address.streetName}, ${
+        selectedFilial.address.buildingNumber
+    }${
+        selectedFilial.address.addressComplement
+            ? ` - ${selectedFilial.address.addressComplement}`
+            : ""
+    }, ${selectedFilial.address.neighborhoodName}, ${
+        selectedFilial.address.cityName
+    }/${selectedFilial.address.state.UF}`;
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Building className="h-5 w-5" />
-                    Regional {selectedRegional.description}
+          Filial {selectedFilial.description}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                    {selectedRegional.address.state.stateName} - {selectedRegional.address.city}
+                    {selectedFilial.address.state.stateName} -{" "}
+                    {selectedFilial.address.cityName}
                 </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -39,39 +62,49 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                 <div>
                     <h4 className="font-semibold mb-3 flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        Informações Corporativas
+            Informações Corporativas
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">ID Regional:</Label>
-                                <span className="font-mono text-sm font-semibold">{selectedRegional.regionalId}</span>
+                                <Label className="text-sm font-medium">ID filial:</Label>
+                                <span className="font-mono text-sm font-semibold">
+                                    {selectedFilial.filialId}
+                                </span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">CNPJ:</Label>
-                                <span className="font-mono text-sm">{selectedRegional.CNPJ}</span>
+                                <span className="font-mono text-sm">
+                                    {selectedFilial.CNPJ}
+                                </span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Estado:</Label>
-                                <Badge variant="outline" className="text-blue-600 border-blue-200">
-                                    {selectedRegional.address.state.UF} - {selectedRegional.address.state.stateName}
+                                <Badge
+                                    variant="outline"
+                                    className="text-blue-600 border-blue-200"
+                                >
+                                    {selectedFilial.address.state.UF} -{" "}
+                                    {selectedFilial.address.state.stateName}
                                 </Badge>
                             </div>
                         </div>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Cidade:</Label>
-                                <span className="text-sm">{selectedRegional.address.city}</span>
+                                <span className="text-sm">{selectedFilial.address.cityName}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Bairro:</Label>
-                                <span className="text-sm">{selectedRegional.address.neighborhood}</span>
+                                <span className="text-sm">
+                                    {selectedFilial.address.neighborhoodName}
+                                </span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Status:</Label>
                                 <Badge className="bg-green-100 text-green-800 border-green-200">
                                     <CheckCircle className="h-3 w-3 mr-1" />
-                                    Ativa
+                  Ativa
                                 </Badge>
                             </div>
                         </div>
@@ -84,7 +117,7 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                 <div>
                     <h4 className="font-semibold mb-3 flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        Localização
+            Localização
                     </h4>
                     <div className="bg-muted/50 p-4 rounded-lg">
                         <p className="text-sm leading-relaxed">
@@ -100,7 +133,7 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                 <div>
                     <h4 className="font-semibold mb-3 flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        Responsável e Contato
+            Responsável e Contato
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-3">
@@ -108,19 +141,23 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                                 {/* TODO: fetch employee data */}
                                 <User className="h-4 w-4 text-muted-foreground" />
                                 <Label className="text-sm font-medium">Gerente:</Label>
-                                <span className="text-sm font-semibold">{selectedRegional.managerEmployeeId}</span>
+                                <span className="text-sm font-semibold">
+                                    {selectedFilial.managerEmployeeId}
+                                </span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-muted-foreground" />
                                 <Label className="text-sm font-medium">Telefone:</Label>
-                                <span className="text-sm">{selectedRegional.cellphone}</span>
+                                <span className="text-sm">{selectedFilial.cellphone}</span>
                             </div>
                         </div>
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
                                 <Mail className="h-4 w-4 text-muted-foreground" />
                                 <Label className="text-sm font-medium">Email:</Label>
-                                <span className="text-sm text-blue-600">{selectedRegional.email}</span>
+                                <span className="text-sm text-blue-600">
+                                    {selectedFilial.email}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -132,16 +169,20 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                 <div>
                     <h4 className="font-semibold mb-3 flex items-center gap-2">
                         <TrendingUp className="h-4 w-4" />
-                        Estatísticas Operacionais
+            Estatísticas Operacionais
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <div className="text-2xl font-bold text-blue-600">45</div>
-                            <div className="text-xs text-muted-foreground">Equipamentos Totais</div>
+                            <div className="text-xs text-muted-foreground">
+                Equipamentos Totais
+                            </div>
                         </div>
                         <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg">
                             <div className="text-2xl font-bold text-green-600">38</div>
-                            <div className="text-xs text-muted-foreground">Equipamentos Disponíveis</div>
+                            <div className="text-xs text-muted-foreground">
+                Equipamentos Disponíveis
+                            </div>
                         </div>
                         <div className="text-center p-4 bg-orange-50 border border-orange-200 rounded-lg">
                             <div className="text-2xl font-bold text-orange-600">7</div>
@@ -149,7 +190,9 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                         </div>
                         <div className="text-center p-4 bg-purple-50 border border-purple-200 rounded-lg">
                             <div className="text-2xl font-bold text-purple-600">84%</div>
-                            <div className="text-xs text-muted-foreground">Taxa Disponibilidade</div>
+                            <div className="text-xs text-muted-foreground">
+                Taxa Disponibilidade
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -160,7 +203,7 @@ export function RegionalDetailsCard({ selectedRegional }: RegionalDetailsCardPro
                 <div>
                     <h4 className="font-semibold mb-3 flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        Informações Operacionais
+            Informações Operacionais
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div className="space-y-2">

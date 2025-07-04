@@ -1,3 +1,8 @@
+export interface ROLE {
+    roleId: string,
+    roleName: string,
+}
+
 export const ROLES = [
     { name: "Gerente", id: "cmcjvj8vl000018uyelhjfonu" },
     { name: "Financeiro", id: "cmcjvj8vl000118uy8bbtfwza" },

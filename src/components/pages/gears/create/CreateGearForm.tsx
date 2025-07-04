@@ -8,7 +8,7 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { SelectRegional } from "@/components/shared/SelectRegional";
+import { SelectFilial } from "@/components/shared/SelectFilial";
 import {
     createGearFormSchema,
     CreateGearFormSchemaType,
@@ -50,19 +50,21 @@ export function CreateGearForm() {
             });
             const data = await response.json();
 
-            if(!response.ok) {
+            if (!response.ok) {
                 toast.warning(data.message, { style: { fontSize: "1rem" } });
                 window.scroll({ top: 0 });
                 // if(response.status === 409) {
                 //     setError("documentNumber", { message: "Documento já cadastrado." });
                 // }
             } else {
-                toast.success("Funcionário criado com sucesso!", { style: { fontSize: "1rem" } });
+                toast.success("Equipamento criado com sucesso!", {
+                    style: { fontSize: "1rem" },
+                });
                 window.scroll({ top: 0 });
                 reset();
             }
         } catch {
-            toast.error("Erro ao criar funcionário.");
+            toast.error("Erro ao criar equipamento.");
         }
     }
 
@@ -90,9 +92,9 @@ export function CreateGearForm() {
                             )}
                         </div>
                         <div className="space-y-2">
-                            <Label>Regional</Label>
+                            <Label>Filial</Label>
                             <FormProvider { ...createGearMethods }>
-                                <SelectRegional<CreateGearFormSchemaType>
+                                <SelectFilial<CreateGearFormSchemaType>
                                     control={ control }
                                     name="sourceFilialId"
                                 />

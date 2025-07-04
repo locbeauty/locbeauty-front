@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { addressSchema } from "./address";
 
-export const createRegionalFormSchema = z
+export const createFilialFormSchema = z
     .object({
         CNPJ: z.string().optional(),
         email: z
@@ -17,6 +17,6 @@ export const createRegionalFormSchema = z
         address: addressSchema,
     });
 
-export type CreateRegionalFormSchemaType = z.infer<
-  typeof createRegionalFormSchema
+export type CreateFilialFormSchemaType = z.infer<
+  typeof createFilialFormSchema
 >
