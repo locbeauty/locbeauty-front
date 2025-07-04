@@ -2,7 +2,7 @@ export type Gear = {
     gearId: string,
     name: string,
     description: string,
-    regionalId: string,
+    filialId: string,
     availableUnits: number,
     outOfServiceUnits: number,
     totalUnits: number,

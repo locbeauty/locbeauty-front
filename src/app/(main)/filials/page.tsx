@@ -1,24 +1,24 @@
-import { RegionalsTable } from "@/components/pages/regionals/view/RegionalsTable";
+import { FilialsTable } from "@/components/pages/filials/view/FilialTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/utils/routes";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 
-export default function RegionalsPage() {
+export default function FilialsPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Regionais</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Filiais</h1>
                     <p className="text-muted-foreground">
-                        Gerencie o cadastro de regionais
+            Gerencie o cadastro de filiais
                     </p>
                 </div>
                 <Button className="flex justify-center items-center" asChild>
-                    <Link href={ ROUTES.CREATE_REGIONAL }>
+                    <Link href={ ROUTES.CREATE_FILIAL }>
                         <Plus className="" />
-                        <span className="hidden md:inline">Nova regional</span>
+                        <span className="hidden md:inline">Nova filial</span>
                     </Link>
                 </Button>
             </div>
@@ -34,7 +34,7 @@ export default function RegionalsPage() {
                 </div>
             </div>
 
-            <RegionalsTable />
+            <FilialsTable />
         </div>
     );
 }

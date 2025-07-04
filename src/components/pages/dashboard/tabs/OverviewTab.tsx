@@ -35,7 +35,7 @@ export function OverviewTab() {
         { date: "Dez", TaxaDeOcupacao: 94 },
     ];
 
-    const RegionalsData = [
+    const FilialsData = [
         { name: "Ceará", value: 1423 },
         { name: "Pernambuco", value: 952 },
         { name: "Bahia", value: 687 },
@@ -164,7 +164,7 @@ export function OverviewTab() {
                     </CardHeader>
                     <CardContent>
                         <CustomBarChart
-                            data={ RegionalsData }
+                            data={ FilialsData }
                             dataKey="value"
                             nameKey="name"
                             height={ 400 }

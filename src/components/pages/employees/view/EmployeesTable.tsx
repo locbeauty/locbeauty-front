@@ -8,29 +8,40 @@ import { UpdateEmployeeDialog } from "../update/UpdateEmployeeDialog";
 import { EmployeeDetailsDialog } from "./EmployeeDetailsDialog";
 
 export function EmployeesTable() {
-
-    const [ isUpdateEmployeeDialogOpen, setIsUpdateEmployeeDialogOpen ] = useState(false);
+    const [ isUpdateEmployeeDialogOpen, setIsUpdateEmployeeDialogOpen ] =
+    useState(false);
     const [ allEmployees, setAllEmployees ] = useState<Employee[]>();
-    const [ selectedEmployee, setSelectedEmployee ] = useState<Employee | null>(null);
+    const [ selectedEmployee, setSelectedEmployee ] = useState<Employee | null>(
+        null
+    );
 
-    const [ isEmployeeDetailsDialogOpen, setIsEmployeeDetailsDialogOpen ] = useState(false);
+    const [ isEmployeeDetailsDialogOpen, setIsEmployeeDetailsDialogOpen ] =
+    useState(false);
 
-    const handleToggleUpdateEmployeeDialog = (openStatus: boolean, employee: Employee | null) => {
-        if(openStatus) {
+    const handleToggleUpdateEmployeeDialog = (
+        openStatus: boolean,
+        employee: Employee | null
+    ) => {
+        if (openStatus) {
             setSelectedEmployee(employee);
         }
 
         setIsUpdateEmployeeDialogOpen(openStatus);
     };
 
-    function handleToggleEmployeeDetailsDialog(openStatus: boolean, employee: Employee | null) {
+    function handleToggleEmployeeDetailsDialog(
+        openStatus: boolean,
+        employee: Employee | null
+    ) {
         setSelectedEmployee(employee);
         setIsEmployeeDetailsDialogOpen(openStatus);
     }
 
     useEffect(() => {
         async function getEmployees() {
-            const response = await fetch("http://localhost:3333/api/employees", { credentials: "include" });
+            const response = await fetch("http://localhost:3333/api/employees", {
+                credentials: "include",
+            });
 
             const { data } = await response.json();
             setAllEmployees(data);
@@ -47,43 +58,43 @@ export function EmployeesTable() {
                             <th className="text-left p-3 font-medium">Nome</th>
                             <th className="text-left p-3 font-medium">CPF</th>
                             <th className="text-center p-3 font-medium">Cargo</th>
-                            <th className="text-center p-3 font-medium">Regional</th>
+                            <th className="text-center p-3 font-medium">Filial</th>
                             <th className="text-center p-3 font-medium">Telefone</th>
                             <th className="text-center p-3 font-medium">Email</th>
                             <th className="text-center p-3 font-medium">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {
-                            allEmployees?.map(employee => (
-
-                                <tr key={ employee.employeeId } className="border-t hover:bg-muted/50">
-                                    <td className="p-3">{employee.fullname}</td>
-                                    <td className="p-3">{employee.documentNumber}</td>
-                                    <td className="p-3 text-center">{employee.roleId}</td>
-                                    <td className="p-3 text-center">{employee.sourceRegionalId}</td>
-                                    <td className="p-3 text-center">{employee.cellphone ?? "-"}</td>
-                                    <td className="p-3 text-center">{employee.email ?? "-"}</td>
-                                    <td className="p-3 flex justify-center items-center gap-4">
-                                        <Button
-                                            onClick={ () =>
-                                                handleToggleEmployeeDetailsDialog(true, employee)
-                                            }
-                                        >
-                                            <Eye />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            onClick={ () =>
-                                                handleToggleUpdateEmployeeDialog(true, employee)
-                                            }
-                                        >
-                                            <Pencil />
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))
-                        }
+                        {allEmployees?.map((employee) => (
+                            <tr
+                                key={ employee.employeeId }
+                                className="border-t hover:bg-muted/50"
+                            >
+                                <td className="p-3">{employee.fullname}</td>
+                                <td className="p-3">{employee.documentNumber}</td>
+                                <td className="p-3 text-center">{employee.roleId}</td>
+                                <td className="p-3 text-center">{employee.sourceFilialId}</td>
+                                <td className="p-3 text-center">{employee.cellphone ?? "-"}</td>
+                                <td className="p-3 text-center">{employee.email ?? "-"}</td>
+                                <td className="p-3 flex justify-center items-center gap-4">
+                                    <Button
+                                        onClick={ () =>
+                                            handleToggleEmployeeDetailsDialog(true, employee)
+                                        }
+                                    >
+                                        <Eye />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={ () =>
+                                            handleToggleUpdateEmployeeDialog(true, employee)
+                                        }
+                                    >
+                                        <Pencil />
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
@@ -113,7 +124,8 @@ export function EmployeesTable() {
                 selectedEmployee={ selectedEmployee }
                 handleToggleUpdateEmployeeDialog={ handleToggleUpdateEmployeeDialog }
                 handleToggleEmployeeDetailsDialog={ handleToggleEmployeeDetailsDialog }
-                isEmployeeDetailsModalOpen={ isEmployeeDetailsDialogOpen } />
+                isEmployeeDetailsModalOpen={ isEmployeeDetailsDialogOpen }
+            />
 
             <UpdateEmployeeDialog
                 isUpdateEmployeeDialogOpen={ isUpdateEmployeeDialogOpen }

@@ -44,7 +44,7 @@ export function GearsTable() {
                         <tr>
                             <th className="text-left p-3 font-medium">Nome</th>
                             <th className="text-left p-3 font-medium">Descrição</th>
-                            <th className="text-center p-3 font-medium">Regional</th>
+                            <th className="text-center p-3 font-medium">Filial</th>
                             <th className="text-center p-3 font-medium">
                 Unidades disponíveis
                             </th>
@@ -66,7 +66,7 @@ export function GearsTable() {
                                 <td className="p-3 max-w-[700px] truncate whitespace-nowrap overflow-hidden">
                                     {gear.description}
                                 </td>
-                                <td className="p-3 text-center">{gear.regionalId}</td>
+                                <td className="p-3 text-center">{gear.filialId}</td>
                                 <td className="p-3 text-center">{gear.availableUnits}</td>
                                 <td className="p-3 text-center">{gear.availableUnits}</td>
                                 <td className="p-3 text-center">{gear.acquisitionDate ? new Date(gear.acquisitionDate).toLocaleDateString("pt-BR") : "Não informado"}</td>
@@ -103,7 +103,7 @@ export function GearsTable() {
                             transferableIndicator: true,
                             transferable: gear.transferable,
                             items: [
-                                { itemLabel: "Regional:", itemInfo: gear.regionalId },
+                                { itemLabel: "Filial:", itemInfo: gear.filialId },
                                 {
                                     itemLabel: "Unidades disponíveis: ",
                                     itemInfo: gear.availableUnits,

@@ -16,9 +16,9 @@ export const mockCustomers: Customer[] = [
                 stateName: "Acre",
                 UF: "AC"
             },
-            city: "Recife",
-            neighborhood: "Boa Viagem",
-            street: "Avenida Beira Mar",
+            cityName: "Recife",
+            neighborhoodName: "Boa Viagem",
+            streetName: "Avenida Beira Mar",
             buildingNumber: "1167",
             addressComplement: null,
 
@@ -41,9 +41,9 @@ export const mockCustomers: Customer[] = [
                 stateName: "Acre",
                 UF: "AC"
             },
-            city: "Recife",
-            neighborhood: "Boa Viagem",
-            street: "Avenida Beira Mar",
+            cityName: "Recife",
+            neighborhoodName: "Boa Viagem",
+            streetName: "Avenida Beira Mar",
             buildingNumber: "1167",
             addressComplement: "Perto daquela casa",
 
@@ -66,9 +66,9 @@ export const mockCustomers: Customer[] = [
                 stateName: "Acre",
                 UF: "AC"
             },
-            city: "Recife",
-            neighborhood: "Ilha do Retiro",
-            street: "Avenida Abdias de Carvalho",
+            cityName: "Recife",
+            neighborhoodName: "Ilha do Retiro",
+            streetName: "Avenida Abdias de Carvalho",
             buildingNumber: "0",
             addressComplement: null,
 
