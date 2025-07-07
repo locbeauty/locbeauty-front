@@ -1,4 +1,12 @@
-import { Calendar, ChevronDown, Clock, DollarSign, FileText, Loader2, MapPin } from "lucide-react";
+import {
+    Calendar,
+    ChevronDown,
+    Clock,
+    DollarSign,
+    FileText,
+    Loader2,
+    MapPin,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -7,15 +15,17 @@ import { useEffect, useState } from "react";
 import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentStatusBadge";
 import { BookingStatusBadge } from "../../bookings/common/BookingStatusBadge";
 import { Button } from "@/components/ui/button";
-import { Customer } from "@/utils/@types/customers";
+import { Customer } from "@/utils/@types/customer";
 
 interface BookingHistoryCardProps {
-    isCustomerDetailsModalOpen: boolean,
-    selectedCustomer: Customer | null
+  isCustomerDetailsModalOpen: boolean;
+  selectedCustomer: Customer | null;
 }
 
-export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustomer }: BookingHistoryCardProps) {
-
+export function BookingHistoryCard({
+    isCustomerDetailsModalOpen,
+    selectedCustomer,
+}: BookingHistoryCardProps) {
     const BOOKINGS_PER_PAGE = 10;
 
     const [ visibleBookings, setVisibleBookings ] = useState(10);
@@ -46,13 +56,13 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                 <CardTitle className="flex items-center md:flex-row md:items-center flex-col">
                     <div className="flex items-center gap-2 mb-3">
                         <Calendar className="h-5 w-5 shrink-0" />
-                        Histórico de Agendamentos
+            Histórico de Agendamentos
                         <Badge variant="secondary">{bookings.length}</Badge>
                     </div>
                     <div className="flex">
                         {visibleBookings < bookings.length && (
                             <Badge variant="outline" className="text-xs">
-                    Mostrando {visibleBookings} de {bookings.length}
+                Mostrando {visibleBookings} de {bookings.length}
                             </Badge>
                         )}
                     </div>
@@ -74,7 +84,9 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                                             <div className="flex items-center justify-between">
                                                 <h4 className="font-semibold text-lg">#{booking.id}</h4>
                                                 <div className="flex gap-2">
-                                                    <BookingPaymentStatusBadge status={ booking.paymentStatus } />
+                                                    <BookingPaymentStatusBadge
+                                                        status={ booking.paymentStatus }
+                                                    />
                                                     <BookingStatusBadge status={ booking.bookingStatus } />
                                                 </div>
                                             </div>
@@ -94,7 +106,9 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                                             <div className="flex items-center gap-2 text-sm">
                                                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                                                 <span className="font-medium">Valor:</span>
-                                                <span className="font-semibold text-green-600">R$ {booking.price.toFixed(2)}</span>
+                                                <span className="font-semibold text-green-600">
+                          R$ {booking.price.toFixed(2)}
+                                                </span>
                                             </div>
                                         </div>
 
@@ -119,7 +133,9 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
 
                                             <div className="text-sm">
                                                 <span className="font-medium">Endereço:</span>
-                                                <p className="text-muted-foreground mt-1">{booking.address}</p>
+                                                <p className="text-muted-foreground mt-1">
+                                                    {booking.address}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -130,7 +146,9 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                                                 <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
                                                 <div>
                                                     <span className="font-medium">Observações:</span>
-                                                    <p className="text-muted-foreground mt-1">{booking.observations}</p>
+                                                    <p className="text-muted-foreground mt-1">
+                                                        {booking.observations}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -143,19 +161,27 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                         {hasMoreBookings && (
                             <div className="flex flex-col items-center gap-3 pt-4">
                                 <div className="text-sm text-muted-foreground">
-                                    {remainingBookings} agendamento{remainingBookings !== 1 ? "s" : ""} restante
+                                    {remainingBookings} agendamento
+                                    {remainingBookings !== 1 ? "s" : ""} restante
                                     {remainingBookings !== 1 ? "s" : ""}
                                 </div>
-                                <Button variant="outline" onClick={ handleLoadMore } disabled={ isLoadingMore } className="gap-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={ handleLoadMore }
+                                    disabled={ isLoadingMore }
+                                    className="gap-2"
+                                >
                                     {isLoadingMore ? (
                                         <>
                                             <Loader2 className="h-4 w-4 animate-spin" />
-                            Carregando...
+                      Carregando...
                                         </>
                                     ) : (
                                         <>
                                             <ChevronDown className="h-4 w-4" />
-                            Carregar mais {Math.min(BOOKINGS_PER_PAGE, remainingBookings)} agendamentos
+                      Carregar mais{" "}
+                                            {Math.min(BOOKINGS_PER_PAGE, remainingBookings)}{" "}
+                      agendamentos
                                         </>
                                     )}
                                 </Button>

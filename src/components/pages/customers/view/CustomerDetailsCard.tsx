@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Separator } from "@/components/ui/separator";
 import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
-import { Customer } from "@/utils/@types/customers";
+import { Customer } from "@/utils/@types/customer";
 
 interface CustomerDetailsCardProps {
   selectedCustomer: Customer | null;
@@ -25,19 +25,13 @@ export function CustomerDetailsCard({
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">
-                                    Nome do Responsável
-                            </span>
-                            <span>
-                                {selectedCustomer?.companyName}
-                            </span>
+                            <span className="font-medium">Nome do Responsável</span>
+                            <span>{selectedCustomer?.companyName}</span>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">
-                                Número do documento:
-                            </span>
+                            <span className="font-medium">Número do documento:</span>
                             <span className="font-mono">
                                 {selectedCustomer?.documentNumber}
                             </span>
@@ -71,7 +65,10 @@ export function CustomerDetailsCard({
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
                     <span>
-            Último registro: {selectedCustomer?.lastBooking ? selectedCustomer?.lastBooking.toLocaleString() : "Não informado"}
+            Último registro:{" "}
+                        {selectedCustomer?.lastBooking
+                            ? selectedCustomer?.lastBooking.toLocaleString()
+                            : "Não informado"}
                     </span>
                 </div>
             </CardContent>

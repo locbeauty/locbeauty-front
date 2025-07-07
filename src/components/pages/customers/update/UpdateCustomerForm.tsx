@@ -7,7 +7,7 @@ import {
     createCustomerFormSchema,
     CreateCustomerFormSchemaType,
 } from "@/lib/zod/CreateCustomerValidation";
-import { Customer } from "@/utils/@types/customers";
+import { Customer } from "@/utils/@types/customer";
 
 interface UpdateCustomerFormProps {
   selectedCustomer: Customer;
@@ -19,7 +19,9 @@ export function UpdateCustomerForm({
     const updateCustomerMethods = useForm<CreateCustomerFormSchemaType>({
         resolver: zodResolver(createCustomerFormSchema),
         defaultValues: {
-            birthdate: selectedCustomer.birthdate ? new Date(selectedCustomer.birthdate) : null,
+            birthdate: selectedCustomer.birthdate
+                ? new Date(selectedCustomer.birthdate)
+                : null,
             cellphone: selectedCustomer.cellphone,
             address: {
                 zipCode: selectedCustomer.address.zipCode,

@@ -1,4 +1,4 @@
-import { Employee } from "../@types/employees";
+import { Employee } from "../@types/employee";
 
 export const employees: Employee[] = [
     {

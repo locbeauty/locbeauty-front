@@ -31,6 +31,7 @@ export function GearsTable() {
             const response = await fetch("http://localhost:3333/api/gears", { credentials: "include" });
 
             const { data } = await response.json();
+            console.log("data: ", data);
             setGears(data);
         }
         getGears();

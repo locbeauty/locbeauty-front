@@ -1,4 +1,4 @@
-import { Customer } from "../@types/customers";
+import { Customer } from "../@types/customer";
 
 export const mockCustomers: Customer[] = [
     {
@@ -14,14 +14,13 @@ export const mockCustomers: Customer[] = [
             zipCode: "54430-350",
             state: {
                 stateName: "Acre",
-                UF: "AC"
+                UF: "AC",
             },
             cityName: "Recife",
             neighborhoodName: "Boa Viagem",
             streetName: "Avenida Beira Mar",
             buildingNumber: "1167",
             addressComplement: null,
-
         },
         documentNumber: "111.111.111-11",
         lastBooking: new Date(),
@@ -39,14 +38,13 @@ export const mockCustomers: Customer[] = [
             zipCode: "54430-350",
             state: {
                 stateName: "Acre",
-                UF: "AC"
+                UF: "AC",
             },
             cityName: "Recife",
             neighborhoodName: "Boa Viagem",
             streetName: "Avenida Beira Mar",
             buildingNumber: "1167",
             addressComplement: "Perto daquela casa",
-
         },
         documentNumber: "111.111.131-21",
         lastBooking: null,
@@ -64,14 +62,13 @@ export const mockCustomers: Customer[] = [
             zipCode: "54430-350",
             state: {
                 stateName: "Acre",
-                UF: "AC"
+                UF: "AC",
             },
             cityName: "Recife",
             neighborhoodName: "Ilha do Retiro",
             streetName: "Avenida Abdias de Carvalho",
             buildingNumber: "0",
             addressComplement: null,
-
         },
         documentNumber: "111.131.131-21",
         lastBooking: new Date(),

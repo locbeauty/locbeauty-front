@@ -1,7 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Employee } from "@/utils/@types/employees";
+import { Employee } from "@/utils/@types/employee";
 import {
     createEmployeeFormSchema,
     CreateEmployeeFormSchemaType,

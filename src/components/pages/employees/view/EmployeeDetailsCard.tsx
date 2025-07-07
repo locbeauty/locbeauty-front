@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Employee } from "@/utils/@types/employees";
+import { Employee } from "@/utils/@types/employee";
 import { Label } from "@/components/ui/label";
 
 interface EmployeeDetailsCardProps {
@@ -36,20 +36,20 @@ export function EmployeeDetailsCard({
     }
 
     // Cálculos de idade e tempo de empresa
-    const age =
-    new Date().getFullYear() - selectedEmployee.birthdate.getFullYear();
+    const age = selectedEmployee.birthdate ?
+        (new Date().getFullYear() - new Date(selectedEmployee.birthdate).getFullYear()) : null;
     const isWorkingToday = Math.random() > 0.3; // Simulação de status
 
     // Endereço formatado
     const fullAddress = selectedEmployee.address
-        ? `${selectedEmployee.address.streetName}, ${
+        ? `${selectedEmployee.address.street.streetName}, ${
             selectedEmployee.address.buildingNumber
         }${
             selectedEmployee.address.addressComplement
                 ? ` - ${selectedEmployee.address.addressComplement}`
                 : ""
-        }, ${selectedEmployee.address.neighborhoodName}, ${
-            selectedEmployee.address.cityName
+        }, ${selectedEmployee.address.neighborhood.neighborhoodName}, ${
+            selectedEmployee.address.city.cityName
         }/${selectedEmployee.address.state.UF}`
         : "Endereço não informado";
 
@@ -80,9 +80,9 @@ export function EmployeeDetailsCard({
                     {selectedEmployee.fullname}
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                    <Badge className={ getRoleBadgeColor(selectedEmployee.roleId) }>
+                    <Badge className={ getRoleBadgeColor(selectedEmployee.role.roleId) }>
                         <Award className="h-3 w-3 mr-1" />
-                        {selectedEmployee.roleId}
+                        {selectedEmployee.role.roleId}
                     </Badge>
                     <Badge
                         variant="outline"
@@ -132,13 +132,17 @@ export function EmployeeDetailsCard({
                   Data de Nascimento:
                                 </Label>
                                 <span className="text-sm">
-                                    {selectedEmployee.birthdate.toLocaleDateString("pt-BR")}
+                                    {selectedEmployee.birthdate ? new Date(selectedEmployee.birthdate).toLocaleDateString("pt-BR") : "Não informado"}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">Idade:</Label>
-                                <span className="text-sm font-semibold">{age} anos</span>
-                            </div>
+                            {
+                                age && (
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">Idade:</Label>
+                                        <span className="text-sm font-semibold">{age} anos</span>
+                                    </div>
+                                )
+                            }
                         </div>
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
@@ -211,19 +215,19 @@ export function EmployeeDetailsCard({
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Filial de Origem:</Label>
                                 <span className="text-sm font-semibold">
-                                    {selectedEmployee.sourceFilialId}
+                                    {selectedEmployee.sourceFilial.filialId}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Filial Atual:</Label>
                                 <span className="text-sm">
-                                    {selectedEmployee.sourceFilialId}
+                                    {selectedEmployee.sourceFilial.filialId}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">CNPJ Regional:</Label>
                                 <span className="font-mono text-xs">
-                                    {selectedEmployee.sourceFilialId}
+                                    {selectedEmployee.sourceFilial.filialId}
                                 </span>
                             </div>
                         </div>
@@ -234,8 +238,8 @@ export function EmployeeDetailsCard({
                                     variant="outline"
                                     className="text-blue-600 border-blue-200"
                                 >
-                                    {selectedEmployee.sourceFilialId} -{" "}
-                                    {selectedEmployee.sourceFilialId}
+                                    {selectedEmployee.sourceFilial.filialId} -{" "}
+                                    {selectedEmployee.sourceFilial.filialId}
                                 </Badge>
                             </div>
                         </div>

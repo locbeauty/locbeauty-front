@@ -29,19 +29,30 @@ export const ESTADOS_BRASILEIROS = {
 } as const;
 
 export type UF = keyof typeof ESTADOS_BRASILEIROS
-export type StateTitle = (typeof ESTADOS_BRASILEIROS)[UF]
+export type StateName = (typeof ESTADOS_BRASILEIROS)[UF]
 
-export type State = {
-    UF: UF
-    stateName: StateTitle
-  }
-
-export type Address = {
-    zipCode: string,
-    state: State,
-    cityName: string,
-    neighborhoodName: string,
-    streetName: string,
-    buildingNumber: string,
-    addressComplement: string | null,
+export interface Address {
+    addressId: string;
+    zipCode: string;
+    buildingNumber: string;
+    addressComplement: string | null;
+    createdAt: string;
+    updatedAt: string;
+    state: {
+      stateId: string;
+      stateName: StateName;
+      UF: UF
+    };
+    city: {
+      cityId: string;
+      cityName: string;
+    };
+    neighborhood: {
+      neighborhoodId: string;
+      neighborhoodName: string;
+    };
+    street: {
+      streetId: string;
+      streetName: string;
+    };
 }

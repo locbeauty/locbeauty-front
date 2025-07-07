@@ -1,7 +1,7 @@
 "use client";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { Button } from "@/components/ui/button";
-import { Employee } from "@/utils/@types/employees";
+import { Employee } from "@/utils/@types/employee";
 import { Eye, Pencil } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import { UpdateEmployeeDialog } from "../update/UpdateEmployeeDialog";
@@ -44,6 +44,8 @@ export function EmployeesTable() {
             });
 
             const { data } = await response.json();
+            console.log(data);
+
             setAllEmployees(data);
         }
         getEmployees();
@@ -72,8 +74,8 @@ export function EmployeesTable() {
                             >
                                 <td className="p-3">{employee.fullname}</td>
                                 <td className="p-3">{employee.documentNumber}</td>
-                                <td className="p-3 text-center">{employee.roleId}</td>
-                                <td className="p-3 text-center">{employee.sourceFilialId}</td>
+                                <td className="p-3 text-center">{employee.role.roleName}</td>
+                                <td className="p-3 text-center">{employee.sourceFilial.description}</td>
                                 <td className="p-3 text-center">{employee.cellphone ?? "-"}</td>
                                 <td className="p-3 text-center">{employee.email ?? "-"}</td>
                                 <td className="p-3 flex justify-center items-center gap-4">
@@ -106,11 +108,11 @@ export function EmployeesTable() {
                             title: employee.fullname,
                             description: "",
                             items: [
-                                { itemLabel: "Função: ", itemInfo: employee.roleId },
-                                { itemLabel: "Email: ", itemInfo: employee.email },
+                                { itemLabel: "Função: ", itemInfo: employee.role.roleName },
+                                { itemLabel: "Email: ", itemInfo: employee.email ?? "-" },
                                 {
                                     itemLabel: "Telefone: ",
-                                    itemInfo: employee.cellphone,
+                                    itemInfo: employee.cellphone ?? "-",
                                 },
                             ],
                         } }
