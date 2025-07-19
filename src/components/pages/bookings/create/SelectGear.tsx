@@ -1,11 +1,9 @@
 "use client";
 
 import {
-    Control,
     Controller,
     ControllerRenderProps,
-    FieldPath,
-    FieldValues,
+    useFormContext,
 } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -30,25 +28,20 @@ import {
 } from "@/components/ui/popover";
 import { useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Gear } from "@/utils/@types/gears";
 import { useAuth } from "@/contexts/auth-provider";
+import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
-type SelectGearProps<T extends FieldValues> = {
-  control: Control<T>;
-  name: FieldPath<T>;
-  setSelectedGear?: Dispatch<SetStateAction<Gear | null>>
-};
-
-export function SelectGear<T extends FieldValues>({
-    name,
-    control,
-    setSelectedGear
-}: SelectGearProps<T>) {
+export function SelectGear() {
     const [ allGears, setAllGears ] = useState<Gear[]>();
     const isMounted = useMounted();
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const user = useAuth();
+
+    const {
+        control,
+    } = useFormContext<CreateBookingFormSchemaType>();
 
     useEffect(() => {
         async function getAllGears() {
@@ -70,12 +63,12 @@ export function SelectGear<T extends FieldValues>({
         <div className="flex flex-col space-y-1">
             <Controller
                 control={ control }
-                name={ name }
+                name="gear"
                 render={ ({ field }) =>
                     isDesktop ? (
-                        <DesktopSelect setSelectedGear={ setSelectedGear } gears={ allGears } field={ field } />
+                        <DesktopSelect gears={ allGears } field={ field } />
                     ) : (
-                        <MobileSelect setSelectedGear={ setSelectedGear } gears={ allGears } field={ field } />
+                        <MobileSelect gears={ allGears } field={ field } />
                     )
                 }
             />
@@ -83,35 +76,25 @@ export function SelectGear<T extends FieldValues>({
     );
 }
 
-function DesktopSelect<T extends FieldValues>({
+function DesktopSelect({
     field,
     gears,
-    setSelectedGear
 }: {
-    // eslint-disable-next-line
-    field: ControllerRenderProps<T, any>;
+    field: ControllerRenderProps<CreateBookingFormSchemaType, "gear">;
     gears: Gear[] | undefined;
-    setSelectedGear?: Dispatch<SetStateAction<Gear | null>>
 }) {
     const [ open, setOpen ] = useState(false);
 
-    const selectedGear = field.value
-        ? gears?.find((gear) => gear.gearId === field.value)
-        : null;
-    useEffect(() => {
-        if (setSelectedGear && selectedGear) {
-            setSelectedGear(selectedGear);
-        }
-    }, [ selectedGear, setSelectedGear ]);
+    const selectedGear = field.value;
 
     return (
         <Popover open={ open } onOpenChange={ setOpen }>
             <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start group cursor-pointer">
                     {selectedGear ? (
-                        <>{selectedGear.name}</>
+                        <>{selectedGear.gearName}</>
                     ) : (
-                        <span className="text-muted-foreground">Selecione a máquina</span>
+                        <span className="text-placeholder group-hover:text-white">Selecione a máquina</span>
                     )}
                 </Button>
             </PopoverTrigger>
@@ -127,34 +110,23 @@ function DesktopSelect<T extends FieldValues>({
     );
 }
 
-function MobileSelect<T extends FieldValues>({
+function MobileSelect({
     field,
     gears,
-    setSelectedGear
 }: {
-    // eslint-disable-next-line
-  field: ControllerRenderProps<T, any>;
+  field: ControllerRenderProps<CreateBookingFormSchemaType, "gear">;
   gears: Gear[] | undefined;
-  setSelectedGear?: Dispatch<SetStateAction<Gear | null>>
 }) {
     const [ open, setOpen ] = useState(false);
 
-    const selectedGear = field.value
-        ? gears?.find((gear) => gear.gearId === field.value)
-        : null;
-
-    useEffect(() => {
-        if (setSelectedGear && selectedGear) {
-            setSelectedGear(selectedGear);
-        }
-    }, [ selectedGear, setSelectedGear ]);
+    const selectedGear = field.value;
 
     return (
         <Drawer open={ open } onOpenChange={ setOpen }>
             <DrawerTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
                     {selectedGear ? (
-                        <>{selectedGear.name}</>
+                        <>{selectedGear.gearName}</>
                     ) : (
                         <span className="text-muted-foreground">Selecione a máquina</span>
                     )}
@@ -180,12 +152,11 @@ function MobileSelect<T extends FieldValues>({
 function GearsList({
     setOpen,
     onChange,
-    // value,
     gears,
 }: {
   setOpen: (_open: boolean) => void;
-  onChange: (_value: string) => void;
-  value: string;
+  onChange: (_value: { gearId: string, gearName: string }) => void;
+  value: { gearId: string, gearName: string };
   gears: Gear[] | undefined;
 }) {
     return (
@@ -199,7 +170,7 @@ function GearsList({
                             key={ gear.gearId }
                             value={ gear.name }
                             onSelect={ () => {
-                                onChange(gear.gearId);
+                                onChange({ gearId: gear.gearId, gearName: gear.name });
                                 setOpen(false);
                             } }
                         >

@@ -17,7 +17,6 @@ export function DashboardHeader({
     const pathname = usePathname();
 
     useEffect(() => {
-        console.log("pathname: ", pathname);
         setSidebarOpen(false);
     }, [ pathname, setSidebarOpen ]);
 

@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShoppingCart, Trash2, Calendar, Clock, Package, User, DollarSign } from "lucide-react";
+import { ShoppingCart, Trash2, Calendar, Clock, Package, User, DollarSign, Scroll } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/contexts/cart-provider";
+import { minutesToHHMM } from "@/utils/minutesToHHMM";
 
 export function CartSheet() {
     const { items, removeItem, clearCart, getTotalPrice, getTotalItems } = useCart();
@@ -59,17 +60,17 @@ export function CartSheet() {
                             <ScrollArea className="flex-1 max-h-[70%]">
                                 <div className="space-y-4 flex flex-col items-center w-full">
                                     {items.map((item) => (
-                                        <Card key={ item.gearId } className="relative w-[90%]">
+                                        <Card key={ item.gear.gearId } className="relative w-[90%]">
                                             <CardHeader className="pb-3">
                                                 <div className="flex items-start justify-between">
                                                     <CardTitle className="text-base flex items-center gap-2">
                                                         <Package className="h-4 w-4 text-primary" />
-                                                        {item.gearId}
+                                                        {item.gear.gearName}
                                                     </CardTitle>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={ () => removeItem(item.gearId) }
+                                                        onClick={ () => removeItem(item.gear.gearId) }
                                                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
@@ -81,7 +82,13 @@ export function CartSheet() {
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <User className="h-3 w-3 text-muted-foreground" />
                                                     <span className="text-muted-foreground">Cliente:</span>
-                                                    <span className="font-medium">{item.customerId}</span>
+                                                    <span className="font-medium">{item.customer.fullname}</span>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <Scroll className="h-3 w-3 text-muted-foreground" />
+                                                    <span className="text-muted-foreground">Documento:</span>
+                                                    <span className="font-medium">{item.customer.documentNumber}</span>
                                                 </div>
 
                                                 <div className="flex items-center gap-2 text-sm">
@@ -94,10 +101,10 @@ export function CartSheet() {
                                                     <Clock className="h-3 w-3 text-muted-foreground" />
                                                     <span className="text-muted-foreground">Horário:</span>
                                                     <span className="font-medium">
-                                                        {item.startHourInMinutes} - {item.startHourInMinutes + item.totalDuration * 60}
+                                                        {minutesToHHMM(item.startHourInMinutes)} - {minutesToHHMM(item.startHourInMinutes + item.totalDuration)}
                                                     </span>
                                                     <Badge variant="secondary" className="text-xs">
-                                                        {item.totalDuration}h
+                                                        {item.totalDuration/60}h
                                                     </Badge>
                                                 </div>
 

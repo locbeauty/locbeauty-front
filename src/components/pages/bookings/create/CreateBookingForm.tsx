@@ -14,7 +14,6 @@ import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-provider";
 import { SelectFilial } from "@/components/shared/SelectFilial";
-import { Gear } from "@/utils/@types/gears";
 import BookingTimeSelector from "./BookingTimeSelector";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { paymentStatuses } from "@/utils/@types/bookings";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-provider";
+import { minutesToHHMM } from "@/utils/minutesToHHMM";
 
 export interface GetDayBookingsResponse {
   hourInMinutes: number,
@@ -40,17 +40,14 @@ export function CreateBookingForm() {
         defaultValues: {
             gearAmount: 0,
             bookingStatus: "Pendente",
+            paymentStatus: "Pendente",
+            price: "",
+            date: undefined,
             filialId: user?.sourceFilial.filialId
         },
     });
 
-    const [ selectedTime, setSelectedTime ] = useState<{
-    start: string
-    end: string
-    duration: number
-  }>();
-
-    const [ selectedGear, setSelectedGear ] = useState<Gear | null>(null);
+    // const [ selectedGear, setSelectedGear ] = useState<Gear | null>(null);
     const [ bookingSchedule, setBookingSchedule ] = useState<GetDayBookingsResponse[] | undefined>();
     const [ maximumGearAmountAvailable, setMaximumGearAmountAvailable ] = useState(0);
 
@@ -58,30 +55,21 @@ export function CreateBookingForm() {
         handleSubmit,
         register,
         watch,
+        setValue,
         reset,
         formState: { errors },
         control,
-        setValue,
     } = createBookingFormMethods;
     const { addItem } = useCart();
 
     const startHour = watch("startHourInMinutes");
+    const watchTotalDurationInMinutes = watch("totalDuration");
     const selectedDate = watch("date");
-    const bookingDuration = watch("totalDuration");
     const watchFilialId = watch("filialId");
-    const watchGearId = watch("gearId");
-    const watchCustomerId = watch("customerId");
+    const watchGearId = watch("gear.gearId");
+    const watchPrice = watch("price");
+    const watchCustomerId = watch("customer.customerId");
     const isDateInPast = selectedDate && selectedDate < new Date();
-
-    useEffect(() => {
-        if (!selectedTime) return;
-
-        const [ hour, minute ] = selectedTime.start.split(":").map(Number);
-        const parsedHour = hour * 60 + minute;
-
-        setValue("startHourInMinutes", parsedHour);
-        setValue("totalDuration", selectedTime.duration);
-    }, [ selectedTime, setValue, startHour ]);
 
     useEffect(() => {
         async function getDayBookings() {
@@ -91,25 +79,27 @@ export function CreateBookingForm() {
             const { data }: {data: GetDayBookingsResponse[]} = await response.json();
             setBookingSchedule(data);
         }
-        if(watchFilialId && watchCustomerId && watchGearId && selectedDate) {
+        if(watchFilialId && watchGearId && selectedDate) {
             getDayBookings();
         }
     }, [ selectedDate, watchFilialId, watchCustomerId, watchGearId ]);
 
     async function handleAddToCart(newBookingData: CreateBookingFormSchemaType) {
 
-        if (!selectedTime || !selectedGear || !selectedDate) {
+        if (!startHour || !watchGearId || !selectedDate) {
             alert("Por favor, preencha todos os campos obrigatórios");
             return;
         }
 
         addItem(newBookingData);
 
-        window.scroll({ top: 0 });
-        reset();
+        toast.success("Agendamento adicionado ao carrinho!", {
+            style: { fontSize: "1rem" },
+        });
 
-        // setSelectedGear(null);
-        // setSelectedTime(null);
+        window.scroll({ top: 0 });
+        setBookingSchedule(undefined);
+        reset();
     };
 
     async function handleCreateBooking(newBookingData: CreateBookingFormSchemaType) {
@@ -183,10 +173,10 @@ export function CreateBookingForm() {
                     Cliente
                                     </Label>
                                     <SelectCustomer />
-                                    {errors.customerId && (
+                                    {errors.customer && errors.customer.customerId && (
                                         <p className="text-sm text-destructive flex items-center gap-1">
                                             <AlertCircle className="h-3 w-3" />
-                                            {errors.customerId.message}
+                                            {errors.customer.customerId.message}
                                         </p>
                                     )}
                                 </div>
@@ -197,11 +187,11 @@ export function CreateBookingForm() {
                                 <Label htmlFor="equipamento" className="text-sm font-medium">
                     Equipamento
                                 </Label>
-                                <SelectGear setSelectedGear={ setSelectedGear } control={ control } name="gearId" />
-                                {errors.gearId && (
+                                <SelectGear />
+                                {errors.gear && errors.gear.gearId && (
                                     <p className="text-sm text-destructive flex items-center gap-1">
                                         <AlertCircle className="h-3 w-3" />
-                                        {errors.gearId.message}
+                                        {errors.gear.gearId.message}
                                     </p>
                                 )}
                             </div>
@@ -213,7 +203,6 @@ export function CreateBookingForm() {
                             control={ control }
                             setMaximumGearAmountAvailable={ setMaximumGearAmountAvailable }
                             bookingSchedule={ bookingSchedule }
-                            setSelectedTime={ setSelectedTime }
                         />
 
                         {/* Amount and Price */}
@@ -239,11 +228,11 @@ export function CreateBookingForm() {
                                                     value={ field.value || 0 }
                                                     onChange={ field.onChange }
                                                     error={ !!errors.gearAmount }
-                                                    disabled={ selectedGear ? false : true }
+                                                    disabled={ watchGearId ? false : true }
                                                     max={ maximumGearAmountAvailable }
                                                 />
                                                 {
-                                                    startHour && selectedDate && bookingDuration && bookingDuration > 0 ? (
+                                                    startHour && selectedDate && watchTotalDurationInMinutes && watchTotalDurationInMinutes > 0 ? (
                                                         <span className="text-xs text-center">Quantidade máxima disponível: {maximumGearAmountAvailable}</span>
                                                     ) : (
                                                         <span className="text-xs text-center">Escolha a data, a hora inicial e a duração da reserva para mostrar a quantidade máxima de unidades disponíveis</span>
@@ -262,7 +251,7 @@ export function CreateBookingForm() {
 
                                 <div className="flex md:flex-row flex-col md:items-end items-center gap-5">
                                     <div className="flex flex-col flex-1">
-                                        <PriceInput register={ register("price") } />
+                                        <PriceInput register={ register("price") } value={ watchPrice } setValue={ setValue } name="price" />
                                         {errors.price && (
                                             <p className="text-sm text-destructive flex items-center gap-1">
                                                 <AlertCircle className="h-3 w-3" />
@@ -325,25 +314,29 @@ export function CreateBookingForm() {
                         </Card>
 
                         {/* Resumo Final */}
-                        {selectedDate && selectedTime && !isDateInPast && (
-                            <Card className="bg-primary/5 border-primary/20">
+                        {selectedDate && startHour && watchTotalDurationInMinutes && watchPrice && !isDateInPast && (
+                            <Card className="bg-primary/5 border-primary/20 w-[80%] ml-auto mr-auto">
                                 <CardHeader>
                                     <CardTitle className="text-lg text-primary">Resumo da Reserva</CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-2">
-                                    <div className="flex gap-15">
+                                <CardContent className="space-y-3">
+                                    <div className="flex justify-between">
                                         <span className="text-muted-foreground">Data:</span>
                                         <span className="font-medium">{selectedDate.toLocaleDateString("pt-BR")}</span>
                                     </div>
-                                    <div className="flex gap-10">
+                                    <div className="flex justify-between">
                                         <span className="text-muted-foreground">Horário:</span>
                                         <span className="font-medium">
-                                            {selectedTime.start} - {selectedTime.end}
+                                            {minutesToHHMM(startHour)} - {minutesToHHMM(startHour + watchTotalDurationInMinutes)}
                                         </span>
                                     </div>
-                                    <div className="flex gap-9">
+                                    <div className="flex justify-between">
                                         <span className="text-muted-foreground">Duração:</span>
-                                        <span className="font-medium">{selectedTime.duration}h</span>
+                                        <span className="font-medium">{watchTotalDurationInMinutes/60}h</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Preço:</span>
+                                        <span className="font-medium">R$ {watchPrice}</span>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -356,14 +349,14 @@ export function CreateBookingForm() {
                                 variant="outline"
                                 // onClick={ handleAddToCart }
                                 className="flex-1 bg-transparent"
-                                disabled={ !selectedTime || !selectedGear }
+                                disabled={ !startHour || !watchGearId }
                             >
                                 <Plus className="h-4 w-4 mr-2" />
                                 <span className="md:flex hidden md:items-center">Adicionar ao Carrinho</span>
                             </Button>
 
                             <Button
-                                disabled={ !selectedTime || !selectedGear }
+                                disabled={ !startHour || !watchGearId }
                                 type="submit"
                                 className="flex-1">
 

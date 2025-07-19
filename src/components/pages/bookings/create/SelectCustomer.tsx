@@ -1,6 +1,6 @@
 "use client";
 
-import { Controller, ControllerRenderProps, FieldValues, useFormContext } from "react-hook-form";
+import { Controller, ControllerRenderProps, useFormContext } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -10,12 +10,13 @@ import { useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
 import { useEffect, useState } from "react";
 import { Customer } from "@/utils/@types/customer";
+import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
-export function SelectCustomer({ name = "customerId", }: { name?: string }) {
+export function SelectCustomer() {
     const isMounted = useMounted();
     const {
         control,
-    } = useFormContext();
+    } = useFormContext<CreateBookingFormSchemaType>();
     const isDesktop = useMediaQuery("(min-width: 768px)");
 
     const [ allCustomers, setAllCustomers ] = useState<Customer[]>([]);
@@ -43,26 +44,26 @@ export function SelectCustomer({ name = "customerId", }: { name?: string }) {
         <div className="flex flex-col space-y-1  w-full">
             <Controller
                 control={ control }
-                name={ name }
+                name="customer"
                 render={ ({ field }) => (isDesktop ? <DesktopSelect allCustomers={ allCustomers } field={ field } /> : <MobileSelect allCustomers={ allCustomers } field={ field } />) }
             />
         </div>
     );
 }
 
-function DesktopSelect({ field, allCustomers }: { field: ControllerRenderProps<FieldValues, string>, allCustomers: Customer[] }) {
+function DesktopSelect({ field, allCustomers }: { field: ControllerRenderProps<CreateBookingFormSchemaType, "customer">, allCustomers: Customer[] }) {
     const [ open, setOpen ] = useState(false);
 
-    const selectedCustomer = field.value ? allCustomers.find((customer) => customer.customerId === field.value) : null;
+    const selectedCustomer = field.value;
 
     return (
         <Popover open={ open } onOpenChange={ setOpen }>
             <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start group cursor-pointer">
                     {selectedCustomer ? (
                         <>{selectedCustomer.fullname} - {hideDocumentNumber(selectedCustomer.documentNumber)}</>
                     ) : (
-                        <span className="text-placeholder">Selecione o cliente</span>
+                        <span className="text-placeholder group-hover:text-white">Selecione o cliente</span>
                     )}
                 </Button>
             </PopoverTrigger>
@@ -73,10 +74,10 @@ function DesktopSelect({ field, allCustomers }: { field: ControllerRenderProps<F
     );
 }
 
-function MobileSelect({ field, allCustomers }: { field: ControllerRenderProps<FieldValues, string>, allCustomers: Customer[] }) {
+function MobileSelect({ field, allCustomers }: { field: ControllerRenderProps<CreateBookingFormSchemaType, "customer">, allCustomers: Customer[] }) {
     const [ open, setOpen ] = useState(false);
 
-    const selectedCustomer = field.value ? allCustomers.find((customer) => customer.customerId === field.value) : null;
+    const selectedCustomer = field.value;
 
     return (
         <Drawer open={ open } onOpenChange={ setOpen }>
@@ -106,8 +107,8 @@ function CustomersList({
     allCustomers
 }: {
   setOpen: (_open: boolean) => void
-  onChange: (_value: string) => void
-  value: string
+  onChange: (_value: { customerId: string, fullname: string, documentNumber: string }) => void
+  value: { customerId: string, fullname: string, documentNumber: string }
   allCustomers: Customer[]
 }) {
     return (
@@ -119,10 +120,16 @@ function CustomersList({
                     {allCustomers.map((customer) => (
                         <CommandItem
                             className="w-[700px]"
-                            key={ customer.customerId }
+                            key={ customer.fullname }
                             value={ customer.fullname }
                             onSelect={ () => {
-                                onChange(customer.customerId);
+                                onChange(
+                                    {
+                                        customerId: customer.customerId,
+                                        fullname: customer.fullname,
+                                        documentNumber: hideDocumentNumber(customer.documentNumber)
+                                    }
+                                );
                                 setOpen(false);
                             } }
                         >

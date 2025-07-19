@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,47 +10,53 @@ import { Calendar, Clock, Timer, CheckCircle2 } from "lucide-react";
 import { GetDayBookingsResponse } from "./CreateBookingForm";
 import { useFormContext } from "react-hook-form";
 import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { minutesToHHMM } from "@/utils/minutesToHHMM";
 
 interface TimePickerProps {
   selectedDate?: Date
-  onTimeChange?: (_startTime: string, _endTime: string, _duration: number) => void
   bookingSchedule: GetDayBookingsResponse[] | undefined
   setMaximumGearAmountAvailable: Dispatch<SetStateAction<number>>
 }
 
-export default function TimePicker({ selectedDate, onTimeChange, bookingSchedule, setMaximumGearAmountAvailable }: TimePickerProps) {
-    const [ selectedStartTime, setSelectedStartTime ] = useState<string>("");
-    const [ duration, setDuration ] = useState(0);
+export default function TimePicker({ selectedDate, bookingSchedule, setMaximumGearAmountAvailable }: TimePickerProps) {
+    const [ durationInMinutes, setDurationInMinutes ] = useState(0);
     const [ selectedHour, setSelectedHour ] = useState<GetDayBookingsResponse | undefined>(undefined);
 
-    const calculateEndTime = (startTime: string, durationHours: number) => {
-        const [ hours, minutes ] = startTime.split(":").map(Number);
-        const totalMinutes = hours * 60 + minutes + durationHours * 60;
-        const endHours = Math.floor(totalMinutes / 60);
-        const endMinutes = totalMinutes % 60;
-        return `${endHours.toString().padStart(2, "0")}:${endMinutes.toString().padStart(2, "0")}`;
+    const calculateEndTime = (startTime: number, durationHoursInMinutes: number) => {
+        const hours = Math.floor(startTime / 60);
+        const minutes = startTime % 60;
+
+        const totalMinutes = hours * 60 + minutes + durationHoursInMinutes;
+        return minutesToHHMM(totalMinutes);
     };
 
-    const handleTimeSelect = (time: string, selectedInitialTimeData: GetDayBookingsResponse) => {
-        setSelectedHour(selectedInitialTimeData);
-        setSelectedStartTime(time);
-        setDuration(0);
-        const endTime = calculateEndTime(time, duration);
-        onTimeChange?.(time, endTime, 0);
-    };
-    const { setValue } = useFormContext<CreateBookingFormSchemaType>();
+    const { setValue, watch, getValues } = useFormContext<CreateBookingFormSchemaType>();
+
+    const watchStartHourInMinutes = watch("startHourInMinutes");
+    const watchGearId = watch("gear.gearId");
+    const watchTotalDuration = watch("totalDuration");
+    const startHour = watch("startHourInMinutes");
+
+    useEffect(() => {
+        const handleShowHourDurations = () => {
+            if(startHour) {
+                const selectedTimeDurations = bookingSchedule?.filter(hour => hour.hourInMinutes === startHour)[0];
+                setSelectedHour(selectedTimeDurations);
+            } else {
+                setSelectedHour(undefined);
+            }
+        };
+        handleShowHourDurations();
+    }, [ bookingSchedule, getValues, startHour ]);
 
     const handleDurationButtonClick = (durationValue: number, maxGearAmount: number) => {
         setValue("gearAmount", 0);
+        setValue("totalDuration", durationValue);
         setMaximumGearAmountAvailable(maxGearAmount);
-        setDuration(durationValue);
-        if (selectedStartTime) {
-            const endTime = calculateEndTime(selectedStartTime, durationValue);
-            onTimeChange?.(selectedStartTime, endTime, durationValue);
-        }
+        setDurationInMinutes(durationValue);
     };
 
-    if (!selectedDate) {
+    if (!selectedDate || !watchGearId) {
         return (
             <Card className="transition-all duration-200 hover:shadow-md">
                 <CardHeader className="pb-4">
@@ -62,7 +68,7 @@ export default function TimePicker({ selectedDate, onTimeChange, bookingSchedule
                 <CardContent>
                     <div className="flex items-center justify-center p-8 text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed">
                         <Calendar className="h-5 w-5 mr-2 shrink-0" />
-                        <span className="text-sm">Selecione uma data primeiro para ver os horários disponíveis</span>
+                        <span className="text-sm">Selecione primeiro uma data e um equipamento para ver os horários disponíveis</span>
                     </div>
                 </CardContent>
             </Card>
@@ -75,10 +81,10 @@ export default function TimePicker({ selectedDate, onTimeChange, bookingSchedule
                 <CardTitle className="flex items-center gap-2 text-lg">
                     <Clock className="h-5 w-5 text-primary" />
           Horário da Reserva
-                    {selectedStartTime && (
+                    {watchStartHourInMinutes && (
                         <Badge variant="secondary" className="ml-auto">
                             <Timer className="h-3 w-3 mr-1" />
-                            {selectedStartTime} - {calculateEndTime(selectedStartTime, duration)} ({duration}h)
+                            {minutesToHHMM(watchStartHourInMinutes)} - {calculateEndTime(watchStartHourInMinutes, durationInMinutes)} ({durationInMinutes/60}h)
                         </Badge>
                     )}
                 </CardTitle>
@@ -96,18 +102,18 @@ export default function TimePicker({ selectedDate, onTimeChange, bookingSchedule
                                     <Button
                                         type="button"
                                         key={ hour.hourInMinutes }
-                                        variant={ selectedStartTime === hour.formattedTime ? "default" : "outline" }
+                                        variant={ watchStartHourInMinutes === hour.hourInMinutes ? "default" : "outline" }
                                         size="sm"
                                         disabled={ !hasSomeAvailableGapTime }
-                                        onClick={ () => handleTimeSelect(hour.formattedTime, hour) }
+                                        onClick={ () => setValue("startHourInMinutes", hour.hourInMinutes) }
                                         className={ `
                                                     relative text-xs h-9 transition-all duration-200
-                                                    ${selectedStartTime === hour.formattedTime ? "ring-2 ring-primary ring-offset-2" : ""}
+                                                    ${watchStartHourInMinutes === hour.hourInMinutes ? "ring-2 ring-primary ring-offset-2" : ""}
                                                     ${!hasSomeAvailableGapTime ? "opacity-50 cursor-not-allowed" : "hover:scale-105"}
                                                 ` }
                                     >
                                         {hour.formattedTime}
-                                        {selectedStartTime === hour.formattedTime && (
+                                        {watchStartHourInMinutes === hour.hourInMinutes && (
                                             <CheckCircle2 className="h-3 w-3 absolute -top-1 -right-1 text-primary bg-background rounded-full" />
                                         )}
                                     </Button>
@@ -116,30 +122,37 @@ export default function TimePicker({ selectedDate, onTimeChange, bookingSchedule
                         }
                     </div>
 
-                    <Separator />
+                    {/* Botões de duração rápida */}
+                    {
+                        selectedHour && (
+                            <>
+                                <Separator />
+                                <div className="space-y-4">
 
-                    {/* Seleção de Duração */}
-                    <div className="space-y-4">
-                        <Label className="text-sm font-medium">Duração da reserva</Label>
+                                    <Label className="text-sm font-medium">Duração da reserva</Label>
 
-                        {/* Botões de duração rápida */}
-                        <div className="flex flex-wrap gap-2">
-                            {selectedHour && selectedHour.availability.map((option) => {
-                                return (
-                                    <Button
-                                        type="button"
-                                        key={ option.durationInMinutes }
-                                        disabled={ !option.available }
-                                        variant={ (duration === option.durationInMinutes / 60 && duration > 0) ? "default" : "outline" }
-                                        size="sm"
-                                        onClick={ () => handleDurationButtonClick(option.durationInMinutes / 60, option.maxGearAmount) }
-                                        className="text-xs"
-                                    >
-                                        {option.durationInMinutes / 60} horas
-                                    </Button>
-                                );})}
-                        </div>
-                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedHour && selectedHour.availability.map((option) => {
+                                            return (
+                                                <Button
+                                                    type="button"
+                                                    key={ option.durationInMinutes }
+                                                    disabled={ !option.available }
+                                                    variant={ watchTotalDuration === option.durationInMinutes ? "default" : "outline" }
+                                                    size="sm"
+                                                    onClick={ () => handleDurationButtonClick(option.durationInMinutes, option.maxGearAmount) }
+                                                    className="text-xs"
+                                                >
+                                                    {option.durationInMinutes / 60} horas
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </>
+                        )
+                    }
+
                 </div>
             </CardContent>
         </Card>

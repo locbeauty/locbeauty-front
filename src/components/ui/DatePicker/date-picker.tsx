@@ -130,7 +130,7 @@ export function DatePicker({
                         ) }
                         tabIndex={ 0 }
                     >
-                        <div className={ cn("flex items-center", !value && "text-placeholder") }>
+                        <div className={ cn("flex items-center cursor-pointer", !value && "text-placeholder") }>
                             <CalendarIcon className="mr-2 size-4" />
                             { displayFormat }
                         </div>

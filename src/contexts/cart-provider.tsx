@@ -2,7 +2,7 @@
 
 import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 interface CartContextType {
   items: CreateBookingFormSchemaType[]
@@ -38,9 +38,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return items.reduce((total, item) => total + item.gearAmount, 0);
     };
 
-    useEffect(() => {
-        console.log("items: ", items);
-    }, [ items ]);
+    // useEffect(() => {
+    //     console.log("items: ", items);
+    // }, [ items ]);
 
     return (
         <CartContext.Provider

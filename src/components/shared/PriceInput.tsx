@@ -2,28 +2,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type React from "react";
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { UseFormRegisterReturn } from "react-hook-form";
+import { Path, UseFormRegisterReturn, UseFormSetValue } from "react-hook-form";
 import { Label } from "../ui/label";
 import { DollarSign } from "lucide-react";
 
-interface PriceInputProps {
+interface PriceInputProps<TFieldValues extends Record<string, any>> {
   label?: string
   placeholder?: string
   value?: string
   onChange?: (_value: string) => void
   error?: string
   register: UseFormRegisterReturn<any>
+  setValue?: UseFormSetValue<TFieldValues>;
+    name: Path<TFieldValues>;
 }
 
-export default function PriceInput({
-    value: initialValue = "",
+export default function PriceInput<TFieldValues extends Record<string, any>>({
     onChange,
     error,
     register,
-}: PriceInputProps) {
-    const [ displayValue, setDisplayValue ] = useState(initialValue);
+    setValue,
+    name,
+    value: displayValue
+}: PriceInputProps<TFieldValues>) {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Remove any non-numeric characters
@@ -38,12 +40,8 @@ export default function PriceInput({
             maximumFractionDigits: 2,
         });
 
-        setDisplayValue(reais);
-
-        // Call the onChange handler with the raw value (in the format XX,XX)
-        if (onChange) {
-            onChange(reais);
-        }
+        if (onChange) onChange(reais);
+        if (setValue) setValue(name, reais as any);
     };
 
     return (

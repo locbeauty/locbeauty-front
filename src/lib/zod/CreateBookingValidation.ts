@@ -2,8 +2,16 @@ import { z } from "zod";
 
 export const createBookingFormSchema = z
     .object({
-        customerId: z.string({ message: "Nome do cliente é obrigatório" }),
-        gearId: z.string({ message: "Nome da máquina é obrigatório" }),
+        // customerId: z.string({ message: "Nome do cliente é obrigatório" }),
+        customer: z.object({
+            customerId: z.string({ message: "ID do cliente é obrigatório" }),
+            fullname: z.string({ message: "Nome do cliente é obrigatório" }),
+            documentNumber: z.string({ message: "documento do cliente é obrigatório" }),
+        }),
+        gear: z.object({
+            gearId: z.string({ message: "ID da máquina é obrigatório" }),
+            gearName: z.string({ message: "Nome da máquina é obrigatório" }),
+        }),
         filialId: z.string(),
         gearAmount: z.number().min(1, { message: "Quantidade deve ser maior que zero." }),
         date: z.date({ message: "Data é obrigatória." })

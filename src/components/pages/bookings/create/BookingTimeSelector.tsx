@@ -1,36 +1,28 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Calendar, AlertCircle } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import TimePicker from "./time-picker";
-import { Control, Controller, FieldValues, Path } from "react-hook-form";
+import { Control, Controller, FieldValues, Path, useFormContext } from "react-hook-form";
 import { GetDayBookingsResponse } from "./CreateBookingForm";
-
-interface SelectedTimeType {
-    start: string;
-    end: string;
-    duration: number;
-}
+import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
 interface BookingTimeSelectorProps<T extends FieldValues> {
     control: Control<T>
     name: Path<T>
-    setSelectedTime: Dispatch<SetStateAction<SelectedTimeType | undefined>>
     bookingSchedule: GetDayBookingsResponse[] | undefined
     setMaximumGearAmountAvailable: Dispatch<SetStateAction<number>>
 }
 
-export default function BookingTimeSelector<T extends FieldValues>({ setSelectedTime, control, name, bookingSchedule, setMaximumGearAmountAvailable }: BookingTimeSelectorProps<T>) {
-    const [ selectedDate, setSelectedDate ] = useState<Date>();
+export default function BookingTimeSelector<T extends FieldValues>({ control, name, bookingSchedule, setMaximumGearAmountAvailable }: BookingTimeSelectorProps<T>) {
+    const { setValue, watch } = useFormContext<CreateBookingFormSchemaType>();
 
-    const handleTimeChange = (startTime: string, endTime: string, duration: number) => {
-        setSelectedTime({ start: startTime, end: endTime, duration });
-    };
+    const watchDate = watch("date");
 
-    const isDateInPast = selectedDate && selectedDate < new Date();
+    const isDateInPast = watchDate && watchDate < new Date();
 
     return (
         <div className="space-y-10">
@@ -55,7 +47,9 @@ export default function BookingTimeSelector<T extends FieldValues>({ setSelected
                                     value={ field.value! }
                                     onChange={ (e) => {
                                         field.onChange(e);
-                                        setSelectedDate(e);
+                                        if(e) {
+                                            setValue("date", e);
+                                        }
                                     } }
                                     placeholder="Selecione a data da reserva"
                                     clearable
@@ -77,8 +71,7 @@ export default function BookingTimeSelector<T extends FieldValues>({ setSelected
             <TimePicker
                 setMaximumGearAmountAvailable={ setMaximumGearAmountAvailable }
                 bookingSchedule={ bookingSchedule }
-                selectedDate={ selectedDate && !isDateInPast ? selectedDate : undefined }
-                onTimeChange={ handleTimeChange }
+                selectedDate={ watchDate && !isDateInPast ? watchDate : undefined }
             />
         </div>
     );
