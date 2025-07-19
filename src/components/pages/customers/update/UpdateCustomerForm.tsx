@@ -23,15 +23,6 @@ export function UpdateCustomerForm({
                 ? new Date(selectedCustomer.birthdate)
                 : null,
             cellphone: selectedCustomer.cellphone,
-            address: {
-                zipCode: selectedCustomer.address.zipCode,
-                stateName: selectedCustomer.address.state.stateName,
-                cityName: selectedCustomer.address.cityName,
-                neighborhoodName: selectedCustomer.address.neighborhoodName,
-                streetName: selectedCustomer.address.streetName,
-                buildingNumber: selectedCustomer.address.buildingNumber,
-                addressComplement: selectedCustomer.address.addressComplement,
-            },
             documentNumber: selectedCustomer.documentNumber,
             companyName: selectedCustomer.companyName,
             fullname: selectedCustomer.fullname,
