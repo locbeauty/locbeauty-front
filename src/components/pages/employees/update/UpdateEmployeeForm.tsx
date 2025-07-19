@@ -20,19 +20,11 @@ export function UpdateEmployeeForm({
         defaultValues: {
             birthdate: selectedEmployee.birthdate,
             cellphone: selectedEmployee.cellphone,
-            address: {
-                zipCode: selectedEmployee.address.zipCode,
-                cityName: selectedEmployee.address.cityName,
-                buildingNumber: selectedEmployee.address.buildingNumber,
-                addressComplement: selectedEmployee.address.addressComplement,
-                neighborhoodName: selectedEmployee.address.neighborhoodName,
-                stateName: selectedEmployee.address.state.stateName,
-            },
             documentNumber: selectedEmployee.documentNumber,
             email: selectedEmployee.email,
             fullname: selectedEmployee.fullname,
-            roleId: selectedEmployee.roleId,
-            sourceFilialId: selectedEmployee.sourceFilialId,
+            roleId: selectedEmployee.role,
+            sourceFilialId: selectedEmployee.sourceFilial.filialId,
         },
     });
 
