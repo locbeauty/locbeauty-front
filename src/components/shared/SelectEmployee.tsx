@@ -8,7 +8,7 @@ import {
     SelectContent,
     SelectItem,
 } from "@/components/ui/select";
-import { employees } from "@/utils/mocks/employees";
+// import { employees } from "@/utils/mocks/employees";
 import { useEffect, useState } from "react";
 import { Employee } from "@/utils/@types/employee";
 
@@ -21,12 +21,10 @@ type SelectEmployeeProps<T extends FieldValues> = {
 export function SelectEmployee<T extends FieldValues>({
     control,
     name,
-    managerEmployeeId,
+    // managerEmployeeId,
 }: SelectEmployeeProps<T>) {
-    const selectedEmployee = employees.find(
-        (employee) => employee.employeeId === managerEmployeeId
-    );
     const [ allEmployees, setAllEmployees ] = useState<Employee[]>([]);
+    // const [ selectedEmployee, setSelectedEmployee ] = useState<Employee | null>(null);
 
     useEffect(() => {
         const getEmployees = async () => {
@@ -58,7 +56,7 @@ export function SelectEmployee<T extends FieldValues>({
                     <SelectContent>
                         {allEmployees.map((employee) => (
                             <SelectItem
-                                defaultValue={ selectedEmployee?.fullname }
+                                // defaultValue={ selectedEmployee?.fullname }
                                 key={ employee.employeeId }
                                 value={ employee.fullname }
                             >
