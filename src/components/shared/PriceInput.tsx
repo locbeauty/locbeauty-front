@@ -4,9 +4,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { UseFormRegisterReturn } from "react-hook-form";
-import { DollarSign } from "lucide-react";
 
 interface PriceInputProps {
   label?: string
