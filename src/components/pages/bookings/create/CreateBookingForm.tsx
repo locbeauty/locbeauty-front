@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectGear } from "./SelectGear";
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
-import { AlertCircle, User, Package, MessageSquare, DollarSign } from "lucide-react";
+import { AlertCircle, User, Package, MessageSquare, Plus, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ import { parseStringToCents } from "@/utils/parseStringToCents";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { paymentStatuses } from "@/utils/@types/bookings";
+import { Button } from "@/components/ui/button";
 
 export interface GetDayBookingsResponse {
   hourInMinutes: number,
@@ -100,7 +101,7 @@ export function CreateBookingForm() {
         };
 
         try {
-            const response = await fetch("http://localhost:3333/api/bookings/create", {
+            const response = await fetch("http://192.168.0.39:3333/api/bookings/create", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -129,7 +130,7 @@ export function CreateBookingForm() {
 
     return (
         <div className="">
-            <div className="ml-5 space-y-2 mb-8 flex flex-col">
+            <div className="ml-5 space-y-2 mb-8 flex flex-col items-center">
                 {
                     user?.role === "Gerente" && (
                         <Controller
@@ -155,7 +156,7 @@ export function CreateBookingForm() {
                             <CardHeader className="pb-4">
                                 <CardTitle className="flex items-center gap-2 text-lg">
                                     <User className="h-5 w-5 text-primary" />
-                  Informações do Cliente
+                  Informações básicas
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6 w-full">
@@ -202,7 +203,7 @@ export function CreateBookingForm() {
                             <CardHeader className="pb-4">
                                 <CardTitle className="flex items-center gap-2 text-lg">
                                     <Package className="h-5 w-5 text-primary" />
-                  Informações do equipamento
+                  Quantidade e valor
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6">
@@ -241,12 +242,8 @@ export function CreateBookingForm() {
                                     )}
                                 </div>
 
-                                <div className="flex items-end gap-4">
-                                    <div className="flex flex-col">
-                                        <Label htmlFor="price-input" className="gap-1 flex items-center">
-                                            <DollarSign className="h-4 w-4" />
-      Preço
-                                        </Label>
+                                <div className="flex md:flex-row flex-col md:items-end items-center gap-5">
+                                    <div className="flex flex-col flex-1">
                                         <PriceInput register={ register("price") } />
                                         {errors.price && (
                                             <p className="text-sm text-destructive flex items-center gap-1">
@@ -261,7 +258,7 @@ export function CreateBookingForm() {
                                             name="paymentStatus"
                                             render={ ({ field }) => (
                                                 <Select value={ field.value } onValueChange={ field.onChange }>
-                                                    <SelectTrigger className="w-[180px]">
+                                                    <SelectTrigger className="">
                                                         <SelectValue placeholder="Status de pagamento" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -333,9 +330,29 @@ export function CreateBookingForm() {
                                 </CardContent>
                             </Card>
                         )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                // onClick={ handleAddToCart }
+                                className="flex-1 bg-transparent"
+                                disabled={ !selectedTime || !selectedGear }
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                <span className="md:flex hidden md:items-center">Adicionar ao Carrinho</span>
+                            </Button>
+
+                            <Button type="submit" className="flex-1">
+                                <ShoppingCart className="h-4 w-4 mr-2" />
+                                <span className="md:flex hidden md:items-center">Criar Reserva Direta</span>
+                            </Button>
+                        </div>
                     </div>
                 </FormProvider>
             </form>
         </div>
     );
+
 }

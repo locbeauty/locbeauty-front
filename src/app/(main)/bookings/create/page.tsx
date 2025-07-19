@@ -1,10 +1,7 @@
 "use client";
 import { CreateBookingForm } from "@/components/pages/bookings/create/CreateBookingForm";
-import { CreationPageFooter } from "@/components/shared/CreationPageFooter";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { ROUTES } from "@/utils/routes";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -30,15 +27,7 @@ export default function CreateBookingPage() {
                 </div>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Dados do Agendamento</CardTitle>
-                    <CardDescription>Preencha os dados do agendamento</CardDescription>
-                </CardHeader>
-                <CreateBookingForm />
-            </Card>
-
-            <CreationPageFooter cancelUrl={ ROUTES.BOOKINGS } formId="new-booking-form" />
+            <CreateBookingForm />
         </div>
     );
 }
