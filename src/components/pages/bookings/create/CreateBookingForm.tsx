@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { paymentStatuses } from "@/utils/@types/bookings";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/contexts/cart-provider";
 
 export interface GetDayBookingsResponse {
   hourInMinutes: number,
@@ -62,6 +63,7 @@ export function CreateBookingForm() {
         control,
         setValue,
     } = createBookingFormMethods;
+    const { addItem } = useCart();
 
     const startHour = watch("startHourInMinutes");
     const selectedDate = watch("date");
@@ -94,6 +96,22 @@ export function CreateBookingForm() {
         }
     }, [ selectedDate, watchFilialId, watchCustomerId, watchGearId ]);
 
+    async function handleAddToCart(newBookingData: CreateBookingFormSchemaType) {
+
+        if (!selectedTime || !selectedGear || !selectedDate) {
+            alert("Por favor, preencha todos os campos obrigatórios");
+            return;
+        }
+
+        addItem(newBookingData);
+
+        window.scroll({ top: 0 });
+        reset();
+
+        // setSelectedGear(null);
+        // setSelectedTime(null);
+    };
+
     async function handleCreateBooking(newBookingData: CreateBookingFormSchemaType) {
         const bookingInfoWithPrice = {
             ...newBookingData,
@@ -118,8 +136,7 @@ export function CreateBookingForm() {
                 toast.success("Agendamento criado com sucesso!", {
                     style: { fontSize: "1rem" },
                 });
-                window.scroll({ top: 0 });
-                reset();
+
             }
 
             setBookingSchedule(undefined);
@@ -130,7 +147,7 @@ export function CreateBookingForm() {
 
     return (
         <div className="">
-            <div className="ml-5 space-y-2 mb-8 flex flex-col items-center">
+            <div className="ml-5 space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
                 {
                     user?.role === "Gerente" && (
                         <Controller
@@ -146,9 +163,10 @@ export function CreateBookingForm() {
                         />
                     )
                 }
+
             </div>
 
-            <form id="new-booking-form" onSubmit={ handleSubmit(handleCreateBooking) }>
+            <form id="new-booking-form" onSubmit={ handleSubmit(handleAddToCart) }>
                 <FormProvider { ...createBookingFormMethods }>
                     <div className="flex flex-col gap-10">
                         {/* Customer and Gear Selection */}
@@ -334,7 +352,7 @@ export function CreateBookingForm() {
                         {/* Action Buttons */}
                         <div className="flex gap-3 pt-4">
                             <Button
-                                type="button"
+                                type="submit"
                                 variant="outline"
                                 // onClick={ handleAddToCart }
                                 className="flex-1 bg-transparent"
@@ -344,7 +362,11 @@ export function CreateBookingForm() {
                                 <span className="md:flex hidden md:items-center">Adicionar ao Carrinho</span>
                             </Button>
 
-                            <Button type="submit" className="flex-1">
+                            <Button
+                                disabled={ !selectedTime || !selectedGear }
+                                type="submit"
+                                className="flex-1">
+
                                 <ShoppingCart className="h-4 w-4 mr-2" />
                                 <span className="md:flex hidden md:items-center">Criar Reserva Direta</span>
                             </Button>

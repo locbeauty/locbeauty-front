@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
 
 import { UserDropdown } from "./UserDropdown";
+import { CartSheet } from "@/components/pages/bookings/create/cart-sheet";
+import { ROUTES } from "@/utils/routes";
 
 export function DashboardHeader({
     setSidebarOpen,
@@ -15,6 +17,7 @@ export function DashboardHeader({
     const pathname = usePathname();
 
     useEffect(() => {
+        console.log("pathname: ", pathname);
         setSidebarOpen(false);
     }, [ pathname, setSidebarOpen ]);
 
@@ -30,8 +33,17 @@ export function DashboardHeader({
                     <Menu className="h-6 w-6" />
                     <span className="sr-only">Toggle sidebar</span>
                 </Button>
-                <div className="flex items-center ml-auto">
-                    <UserDropdown />
+                <div className="flex gap-4 items-center ml-auto">
+                    {
+                        pathname ===  ROUTES.CREATE_BOOKING && (
+                            <div className="flex">
+                                <CartSheet />
+                            </div>
+                        )
+                    }
+                    <div className="flex items-center ml-auto">
+                        <UserDropdown />
+                    </div>
                 </div>
             </div>
         </header>
