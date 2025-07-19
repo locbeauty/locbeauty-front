@@ -9,11 +9,13 @@ interface DocumentInputProps {
   register?: UseFormRegisterReturn;
   disabled?: boolean
   placeholder?: string
+  isCPF?: boolean
 }
 
 export default function DocumentInput({
     register,
     disabled = false,
+    isCPF = false,
     placeholder = "000.000.000-00 ou 00.000.000/0000-00"
 }: DocumentInputProps) {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -22,7 +24,7 @@ export default function DocumentInput({
         if (!inputRef.current) return;
 
         const maskOptions = {
-            mask: [ "000.000.000-00", "00.000.000/0000-00" ]
+            mask: isCPF ? [ "000.000.000-00" ] : [ "000.000.000-00", "00.000.000/0000-00" ]
         };
 
         const mask = IMask(inputRef.current, maskOptions);
@@ -30,7 +32,7 @@ export default function DocumentInput({
         return () => {
             mask.destroy();
         };
-    }, []);
+    }, [ isCPF ]);
 
     return (
         <Input

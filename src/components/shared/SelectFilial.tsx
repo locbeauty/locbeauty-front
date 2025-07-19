@@ -14,11 +14,13 @@ import { Filial } from "@/utils/@types/filials";
 type SelectFilialProps<T extends FieldValues> = {
   control: Control<T>;
   name: FieldPath<T>;
+  defaultFilial?: string
 };
 
 export function SelectFilial<T extends FieldValues>({
     control,
     name,
+    defaultFilial
 }: SelectFilialProps<T>) {
     const [ allFilials, setAllFilials ] = useState<Filial[]>([]);
 
@@ -31,7 +33,6 @@ export function SelectFilial<T extends FieldValues>({
                 },
             });
             const { data }: { data: Filial[] } = await response.json();
-            console.log("DATA: ", data);
             setAllFilials(data);
         }
         handleGetAllFilials();
@@ -41,7 +42,7 @@ export function SelectFilial<T extends FieldValues>({
             name={ name }
             control={ control }
             render={ ({ field }) => (
-                <Select onValueChange={ field.onChange } value={ field.value }>
+                <Select defaultValue={ defaultFilial } onValueChange={ field.onChange } value={ field.value }>
                     <SelectTrigger className="w-full md:w-[200px] data-[placeholder]:text-placeholder">
                         <SelectValue placeholder="Selecione uma filial" />
                     </SelectTrigger>

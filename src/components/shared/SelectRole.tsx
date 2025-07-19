@@ -2,8 +2,7 @@
 
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { ROLE } from "@/utils/roles";
-import { useEffect, useState } from "react";
+import { ROLES } from "@/utils/roles";
 
 type SelectRoleProps<T extends FieldValues> = {
   control: Control<T>
@@ -11,17 +10,17 @@ type SelectRoleProps<T extends FieldValues> = {
 }
 
 export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleProps<T>) {
-    const [ allRoles, setAllRoles ] = useState<ROLE[]>([]);
+    // const [ allRoles, setAllRoles ] = useState<ROLES[]>([]);
 
-    useEffect(() => {
-        const getEmployees = async () => {
-            const response = await fetch("http://localhost:3333/api/roles", { credentials: "include" });
-            const { data } = await response.json();
-            console.log("DATA: ", data);
-            setAllRoles(data);
-        };
-        getEmployees();
-    }, []);
+    // useEffect(() => {
+    //     const getEmployees = async () => {
+    //         const response = await fetch("http://localhost:3333/api/roles", { credentials: "include" });
+    //         const { data } = await response.json();
+    //         console.log("DATA: ", data);
+    //         setAllRoles(data);
+    //     };
+    //     getEmployees();
+    // }, []);
     return (
         <Controller
             name={ name }
@@ -36,10 +35,10 @@ export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleP
                             />
                         </SelectTrigger>
                         <SelectContent>
-                            { allRoles.map((role) => {
+                            { ROLES.map((role) => {
                                 return (
-                                    <SelectItem key={ role.roleId } value={ role.roleId }>
-                                        { role.roleName }
+                                    <SelectItem key={ role } value={ role }>
+                                        { role }
                                     </SelectItem>
                                 );
 

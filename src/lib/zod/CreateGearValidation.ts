@@ -9,19 +9,33 @@ export const createGearFormSchema = z.object({
             message: "Nome do equipamento deve ter no máximo 100 caracteres",
         }),
     description: z.string().trim().optional(),
-    acquisitionDate: z
-        .date({ message: "Data de aquisição é obrigatória" })
-        .refine((date) => !date || date <= new Date(), {
-            message: "Data de aquisição não pode ser no futuro",
-        }),
     sourceFilialId: z
         .string({ message: "Filial é obrigatória" })
         .trim()
         .min(1, { message: "Filial é obrigatória" }),
     transferable: z.boolean(),
+    // outOfServiceUnits: z.number().default(0),
+    // availableUnits: z.number().default(0),
     availableUnits: z.number({
         message: "Número de unidades disponíveis é obrigatório",
     }),
+    acquisitionDate: z
+        .date({ message: "Data de aquisição é obrigatória" })
+        .refine((date) => !date || date <= new Date(), {
+            message: "Data de aquisição não pode ser no futuro",
+        }),
 });
 
 export type CreateGearFormSchemaType = z.infer<typeof createGearFormSchema>;
+
+// gearId: string,
+// name: string,
+// description: string,
+// filialId: string,
+// availableUnits: number,
+// outOfServiceUnits: number,
+// totalUnits: number,
+// acquisitionDate: Date | null,
+// transferable: boolean,
+// nextMaintenance: Date | null,
+// lastMaintenance: Date | null,

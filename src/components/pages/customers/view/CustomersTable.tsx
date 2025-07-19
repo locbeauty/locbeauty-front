@@ -26,7 +26,6 @@ export function CustomersTable() {
                 credentials: "include",
             });
             const { data }: { data: Customer[] } = await response.json();
-            console.log(data);
             setCustomers(data);
         }
         handleGetAllCustomers();

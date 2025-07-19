@@ -10,10 +10,7 @@ export interface Employee {
   password: null;
   createdAt: Date;
   updatedAt: Date;
-  role: {
-    roleId: string;
-    roleName: string;
-  };
+  role: string
   sourceFilial: {
     filialId: string;
     description: string;

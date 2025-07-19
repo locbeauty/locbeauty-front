@@ -45,7 +45,6 @@ export function FilialsTable() {
                 }
             });
             const { data }: { data: Filial[] } = await response.json();
-            console.log("DATA: ", data);
             setAllFilials(data);
         }
         handleGetAllFilials();
@@ -72,8 +71,8 @@ export function FilialsTable() {
                                 <td className="p-3">{filial.description}</td>
                                 <td className="p-3">{filial.managerEmployeeId}</td>
                                 <td className="p-3">
-                                    {filial.address.streetName}, {filial.address.buildingNumber} -{" "}
-                                    {filial.address.cityName}/{filial.address.state.UF}{" "}
+                                    {filial.address.street.streetName}, {filial.address.buildingNumber} -{" "}
+                                    {filial.address.city.cityName}/{filial.address.state.UF}{" "}
                                 </td>
                                 <td className="p-3">{filial.cellphone}</td>
                                 <td className="p-3">{filial.email}</td>

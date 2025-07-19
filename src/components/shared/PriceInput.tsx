@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UseFormRegisterReturn } from "react-hook-form";
+import { DollarSign } from "lucide-react";
 
 interface PriceInputProps {
   label?: string
@@ -47,9 +48,6 @@ export default function PriceInput({
 
     return (
         <div className="flex flex-col gap-2 mt-4">
-            <Label htmlFor="price-input" className="gap-1">
-                Preço
-            </Label>
             <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                 <Input

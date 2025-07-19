@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { createContext, useContext, useEffect, useState } from "react";
 
 type User = {
@@ -7,6 +8,10 @@ type User = {
     employeeName: string
     role: string
     email: string | null
+    sourceFilial: {
+            filialId: string,
+            description: string,
+        }
 }
 
 type AuthContextType = {
@@ -44,9 +49,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         fetchUser();
     }, []);
 
+    // useEffect(() => {
+    //     console.log("user: ", user);
+    // }, [ user ]);
+
     return (
         <AuthContext.Provider value={ { user, isLoading } }>
-            {children}
+            {user ? children : (
+                <div className="h-screen flex justify-center items-center">
+                    <Loader2 size={ 28 } className="animate-spin" />
+                </div>
+            )}
         </AuthContext.Provider>
     );
 }

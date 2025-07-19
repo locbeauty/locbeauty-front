@@ -44,7 +44,6 @@ export function EmployeesTable() {
             });
 
             const { data } = await response.json();
-            console.log(data);
 
             setAllEmployees(data);
         }
@@ -74,7 +73,7 @@ export function EmployeesTable() {
                             >
                                 <td className="p-3">{employee.fullname}</td>
                                 <td className="p-3">{employee.documentNumber}</td>
-                                <td className="p-3 text-center">{employee.role.roleName}</td>
+                                <td className="p-3 text-center">{employee.role}</td>
                                 <td className="p-3 text-center">{employee.sourceFilial.description}</td>
                                 <td className="p-3 text-center">{employee.cellphone ?? "-"}</td>
                                 <td className="p-3 text-center">{employee.email ?? "-"}</td>
@@ -108,7 +107,7 @@ export function EmployeesTable() {
                             title: employee.fullname,
                             description: "",
                             items: [
-                                { itemLabel: "Função: ", itemInfo: employee.role.roleName },
+                                { itemLabel: "Função: ", itemInfo: employee.role },
                                 { itemLabel: "Email: ", itemInfo: employee.email ?? "-" },
                                 {
                                     itemLabel: "Telefone: ",

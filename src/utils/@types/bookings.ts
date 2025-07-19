@@ -1,5 +1,7 @@
 export type BookingStatuses = "Pendente" | "Concluido" | "Cancelado"
-export type PaymentStatuses = "Pendente" | "Parcial" | "Pago"
+export const paymentStatuses = [ "Pendente", "Parcial", "Pago" ] as const;
+
+export type PaymentStatuses = (typeof paymentStatuses)[number];
 
 export type Booking = {
   id: number;

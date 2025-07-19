@@ -157,7 +157,7 @@ export function UpdateGearDialog({
                                     name="acquisitionDate"
                                     value={
                                         selectedGear.acquisitionDate
-                                            ? selectedGear.acquisitionDate.toLocaleDateString("pt-BR")
+                                            ? selectedGear.acquisitionDate && new Date(selectedGear.acquisitionDate).toLocaleDateString("pt-BR")
                                             : "Não informado"
                                     }
                                     onChange={ handleInputChange }

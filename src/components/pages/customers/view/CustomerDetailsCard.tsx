@@ -67,7 +67,7 @@ export function CustomerDetailsCard({
                     <span>
             Último registro:{" "}
                         {selectedCustomer?.lastBooking
-                            ? selectedCustomer?.lastBooking.toLocaleString()
+                            ? new Date(selectedCustomer?.lastBooking).toLocaleString()
                             : "Não informado"}
                     </span>
                 </div>

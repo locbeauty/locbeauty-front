@@ -21,7 +21,6 @@ export function CreateGearForm() {
         resolver: zodResolver(createGearFormSchema),
         defaultValues: {
             transferable: false,
-            availableUnits: 0,
         },
     });
 
