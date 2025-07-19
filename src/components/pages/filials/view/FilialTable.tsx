@@ -46,6 +46,8 @@ export function FilialsTable() {
             });
             const { data }: { data: Filial[] } = await response.json();
             setAllFilials(data);
+
+            return data;
         }
         handleGetAllFilials();
     }, []);

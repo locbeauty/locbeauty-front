@@ -80,9 +80,9 @@ export function EmployeeDetailsCard({
                     {selectedEmployee.fullname}
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                    <Badge className={ getRoleBadgeColor(selectedEmployee.role.roleId) }>
+                    <Badge className={ getRoleBadgeColor(selectedEmployee.role) }>
                         <Award className="h-3 w-3 mr-1" />
-                        {selectedEmployee.role.roleId}
+                        {selectedEmployee.role}
                     </Badge>
                     <Badge
                         variant="outline"

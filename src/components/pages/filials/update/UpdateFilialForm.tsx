@@ -23,15 +23,15 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
     const updateFilialMethods = useForm<CreateFilialFormSchemaType>({
         resolver: zodResolver(createFilialFormSchema),
         defaultValues: {
-            address: {
-                addressComplement: selectedFilial.address.addressComplement,
-                zipCode: selectedFilial.address.zipCode,
-                cityName: selectedFilial.address.cityName,
-                buildingNumber: selectedFilial.address.buildingNumber,
-                neighborhoodName: selectedFilial.address.neighborhoodName,
-                stateName: selectedFilial.address.state.stateName,
-                streetName: selectedFilial.address.streetName,
-            },
+            // address: {
+            //     addressComplement: selectedFilial.address.addressComplement,
+            //     zipCode: selectedFilial.address.zipCode,
+            //     cityName: selectedFilial.address.cityName,
+            //     buildingNumber: selectedFilial.address.buildingNumber,
+            //     neighborhoodName: selectedFilial.address.neighborhoodName,
+            //     stateName: selectedFilial.address.state.stateName,
+            //     streetName: selectedFilial.address.streetName,
+            // },
             cellphone: selectedFilial.cellphone,
             CNPJ: selectedFilial.CNPJ,
             email: selectedFilial.email,
