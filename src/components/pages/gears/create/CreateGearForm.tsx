@@ -21,6 +21,7 @@ export function CreateGearForm() {
         resolver: zodResolver(createGearFormSchema),
         defaultValues: {
             transferable: false,
+            sourceFilialId: ""
         },
     });
 
@@ -78,15 +79,15 @@ export function CreateGearForm() {
                                 id="name"
                                 placeholder="Nome do equipamento"
                                 className={ `placeholder:text-sm placeholder:text-placeholder ${
-                                    errors.name
+                                    errors.gearName
                                         ? "border-destructive focus-visible:ring-destructive"
                                         : ""
                                 }` }
-                                { ...register("name") }
+                                { ...register("gearName") }
                             />
-                            {errors.name && (
+                            {errors.gearName && (
                                 <p className="text-sm text-destructive mt-2">
-                                    {errors.name.message}
+                                    {errors.gearName.message}
                                 </p>
                             )}
                         </div>
@@ -125,21 +126,21 @@ export function CreateGearForm() {
                     </div>
                 </div>
                 <div className="space-y-2 flex-1 mt-4">
-                    <Label htmlFor="availableUnits">Unidades disponíveis</Label>
+                    <Label htmlFor="totalUnits">Estoque</Label>
                     <Controller
                         control={ control }
-                        name="availableUnits"
+                        name="totalUnits"
                         render={ ({ field }) => (
                             <AmountControlButton
                                 value={ field.value || 0 }
                                 onChange={ field.onChange }
-                                error={ !!errors.availableUnits }
+                                error={ !!errors.totalUnits }
                             />
                         ) }
                     />
-                    {errors.availableUnits && (
+                    {errors.totalUnits && (
                         <p className="text-sm text-destructive mt-2">
-                            {errors.availableUnits.message}
+                            {errors.totalUnits.message}
                         </p>
                     )}
                 </div>

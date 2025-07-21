@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createGearFormSchema = z.object({
-    name: z
+    gearName: z
         .string({ message: "Nome do equipamento é obrigatório" })
         .trim()
         .min(1, { message: "Nome do equipamento é obrigatório" })
@@ -16,7 +16,7 @@ export const createGearFormSchema = z.object({
     transferable: z.boolean(),
     // outOfServiceUnits: z.number().default(0),
     // availableUnits: z.number().default(0),
-    availableUnits: z.number({
+    totalUnits: z.number({
         message: "Número de unidades disponíveis é obrigatório",
     }),
     acquisitionDate: z

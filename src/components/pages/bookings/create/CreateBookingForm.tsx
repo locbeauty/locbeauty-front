@@ -8,14 +8,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectGear } from "./SelectGear";
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
-import { AlertCircle, User, Package, MessageSquare, Plus, ShoppingCart } from "lucide-react";
+import { AlertCircle, User, Package, MessageSquare, Plus, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-provider";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import BookingTimeSelector from "./BookingTimeSelector";
-import { parseStringToCents } from "@/utils/parseStringToCents";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { paymentStatuses } from "@/utils/@types/bookings";
@@ -42,38 +41,48 @@ export function CreateBookingForm() {
             bookingStatus: "Pendente",
             paymentStatus: "Pendente",
             price: "",
-            date: undefined,
-            filialId: user?.sourceFilial.filialId
+            filialId: user?.sourceFilial.filialId,
         },
     });
 
-    // const [ selectedGear, setSelectedGear ] = useState<Gear | null>(null);
     const [ bookingSchedule, setBookingSchedule ] = useState<GetDayBookingsResponse[] | undefined>();
     const [ maximumGearAmountAvailable, setMaximumGearAmountAvailable ] = useState(0);
+    const [ shouldCheckout, setShouldCheckout ] = useState(false);
 
     const {
         handleSubmit,
+        reset,
         register,
         watch,
         setValue,
-        reset,
         formState: { errors },
         control,
     } = createBookingFormMethods;
-    const { addItem } = useCart();
+
+    const { addItem, getTotalItems, items, clearCart, handleCheckout } = useCart();
 
     const startHour = watch("startHourInMinutes");
     const watchTotalDurationInMinutes = watch("totalDuration");
+    const watchGearAmount = watch("gearAmount");
     const selectedDate = watch("date");
     const watchFilialId = watch("filialId");
-    const watchGearId = watch("gear.gearId");
+    const watchGearId = watch("gear");
     const watchPrice = watch("price");
-    const watchCustomerId = watch("customer.customerId");
     const isDateInPast = selectedDate && selectedDate < new Date();
 
     useEffect(() => {
+        setValue("startHourInMinutes", 0);
+        setValue("totalDuration", 0);
+        setMaximumGearAmountAvailable(0);
+    }, [ watchGearId ]);
+
+    useEffect(() => {
+        setBookingSchedule(undefined);
+    }, [ items ]);
+
+    useEffect(() => {
         async function getDayBookings() {
-            const response = await fetch(`http://localhost:3333/api/bookings?filialId=${watchFilialId}&gearId=${watchGearId}&date=${selectedDate}`, {
+            const response = await fetch(`http://localhost:3333/api/bookings?filialId=${watchFilialId}&gearId=${watchGearId.gearId}&date=${selectedDate}`, {
                 credentials: "include",
             });
             const { data }: {data: GetDayBookingsResponse[]} = await response.json();
@@ -82,81 +91,72 @@ export function CreateBookingForm() {
         if(watchFilialId && watchGearId && selectedDate) {
             getDayBookings();
         }
-    }, [ selectedDate, watchFilialId, watchCustomerId, watchGearId ]);
+    }, [ selectedDate, watchFilialId, watchGearId ]);
 
-    async function handleAddToCart(newBookingData: CreateBookingFormSchemaType) {
-
+    async function handleAddToCart(newBookingData: CreateBookingFormSchemaType, showAddToCartToast?: boolean) {
         if (!startHour || !watchGearId || !selectedDate) {
             alert("Por favor, preencha todos os campos obrigatórios");
             return;
         }
 
         addItem(newBookingData);
-
-        toast.success("Agendamento adicionado ao carrinho!", {
-            style: { fontSize: "1rem" },
-        });
+        if(showAddToCartToast) {
+            toast.success("Agendamento adicionado ao carrinho!", {
+                style: { fontSize: "1rem" },
+            });
+        }
 
         window.scroll({ top: 0 });
         setBookingSchedule(undefined);
+        // @ts-expect-error booking cannot be sended withou date, but is set as undefined to reset after user put some item in the cart.
+        setValue("date", undefined);
+        setValue("startHourInMinutes", 0);
+        setValue("totalDuration", 0);
+        // @ts-expect-error same as date
+        setValue("gear", undefined);
+        setValue("gearAmount", 0);
+        setValue("price", "");
+        setValue("observations", "");
+        setValue("paymentStatus", "Pendente");
+    };
+
+    const handleQuickBooking = (formData: CreateBookingFormSchemaType) => {
+        handleAddToCart(formData);
+        setShouldCheckout(true);
         reset();
     };
 
-    async function handleCreateBooking(newBookingData: CreateBookingFormSchemaType) {
-        const bookingInfoWithPrice = {
-            ...newBookingData,
-            price: parseStringToCents(newBookingData.price)
-        };
-
-        try {
-            const response = await fetch("http://192.168.0.39:3333/api/bookings/create", {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(bookingInfoWithPrice),
-            });
-            const data = await response.json();
-
-            if (!response.ok) {
-                toast.warning(data.message, { style: { fontSize: "1rem" } });
-                window.scroll({ top: 0 });
-            } else {
-                toast.success("Agendamento criado com sucesso!", {
-                    style: { fontSize: "1rem" },
-                });
-
-            }
-
-            setBookingSchedule(undefined);
-        } catch {
-            toast.error("Erro ao criar agendamento.");
+    useEffect(() => {
+        if (shouldCheckout && items.length > 0) {
+            handleCheckout();
+            setShouldCheckout(false);
+            clearCart();
         }
-    }
+    }, [ items, shouldCheckout ]);
 
     return (
         <div className="">
-            <div className="ml-5 space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
-                {
-                    user?.role === "Gerente" && (
-                        <Controller
-                            control={ control }
-                            name="filialId"
-                            render={ ({ field }) => (
-                                <SelectFilial
-                                    control={ control }
-                                    name={ field.name }
-                                    defaultFilial={ user?.sourceFilial.filialId }
-                                />
-                            ) }
-                        />
-                    )
-                }
-
+            <div className="space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
+                <div className="ml-auto mr-auto w-[50%]">
+                    {
+                        user?.role === "Gerente" && (
+                            <Controller
+                                control={ control }
+                                name="filialId"
+                                render={ ({ field }) => (
+                                    <SelectFilial
+                                        control={ control }
+                                        name={ field.name }
+                                        defaultFilial={ user?.sourceFilial.filialId }
+                                    />
+                                ) }
+                            />
+                        )
+                    }
+                </div>
             </div>
 
-            <form id="new-booking-form" onSubmit={ handleSubmit(handleAddToCart) }>
+            <form id="new-booking-form">
                 <FormProvider { ...createBookingFormMethods }>
                     <div className="flex flex-col gap-10">
                         {/* Customer and Gear Selection */}
@@ -172,7 +172,7 @@ export function CreateBookingForm() {
                                     <Label htmlFor="cliente" className="text-sm font-medium">
                     Cliente
                                     </Label>
-                                    <SelectCustomer />
+                                    <SelectCustomer disabled={ getTotalItems() > 0 } />
                                     {errors.customer && errors.customer.customerId && (
                                         <p className="text-sm text-destructive flex items-center gap-1">
                                             <AlertCircle className="h-3 w-3" />
@@ -185,9 +185,10 @@ export function CreateBookingForm() {
 
                             <div className="space-y-2 px-5">
                                 <Label htmlFor="equipamento" className="text-sm font-medium">
-                    Equipamento
+                                Equipamento
                                 </Label>
                                 <SelectGear />
+
                                 {errors.gear && errors.gear.gearId && (
                                     <p className="text-sm text-destructive flex items-center gap-1">
                                         <AlertCircle className="h-3 w-3" />
@@ -204,103 +205,104 @@ export function CreateBookingForm() {
                             setMaximumGearAmountAvailable={ setMaximumGearAmountAvailable }
                             bookingSchedule={ bookingSchedule }
                         />
-
                         {/* Amount and Price */}
-                        <Card className="transition-all duration-200 hover:shadow-md pb-0">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="flex items-center gap-2 text-lg">
-                                    <Package className="h-5 w-5 text-primary" />
+                        <div className="pb-0 flex w-full justify-center gap-3">
+                            <Card className="transition-all duration-200 hover:shadow-md">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-lg">
+                                        <Package className="h-5 w-5 text-primary" />
                   Quantidade e valor
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="amount" className="text-sm font-medium">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="amount" className="text-sm font-medium">
                     Quantidade
-                                    </Label>
-                                    <Controller
-                                        control={ control }
-                                        name="gearAmount"
-                                        render={ ({ field }) => (
-                                            <div className="flex md:flex-row md:items-center md:justify-start gap-3 flex-col justify-center">
-                                                <AmountControlButton
-                                                    value={ field.value || 0 }
-                                                    onChange={ field.onChange }
-                                                    error={ !!errors.gearAmount }
-                                                    disabled={ watchGearId ? false : true }
-                                                    max={ maximumGearAmountAvailable }
-                                                />
-                                                {
-                                                    startHour && selectedDate && watchTotalDurationInMinutes && watchTotalDurationInMinutes > 0 ? (
-                                                        <span className="text-xs text-center">Quantidade máxima disponível: {maximumGearAmountAvailable}</span>
-                                                    ) : (
-                                                        <span className="text-xs text-center">Escolha a data, a hora inicial e a duração da reserva para mostrar a quantidade máxima de unidades disponíveis</span>
-                                                    )
-                                                }
-                                            </div>
-                                        ) }
-                                    />
-                                    {errors.gearAmount && (
-                                        <p className="text-sm text-destructive flex items-center gap-1">
-                                            <AlertCircle className="h-3 w-3" />
-                                            {errors.gearAmount.message}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="flex md:flex-row flex-col md:items-end items-center gap-5">
-                                    <div className="flex flex-col flex-1">
-                                        <PriceInput register={ register("price") } value={ watchPrice } setValue={ setValue } name="price" />
-                                        {errors.price && (
-                                            <p className="text-sm text-destructive flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                {errors.price.message}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="">
+                                        </Label>
                                         <Controller
                                             control={ control }
-                                            name="paymentStatus"
+                                            name="gearAmount"
                                             render={ ({ field }) => (
-                                                <Select value={ field.value } onValueChange={ field.onChange }>
-                                                    <SelectTrigger className="">
-                                                        <SelectValue placeholder="Status de pagamento" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {paymentStatuses.map((status) => (
-                                                            <SelectItem key={ status } value={ status }>
-                                                                {status}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                                <div className="flex gap-3 flex-col justify-center">
+                                                    <AmountControlButton
+                                                        value={ field.value || 0 }
+                                                        onChange={ field.onChange }
+                                                        error={ !!errors.gearAmount }
+                                                        disabled={ watchGearId ? false : true }
+                                                        max={ maximumGearAmountAvailable }
+                                                    />
+                                                    {
+                                                        startHour && selectedDate && watchTotalDurationInMinutes && watchTotalDurationInMinutes > 0 ? (
+                                                            <span className="text-sm">Máximo: {maximumGearAmountAvailable}</span>
+                                                        ) : (
+                                                            <span className="text-sm">Escolha a data, a hora inicial e a duração da reserva para mostrar a quantidade máxima de unidades disponíveis</span>
+                                                        )
+                                                    }
+                                                </div>
                                             ) }
                                         />
-                                        {errors.paymentStatus && (
-                                            <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                                        {errors.gearAmount && (
+                                            <p className="text-sm text-destructive flex items-center gap-1">
                                                 <AlertCircle className="h-3 w-3" />
-                                                {errors.paymentStatus.message}
+                                                {errors.gearAmount.message}
                                             </p>
                                         )}
                                     </div>
-                                </div>
 
-                            </CardContent>
+                                    <div className="flex md:flex-row flex-col md:items-end items-center gap-5">
+                                        <div className="flex flex-col flex-1">
+                                            <PriceInput register={ register("price") } value={ watchPrice } setValue={ setValue } name="price" />
+                                            {errors.price && (
+                                                <p className="text-sm text-destructive flex items-center gap-1">
+                                                    <AlertCircle className="h-3 w-3" />
+                                                    {errors.price.message}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="">
+                                            <span className="text-sm font-semibold">Status</span>
+                                            <Controller
+                                                control={ control }
+                                                name="paymentStatus"
+                                                render={ ({ field }) => (
+                                                    <Select value={ field.value } onValueChange={ field.onChange }>
+                                                        <SelectTrigger className="">
+                                                            <SelectValue placeholder="Status de pagamento" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {paymentStatuses.map((status) => (
+                                                                <SelectItem key={ status } value={ status }>
+                                                                    {status}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                ) }
+                                            />
+                                            {errors.paymentStatus && (
+                                                <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                                                    <AlertCircle className="h-3 w-3" />
+                                                    {errors.paymentStatus.message}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
 
                             {/* Observations */}
                             <Card className="transition-all duration-200 hover:shadow-md">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="flex items-center gap-2 text-lg">
                                         <MessageSquare className="h-5 w-5 text-primary" />
-                Observações
+                                        Observações
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-2">
                                         <Label htmlFor="observacoes" className="text-sm font-medium">
-                  Detalhes adicionais (opcional)
+                                        Detalhes adicionais (opcional)
                                         </Label>
                                         <Textarea
                                             { ...register("observations") }
@@ -311,7 +313,8 @@ export function CreateBookingForm() {
                                     </div>
                                 </CardContent>
                             </Card>
-                        </Card>
+
+                        </div>
 
                         {/* Resumo Final */}
                         {selectedDate && startHour && watchTotalDurationInMinutes && watchPrice && !isDateInPast && (
@@ -345,22 +348,23 @@ export function CreateBookingForm() {
                         {/* Action Buttons */}
                         <div className="flex gap-3 pt-4">
                             <Button
-                                type="submit"
+                                type="button"
                                 variant="outline"
-                                // onClick={ handleAddToCart }
+                                onClick={ handleSubmit((data) => handleAddToCart(data, true)) }
                                 className="flex-1 bg-transparent"
-                                disabled={ !startHour || !watchGearId }
+                                disabled={ !startHour || !watchGearId || !watchPrice || watchGearAmount === 0 }
                             >
                                 <Plus className="h-4 w-4 mr-2" />
                                 <span className="md:flex hidden md:items-center">Adicionar ao Carrinho</span>
                             </Button>
 
                             <Button
-                                disabled={ !startHour || !watchGearId }
-                                type="submit"
+                                disabled={ !startHour || !watchGearId || items.length > 0 || !watchPrice || watchGearAmount === 0 }
+                                type="button"
+                                onClick={ handleSubmit(handleQuickBooking) }
                                 className="flex-1">
 
-                                <ShoppingCart className="h-4 w-4 mr-2" />
+                                <Check className="h-4 w-4 mr-2" />
                                 <span className="md:flex hidden md:items-center">Criar Reserva Direta</span>
                             </Button>
                         </div>

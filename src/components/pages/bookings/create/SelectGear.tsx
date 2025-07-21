@@ -32,28 +32,38 @@ import { useEffect, useState } from "react";
 import { Gear } from "@/utils/@types/gears";
 import { useAuth } from "@/contexts/auth-provider";
 import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { useCart } from "@/contexts/cart-provider";
 
 export function SelectGear() {
-    const [ allGears, setAllGears ] = useState<Gear[]>();
+    const [ originalGears, setOriginalGears ] = useState<Gear[]>([]);
+    const [ filteredGears, setFilteredGears ] = useState<Gear[]>([]);
+
     const isMounted = useMounted();
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const user = useAuth();
-
-    const {
-        control,
-    } = useFormContext<CreateBookingFormSchemaType>();
+    const { items } = useCart();
 
     useEffect(() => {
         async function getAllGears() {
-
             const response = await fetch(`http://localhost:3333/api/gears/${user.user?.sourceFilial.filialId}`, {
                 credentials: "include",
             });
             const { data } = await response.json();
-            setAllGears(data);
+            setOriginalGears(data);
         }
         getAllGears();
     }, [ user.user?.sourceFilial.filialId ]);
+
+    useEffect(() => {
+        const updated = originalGears.filter(
+            gear => !items.some(item => item.gear.gearId === gear.gearId)
+        );
+        setFilteredGears(updated);
+    }, [ items, originalGears ]);
+
+    const {
+        control,
+    } = useFormContext<CreateBookingFormSchemaType>();
 
     if (!isMounted) {
         return <div className="h-10 w-full" />;
@@ -66,9 +76,9 @@ export function SelectGear() {
                 name="gear"
                 render={ ({ field }) =>
                     isDesktop ? (
-                        <DesktopSelect gears={ allGears } field={ field } />
+                        <DesktopSelect gears={ filteredGears } field={ field } />
                     ) : (
-                        <MobileSelect gears={ allGears } field={ field } />
+                        <MobileSelect gears={ filteredGears } field={ field } />
                     )
                 }
             />
@@ -168,13 +178,13 @@ function GearsList({
                     {gears?.map((gear) => (
                         <CommandItem
                             key={ gear.gearId }
-                            value={ gear.name }
+                            value={ gear.gearName }
                             onSelect={ () => {
-                                onChange({ gearId: gear.gearId, gearName: gear.name });
+                                onChange({ gearId: gear.gearId, gearName: gear.gearName });
                                 setOpen(false);
                             } }
                         >
-                            {gear.name}
+                            {gear.gearName}
                         </CommandItem>
                     ))}
                 </CommandGroup>

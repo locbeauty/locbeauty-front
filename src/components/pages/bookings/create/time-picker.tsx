@@ -68,7 +68,7 @@ export default function TimePicker({ selectedDate, bookingSchedule, setMaximumGe
                 <CardContent>
                     <div className="flex items-center justify-center p-8 text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed">
                         <Calendar className="h-5 w-5 mr-2 shrink-0" />
-                        <span className="text-sm">Selecione primeiro uma data e um equipamento para ver os horários disponíveis</span>
+                        <span className="text-sm">Selecione primeiro um equipamento e uma data para ver os horários disponíveis</span>
                     </div>
                 </CardContent>
             </Card>

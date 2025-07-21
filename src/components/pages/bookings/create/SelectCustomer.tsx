@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { Customer } from "@/utils/@types/customer";
 import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
-export function SelectCustomer() {
+export function SelectCustomer({ disabled = false }: {disabled?: boolean}) {
     const isMounted = useMounted();
     const {
         control,
@@ -36,7 +36,6 @@ export function SelectCustomer() {
     }, []);
 
     if (!isMounted) {
-    // Return a placeholder with the same height to prevent layout shift
         return <div className="h-10 w-full" />;
     }
 
@@ -45,13 +44,13 @@ export function SelectCustomer() {
             <Controller
                 control={ control }
                 name="customer"
-                render={ ({ field }) => (isDesktop ? <DesktopSelect allCustomers={ allCustomers } field={ field } /> : <MobileSelect allCustomers={ allCustomers } field={ field } />) }
+                render={ ({ field }) => (isDesktop ? <DesktopSelect disabled={ disabled } allCustomers={ allCustomers } field={ field } /> : <MobileSelect allCustomers={ allCustomers } field={ field } />) }
             />
         </div>
     );
 }
 
-function DesktopSelect({ field, allCustomers }: { field: ControllerRenderProps<CreateBookingFormSchemaType, "customer">, allCustomers: Customer[] }) {
+function DesktopSelect({ disabled, field, allCustomers }: { disabled?: boolean, field: ControllerRenderProps<CreateBookingFormSchemaType, "customer">, allCustomers: Customer[] }) {
     const [ open, setOpen ] = useState(false);
 
     const selectedCustomer = field.value;
@@ -59,7 +58,7 @@ function DesktopSelect({ field, allCustomers }: { field: ControllerRenderProps<C
     return (
         <Popover open={ open } onOpenChange={ setOpen }>
             <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start group cursor-pointer">
+                <Button disabled={ disabled } variant="outline" className="w-full justify-start group cursor-pointer">
                     {selectedCustomer ? (
                         <>{selectedCustomer.fullname} - {hideDocumentNumber(selectedCustomer.documentNumber)}</>
                     ) : (

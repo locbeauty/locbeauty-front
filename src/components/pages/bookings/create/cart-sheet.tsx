@@ -6,21 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShoppingCart, Trash2, Calendar, Clock, Package, User, DollarSign, Scroll } from "lucide-react";
+import { ShoppingCart, Trash2, Calendar, Clock, Package, User, Scroll } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/contexts/cart-provider";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 
 export function CartSheet() {
-    const { items, removeItem, clearCart, getTotalPrice, getTotalItems } = useCart();
+    const { items, removeItem, clearCart, getTotalPrice, getTotalItems, handleCheckout } = useCart();
     const [ isOpen, setIsOpen ] = useState(false);
-
-    const handleCheckout = () => {
-    // Implementar lógica de checkout aqui
-        console.log("Processando checkout...", items);
-    // clearCart()
-    // setIsOpen(false)
-    };
 
     return (
         <Sheet open={ isOpen } onOpenChange={ setIsOpen }>
@@ -38,17 +31,17 @@ export function CartSheet() {
                 </Button>
             </SheetTrigger>
 
-            <SheetContent className="md:w-[400px] w-[540px]">
-                <SheetHeader>
+            <SheetContent aria-describedby={ undefined } className="flex flex-col h-full md:w-[400px] w-[540px]">
+                <SheetHeader className="flex-shrink-0">
                     <SheetTitle className="flex items-center gap-2">
                         <ShoppingCart className="h-5 w-5" />
-            Carrinho de Reservas
+          Carrinho de Reservas
                     </SheetTitle>
                 </SheetHeader>
 
-                <div className="flex flex-col h-full mt-6 w-full">
+                <div id="espaco-restante" className="flex flex-col flex-1 min-h-0">
                     {items.length === 0 ? (
-                        <div className="flex h-[80%] items-center justify-center">
+                        <div className="flex flex-1 items-center justify-center">
                             <div className="text-center text-muted-foreground">
                                 <ShoppingCart className="h-12 w-12 mx-auto mb-4 opacity-50" />
                                 <p>Seu carrinho está vazio</p>
@@ -57,11 +50,11 @@ export function CartSheet() {
                         </div>
                     ) : (
                         <>
-                            <ScrollArea className="flex-1 max-h-[70%]">
-                                <div className="space-y-4 flex flex-col items-center w-full">
+                            <ScrollArea className="flex-1 px-1 overflow-y-scroll">
+                                <div className="space-y-4 flex flex-col items-center w-full py-2">
                                     {items.map((item) => (
                                         <Card key={ item.gear.gearId } className="relative w-[90%]">
-                                            <CardHeader className="pb-3">
+                                            <CardHeader>
                                                 <div className="flex items-start justify-between">
                                                     <CardTitle className="text-base flex items-center gap-2">
                                                         <Package className="h-4 w-4 text-primary" />
@@ -77,56 +70,46 @@ export function CartSheet() {
                                                     </Button>
                                                 </div>
                                             </CardHeader>
-
-                                            <CardContent className="space-y-3">
+                                            <CardContent className="md:space-y-3 space-y-1">
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <User className="h-3 w-3 text-muted-foreground" />
                                                     <span className="text-muted-foreground">Cliente:</span>
                                                     <span className="font-medium">{item.customer.fullname}</span>
                                                 </div>
-
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <Scroll className="h-3 w-3 text-muted-foreground" />
                                                     <span className="text-muted-foreground">Documento:</span>
                                                     <span className="font-medium">{item.customer.documentNumber}</span>
                                                 </div>
-
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <Calendar className="h-3 w-3 text-muted-foreground" />
                                                     <span className="text-muted-foreground">Data:</span>
                                                     <span className="font-medium">{item.date.toLocaleDateString()}</span>
                                                 </div>
-
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <Clock className="h-3 w-3 text-muted-foreground" />
                                                     <span className="text-muted-foreground">Horário:</span>
                                                     <span className="font-medium">
-                                                        {minutesToHHMM(item.startHourInMinutes)} - {minutesToHHMM(item.startHourInMinutes + item.totalDuration)}
+                                                        {minutesToHHMM(item.startHourInMinutes)} -{" "}
+                                                        {minutesToHHMM(item.startHourInMinutes + item.totalDuration)}
                                                     </span>
                                                     <Badge variant="secondary" className="text-xs">
-                                                        {item.totalDuration/60}h
+                                                        {item.totalDuration / 60}h
                                                     </Badge>
                                                 </div>
-
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <Package className="h-3 w-3 text-muted-foreground" />
+                                                    <span className="text-muted-foreground">Quantidade:</span>
+                                                    <Badge variant="outline">{item.gearAmount}</Badge>
+                                                </div>
                                                 <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2 text-sm">
-                                                        <Package className="h-3 w-3 text-muted-foreground" />
-                                                        <span className="text-muted-foreground">Quantidade:</span>
-                                                        <Badge variant="outline">{item.gearAmount}</Badge>
-                                                    </div>
-
-                                                    <div className="flex items-center gap-2">
-                                                        <DollarSign className="h-3 w-3 text-muted-foreground" />
-                                                        <span className="font-semibold text-primary">
-                                                            {item.price}
-                                                        </span>
+                                                    <Badge variant={ item.paymentStatus === "Pago" ? "default" : "secondary" } className="w-fit">
+                                                        {item.paymentStatus}
+                                                    </Badge>
+                                                    <div className="flex items-center">
+                                                        <span className="font-semibold text-primary">R$ {item.price}</span>
                                                     </div>
                                                 </div>
-
-                                                <Badge variant={ item.paymentStatus === "Pago" ? "default" : "secondary" } className="w-fit">
-                                                    {item.paymentStatus}
-                                                </Badge>
-
                                                 {item.observations && (
                                                     <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
                                                         <strong>Observações:</strong> {item.observations}
@@ -138,25 +121,24 @@ export function CartSheet() {
                                 </div>
                             </ScrollArea>
 
-                            <div className="border-t p-4 mt-4 space-y-4">
+                            <div id="footer" className="flex-shrink-0 border-t p-4 space-y-4 bg-background">
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Total de itens:</span>
                                     <Badge variant="secondary">{getTotalItems()}</Badge>
                                 </div>
-
                                 <Separator />
-
                                 <div className="flex items-center justify-between">
                                     <span className="text-lg font-semibold">Total:</span>
-                                    <span className="text-xl font-bold text-primary">R${getTotalPrice()/100}</span>
+                                    <span className="text-xl font-bold text-primary">
+                  R$ {(getTotalPrice() / 100).toFixed(2).replace(".", ",")}
+                                    </span>
                                 </div>
-
                                 <div className="flex gap-2">
                                     <Button variant="outline" onClick={ clearCart } className="flex-1 bg-transparent">
-                    Limpar Carrinho
+                  Limpar Carrinho
                                     </Button>
-                                    <Button onClick={ handleCheckout } className="flex-1">
-                    Finalizar Reservas
+                                    <Button onClick={ () => handleCheckout() } className="flex-1">
+                  Finalizar Reservas
                                     </Button>
                                 </div>
                             </div>

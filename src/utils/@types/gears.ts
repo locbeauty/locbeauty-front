@@ -1,6 +1,6 @@
 export type Gear = {
     gearId: string,
-    name: string,
+    gearName: string,
     description: string,
     filialId: string,
     availableUnits: number,
