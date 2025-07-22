@@ -15,13 +15,15 @@ import {
 } from "@/lib/zod/CreateGearValidation";
 import { toast } from "sonner";
 import { TransferableCheckbox } from "../shared/canBeTransferredCheckbox";
+import { useAuth } from "@/contexts/auth-provider";
 
 export function CreateGearForm() {
+    const { user } = useAuth();
     const createGearMethods = useForm<CreateGearFormSchemaType>({
         resolver: zodResolver(createGearFormSchema),
         defaultValues: {
             transferable: false,
-            sourceFilialId: ""
+            sourceFilialId: user?.role === "Gerente" ? "" : user?.sourceFilial.filialId
         },
     });
 
@@ -91,20 +93,25 @@ export function CreateGearForm() {
                                 </p>
                             )}
                         </div>
-                        <div className="space-y-2">
-                            <Label>Filial</Label>
-                            <FormProvider { ...createGearMethods }>
-                                <SelectFilial<CreateGearFormSchemaType>
-                                    control={ control }
-                                    name="sourceFilialId"
-                                />
-                            </FormProvider>
-                            {errors.sourceFilialId && (
-                                <p className="text-sm text-destructive mt-2">
-                                    {errors.sourceFilialId.message}
-                                </p>
-                            )}
-                        </div>
+                        {
+                            user?.role === "Gerente" && (
+
+                                <div className="space-y-2">
+                                    <Label>Filial</Label>
+                                    <FormProvider { ...createGearMethods }>
+                                        <SelectFilial<CreateGearFormSchemaType>
+                                            control={ control }
+                                            name="sourceFilialId"
+                                        />
+                                    </FormProvider>
+                                    {errors.sourceFilialId && (
+                                        <p className="text-sm text-destructive mt-2">
+                                            {errors.sourceFilialId.message}
+                                        </p>
+                                    )}
+                                </div>
+                            )
+                        }
                     </div>
                     <div className="flex flex-col gap-2">
                         <Label htmlFor="description">Descrição</Label>

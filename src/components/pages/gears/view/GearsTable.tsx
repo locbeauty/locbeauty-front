@@ -6,6 +6,7 @@ import { UpdateGearDialog } from "../update/UpdateGearDialog";
 import { Button } from "@/components/ui/button";
 import { GearDetailsDialog } from "./GearDetailsDialog";
 import { Gear } from "@/utils/@types/gears";
+import { useAuth } from "@/contexts/auth-provider";
 
 export function GearsTable() {
     const [ gears, setGears ] = useState<Gear[]>([]);
@@ -13,6 +14,8 @@ export function GearsTable() {
     const [ isUpdateGearDialogOpen, setIsUpdateGearDialogOpen ] = useState(false);
     const [ isGearDetailsDialogOpen, setIsGearDetailsDialogOpen ] = useState(false);
     const [ selectedGear, setSelectedGear ] = useState<Gear | null>(null);
+
+    const { user } = useAuth();
 
     const handleToggleUpdateGearDialog = (openStatus: boolean, gear: Gear | null) => {
         setIsUpdateGearDialogOpen(openStatus);
@@ -28,13 +31,17 @@ export function GearsTable() {
 
     useEffect(() => {
         async function getGears() {
-            const response = await fetch("http://localhost:3333/api/gears/", { credentials: "include" });
+            const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears/all`);
+            if(user && user?.role !== "Gerente") {
+                url.searchParams.append("filialId", user?.sourceFilial.filialId);
+            }
+            const response = await fetch(url, { credentials: "include" });
 
             const { data } = await response.json();
             setGears(data);
         }
         getGears();
-    }, []);
+    }, [ user ]);
 
     return (
         <>
@@ -57,12 +64,19 @@ export function GearsTable() {
                         </tr>
                     </thead>
                     <tbody>
-                        {gears.map((gear) => (
+                        {gears?.length === 0 && (
+                            <tr>
+                                <td className="text-center p-4" colSpan={ 8 }>
+                                    Nada a mostrar por aqui.
+                                </td>
+                            </tr>
+                        )}
+                        {gears && gears?.map((gear) => (
                             <tr
                                 key={ gear.gearId }
                                 className="border-t hover:bg-muted/50 items-stretch"
                             >
-                                <td className="p-3">{gear.name}</td>
+                                <td className="p-3">{gear.gearName}</td>
                                 <td className="p-3 max-w-[700px] truncate whitespace-nowrap overflow-hidden">
                                     {gear.description}
                                 </td>
@@ -98,7 +112,7 @@ export function GearsTable() {
                     <ResponsiveCard
                         cardData={ {
                             id: gear.gearId,
-                            title: gear.name,
+                            title: gear.gearName,
                             description: gear.description,
                             transferableIndicator: true,
                             transferable: gear.transferable,

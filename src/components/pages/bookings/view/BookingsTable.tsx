@@ -14,9 +14,8 @@ export function BookingsTable() {
 
     useEffect(() => {
         async function handleGetAllCustomers() {
-            // const filialIdIfUserIsNotManager = user?.role === "Gerente" ? undefined : user?.sourceFilial.filialId;
-            const url = new URL("http://localhost:3333/api/checkouts/all");
-            if(user?.role === "Gerente") {
+            const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/checkouts/all`);
+            if(user && user?.role !== "Gerente") {
                 url.searchParams.append("filialId", user?.sourceFilial.filialId);
             }
             const response = await fetch(url, {
@@ -26,7 +25,7 @@ export function BookingsTable() {
             setCheckouts(data);
         }
         handleGetAllCustomers();
-    }, [ user?.sourceFilial.filialId, user?.role ]);
+    }, [ user ]);
 
     return (
         <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto">
@@ -44,6 +43,13 @@ export function BookingsTable() {
                     </tr>
                 </thead>
                 <tbody>
+                    {!checkouts || checkouts.length === 0 && (
+                        <tr>
+                            <td className="text-center p-4" colSpan={ 8 }>
+          Nada a mostrar por aqui.
+                            </td>
+                        </tr>
+                    )}
                     {checkouts?.map((checkout) => {
                         const bookingDates = checkout.Bookings.map((b) =>
                             new Date(b.date).toLocaleDateString("pt-BR" )
