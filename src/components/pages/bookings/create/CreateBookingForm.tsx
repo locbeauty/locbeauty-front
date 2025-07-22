@@ -16,8 +16,7 @@ import { useAuth } from "@/contexts/auth-provider";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import BookingTimeSelector from "./BookingTimeSelector";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { paymentStatuses } from "@/utils/@types/bookings";
+
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-provider";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
@@ -74,7 +73,7 @@ export function CreateBookingForm() {
         setValue("startHourInMinutes", 0);
         setValue("totalDuration", 0);
         setMaximumGearAmountAvailable(0);
-    }, [ watchGearId ]);
+    }, [ watchGearId, setValue ]);
 
     useEffect(() => {
         setBookingSchedule(undefined);
@@ -82,7 +81,7 @@ export function CreateBookingForm() {
 
     useEffect(() => {
         async function getDayBookings() {
-            const response = await fetch(`http://localhost:3333/api/bookings?filialId=${watchFilialId}&gearId=${watchGearId.gearId}&date=${selectedDate}`, {
+            const response = await fetch(`http://localhost:3333/api/bookings/available?filialId=${watchFilialId}&gearId=${watchGearId.gearId}&date=${selectedDate}`, {
                 credentials: "include",
             });
             const { data }: {data: GetDayBookingsResponse[]} = await response.json();
@@ -132,7 +131,7 @@ export function CreateBookingForm() {
             setShouldCheckout(false);
             clearCart();
         }
-    }, [ items, shouldCheckout ]);
+    }, [ items, shouldCheckout, clearCart, handleCheckout ]);
 
     return (
         <div className="">
@@ -260,33 +259,6 @@ export function CreateBookingForm() {
                                                 </p>
                                             )}
                                         </div>
-                                        <div className="">
-                                            <span className="text-sm font-semibold">Status</span>
-                                            <Controller
-                                                control={ control }
-                                                name="paymentStatus"
-                                                render={ ({ field }) => (
-                                                    <Select value={ field.value } onValueChange={ field.onChange }>
-                                                        <SelectTrigger className="">
-                                                            <SelectValue placeholder="Status de pagamento" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {paymentStatuses.map((status) => (
-                                                                <SelectItem key={ status } value={ status }>
-                                                                    {status}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                ) }
-                                            />
-                                            {errors.paymentStatus && (
-                                                <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                    {errors.paymentStatus.message}
-                                                </p>
-                                            )}
-                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -365,7 +337,7 @@ export function CreateBookingForm() {
                                 className="flex-1">
 
                                 <Check className="h-4 w-4 mr-2" />
-                                <span className="md:flex hidden md:items-center">Criar Reserva Direta</span>
+                                <span className="md:flex hidden md:items-center">Criar Reserva Rápida</span>
                             </Button>
                         </div>
                     </div>

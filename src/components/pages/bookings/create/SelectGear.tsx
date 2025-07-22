@@ -30,7 +30,6 @@ import { useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
 import { useEffect, useState } from "react";
 import { Gear } from "@/utils/@types/gears";
-import { useAuth } from "@/contexts/auth-provider";
 import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { useCart } from "@/contexts/cart-provider";
 
@@ -40,19 +39,24 @@ export function SelectGear() {
 
     const isMounted = useMounted();
     const isDesktop = useMediaQuery("(min-width: 768px)");
-    const user = useAuth();
     const { items } = useCart();
 
+    const {
+        control,
+        watch
+    } = useFormContext<CreateBookingFormSchemaType>();
+
+    const watchFilialId = watch("filialId");
     useEffect(() => {
         async function getAllGears() {
-            const response = await fetch(`http://localhost:3333/api/gears/${user.user?.sourceFilial.filialId}`, {
+            const response = await fetch(`http://localhost:3333/api/gears/${watchFilialId}`, {
                 credentials: "include",
             });
             const { data } = await response.json();
             setOriginalGears(data);
         }
         getAllGears();
-    }, [ user.user?.sourceFilial.filialId ]);
+    }, [ watchFilialId ]);
 
     useEffect(() => {
         const updated = originalGears.filter(
@@ -60,10 +64,6 @@ export function SelectGear() {
         );
         setFilteredGears(updated);
     }, [ items, originalGears ]);
-
-    const {
-        control,
-    } = useFormContext<CreateBookingFormSchemaType>();
 
     if (!isMounted) {
         return <div className="h-10 w-full" />;

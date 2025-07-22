@@ -1,5 +1,6 @@
 "use client";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { paymentModes, paymentStatuses } from "@/utils/@types/bookings";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ import { useCart } from "@/contexts/cart-provider";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 
 export function CartSheet() {
-    const { items, removeItem, clearCart, getTotalPrice, getTotalItems, handleCheckout } = useCart();
+    const { items, removeItem, clearCart, getTotalPrice, getTotalItems, handleCheckout, changePaymentModes, changePaymentStatus } = useCart();
     const [ isOpen, setIsOpen ] = useState(false);
 
     return (
@@ -125,6 +126,40 @@ export function CartSheet() {
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Total de itens:</span>
                                     <Badge variant="secondary">{getTotalItems()}</Badge>
+                                </div>
+                                <Separator />
+
+                                <div className="flex justify-between gap-4">
+                                    <div className="flex flex-col items-center flex-1/2">
+                                        <span className="text-sm font-semibold">Status de pagamento</span>
+                                        <Select onValueChange={ changePaymentStatus }>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Status de pagamento" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {paymentStatuses.map((status) => (
+                                                    <SelectItem key={ status } value={ status }>
+                                                        {status}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="flex flex-col items-center flex-1/2">
+                                        <span className="text-sm font-semibold">Forma de pagamento</span>
+                                        <Select onValueChange={ changePaymentModes }>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="modo de pagamento" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {paymentModes.map((mode) => (
+                                                    <SelectItem key={ mode } value={ mode }>
+                                                        {mode}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
                                 <Separator />
                                 <div className="flex items-center justify-between">

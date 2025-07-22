@@ -1,13 +1,18 @@
 "use client";
 
 import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { PaymentModes, PaymentStatuses } from "@/utils/@types/bookings";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 interface CartContextType {
+  paymentStatus: PaymentStatuses
+  paymentMode: PaymentModes
   items: CreateBookingFormSchemaType[]
   addItem: (item: CreateBookingFormSchemaType) => void
+  changePaymentStatus: (paymentStatus: PaymentStatuses) => void
+  changePaymentModes: (paymentMode: PaymentModes) => void
   removeItem: (id: string) => void
   clearCart: () => void
   getTotalPrice: () => number
@@ -85,8 +90,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     ]
     );
 
+    const [ paymentStatus, setPaymentStatus ] = useState<PaymentStatuses>("Pendente");
+    const [ paymentMode, setPaymentMode ] = useState<PaymentModes>("PIX");
+
     const addItem = (item: CreateBookingFormSchemaType) => {
         setItems((prev) => [ ...prev, { ...item, id: Date.now().toString() } ]);
+    };
+
+    const changePaymentStatus = (paymentStatus: PaymentStatuses) => {
+        setPaymentStatus(paymentStatus);
+    };
+
+    const changePaymentModes = (paymentMode: PaymentModes) => {
+        setPaymentMode(paymentMode);
     };
 
     const removeItem = (id: string) => {
@@ -98,7 +114,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     const getTotalPrice = () => {
-        return items.reduce((total, item) => total + parseStringToCents(item.price) * item.gearAmount, 0);
+        return items.reduce((total, item) => total + parseStringToCents(item.price), 0);
     };
 
     const getTotalItems = () => {
@@ -132,6 +148,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    // useEffect(() => {
+    //     console.log("items: ", items);
+    // }, [ items ]);
+
     return (
         <CartContext.Provider
             value={ {
@@ -141,7 +161,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 clearCart,
                 getTotalPrice,
                 getTotalItems,
-                handleCheckout
+                handleCheckout,
+                changePaymentStatus,
+                changePaymentModes,
+                paymentMode,
+                paymentStatus
             } }
         >
             {children}
