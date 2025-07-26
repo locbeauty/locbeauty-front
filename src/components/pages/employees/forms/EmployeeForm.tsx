@@ -104,11 +104,11 @@ export function EmployeeForm() {
             <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                     <Label htmlFor="nome">Cargo:</Label>
-                    <SelectRole control={ control } name="roleId" />
+                    <SelectRole control={ control } name="role" />
                     <div className="h-3">
-                        {errors.roleId && (
+                        {errors.role && (
                             <p className="text-xs font-medium text-destructive">
-                                {errors.roleId.message}
+                                {errors.role.message}
                             </p>
                         )}
                     </div>

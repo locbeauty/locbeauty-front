@@ -1,6 +1,6 @@
 ### ❓ Dúvidas Pendentes
 
-- **O que seria um cliente inativo? há muito tempo sem alugar?**
+- **O que seria um cliente inativo? há muito tempo sem alugar?** 90 dias
 
 - **Cada equipamento possui algum identificador único?**
 
@@ -13,8 +13,8 @@
 
 - **Quem poderá criar/editar/excluir as entidades?**
 
-- **Para clientes Pessoa Jurídica (PJ), é obrigatório registrar a data de nascimento?**  
-  (Ou esse campo é opcional/não utilizado em todos os casos?)
+<!-- - **Para clientes Pessoa Jurídica (PJ), é obrigatório registrar a data de nascimento?**  
+  (Ou esse campo é opcional/não utilizado em todos os casos?) -->
 
 - **Cada filial possui seu próprio gerente ou há um gerente responsável por múltiplas filiais(região)?**  
   (Como é organizada a hierarquia dos gestores?)
@@ -26,12 +26,12 @@
 
 - **Cada equipamento terá sua filial de origem, quantidade disponível/quantidade total?**
 
-- **O equipamento é alugado pra qual fim? (Evento, estabelecimento, ...)**
+<!-- - **O equipamento é alugado pra qual fim? (Evento, estabelecimento, ...)** -->
 
-- **Fluxo para agendamento de um equipamento que pode ser transferido:**
+<!-- - **Fluxo para agendamento de um equipamento que pode ser transferido:**
 - - checar se equipamento está disponível no determinado dia;
 - - checar estoque disponível;
-- - checar o tempo de deslocamento;
+- - checar o tempo de deslocamento; -->
 
 - **Existe algum interesse em guardar endereço dos funcionários?**
 
@@ -111,64 +111,15 @@
 | Editar     | ❌      | ❌          | ❌        | ❌           | ❌                           |           |
 | Excluir    | ❌      | ❌          | ❌        | ❌           | ❌                           |           |
 
----
 
-# 📝 Formulários de Cliente
-
-## Pessoa Física (PF)
-
-```json
-{
-  "personType": "PF",
-  "birthday": "2025-05-08",
-  "fullname": "Ateste",
-  "companyName": "",
-  "email": "teste@teste.com",
-  "cellphone": "(11) 11111-1111",
-  "instagram": "asdasdasd",
-  "city": "teste",
-  "UF": "PE",
-  "neighborhood": "teste",
-  "street": "teste",
-  "houseNumber": "11111111",
-  "CPF": "111.111.111-11",
-  "CNPJ": ""
-}
 ```
 
-## Pessoa Jurídica (PJ)
 
-```json
-{
-  "personType": "PJ",
-  "birthday": "",
-  "fullname": "",
-  "companyName": "teste",
-  "email": "teste@teste.com",
-  "cellphone": "(81) 97332-8630",
-  "instagram": "asdasdas",
-  "city": "teste",
-  "UF": "PE",
-  "neighborhood": "teste",
-  "street": "teste",
-  "houseNumber": "1123",
-  "CPF": "",
-  "CNPJ": "11.111.111/1111-11"
-}
-```
 
----
-
-🔶 _Os campos marcados com "a definir" podem ser ajustados conforme regras de negócio futuras._
-
----
-<!-- 
-## Dados do funcionario logado :
-
-```ts
-interface loggedUser {
-  role: "gerente" | "comercial" | "logistica" | "financeiro";
-  regional: "PE";
-  username: string;
-}
-``` -->
+Motoristas, 
+Motoristas chefe, 
+comercial,
+RH,
+Financeiro,
+Supervisão
+Gerência

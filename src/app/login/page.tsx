@@ -77,7 +77,7 @@ export default function LoginPage() {
                             <div className="grid gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="documentNumber">CPF</Label>
-                                    <DocumentInput placeholder="000.000.000-00" register={ register("documentNumber") } />
+                                    <DocumentInput isCPF={ true } placeholder="000.000.000-00" register={ register("documentNumber") } />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="password">Senha</Label>

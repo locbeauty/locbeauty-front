@@ -23,6 +23,7 @@ import {
     Mail,
     Edit,
     Trash2,
+    CircleEllipsis,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -32,12 +33,12 @@ import {
 } from "@/components/pages/bookings/view/bookingViewHelpers";
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../../common/BookingPaymentStatusBadge";
-import { Booking } from "@/utils/@types/bookings";
+import { FlattenedBooking } from "../WeekView";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
   isBookingDetailsDialogOpen: boolean;
-  selectedAgendamento: Booking | null;
+  selectedAgendamento: FlattenedBooking | null;
 }
 
 export function BookingDetailsDialog({
@@ -68,7 +69,7 @@ export function BookingDetailsDialog({
                                 <div className="flex items-center gap-2">
                                     <Package className="h-5 w-5 text-primary" />
                                     <h3 className="text-lg font-semibold">
-                                        { selectedAgendamento.gear }
+                                        { selectedAgendamento.gear.gearName }
                                     </h3>
                                 </div>
                                 <div className="flex gap-2">
@@ -91,18 +92,18 @@ export function BookingDetailsDialog({
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="flex items-center gap-2">
                                         <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                                        <span>{ selectedAgendamento.customer }</span>
+                                        <span>{ selectedAgendamento.customer.fullname }</span>
                                     </div>
-                                    { selectedAgendamento.customerEmail && (
+                                    { selectedAgendamento.customer.email && (
                                         <div className="flex items-center gap-2">
                                             <Mail className="h-4 w-4 text-muted-foreground" />
-                                            <span>{ selectedAgendamento.customerEmail }</span>
+                                            <span>{ selectedAgendamento.customer.email }</span>
                                         </div>
                                     ) }
-                                    { selectedAgendamento.customerCellphone && (
+                                    { selectedAgendamento.customer.documentNumber && (
                                         <div className="flex items-center gap-2">
                                             <Phone className="h-4 w-4 text-muted-foreground" />
-                                            <span>{ selectedAgendamento.customerCellphone }</span>
+                                            <span>{ selectedAgendamento.customer.documentNumber }</span>
                                         </div>
                                     ) }
                                 </div>
@@ -116,14 +117,20 @@ export function BookingDetailsDialog({
                                 <div className="grid grid-cols-1 gap-3">
                                     <div className="flex items-center gap-2">
                                         <Building className="h-4 w-4 text-muted-foreground" />
-                                        <span>{ selectedAgendamento.city }</span>
+                                        <span>{ selectedAgendamento.address.city.cityName }</span>
                                     </div>
-                                    { selectedAgendamento.address && (
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                                            <span>{ selectedAgendamento.address }</span>
-                                        </div>
-                                    ) }
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                                        <span>{ selectedAgendamento.address.neighborhood.neighborhoodName }, { selectedAgendamento.address.street.streetName }, { selectedAgendamento.address.buildingNumber }</span>
+                                    </div>
+                                    {
+                                        selectedAgendamento.address.addressComplement && (
+                                            <div className="flex items-center gap-2">
+                                                <CircleEllipsis className="h-4 w-4 text-muted-foreground" />
+                                                <span>{ selectedAgendamento.address.addressComplement }</span>
+                                            </div>
+                                        )
+                                    }
                                 </div>
                             </div>
 
@@ -147,7 +154,7 @@ export function BookingDetailsDialog({
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-4 w-4 text-muted-foreground" />
                                         <span>
-                      Duração: { selectedAgendamento.totalDuration } horas
+                      Duração: { selectedAgendamento.totalDurationInMinutes / 60 } horas
                                         </span>
                                     </div>
                                 </div>
@@ -170,8 +177,7 @@ export function BookingDetailsDialog({
                                         <span>
                       Valor por hora:{ " " }
                                             { formatCurrency(
-                                                selectedAgendamento.price /
-                          selectedAgendamento.totalDuration
+                                                selectedAgendamento.price / (selectedAgendamento.totalDurationInMinutes / 60)
                                             ) }
                                         </span>
                                     </div>

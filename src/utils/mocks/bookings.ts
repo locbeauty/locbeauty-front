@@ -410,3 +410,58 @@ export const bookings: Booking[] = [
       "Cliente solicitou demonstração do equipamento antes do início do serviço.",
     },
 ];
+// {
+//         "checkoutId": "70c960ee-0d66-4999-b7d8-38059a7b7671",
+//         "bookingStatus": "Pendente",
+//         "paymentStatus": "Pendente",
+//         "totalPrice": 12323,
+//         "sourceFilial": {
+//             "filialId": "cmd1whtk2001018ys2pasxjr8",
+//             "description": "Filial São Paulo"
+//         },
+//         "customer": {
+//             "customerId": "cmd1whtkb001118ysb71o634w",
+//             "fullname": "Maria Cliente",
+//             "documentNumber": "98765432100"
+//         },
+//         "Bookings": [
+//             {
+//                 "bookingId": "a6e5247d-6867-48c7-9911-6702e2bd819a",
+//                 "date": "2025-07-25T03:00:00.000Z",
+//                 "gearAmount": 5,
+//                 "startHourInMinutes": 300,
+//                 "totalDuration": 120,
+//                 "observations": "",
+//                 "price": 12323,
+//                 "gear": {
+//                     "gearId": "21ebd956-29c4-4429-86c5-56376b64b7ba",
+//                     "gearName": "Lavieen"
+//                 }
+//             }
+//         ],
+//         "address": {
+//             "addressId": "cmd1whtjx000y18ys9t2mkjpc",
+//             "zipCode": "01311-000",
+//             "buildingNumber": "1000",
+//             "addressComplement": "Sala 10",
+//             "createdAt": "2025-07-13T16:40:25.821Z",
+//             "updatedAt": "2025-07-13T16:40:25.821Z",
+//             "state": {
+//                 "stateId": "cmd1whtic000g18yshzuz2b3p",
+//                 "stateName": "Pernambuco",
+//                 "UF": "PE"
+//             },
+//             "city": {
+//                 "cityId": "cmd1whtjk000s18yss416j69w",
+//                 "cityName": "Recife"
+//             },
+//             "neighborhood": {
+//                 "neighborhoodId": "cmd1whtjo000u18ys6xffqfwc",
+//                 "neighborhoodName": "Centro"
+//             },
+//             "street": {
+//                 "streetId": "cmd1whtjs000w18ys4kusmry6",
+//                 "streetName": "Av. Paulista"
+//             }
+//         }
+// },

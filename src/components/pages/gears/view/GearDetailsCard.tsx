@@ -55,7 +55,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Data de Aquisição:</Label>
-                                <span className="font-mono text-sm">{selectedGear.acquisitionDate ? selectedGear.acquisitionDate.toLocaleDateString() : "Não informado"}</span>
+                                {/* <span className="font-mono text-sm">{selectedGear.acquisitionDate ? selectedGear.acquisitionDate.toLocaleDateString() : "Não informado"}</span> */}
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Transferível:</Label>

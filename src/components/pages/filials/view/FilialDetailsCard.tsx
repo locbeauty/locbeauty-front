@@ -35,14 +35,14 @@ export function FilialDetailsCard({
     }
 
     // Endereço completo formatado
-    const fullAddress = `${selectedFilial.address.streetName}, ${
+    const fullAddress = `${selectedFilial.address.street.streetName}, ${
         selectedFilial.address.buildingNumber
     }${
         selectedFilial.address.addressComplement
             ? ` - ${selectedFilial.address.addressComplement}`
             : ""
-    }, ${selectedFilial.address.neighborhoodName}, ${
-        selectedFilial.address.cityName
+    }, ${selectedFilial.address.neighborhood.neighborhoodName}, ${
+        selectedFilial.address.city.cityName
     }/${selectedFilial.address.state.UF}`;
 
     return (
@@ -54,7 +54,7 @@ export function FilialDetailsCard({
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                     {selectedFilial.address.state.stateName} -{" "}
-                    {selectedFilial.address.cityName}
+                    {selectedFilial.address.city.cityName}
                 </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -92,12 +92,12 @@ export function FilialDetailsCard({
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Cidade:</Label>
-                                <span className="text-sm">{selectedFilial.address.cityName}</span>
+                                <span className="text-sm">{selectedFilial.address.city.cityName}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Bairro:</Label>
                                 <span className="text-sm">
-                                    {selectedFilial.address.neighborhoodName}
+                                    {selectedFilial.address.neighborhood.neighborhoodName}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">

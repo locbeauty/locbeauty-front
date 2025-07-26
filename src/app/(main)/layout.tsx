@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { AuthProvider } from "@/contexts/auth-provider";
+import { CartProvider } from "@/contexts/cart-provider";
 
 export default function DashboardLayout({
     children,
@@ -16,25 +17,28 @@ export default function DashboardLayout({
 
     return (
         <AuthProvider>
-            <div className="max-h-screen flex bg-background">
-                <Sidebar
-                    className={ cn(sidebarOpen ? "translate-x-0" : "-translate-x-full") }
-                />
+            <CartProvider>
 
-                <div className="flex-1 md:ml-48">
-                    <DashboardHeader setSidebarOpen={ setSidebarOpen } />
-                    <main className="p-6">{children}</main>
-                </div>
-
-                {/* Overlay for mobile */}
-                {sidebarOpen && (
-                    <div
-                        className="fixed inset-0 z-40 bg-black/50 md:hidden"
-                        onClick={ () => setSidebarOpen(false) }
+                <div className="max-h-screen flex bg-background">
+                    <Sidebar
+                        className={ cn(sidebarOpen ? "translate-x-0" : "-translate-x-full") }
                     />
-                )}
-                <Toaster />
-            </div>
+
+                    <div className="flex-1 md:ml-48">
+                        <DashboardHeader setSidebarOpen={ setSidebarOpen } />
+                        <main className="p-6">{children}</main>
+                    </div>
+
+                    {/* Overlay for mobile */}
+                    {sidebarOpen && (
+                        <div
+                            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+                            onClick={ () => setSidebarOpen(false) }
+                        />
+                    )}
+                    <Toaster />
+                </div>
+            </CartProvider>
         </AuthProvider>
     );
 }

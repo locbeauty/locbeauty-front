@@ -1,242 +1,366 @@
+"use client";
+
 import { Label } from "@/components/ui/label";
-import { CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import { CreateBookingFormSchemaType, createBookingFormSchema } from "@/lib/zod/CreateBookingValidation";
+import { type CreateBookingFormSchemaType, createBookingFormSchema } from "@/lib/zod/CreateBookingValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectGear } from "./SelectGear";
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { AlertCircle, Clock, Info, RefreshCw } from "lucide-react";
+import { AlertCircle, User, Package, MessageSquare, Plus, Check } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { clearSelection, getBadgeStyle, handleMouseEnter, handleMouseLeave, handleTimeClick, isHourInRange, isValidEndHour } from "@/utils/create-booking-helpers";
-import { Textarea } from "@/components/ui/textarea";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth-provider";
+import { SelectFilial } from "@/components/shared/SelectFilial";
+import BookingTimeSelector from "./BookingTimeSelector";
+import { Textarea } from "@/components/ui/textarea";
 
-export const availableHours = [
-    { hour: 5, available: true },
-    { hour: 6, available: true },
-    { hour: 7, available: true },
-    { hour: 8, available: false },
-    { hour: 9, available: false },
-    { hour: 10, available: false },
-    { hour: 11, available: false },
-    { hour: 12, available: false },
-    { hour: 13, available: false },
-    { hour: 14, available: false },
-    { hour: 15, available: true },
-    { hour: 16, available: true },
-    { hour: 17, available: true },
-    { hour: 18, available: true },
-    { hour: 19, available: true },
-    { hour: 20, available: true },
-    { hour: 21, available: true },
-    { hour: 22, available: false },
-];
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/contexts/cart-provider";
+import { minutesToHHMM } from "@/utils/minutesToHHMM";
+import { SelectAddress } from "./SelectAddress";
+
+export interface GetDayBookingsResponse {
+  hourInMinutes: number,
+  formattedTime: string,
+  availability: {
+        durationInMinutes: number,
+        available: boolean,
+        maxGearAmount: number
+    }[],
+}
 
 export function CreateBookingForm() {
-
+    const { user } = useAuth();
     const createBookingFormMethods = useForm<CreateBookingFormSchemaType>({
         resolver: zodResolver(createBookingFormSchema),
         defaultValues: {
-            amount: 0,
+            gearAmount: 0,
+            bookingStatus: "Pendente",
+            paymentStatus: "Pendente",
             price: "",
-            bookingStatus: "Não iniciado",
-            paymentStatus: "Não pago",
+            addressId: "",
+            filialId: user?.sourceFilial.filialId,
         },
     });
 
-    const { handleSubmit, register, watch, formState: { errors }, control, setValue, trigger } = createBookingFormMethods;
-    const [ hoverHour, setHoverHour ] = useState<number | null>(null);
+    const [ bookingSchedule, setBookingSchedule ] = useState<GetDayBookingsResponse[] | undefined>();
+    const [ maximumGearAmountAvailable, setMaximumGearAmountAvailable ] = useState(0);
+    const [ shouldCheckout, setShouldCheckout ] = useState(false);
 
-    const bookingDate = watch("date");
-    const watchStartHour = watch("startHour");
-    const watchEndHour = watch("endHour");
+    const {
+        handleSubmit,
+        reset,
+        register,
+        watch,
+        setValue,
+        formState: { errors },
+        control,
+    } = createBookingFormMethods;
 
-    useEffect(() =>{
-        setValue("totalDuration", watchEndHour && watchStartHour ? watchEndHour - watchStartHour : 0);
-    }, [ watchEndHour, watchStartHour, setValue ]);
+    const { addItem, getTotalItems, items, clearCart, handleCheckout } = useCart();
 
-    function handleCreateBooking(newBookingData: CreateBookingFormSchemaType) {
-        console.log("newBookingData", newBookingData);
-        toast.success("Agendamento criado com sucesso!");
-    }
+    const startHour = watch("startHourInMinutes");
+    const watchTotalDurationInMinutes = watch("totalDurationInMinutes");
+    const watchGearAmount = watch("gearAmount");
+    const selectedDate = watch("date");
+    const watchFilialId = watch("filialId");
+    const watchGearId = watch("gear");
+    const watchPrice = watch("price");
+    const isDateInPast = selectedDate && selectedDate < new Date();
+
+    useEffect(() => {
+        setValue("startHourInMinutes", 0);
+        setValue("totalDurationInMinutes", 0);
+        setMaximumGearAmountAvailable(0);
+    }, [ watchGearId, setValue ]);
+
+    useEffect(() => {
+        setBookingSchedule(undefined);
+    }, [ items ]);
+
+    useEffect(() => {
+        setValue("startHourInMinutes", 0);
+        setValue("totalDurationInMinutes", 0);
+        setValue("gearAmount", 0);
+        async function getDayBookings() {
+            const response = await fetch(`http://localhost:3333/api/bookings/available?filialId=${watchFilialId}&gearId=${watchGearId.gearId}&date=${selectedDate}`, {
+                credentials: "include",
+            });
+            const { data }: {data: GetDayBookingsResponse[]} = await response.json();
+            setBookingSchedule(data);
+        }
+        if(watchFilialId && watchGearId && selectedDate) {
+            getDayBookings();
+        }
+    }, [ selectedDate, watchFilialId, watchGearId, setValue ]);
+
+    async function handleAddToCart(newBookingData: CreateBookingFormSchemaType, showAddToCartToast?: boolean) {
+        if (!startHour || !watchGearId || !selectedDate) {
+            alert("Por favor, preencha todos os campos obrigatórios");
+            return;
+        }
+
+        addItem(newBookingData);
+        if(showAddToCartToast) {
+            toast.success("Agendamento adicionado ao carrinho!", {
+                style: { fontSize: "1rem" },
+            });
+        }
+
+        window.scroll({ top: 0 });
+        setBookingSchedule(undefined);
+        // @ts-expect-error booking cannot be sended withou date, but is set as undefined to reset after user put some item in the cart.
+        setValue("date", undefined);
+        setValue("startHourInMinutes", 0);
+        setValue("totalDurationInMinutes", 0);
+        // @ts-expect-error same as date
+        setValue("gear", undefined);
+        setValue("gearAmount", 0);
+        setValue("price", "");
+        setValue("observations", "");
+        setValue("paymentStatus", "Pendente");
+    };
+
+    const handleQuickBooking = (formData: CreateBookingFormSchemaType) => {
+        handleAddToCart(formData);
+        setShouldCheckout(true);
+        reset();
+    };
+
+    useEffect(() => {
+        if (shouldCheckout && items.length > 0) {
+            handleCheckout();
+            setShouldCheckout(false);
+            clearCart();
+        }
+    }, [ items, shouldCheckout, clearCart, handleCheckout ]);
 
     return (
-        <CardContent>
-            <form id="new-booking-form" className="space-y-6" onSubmit={ handleSubmit(handleCreateBooking) }>
+        <div className="">
+            <div className="space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
+                <div className="ml-auto mr-auto w-[50%]">
+                    {
+                        user?.role === "Gerente" && (
+                            <Controller
+                                control={ control }
+                                name="filialId"
+                                render={ ({ field }) => (
+                                    <SelectFilial
+                                        control={ control }
+                                        name={ field.name }
+                                        defaultFilial={ user?.sourceFilial.filialId }
+                                    />
+                                ) }
+                            />
+                        )
+                    }
+                </div>
+            </div>
+
+            <form id="new-booking-form">
                 <FormProvider { ...createBookingFormMethods }>
-                    <div className="space-y-2">
-                        <Label htmlFor="cliente">Cliente</Label>
-                        <SelectCustomer />
-                        <div className="h-2">
-                            {errors.customerId && (
-                                <p className="text-sm text-destructive mt-2">
-                                    {errors.customerId.message}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="equipamento">Equipamento</Label>
-                        <SelectGear />
-                        <div className="h-2">
-                            {errors.gearName && (
-                                <p className="text-sm text-destructive mt-2">
-                                    {errors.gearName.message}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="flex gap-2 flex-col">
-                        <div className="space-y-2">
-                            <Label htmlFor="amount">Quantidade</Label>
-                            <Controller
-                                control={ control }
-                                name="amount"
-                                render={ ({ field }) => (
-                                    <AmountControlButton
-                                        value={ field.value || 0 }
-                                        onChange={ field.onChange }
-                                        error={ !!errors.amount }
-                                    />
-                                ) }
-                            />
-                            <div className="h-2">
-                                {errors.amount && (
-                                    <p className="text-sm text-destructive mt-2">
-                                        {errors.amount.message}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        <PriceInput register={ register("price") } />
-                        <div className="h-2">
-                            {errors.price && (
-                                <p className="text-sm text-destructive m-0">
-                                    {errors.price.message}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <CardContent className="space-y-4 p-4 rounded-lg border-1 border-gray-300">
-                        <div className="space-y-2">
-                            <Label htmlFor="data" className="font-medium">
-                  Data da reserva
-                            </Label>
-                            <Controller
-                                control={ control }
-                                name="date"
-                                render={ ({ field }) => (
-                                    <DatePicker
-                                        value={ field.value! }
-                                        onChange={ field.onChange }
-                                        placeholder="Selecione a data da reserva"
-                                        clearable
-                                    />
-                                ) }
-                            />
-                            {errors.date && (
-                                <p className="text-sm text-destructive flex items-center mt-1">
-                                    <AlertCircle className="h-4 w-4 mr-1" />
-                                    {errors.date.message}
-                                </p>
-                            )}
-                        </div>
-
-                        {bookingDate && bookingDate > new Date() && (
-                            <div className="mt-6 space-y-3">
-                                <div className="flex items-center flex-col gap-2 mb-3">
-                                    <div className="flex gap-2">
-                                        <Clock className="h-5 w-5 text-muted-foreground shrink-0" />
-                                        <Label className="font-medium">Horário da reserva</Label>
-                                    </div>
-
-                                    {watchStartHour && (
-                                        <div className="md:ml-auto flex flex-col md:flex-row justify-center items-center gap-2">
-                                            <span className="text-sm font-medium">
-                                                {watchStartHour}:00
-                                                {watchEndHour !== null && ` até ${watchEndHour}:00`}
-                                                {watchEndHour === null &&
-                                                                hoverHour !== null &&
-                                                                isValidEndHour(hoverHour, watchStartHour) &&
-                                                                ` até ${hoverHour}:00`}
-                                            </span>
-                                            <Button onClick={ () => clearSelection(setValue) } type="button" variant="outline" size="sm" className="h-8 px-2">
-                                                <RefreshCw className="h-3.5 w-3.5 mr-1" />
-                                                <span className="text-xs">Limpar</span>
-                                            </Button>
-                                        </div>
+                    <div className="flex flex-col gap-10">
+                        {/* Customer and Gear Selection */}
+                        <Card className="transition-all duration-200 hover:shadow-md">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <User className="h-5 w-5 text-primary" />
+                  Informações básicas
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6 w-full">
+                                <div className="space-y-2 w-full">
+                                    <Label htmlFor="cliente" className="text-sm font-medium">
+                    Cliente
+                                    </Label>
+                                    <SelectCustomer disabled={ getTotalItems() > 0 } />
+                                    {errors.customer && errors.customer.customerId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <AlertCircle className="h-3 w-3" />
+                                            {errors.customer.customerId.message}
+                                        </p>
                                     )}
                                 </div>
 
-                                <div className="bg-muted/40 p-4 rounded-lg">
-                                    <div className="grid grid-cols-6 sm:grid-cols-9 md:grid-cols-12 lg:grid-cols-18 gap-1.5">
-                                        {availableHours.map(({ hour, available }) => (
-                                            <Badge
-                                                key={ hour }
-                                                variant={ isHourInRange(hour, watchStartHour, hoverHour, watchEndHour) ? "default" : "outline" }
-                                                className={ cn(
-                                                    "h-9 w-full flex items-center justify-center transition-all",
-                                                    getBadgeStyle(hour, available, watchStartHour, watchEndHour, hoverHour),
-                                                ) }
-                                                onClick={ () => handleTimeClick(hour, available, watchStartHour, watchEndHour, setValue, trigger) }
-                                                onMouseEnter={ () => handleMouseEnter(hour, available, watchStartHour, watchEndHour, setHoverHour) }
-                                                onMouseLeave={ () => handleMouseLeave(setHoverHour) }
-                                            >
-                                                {hour}:00
-                                            </Badge>
-                                        ))}
-                                    </div>
-
-                                    {watchStartHour !== null && watchEndHour === null && (
-                                        <div className="text-xs text-muted-foreground mt-3 text-center">
-                        Selecione um horário final (apenas horários consecutivos disponíveis)
-                                        </div>
-                                    )}
-
-                                    {!watchStartHour && (
-                                        <div className="text-xs text-muted-foreground mt-3 text-center">
-                        Selecione um horário inicial para começar
-                                        </div>
+                                <div className="space-y-2 w-full">
+                                    <Label htmlFor="cliente" className="text-sm font-medium">
+                                        Endereço
+                                    </Label>
+                                    <SelectAddress disabled={ getTotalItems() > 0 } />
+                                    {errors.customer && errors.customer.customerId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <AlertCircle className="h-3 w-3" />
+                                            {errors.customer.customerId.message}
+                                        </p>
                                     )}
                                 </div>
-                                {errors.startHour && (
-                                    <p className="text-sm text-destructive flex items-center mt-1">
-                                        <AlertCircle className="h-4 w-4 mr-1" />
-                                        {errors.startHour.message}
-                                    </p>
-                                )}
-                            </div>
-                        )}
 
-                        {(!bookingDate || bookingDate < new Date()) && (
-                            <div className="flex items-center justify-center p-6 text-muted-foreground">
-                                <Info className="h-4 w-4 mr-2 shrink-0" />
-                                <span className="text-sm">Selecione uma data futura para ver os horários disponíveis</span>
-                            </div>
-                        )}
+                                <div className="space-y-2">
+                                    <Label htmlFor="equipamento" className="text-sm font-medium">
+                                Equipamento
+                                    </Label>
+                                    <SelectGear />
 
-                    </CardContent>
+                                    {errors.gear && errors.gear.gearId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <AlertCircle className="h-3 w-3" />
+                                            {errors.gear.gearId.message}
+                                        </p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="observacoes">Observações</Label>
-                        <Textarea
-                            { ...register("observations") }
-                            className="h-[120px] resize-none max-w-[80vw] placeholder:text-placeholder"
-                            placeholder="Digite detalhes adicionais."
+                        {/* Date and Time Selection */}
+                        <BookingTimeSelector
+                            name="date"
+                            control={ control }
+                            setMaximumGearAmountAvailable={ setMaximumGearAmountAvailable }
+                            bookingSchedule={ bookingSchedule }
                         />
+                        {/* Amount and Price */}
+                        <div className="pb-0 flex w-full justify-center gap-3">
+                            <Card className="transition-all duration-200 hover:shadow-md">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-lg">
+                                        <Package className="h-5 w-5 text-primary" />
+                  Quantidade e valor
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="amount" className="text-sm font-medium">
+                    Quantidade
+                                        </Label>
+                                        <Controller
+                                            control={ control }
+                                            name="gearAmount"
+                                            render={ ({ field }) => (
+                                                <div className="flex gap-3 flex-col justify-center">
+                                                    <AmountControlButton
+                                                        value={ field.value || 0 }
+                                                        onChange={ field.onChange }
+                                                        error={ !!errors.gearAmount }
+                                                        disabled={ watchGearId ? false : true }
+                                                        max={ maximumGearAmountAvailable }
+                                                    />
+                                                    {
+                                                        startHour && selectedDate && watchTotalDurationInMinutes && watchTotalDurationInMinutes > 0 ? (
+                                                            <span className="text-sm">Máximo: {maximumGearAmountAvailable}</span>
+                                                        ) : (
+                                                            <span className="text-sm">Escolha a data, a hora inicial e a duração da reserva para mostrar a quantidade máxima de unidades disponíveis</span>
+                                                        )
+                                                    }
+                                                </div>
+                                            ) }
+                                        />
+                                        {errors.gearAmount && (
+                                            <p className="text-sm text-destructive flex items-center gap-1">
+                                                <AlertCircle className="h-3 w-3" />
+                                                {errors.gearAmount.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="flex md:flex-row flex-col md:items-end items-center gap-5">
+                                        <div className="flex flex-col flex-1">
+                                            <PriceInput register={ register("price") } value={ watchPrice } setValue={ setValue } name="price" />
+                                            {errors.price && (
+                                                <p className="text-sm text-destructive flex items-center gap-1">
+                                                    <AlertCircle className="h-3 w-3" />
+                                                    {errors.price.message}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Observations */}
+                            <Card className="transition-all duration-200 hover:shadow-md">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2 text-lg">
+                                        <MessageSquare className="h-5 w-5 text-primary" />
+                                        Observações
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="observacoes" className="text-sm font-medium">
+                                        Detalhes adicionais (opcional)
+                                        </Label>
+                                        <Textarea
+                                            { ...register("observations") }
+                                            className="min-h-[120px] resize-none placeholder:text-muted-foreground/60 pb-0"
+                                            placeholder="Digite informações adicionais sobre o agendamento, requisitos especiais, ou outras observações relevantes..."
+                                        />
+
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                        </div>
+
+                        {/* Resumo Final */}
+                        {selectedDate && startHour && watchTotalDurationInMinutes && watchPrice && !isDateInPast && (
+                            <Card className="bg-primary/5 border-primary/20 w-[80%] ml-auto mr-auto">
+                                <CardHeader>
+                                    <CardTitle className="text-lg text-primary">Resumo da Reserva</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Data:</span>
+                                        <span className="font-medium">{selectedDate.toLocaleDateString("pt-BR")}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Horário:</span>
+                                        <span className="font-medium">
+                                            {minutesToHHMM(startHour)} - {minutesToHHMM(startHour + watchTotalDurationInMinutes)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Duração:</span>
+                                        <span className="font-medium">{watchTotalDurationInMinutes/60}h</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Preço:</span>
+                                        <span className="font-medium">R$ {watchPrice}</span>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={ handleSubmit((data) => handleAddToCart(data, true)) }
+                                className="flex-1 bg-transparent"
+                                disabled={ !startHour || !watchGearId || !watchPrice || watchGearAmount === 0 }
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                <span className="md:flex hidden md:items-center">Adicionar ao Carrinho</span>
+                            </Button>
+
+                            <Button
+                                disabled={ !startHour || !watchGearId || items.length > 0 || !watchPrice || watchGearAmount === 0 }
+                                type="button"
+                                onClick={ handleSubmit(handleQuickBooking) }
+                                className="flex-1">
+
+                                <Check className="h-4 w-4 mr-2" />
+                                <span className="md:flex hidden md:items-center">Criar Reserva Rápida</span>
+                            </Button>
+                        </div>
                     </div>
                 </FormProvider>
             </form>
-        </CardContent>
+        </div>
     );
+
 }

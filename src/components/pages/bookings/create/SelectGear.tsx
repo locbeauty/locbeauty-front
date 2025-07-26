@@ -1,55 +1,69 @@
 "use client";
 
-import * as React from "react";
-import { Controller, ControllerRenderProps, FieldValues, useFormContext } from "react-hook-form";
+import {
+    Controller,
+    ControllerRenderProps,
+    useFormContext,
+} from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
+import {
+    Drawer,
+    DrawerContent,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import { useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
+import { useEffect, useState } from "react";
+import { Gear } from "@/utils/@types/gears";
+import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { useCart } from "@/contexts/cart-provider";
 
-type Gear = {
-  slug: string
-  label: string
-  id: string
-}
+export function SelectGear() {
+    const [ originalGears, setOriginalGears ] = useState<Gear[]>([]);
+    const [ filteredGears, setFilteredGears ] = useState<Gear[]>([]);
 
-const gears: Gear[] = [
-    {
-        slug: "lavieen",
-        label: "Lavieen",
-        id: "1",
-    },
-    {
-        slug: "ultraformer",
-        label: "Ultraformer",
-        id: "2",
-    },
-    {
-        slug: "delight",
-        label: "Delight",
-        id: "3",
-    },
-    {
-        slug: "lightsheer-duet",
-        label: "Lightsheer Duet",
-        id: "4",
-    },
-    {
-        slug: "vega",
-        label: "Vega",
-        id: "5",
-    },
-];
-
-export function SelectGear({ name = "gearName" }: { name?: string }) {
     const isMounted = useMounted();
+    const isDesktop = useMediaQuery("(min-width: 768px)");
+    const { items } = useCart();
+
     const {
         control,
-    } = useFormContext();
-    const isDesktop = useMediaQuery("(min-width: 768px)");
+        watch
+    } = useFormContext<CreateBookingFormSchemaType>();
+
+    const watchFilialId = watch("filialId");
+    useEffect(() => {
+        async function getAllGears() {
+            const response = await fetch(`http://localhost:3333/api/gears?filialId=${watchFilialId}`, {
+                credentials: "include",
+            });
+            const { data } = await response.json();
+            setOriginalGears(data);
+        }
+        getAllGears();
+    }, [ watchFilialId ]);
+
+    useEffect(() => {
+        const updated = originalGears.filter(
+            gear => !items.some(item => item.gear.gearId === gear.gearId)
+        );
+        setFilteredGears(updated);
+    }, [ items, originalGears ]);
 
     if (!isMounted) {
         return <div className="h-10 w-full" />;
@@ -59,58 +73,87 @@ export function SelectGear({ name = "gearName" }: { name?: string }) {
         <div className="flex flex-col space-y-1">
             <Controller
                 control={ control }
-                name={ name }
-                render={ ({ field }) => (isDesktop ? <DesktopSelect field={ field } /> : <MobileSelect field={ field } />) }
+                name="gear"
+                render={ ({ field }) =>
+                    isDesktop ? (
+                        <DesktopSelect gears={ filteredGears } field={ field } />
+                    ) : (
+                        <MobileSelect gears={ filteredGears } field={ field } />
+                    )
+                }
             />
         </div>
     );
 }
 
-function DesktopSelect({ field }: { field: ControllerRenderProps<FieldValues, string> }) {
-    const [ open, setOpen ] = React.useState(false);
+function DesktopSelect({
+    field,
+    gears,
+}: {
+    field: ControllerRenderProps<CreateBookingFormSchemaType, "gear">;
+    gears: Gear[] | undefined;
+}) {
+    const [ open, setOpen ] = useState(false);
 
-    const selectedGear = field.value ? gears.find((gear) => gear.slug === field.value) : null;
+    const selectedGear = field.value;
 
     return (
         <Popover open={ open } onOpenChange={ setOpen }>
             <PopoverTrigger asChild>
-                <Button variant="outline" className="w-fit justify-start">
+                <Button variant="outline" className="w-full justify-start group cursor-pointer">
                     {selectedGear ? (
-                        <>{selectedGear.label}</>
+                        <>{selectedGear.gearName}</>
                     ) : (
-                        <span className="text-placeholder">Selecione a máquina</span>
+                        <span className="text-placeholder group-hover:text-white">Selecione a máquina</span>
                     )}
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[200px] p-0" align="start">
-                <GearsList setOpen={ setOpen } onChange={ field.onChange } value={ field.value } />
+                <GearsList
+                    gears={ gears }
+                    setOpen={ setOpen }
+                    onChange={ field.onChange }
+                    value={ field.value }
+                />
             </PopoverContent>
         </Popover>
     );
 }
 
-function MobileSelect({ field }: { field: ControllerRenderProps<FieldValues, string> }) {
-    const [ open, setOpen ] = React.useState(false);
+function MobileSelect({
+    field,
+    gears,
+}: {
+  field: ControllerRenderProps<CreateBookingFormSchemaType, "gear">;
+  gears: Gear[] | undefined;
+}) {
+    const [ open, setOpen ] = useState(false);
 
-    const selectedGear = field.value ? gears.find((gear) => gear.slug === field.value) : null;
+    const selectedGear = field.value;
 
     return (
         <Drawer open={ open } onOpenChange={ setOpen }>
             <DrawerTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
                     {selectedGear ? (
-                        <>{selectedGear.label}</>
+                        <>{selectedGear.gearName}</>
                     ) : (
-                        <span className="text-placeholder">Selecione a máquina</span>
+                        <span className="text-muted-foreground">Selecione a máquina</span>
                     )}
                 </Button>
             </DrawerTrigger>
-            <DrawerContent aria-describedby={ undefined }>
-                <DrawerTitle>
-                    <div className="mt-4 border-t">
-                        <GearsList setOpen={ setOpen } onChange={ field.onChange } value={ field.value } />
-                    </div>
+            <DrawerContent>
+                <DrawerTitle className="px-4 pt-4 text-base font-semibold">
+          Máquinas
                 </DrawerTitle>
+                <div className="mt-2 border-t px-4">
+                    <GearsList
+                        gears={ gears }
+                        setOpen={ setOpen }
+                        onChange={ field.onChange }
+                        value={ field.value }
+                    />
+                </div>
             </DrawerContent>
         </Drawer>
     );
@@ -119,10 +162,12 @@ function MobileSelect({ field }: { field: ControllerRenderProps<FieldValues, str
 function GearsList({
     setOpen,
     onChange,
+    gears,
 }: {
-  setOpen: (_open: boolean) => void
-  onChange: (_value: string) => void
-  value: string
+  setOpen: (_open: boolean) => void;
+  onChange: (_value: { gearId: string, gearName: string }) => void;
+  value: { gearId: string, gearName: string };
+  gears: Gear[] | undefined;
 }) {
     return (
         <Command>
@@ -130,16 +175,16 @@ function GearsList({
             <CommandList>
                 <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
                 <CommandGroup>
-                    {gears.map((gear) => (
+                    {gears?.map((gear) => (
                         <CommandItem
-                            key={ gear.slug }
-                            value={ gear.slug }
-                            onSelect={ (slug) => {
-                                onChange(slug);
+                            key={ gear.gearId }
+                            value={ gear.gearName }
+                            onSelect={ () => {
+                                onChange({ gearId: gear.gearId, gearName: gear.gearName });
                                 setOpen(false);
                             } }
                         >
-                            {gear.label}
+                            {gear.gearName}
                         </CommandItem>
                     ))}
                 </CommandGroup>

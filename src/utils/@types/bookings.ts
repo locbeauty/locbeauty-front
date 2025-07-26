@@ -1,19 +1,21 @@
 export type BookingStatuses = "Pendente" | "Concluido" | "Cancelado"
-export type PaymentStatuses = "Pendente" | "Parcial" | "Pago"
+export const paymentStatuses = [ "Pendente", "Parcial", "Pago" ] as const;
+export const paymentModes = [ "PIX", "Crédito", "Débito", "Dinheiro" ] as const;
+
+export type PaymentStatuses = (typeof paymentStatuses)[number];
+export type PaymentModes = (typeof paymentModes)[number];
 
 export type Booking = {
-  id: number;
-  gear: string;
-  customer: string;
-  customerEmail?: string;
-  customerCellphone?: string;
-  city: string;
-  address?: string;
-  startDate: Date;
-  endDate: Date;
-  totalDuration: number; // em horas
-  price: number;
-  bookingStatus: BookingStatuses;
-  paymentStatus: PaymentStatuses;
-  observations?: string;
+    bookingId: string;
+    date: Date;
+    gearAmount: number;
+    startHourInMinutes: number;
+    totalDurationInMinutes: number;
+    price: number;
+    observations: string | null;
+    gear: {
+        gearId: string;
+        gearName: string;
+    };
 };
+

@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils";
 import { Badge } from "../../../ui/badge";
+import { BookingStatuses } from "@/utils/@types/bookings";
 
 interface BookingStatusBadgeProps {
-  status: "Pendente" | "Concluido" | "Cancelado";
+  status: BookingStatuses;
   shrink?: boolean;
 }
 

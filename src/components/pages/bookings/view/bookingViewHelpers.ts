@@ -1,5 +1,5 @@
-import { Booking } from "@/utils/@types/bookings";
 import { Dispatch, SetStateAction } from "react";
+import { FlattenedBooking } from "./WeekView";
 
 //
 // ─── NAVEGAÇÃO DE DATAS ──────────────────────────────────────────────────────────
@@ -62,25 +62,54 @@ export function isToday(date: Date): boolean {
     return isSameDay(date, today);
 }
 
+// export function getMonthDays(date: Date): Date[] {
+//     const year = date.getFullYear();
+//     const month = date.getMonth();
+
+//     const firstDayOfMonth = new Date(year, month, 1);
+//     const lastDayOfMonth = new Date(year, month + 1, 0);
+
+//     const start = new Date(firstDayOfMonth);
+//     const startDay = start.getDay();
+//     start.setDate(start.getDate() - startDay);
+
+//     const end = new Date(lastDayOfMonth);
+//     const endDay = end.getDay() === 0 ? 7 : end.getDay();
+//     end.setDate(end.getDate() + (7 - endDay));
+
+//     const days: Date[] = [];
+//     const current = new Date(start);
+
+//     while (current <= end) {
+//         days.push(new Date(current));
+//         current.setDate(current.getDate() + 1);
+//     }
+
+//     return days;
+// }
 export function getMonthDays(date: Date): Date[] {
     const year = date.getFullYear();
     const month = date.getMonth();
 
+    // Get first day of the month
     const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
 
-    const start = new Date(firstDayOfMonth);
-    const startDay = start.getDay() === 0 ? 7 : start.getDay();
-    start.setDate(start.getDate() - (startDay - 1));
+    // Get the day of the week for the first day (0 = Sunday, 1 = Monday, etc.)
+    const firstDayOfWeek = firstDayOfMonth.getDay();
 
-    const end = new Date(lastDayOfMonth);
-    const endDay = end.getDay() === 0 ? 7 : end.getDay();
-    end.setDate(end.getDate() + (7 - endDay));
+    // Calculate how many days from previous month to show
+    // Adjust for Monday start (0 = Sunday becomes 6, 1 = Monday becomes 0, etc.)
+    const daysFromPrevMonth = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+
+    // Calculate start date (first day to show in the calendar)
+    const startDate = new Date(firstDayOfMonth);
+    startDate.setDate(firstDayOfMonth.getDate() - daysFromPrevMonth);
 
     const days: Date[] = [];
-    const current = new Date(start);
+    const current = new Date(startDate);
 
-    while (current <= end) {
+    // Always generate exactly 6 weeks (42 days) for consistent layout
+    for (let i = 0; i < 42; i++) {
         days.push(new Date(current));
         current.setDate(current.getDate() + 1);
     }
@@ -90,7 +119,7 @@ export function getMonthDays(date: Date): Date[] {
 
 export function getWeekDays(date: Date): Date[] {
     const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    const diff = date.getDate() - day;
     const monday = new Date(date);
     monday.setDate(diff);
 
@@ -104,24 +133,18 @@ export function getWeekDays(date: Date): Date[] {
     return weekDays;
 }
 
-export function getDayIndex(date: Date, weekDays: Date[]): number {
-    for (let i = 0; i < weekDays.length; i++) {
-        if (isSameDay(date, weekDays[i])) {
-            return i;
-        }
-    }
-    return -1;
+export function getDayIndex(bookingDate: Date, weekDays: Date[]): number {
+    const bookingDay = bookingDate.toDateString();
+    return weekDays.findIndex((day) => day.toDateString() === bookingDay);
 }
 
-export function isAgendamentoInWeek(agendamento: Booking, weekDays: Date[]): boolean {
-    const agendamentoDate = agendamento.startDate;
-    const weekStart = new Date(weekDays[0]);
-    weekStart.setHours(0, 0, 0, 0);
+export function isAgendamentoInWeek(booking: FlattenedBooking, weekDays: Date[]): boolean {
+    const bookingDate = booking.startDate;
+    const startOfWeek = weekDays[0];
+    const endOfWeek = new Date(weekDays[6]);
+    endOfWeek.setHours(23, 59, 59, 999);
 
-    const weekEnd = new Date(weekDays[6]);
-    weekEnd.setHours(23, 59, 59, 999);
-
-    return agendamentoDate >= weekStart && agendamentoDate <= weekEnd;
+    return bookingDate >= startOfWeek && bookingDate <= endOfWeek;
 }
 
 //
@@ -158,15 +181,16 @@ export function formatCurrency(value: number): string {
 // ─── EVENTOS ──────────────────────────────────────────────────────────────────────
 //
 
-export function doEventsOverlap(event1: Booking, event2: Booking): boolean {
-    return event1.startDate < event2.endDate && event1.endDate > event2.startDate;
+function doEventsOverlap(event1: FlattenedBooking, event2: FlattenedBooking): boolean {
+    // Two events overlap if one starts before the other ends
+    return event1.startDate < event2.endDate && event2.startDate < event1.endDate;
 }
 
-export function groupOverlappingEvents(events: Booking[]): Booking[][] {
+export function groupOverlappingEvents(events: FlattenedBooking[]): FlattenedBooking[][] {
     if (events.length === 0) return [];
 
     const sortedEvents = [ ...events ].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-    const groups: Booking[][] = [];
+    const groups: FlattenedBooking[][] = [];
 
     sortedEvents.forEach((event) => {
         let foundGroup = false;

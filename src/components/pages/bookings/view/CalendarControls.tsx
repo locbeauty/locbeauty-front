@@ -69,7 +69,8 @@ export function CalendarControls({
                     { formatMonthYear(currentDate) }
                 </h2>
             </div>
-            <div className="hidden md:flex items-center gap-2">
+            {/* TODO: fix select layout */}
+            <div className="flex items-center gap-2">
                 <SelectCalendarViewType viewType={ viewType } setViewType={ setViewType } />
             </div>
         </div>

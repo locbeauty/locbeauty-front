@@ -15,20 +15,20 @@ export const createEmployeeFormSchema = z.object({
         .regex(/^\d{3}\.\d{3}\.\d{3}\-\d{2}$/, {
             message: "CPF deve ter formato válido (000.000.000-00)",
         }),
-    roleId: z.string({ message: "Função é obrigatória" }),
-    cellphone: z.string().min(14, { message: "Telefone é obrigatório" }),
+    role: z.string({ message: "Função é obrigatória" }),
+    cellphone: z.string().min(14, { message: "Telefone é obrigatório" }).nullable(),
     sourceFilialId: z.string(),
     email: z
         .string()
         .min(1, { message: "Email é obrigatório" })
         .email({ message: "Email inválido" })
-        .max(100, { message: "Email deve ter no máximo 100 caracteres" }),
+        .max(100, { message: "Email deve ter no máximo 100 caracteres" }).nullable(),
     address: addressSchema,
     birthdate: z
         .date({ message: "Data de nascimento é obrigatória" })
         .refine((date) => date < new Date(), {
             message: "Data de nascimento deve ser no passado",
-        }),
+        }).nullable(),
     password: z.string({ message: "Senha é obrigatória." }),
 });
 

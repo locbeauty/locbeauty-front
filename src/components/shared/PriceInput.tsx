@@ -2,27 +2,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type React from "react";
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { UseFormRegisterReturn } from "react-hook-form";
+import { Path, UseFormRegisterReturn, UseFormSetValue } from "react-hook-form";
+import { Label } from "../ui/label";
+import { DollarSign } from "lucide-react";
 
-interface PriceInputProps {
+interface PriceInputProps<TFieldValues extends Record<string, any>> {
   label?: string
   placeholder?: string
   value?: string
   onChange?: (_value: string) => void
   error?: string
   register: UseFormRegisterReturn<any>
+  setValue?: UseFormSetValue<TFieldValues>;
+    name: Path<TFieldValues>;
 }
 
-export default function PriceInput({
-    value: initialValue = "",
+export default function PriceInput<TFieldValues extends Record<string, any>>({
     onChange,
     error,
     register,
-}: PriceInputProps) {
-    const [ displayValue, setDisplayValue ] = useState(initialValue);
+    setValue,
+    name,
+    value: displayValue
+}: PriceInputProps<TFieldValues>) {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Remove any non-numeric characters
@@ -37,30 +40,28 @@ export default function PriceInput({
             maximumFractionDigits: 2,
         });
 
-        setDisplayValue(reais);
-
-        // Call the onChange handler with the raw value (in the format XX,XX)
-        if (onChange) {
-            onChange(reais);
-        }
+        if (onChange) onChange(reais);
+        if (setValue) setValue(name, reais as any);
     };
 
     return (
         <div className="flex flex-col gap-2 mt-4">
-            <Label htmlFor="price-input" className="gap-1">
+            <Label htmlFor="price-input" className="gap-1 flex items-center">
+                <DollarSign className="h-4 w-4" />
                 Preço
             </Label>
             <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                 <Input
                     { ...register }
+                    maxLength={ 12 }
                     id="price-input"
                     type="text"
                     inputMode="numeric"
                     value={ displayValue }
                     onChange={ handleChange }
                     placeholder="0,00"
-                    className="pl-9 md:w-fit w-full"
+                    className="pl-9 w-full"
                     aria-invalid={ !!error }
                 />
             </div>

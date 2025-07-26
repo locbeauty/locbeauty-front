@@ -1,6 +1,6 @@
 export type Gear = {
     gearId: string,
-    name: string,
+    gearName: string,
     description: string,
     filialId: string,
     availableUnits: number,
@@ -10,4 +10,8 @@ export type Gear = {
     transferable: boolean,
     nextMaintenance: Date | null,
     lastMaintenance: Date | null,
+    SourceFilial: {
+      filialId: string,
+      description: string,
+  }
 }
