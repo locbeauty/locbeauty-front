@@ -15,7 +15,7 @@ export const createEmployeeFormSchema = z.object({
         .regex(/^\d{3}\.\d{3}\.\d{3}\-\d{2}$/, {
             message: "CPF deve ter formato válido (000.000.000-00)",
         }),
-    roleId: z.string({ message: "Função é obrigatória" }),
+    role: z.string({ message: "Função é obrigatória" }),
     cellphone: z.string().min(14, { message: "Telefone é obrigatório" }).nullable(),
     sourceFilialId: z.string(),
     email: z

@@ -1,6 +1,7 @@
+import { Address } from "./address";
 import { BookingStatuses, PaymentStatuses } from "./bookings";
 
-export type CheckoutWithRelations = {
+export type Checkout = {
     checkoutId: string;
     bookingStatus: BookingStatuses;
     paymentStatus: PaymentStatuses;
@@ -10,7 +11,7 @@ export type CheckoutWithRelations = {
         date: Date;
         gearAmount: number;
         startHourInMinutes: number;
-        totalDuration: number;
+        totalDurationInMinutes: number;
         price: number;
         observations: string | null;
         gear: {
@@ -22,9 +23,17 @@ export type CheckoutWithRelations = {
         customerId: string;
         fullname: string;
         documentNumber: string;
+        email: string,
+        instagram: string,
+        cellphone: string,
+        birthdate: string,
+        companyName: string,
+        customerStatus: string,
+        lastBooking: Date,
     };
     sourceFilial: {
         filialId: string;
         description: string;
     };
+    address: Address;
 }

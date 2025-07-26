@@ -34,7 +34,7 @@ export default function TimePicker({ selectedDate, bookingSchedule, setMaximumGe
 
     const watchStartHourInMinutes = watch("startHourInMinutes");
     const watchGearId = watch("gear.gearId");
-    const watchTotalDuration = watch("totalDuration");
+    const watchTotalDuration = watch("totalDurationInMinutes");
     const startHour = watch("startHourInMinutes");
 
     useEffect(() => {
@@ -51,7 +51,7 @@ export default function TimePicker({ selectedDate, bookingSchedule, setMaximumGe
 
     const handleDurationButtonClick = (durationValue: number, maxGearAmount: number) => {
         setValue("gearAmount", 0);
-        setValue("totalDuration", durationValue);
+        setValue("totalDurationInMinutes", durationValue);
         setMaximumGearAmountAvailable(maxGearAmount);
         setDurationInMinutes(durationValue);
     };

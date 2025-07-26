@@ -31,7 +31,7 @@ export function GearsTable() {
 
     useEffect(() => {
         async function getGears() {
-            const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears/all`);
+            const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears`);
             if(user && user?.role !== "Gerente") {
                 url.searchParams.append("filialId", user?.sourceFilial.filialId);
             }
@@ -55,7 +55,7 @@ export function GearsTable() {
                             <th className="text-center p-3 font-medium">
                 Unidades disponíveis
                             </th>
-                            <th className="text-center p-3 font-medium">Unidades totais</th>
+                            <th className="text-center p-3 font-medium">Unidades operacionais</th>
                             <th className="text-center p-3 font-medium">Data da aquisição</th>
                             <th className="text-center p-3 font-medium">
                 Pode ser transferido?
@@ -80,9 +80,9 @@ export function GearsTable() {
                                 <td className="p-3 max-w-[700px] truncate whitespace-nowrap overflow-hidden">
                                     {gear.description}
                                 </td>
-                                <td className="p-3 text-center">{gear.filialId}</td>
+                                <td className="p-3 text-center">{gear.SourceFilial.description}</td>
                                 <td className="p-3 text-center">{gear.availableUnits}</td>
-                                <td className="p-3 text-center">{gear.availableUnits}</td>
+                                <td className="p-3 text-center">{gear.totalUnits}</td>
                                 <td className="p-3 text-center">{gear.acquisitionDate ? new Date(gear.acquisitionDate).toLocaleDateString("pt-BR") : "Não informado"}</td>
                                 <td className="p-0 h-full">
                                     <div className="h-full flex justify-center items-center">

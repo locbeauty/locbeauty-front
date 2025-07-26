@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-provider";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
+import { SelectAddress } from "./SelectAddress";
 
 export interface GetDayBookingsResponse {
   hourInMinutes: number,
@@ -27,7 +28,7 @@ export interface GetDayBookingsResponse {
   availability: {
         durationInMinutes: number,
         available: boolean,
-        maxGearAmount: 4
+        maxGearAmount: number
     }[],
 }
 
@@ -40,6 +41,7 @@ export function CreateBookingForm() {
             bookingStatus: "Pendente",
             paymentStatus: "Pendente",
             price: "",
+            addressId: "",
             filialId: user?.sourceFilial.filialId,
         },
     });
@@ -61,7 +63,7 @@ export function CreateBookingForm() {
     const { addItem, getTotalItems, items, clearCart, handleCheckout } = useCart();
 
     const startHour = watch("startHourInMinutes");
-    const watchTotalDurationInMinutes = watch("totalDuration");
+    const watchTotalDurationInMinutes = watch("totalDurationInMinutes");
     const watchGearAmount = watch("gearAmount");
     const selectedDate = watch("date");
     const watchFilialId = watch("filialId");
@@ -71,7 +73,7 @@ export function CreateBookingForm() {
 
     useEffect(() => {
         setValue("startHourInMinutes", 0);
-        setValue("totalDuration", 0);
+        setValue("totalDurationInMinutes", 0);
         setMaximumGearAmountAvailable(0);
     }, [ watchGearId, setValue ]);
 
@@ -80,6 +82,9 @@ export function CreateBookingForm() {
     }, [ items ]);
 
     useEffect(() => {
+        setValue("startHourInMinutes", 0);
+        setValue("totalDurationInMinutes", 0);
+        setValue("gearAmount", 0);
         async function getDayBookings() {
             const response = await fetch(`http://localhost:3333/api/bookings/available?filialId=${watchFilialId}&gearId=${watchGearId.gearId}&date=${selectedDate}`, {
                 credentials: "include",
@@ -90,7 +95,7 @@ export function CreateBookingForm() {
         if(watchFilialId && watchGearId && selectedDate) {
             getDayBookings();
         }
-    }, [ selectedDate, watchFilialId, watchGearId ]);
+    }, [ selectedDate, watchFilialId, watchGearId, setValue ]);
 
     async function handleAddToCart(newBookingData: CreateBookingFormSchemaType, showAddToCartToast?: boolean) {
         if (!startHour || !watchGearId || !selectedDate) {
@@ -110,7 +115,7 @@ export function CreateBookingForm() {
         // @ts-expect-error booking cannot be sended withou date, but is set as undefined to reset after user put some item in the cart.
         setValue("date", undefined);
         setValue("startHourInMinutes", 0);
-        setValue("totalDuration", 0);
+        setValue("totalDurationInMinutes", 0);
         // @ts-expect-error same as date
         setValue("gear", undefined);
         setValue("gearAmount", 0);
@@ -180,21 +185,33 @@ export function CreateBookingForm() {
                                     )}
                                 </div>
 
-                            </CardContent>
+                                <div className="space-y-2 w-full">
+                                    <Label htmlFor="cliente" className="text-sm font-medium">
+                                        Endereço
+                                    </Label>
+                                    <SelectAddress disabled={ getTotalItems() > 0 } />
+                                    {errors.customer && errors.customer.customerId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <AlertCircle className="h-3 w-3" />
+                                            {errors.customer.customerId.message}
+                                        </p>
+                                    )}
+                                </div>
 
-                            <div className="space-y-2 px-5">
-                                <Label htmlFor="equipamento" className="text-sm font-medium">
+                                <div className="space-y-2">
+                                    <Label htmlFor="equipamento" className="text-sm font-medium">
                                 Equipamento
-                                </Label>
-                                <SelectGear />
+                                    </Label>
+                                    <SelectGear />
 
-                                {errors.gear && errors.gear.gearId && (
-                                    <p className="text-sm text-destructive flex items-center gap-1">
-                                        <AlertCircle className="h-3 w-3" />
-                                        {errors.gear.gearId.message}
-                                    </p>
-                                )}
-                            </div>
+                                    {errors.gear && errors.gear.gearId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <AlertCircle className="h-3 w-3" />
+                                            {errors.gear.gearId.message}
+                                        </p>
+                                    )}
+                                </div>
+                            </CardContent>
                         </Card>
 
                         {/* Date and Time Selection */}

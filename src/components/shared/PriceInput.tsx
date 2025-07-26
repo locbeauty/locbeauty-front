@@ -54,6 +54,7 @@ export default function PriceInput<TFieldValues extends Record<string, any>>({
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                 <Input
                     { ...register }
+                    maxLength={ 12 }
                     id="price-input"
                     type="text"
                     inputMode="numeric"

@@ -92,10 +92,10 @@ export function CartSheet() {
                                                     <span className="text-muted-foreground">Horário:</span>
                                                     <span className="font-medium">
                                                         {minutesToHHMM(item.startHourInMinutes)} -{" "}
-                                                        {minutesToHHMM(item.startHourInMinutes + item.totalDuration)}
+                                                        {minutesToHHMM(item.startHourInMinutes + item.totalDurationInMinutes)}
                                                     </span>
                                                     <Badge variant="secondary" className="text-xs">
-                                                        {item.totalDuration / 60}h
+                                                        {item.totalDurationInMinutes / 60}h
                                                     </Badge>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-sm">

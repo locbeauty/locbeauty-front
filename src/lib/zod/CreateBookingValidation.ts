@@ -19,13 +19,14 @@ export const createBookingFormSchema = z
                 message: "Data precisa ser no futuro.",
             }),
         startHourInMinutes: z.number(),
-        totalDuration: z.number(),
+        totalDurationInMinutes: z.number(),
         price: z.string().min(1, { message: "Preço é obrigatório." }),
         bookingStatus: z
             .enum([ "Pendente", "Concluido", "Cancelado" ], { message: "Status de pagamento é obrigatório." }),
         paymentStatus: z
             .enum([ "Pendente", "Parcial", "Pago" ], { message: "Status de pagamento é obrigatório." }),
         observations: z.string().trim().optional(),
+        addressId: z.string()
     });
 
 export type CreateBookingFormSchemaType = z.infer<typeof createBookingFormSchema>

@@ -119,8 +119,8 @@ function CustomersList({
                     {allCustomers.map((customer) => (
                         <CommandItem
                             className="w-[700px]"
-                            key={ customer.fullname }
-                            value={ customer.fullname }
+                            key={ customer.customerId }
+                            value={ customer.customerId }
                             onSelect={ () => {
                                 onChange(
                                     {

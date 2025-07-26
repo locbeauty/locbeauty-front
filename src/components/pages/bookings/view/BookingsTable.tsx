@@ -4,27 +4,30 @@ import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingSt
 import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-provider";
-import { CheckoutWithRelations } from "@/utils/@types/checkouts";
+import { Checkout } from "@/utils/@types/checkouts";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 
 export function BookingsTable() {
-    const [ checkouts, setCheckouts ] = useState<CheckoutWithRelations[] | null>(null);
+    const [ checkouts, setCheckouts ] = useState<Checkout[] | null>(null);
 
     const { user } = useAuth();
 
     useEffect(() => {
-        async function handleGetAllCustomers() {
-            const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/checkouts/all`);
+        async function handleGetAllCheckouts() {
+            const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/checkouts`);
             if(user && user?.role !== "Gerente") {
                 url.searchParams.append("filialId", user?.sourceFilial.filialId);
             }
+
+            // url.searchParams.append("startDate", new Date().toString());
+            // url.searchParams.append("endDate", new Date("08-11-2025").toString());
             const response = await fetch(url, {
                 credentials: "include",
             });
-            const { data }: { data: CheckoutWithRelations[] } = await response.json();
+            const { data }: { data: Checkout[] } = await response.json();
             setCheckouts(data);
         }
-        handleGetAllCustomers();
+        handleGetAllCheckouts();
     }, [ user ]);
 
     return (
@@ -58,7 +61,7 @@ export function BookingsTable() {
                             minutesToHHMM(b.startHourInMinutes)
                         );
                         const endTimes = checkout.Bookings.map((b) =>
-                            minutesToHHMM(b.startHourInMinutes + b.totalDuration)
+                            minutesToHHMM(b.startHourInMinutes + b.totalDurationInMinutes)
                         );
 
                         const isSame = (arr: string[]) =>

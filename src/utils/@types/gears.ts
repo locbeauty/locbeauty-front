@@ -10,4 +10,8 @@ export type Gear = {
     transferable: boolean,
     nextMaintenance: Date | null,
     lastMaintenance: Date | null,
+    SourceFilial: {
+      filialId: string,
+      description: string,
+  }
 }

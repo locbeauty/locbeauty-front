@@ -1,4 +1,113 @@
-import { Booking } from "@/utils/@types/bookings";
+// import { Booking } from "@/utils/@types/bookings";
+// import {
+//     getDayIndex,
+//     getWeekDays,
+//     groupOverlappingEvents,
+//     isAgendamentoInWeek,
+//     workingHours,
+// } from "./bookingViewHelpers";
+
+// import { CalendarWeekHeader } from "./CalendarWeekHeader";
+// import { MultipleEventBox } from "./MultipleEventBox";
+// import { SingleEventBox } from "./SingleEventBox";
+// import { Checkout } from "@/utils/@types/checkouts";
+
+// interface WeekViewProps {
+//   currentDate: Date;
+//   bookings: Checkout[];
+//   openBookingDetails: (_agendamento: Booking) => void;
+// }
+
+// export function WeekView({
+//     currentDate,
+//     bookings,
+//     openBookingDetails,
+// }: WeekViewProps) {
+//     // Gerar os dias da semana a partir da data atual
+//     const weekDays = getWeekDays(currentDate);
+
+//     // Horas do dia para exibição
+//     // const hours = Array.from({ length: 19 }, (_, i) => i + 5); // 5h às 23h
+
+//     return (
+//         <div className="hidden md:block min-w-full">
+//             { /* Cabeçalho com os dias da semana */ }
+//             <CalendarWeekHeader weekDays={ weekDays } />
+
+//             { /* Grade de horários */ }
+//             <div className="relative">
+//                 { /* Linhas de horas */ }
+//                 { workingHours.map((hour) => (
+//                     <div
+//                         key={ hour }
+//                         className="grid border-b h-[64px]"
+//                         style={ { gridTemplateColumns: "100px repeat(7, 1fr)" } }
+//                     >
+//                         <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">{ `${hour}:00` }</div>
+//                         { weekDays.map((_, dayIndex) => (
+//                             <div key={ dayIndex } className="h-16 border-r relative " />
+//                         )) }
+//                     </div>
+//                 )) }
+
+//                 { /* Agendamentos */ }
+//                 { (() => {
+//                     // Agrupar agendamentos por dia
+//                     const bookingsByDay: Record<number, Booking[]> = {};
+
+//                     bookings.forEach((booking) => {
+//                         if (!isAgendamentoInWeek(booking, weekDays)) return;
+
+//                         const dayIndex = getDayIndex(booking.startDate, weekDays);
+//                         if (dayIndex === -1) return;
+
+//                         if (!bookingsByDay[dayIndex]) {
+//                             bookingsByDay[dayIndex] = [];
+//                         }
+
+//                         bookingsByDay[dayIndex].push(booking);
+//                     });
+
+//                     // Renderizar agendamentos para cada dia
+//                     return Object.entries(bookingsByDay).flatMap(
+//                         ([ dayIndexStr, dayAgendamentos ]) => {
+//                             const dayIndex = Number.parseInt(dayIndexStr);
+
+//                             // Agrupar agendamentos sobrepostos para este dia
+//                             const bookingGroups = groupOverlappingEvents(dayAgendamentos);
+
+//                             return bookingGroups.flatMap((group) => {
+//                                 // When there is only one booking starting at the time, show him with full event box width
+//                                 if (group.length === 1) {
+//                                     return (
+//                                         <SingleEventBox
+//                                             key={ group[0].id }
+//                                             dayIndex={ dayIndex }
+//                                             group={ group }
+//                                             openBookingDetails={ openBookingDetails }
+//                                         />
+//                                     );
+//                                 } else {
+//                                     // When there is more than one booking starting in the same time, show them side by side
+//                                     return (
+//                                         <MultipleEventBox
+//                                             key={ group[0].id }
+//                                             dayIndex={ dayIndex }
+//                                             group={ group }
+//                                             openBookingDetails={ openBookingDetails }
+//                                         />
+//                                     );
+//                                 }
+//                             });
+//                         }
+//                     );
+//                 })() }
+//             </div>
+//         </div>
+//     );
+// }
+
+import type { Checkout } from "@/utils/@types/checkouts";
 import {
     getDayIndex,
     getWeekDays,
@@ -6,91 +115,155 @@ import {
     isAgendamentoInWeek,
     workingHours,
 } from "./bookingViewHelpers";
-
 import { CalendarWeekHeader } from "./CalendarWeekHeader";
 import { MultipleEventBox } from "./MultipleEventBox";
 import { SingleEventBox } from "./SingleEventBox";
+import { BookingStatuses, PaymentStatuses } from "@/utils/@types/bookings";
+import { MobileWeekView } from "./MobileWeekView";
+import { Address } from "@/utils/@types/address";
 
-interface WeekViewProps {
-  currentDate: Date;
-  bookings: Booking[];
-  openBookingDetails: (_agendamento: Booking) => void;
+// Create a flattened booking type that includes checkout info
+export type FlattenedBooking = {
+  id: string
+  startDate: Date
+  endDate: Date
+  checkoutId: string
+  bookingId: string
+  date: Date
+  gearAmount: number
+  startHourInMinutes: number
+  totalDurationInMinutes: number
+  price: number
+  observations: string | null
+  gear: {
+    gearId: string
+    gearName: string
+  }
+  customer: {
+    customerId: string
+    fullname: string
+    documentNumber: string
+    email: string,
+    instagram: string,
+    cellphone: string,
+    birthdate: string,
+    companyName: string,
+    customerStatus: string,
+    lastBooking: Date,
+  }
+  sourceFilial: {
+    filialId: string
+    description: string
+  }
+  address: Address
+  bookingStatus: BookingStatuses
+  paymentStatus: PaymentStatuses
+  totalPrice: number
 }
 
-export function WeekView({
-    currentDate,
-    bookings,
-    openBookingDetails,
-}: WeekViewProps) {
-    // Gerar os dias da semana a partir da data atual
+interface WeekViewProps {
+  currentDate: Date
+  checkouts: Checkout[]
+  openBookingDetails: (booking: FlattenedBooking) => void
+}
+
+export function WeekView({ currentDate, checkouts, openBookingDetails }: WeekViewProps) {
+    // Generate week days from current date
     const weekDays = getWeekDays(currentDate);
 
-    // Horas do dia para exibição
-    // const hours = Array.from({ length: 19 }, (_, i) => i + 5); // 5h às 23h
+    // Flatten bookings from checkouts
+    const flattenedBookings: FlattenedBooking[] = checkouts?.flatMap((checkout) =>
+        checkout.Bookings.map((booking) => {
+            // Convert startHourInMinutes to actual start and end dates
+            const startDate = new Date(booking.date);
+            startDate.setHours(Math.floor(booking.startHourInMinutes / 60));
+            startDate.setMinutes(booking.startHourInMinutes % 60);
+
+            const endDate = new Date(startDate);
+            endDate.setMinutes(endDate.getMinutes() + booking.totalDurationInMinutes);
+
+            return {
+                id: booking.bookingId,
+                startDate,
+                endDate,
+                checkoutId: checkout.checkoutId,
+                bookingId: booking.bookingId,
+                date: booking.date,
+                gearAmount: booking.gearAmount,
+                startHourInMinutes: booking.startHourInMinutes,
+                totalDurationInMinutes: booking.totalDurationInMinutes,
+                price: booking.price,
+                observations: booking.observations,
+                gear: booking.gear,
+                customer: checkout.customer,
+                sourceFilial: checkout.sourceFilial,
+                bookingStatus: checkout.bookingStatus,
+                paymentStatus: checkout.paymentStatus,
+                totalPrice: checkout.totalPrice,
+                address: checkout.address
+            };
+        }),
+    );
 
     return (
-        <div className="hidden md:block min-w-full">
-            { /* Cabeçalho com os dias da semana */ }
-            <CalendarWeekHeader weekDays={ weekDays } />
+        <>
+            <MobileWeekView bookings={ checkouts } currentDate={ currentDate } openBookingDetails={ openBookingDetails } />
+            <div className="hidden md:block min-w-full">
+                {/* Header with week days */}
+                <CalendarWeekHeader weekDays={ weekDays } />
 
-            { /* Grade de horários */ }
-            <div className="relative">
-                { /* Linhas de horas */ }
-                { workingHours.map((hour) => (
-                    <div
-                        key={ hour }
-                        className="grid border-b h-[64px]"
-                        style={ { gridTemplateColumns: "100px repeat(7, 1fr)" } }
-                    >
-                        <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">{ `${hour}:00` }</div>
-                        { weekDays.map((_, dayIndex) => (
-                            <div key={ dayIndex } className="h-16 border-r relative " />
-                        )) }
-                    </div>
-                )) }
+                {/* Time grid */}
+                <div className="relative">
+                    {/* Hour lines */}
+                    {workingHours.map((hour) => (
+                        <div key={ hour } className="grid border-b h-[64px]" style={ { gridTemplateColumns: "100px repeat(7, 1fr)" } }>
+                            <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">{`${hour}:00`}</div>
+                            {weekDays.map((_, dayIndex) => (
+                                <div key={ dayIndex } className="h-16 border-r relative" />
+                            ))}
+                        </div>
+                    ))}
 
-                { /* Agendamentos */ }
-                { (() => {
-                    // Agrupar agendamentos por dia
-                    const bookingsByDay: Record<number, Booking[]> = {};
+                    {/* Bookings */}
+                    {(() => {
+                    // Group bookings by day
+                        const bookingsByDay: Record<number, FlattenedBooking[]> = {};
 
-                    bookings.forEach((booking) => {
-                        if (!isAgendamentoInWeek(booking, weekDays)) return;
+                        flattenedBookings?.forEach((booking) => {
+                            if (!isAgendamentoInWeek(booking, weekDays)) return;
 
-                        const dayIndex = getDayIndex(booking.startDate, weekDays);
-                        if (dayIndex === -1) return;
+                            const dayIndex = getDayIndex(booking.startDate, weekDays);
+                            if (dayIndex === -1) return;
 
-                        if (!bookingsByDay[dayIndex]) {
-                            bookingsByDay[dayIndex] = [];
-                        }
+                            if (!bookingsByDay[dayIndex]) {
+                                bookingsByDay[dayIndex] = [];
+                            }
+                            bookingsByDay[dayIndex].push(booking);
+                        });
 
-                        bookingsByDay[dayIndex].push(booking);
-                    });
-
-                    // Renderizar agendamentos para cada dia
-                    return Object.entries(bookingsByDay).flatMap(
-                        ([ dayIndexStr, dayAgendamentos ]) => {
+                        // Render bookings for each day
+                        return Object.entries(bookingsByDay).flatMap(([ dayIndexStr, dayBookings ]) => {
                             const dayIndex = Number.parseInt(dayIndexStr);
 
-                            // Agrupar agendamentos sobrepostos para este dia
-                            const bookingGroups = groupOverlappingEvents(dayAgendamentos);
+                            // Group overlapping bookings for this day
+                            const bookingGroups = groupOverlappingEvents(dayBookings);
 
                             return bookingGroups.flatMap((group) => {
-                                // When there is only one booking starting at the time, show him with full event box width
+                            // When there is only one booking starting at the time, show it with full event box width
                                 if (group.length === 1) {
                                     return (
                                         <SingleEventBox
-                                            key={ group[0].id }
+                                            key={ group[0].bookingId }
                                             dayIndex={ dayIndex }
                                             group={ group }
                                             openBookingDetails={ openBookingDetails }
                                         />
                                     );
                                 } else {
-                                    // When there is more than one booking starting in the same time, show them side by side
+                                // When there is more than one booking starting in the same time, show them side by side
                                     return (
                                         <MultipleEventBox
-                                            key={ group[0].id }
+                                            key={ group[0].bookingId }
                                             dayIndex={ dayIndex }
                                             group={ group }
                                             openBookingDetails={ openBookingDetails }
@@ -98,10 +271,10 @@ export function WeekView({
                                     );
                                 }
                             });
-                        }
-                    );
-                })() }
+                        });
+                    })()}
+                </div>
             </div>
-        </div>
+        </>
     );
 }
