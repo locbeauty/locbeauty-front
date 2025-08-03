@@ -132,14 +132,14 @@ export function MonthView({ currentDate, checkouts, openBookingDetails }: MonthV
                 gearAmount: booking.gearAmount,
                 startHourInMinutes: booking.startHourInMinutes,
                 totalDurationInMinutes: booking.totalDurationInMinutes,
-                price: booking.price,
+                price: booking.price / 100,
                 observations: booking.observations,
                 gear: booking.gear,
                 customer: checkout.customer,
                 sourceFilial: checkout.sourceFilial,
-                bookingStatus: checkout.bookingStatus,
+                bookingStatus: checkout.checkoutStatus,
                 paymentStatus: checkout.paymentStatus,
-                totalPrice: checkout.totalPrice,
+                totalPrice: checkout.totalPrice / 100,
                 address: checkout.address
             };
         }),

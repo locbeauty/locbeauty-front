@@ -42,7 +42,7 @@ export function SelectFilial<T extends FieldValues>({
             name={ name }
             control={ control }
             render={ ({ field }) => (
-                <Select defaultValue={ defaultFilial } onValueChange={ field.onChange } value={ field.value }>
+                <Select defaultValue={ defaultFilial } onValueChange={ field.onChange } value={ field.value ?? "" }>
                     <SelectTrigger className="w-full md:w-[90%] data-[placeholder]:text-placeholder">
                         <SelectValue placeholder="Selecione uma filial" />
                     </SelectTrigger>

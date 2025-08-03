@@ -8,6 +8,9 @@ import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { UserDropdown } from "./UserDropdown";
 import { CartSheet } from "@/components/pages/bookings/create/cart-sheet";
 import { ROUTES } from "@/utils/routes";
+import { Label } from "../label";
+import { Progress } from "../progress";
+import { Badge } from "../badge";
 
 export function DashboardHeader({
     setSidebarOpen,
@@ -40,6 +43,22 @@ export function DashboardHeader({
                             </div>
                         )
                     }
+                    {/* <div className="">
+                        <div className="flex justify-between">
+                            <span className="text-sm font-bold">R$ 250,00 / R$ 500,00</span>
+                        </div>
+                        <div className="w-full h-5 rounded-full bg-border overflow-hidden relative">
+                            <div
+                                className="h-full bg-primary absolute left-0 top-0 transition-all"
+                                style={ { width: "90%" } }
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-white text-xs font-bold z-10">
+        50% concluído
+                                </span>
+                            </div>
+                        </div>
+                    </div> */}
                     <div className="flex items-center ml-auto">
                         <UserDropdown />
                     </div>

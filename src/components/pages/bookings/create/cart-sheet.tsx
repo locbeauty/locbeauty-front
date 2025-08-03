@@ -7,14 +7,81 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShoppingCart, Trash2, Calendar, Clock, Package, User, Scroll } from "lucide-react";
-import { useState } from "react";
+import { ShoppingCart, Trash2, Calendar, Clock, Package, User, Scroll, AlertCircle, CreditCard, CheckCircle, DollarSign } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/contexts/cart-provider";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import PriceInput from "@/components/shared/PriceInput";
+import { parseStringToCents } from "@/utils/parseStringToCents";
 
 export function CartSheet() {
-    const { items, removeItem, clearCart, getTotalPrice, getTotalItems, handleCheckout, changePaymentModes, changePaymentStatus } = useCart();
+    const {
+        items,
+        removeItem,
+        clearCart,
+        getTotalPrice,
+        getTotalItems,
+        handleCheckout,
+        changePaymentMode,
+        changePaymentStatus,
+        paymentMode,
+        paymentStatus,
+        changePartialPaymentValue,
+        partialPaymentValue
+    } = useCart();
     const [ isOpen, setIsOpen ] = useState(false);
+    const [ errorMessage, setErrorMessage ] = useState("");
+
+    function getStatusColor(status: string) {
+        switch (status) {
+        case "Pago":
+            return "bg-green-500";
+        case "Parcial":
+            return "bg-yellow-500";
+        case "Pendente":
+            return "bg-red-500";
+        default:
+            return "bg-gray-500";
+        }
+    }
+
+    useEffect(() => {
+        console.log("partialPaymentValue: ", partialPaymentValue);
+    }, [ partialPaymentValue ]);
+
+    useEffect(() => {
+        if(paymentStatus === "Parcial") {
+            if(parseStringToCents(partialPaymentValue) >= getTotalPrice()) {
+                setErrorMessage("Valor maior que o preço total. Escolha a opção \"Pago\".");
+            } else if(parseStringToCents(partialPaymentValue) === 0) {
+                setErrorMessage("Valor é obrigatório.");
+            } else {
+                setErrorMessage("");
+            }
+        }
+    }, [ paymentMode, paymentStatus, getTotalPrice, partialPaymentValue ]);
+
+    function getPaymentIcon(mode: string) {
+        switch (mode) {
+        case "PIX":
+            return (
+                <div className="w-4 h-4 bg-blue-600 rounded-sm flex items-center justify-center text-white text-xs font-bold">
+            P
+                </div>
+            );
+        case "Crédito":
+        case "Débito":
+            return <CreditCard className="h-4 w-4" />;
+        case "Dinheiro":
+            return (
+                <div className="w-4 h-4 bg-green-600 rounded-full flex items-center justify-center text-white text-xs">$</div>
+            );
+        default:
+            return <CreditCard className="h-4 w-4" />;
+        }
+    }
 
     return (
         <Sheet open={ isOpen } onOpenChange={ setIsOpen }>
@@ -104,11 +171,18 @@ export function CartSheet() {
                                                     <Badge variant="outline">{item.gearAmount}</Badge>
                                                 </div>
                                                 <div className="flex items-center justify-between">
-                                                    <Badge variant={ item.paymentStatus === "Pago" ? "default" : "secondary" } className="w-fit">
-                                                        {item.paymentStatus}
+                                                    <Badge variant={ item.bookingStatus === "Pendente" ? "default" : "secondary" } className="w-fit">
+                                                        {item.bookingStatus}
                                                     </Badge>
                                                     <div className="flex items-center">
-                                                        <span className="font-semibold text-primary">R$ {item.price}</span>
+                                                        <span className="font-semibold text-primary">
+                                                            {
+                                                                new Intl.NumberFormat("pt-BR", {
+                                                                    style: "currency",
+                                                                    currency: "BRL"
+                                                                }).format(item.price/100)
+                                                            }
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 {item.observations && (
@@ -129,38 +203,87 @@ export function CartSheet() {
                                 </div>
                                 <Separator />
 
-                                <div className="flex justify-between gap-4">
-                                    <div className="flex flex-col items-center flex-1/2">
-                                        <span className="text-sm font-semibold">Status de pagamento</span>
-                                        <Select onValueChange={ changePaymentStatus }>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Status de pagamento" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {paymentStatuses.map((status) => (
-                                                    <SelectItem key={ status } value={ status }>
-                                                        {status}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                <div className="flex flex-col gap-6">
+                                    <div className="flex flex-col md:flex-row gap-4">
+                                        <div className="flex flex-col flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                                                <Label htmlFor="payment-status" className="text-sm font-medium">
+          Status do Pagamento
+                                                </Label>
+                                            </div>
+                                            <Select onValueChange={ changePaymentStatus } value={ paymentStatus }>
+                                                <SelectTrigger className="w-full" id="payment-status">
+                                                    <SelectValue placeholder="Selecione o status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {paymentStatuses.map((status) => (
+                                                        <SelectItem key={ status } value={ status } className="cursor-pointer">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={ `w-2 h-2 rounded-full ${getStatusColor(status)}` } />
+                                                                {status}
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="flex flex-col flex-1">
+                                            {paymentStatus !== "Pendente" && (
+                                                <>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                                        <Label htmlFor="payment-mode" className="text-sm font-medium">
+              Forma de Pagamento
+                                                        </Label>
+                                                    </div>
+                                                    <Select onValueChange={ changePaymentMode } value={ paymentMode }>
+                                                        <SelectTrigger className="w-full data-[placeholder]:text-placeholder" id="payment-mode">
+                                                            <SelectValue placeholder="Clique para escolher" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {paymentModes.map((mode) => (
+                                                                <SelectItem key={ mode } value={ mode as "PIX" | "Crédito" | "Débito" | "Dinheiro" | "Parcial" } className="cursor-pointer">
+                                                                    <div className="flex items-center gap-2">
+                                                                        {getPaymentIcon(mode)}
+                                                                        {mode}
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-center flex-1/2">
-                                        <span className="text-sm font-semibold">Forma de pagamento</span>
-                                        <Select onValueChange={ changePaymentModes }>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="modo de pagamento" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {paymentModes.map((mode) => (
-                                                    <SelectItem key={ mode } value={ mode }>
-                                                        {mode}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+
+                                    {paymentStatus === "Parcial" && (
+                                        <div className="flex flex-col justify-center items-center">
+                                            <div className="w-full md:w-2/3">
+                                                <div className="flex gap-1 items-center justify-center">
+                                                    <DollarSign className="h-4 w-4" />
+                                                    <Label htmlFor="partial-payment" className="text-sm font-medium">
+                                                        Valor
+                                                    </Label>
+                                                </div>
+                                                <PriceInput
+                                                    targetState={ partialPaymentValue }
+                                                    setTargetState={ changePartialPaymentValue }
+                                                    isUncontrolled={ true }
+                                                    withLabel={ false }
+                                                />
+                                            </div>
+                                            {errorMessage !== "" && (
+                                                <div className="flex items-center gap-1 w-fit text-red-500 text-xs text-center">
+                                                    <AlertCircle className="h-3 w-3" />
+                                                    {errorMessage}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
+
                                 <Separator />
                                 <div className="flex items-center justify-between">
                                     <span className="text-lg font-semibold">Total:</span>
@@ -172,7 +295,13 @@ export function CartSheet() {
                                     <Button variant="outline" onClick={ clearCart } className="flex-1 bg-transparent">
                   Limpar Carrinho
                                     </Button>
-                                    <Button onClick={ () => handleCheckout() } className="flex-1">
+                                    <Button
+                                        disabled={
+                                            (paymentStatus === "Parcial" && parseStringToCents(partialPaymentValue) === 0) ||
+                                            (paymentStatus !== "Pendente" && !paymentMode)
+                                        }
+                                        onClick={ () => handleCheckout() }
+                                        className="flex-1">
                   Finalizar Reservas
                                     </Button>
                                 </div>

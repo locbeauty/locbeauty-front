@@ -8,14 +8,18 @@ import { Label } from "../ui/label";
 import { DollarSign } from "lucide-react";
 
 interface PriceInputProps<TFieldValues extends Record<string, any>> {
-  label?: string
-  placeholder?: string
-  value?: string
-  onChange?: (_value: string) => void
-  error?: string
-  register: UseFormRegisterReturn<any>
-  setValue?: UseFormSetValue<TFieldValues>;
-    name: Path<TFieldValues>;
+    label?: string
+    placeholder?: string
+    value?: string
+    onChange?: (_value: string) => void
+    error?: string
+    register?: UseFormRegisterReturn<any>
+    setValue?: UseFormSetValue<TFieldValues>;
+    name?: Path<TFieldValues>;
+    isUncontrolled?: boolean
+    targetState?: string
+    setTargetState?: (value: string) => void
+    withLabel?: boolean
 }
 
 export default function PriceInput<TFieldValues extends Record<string, any>>({
@@ -24,7 +28,11 @@ export default function PriceInput<TFieldValues extends Record<string, any>>({
     register,
     setValue,
     name,
-    value: displayValue
+    value: displayValue,
+    isUncontrolled,
+    setTargetState,
+    targetState,
+    withLabel = true
 }: PriceInputProps<TFieldValues>) {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,15 +49,50 @@ export default function PriceInput<TFieldValues extends Record<string, any>>({
         });
 
         if (onChange) onChange(reais);
-        if (setValue) setValue(name, reais as any);
+        if(setTargetState) {
+            setTargetState(reais);
+        }
+        if (setValue) setValue(name!, reais as any);
     };
+    if(isUncontrolled && setTargetState) {
+        return (
+            <div className="flex flex-col gap-2">
+                {
+                    withLabel && (
+                        <Label htmlFor="price-input" className="gap-1 flex items-center">
+                            <DollarSign className="h-4 w-4" />
+                Preço
+                        </Label>
+                    )
+                }
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+                    <Input
+                        maxLength={ 12 }
+                        id="price-input"
+                        type="text"
+                        inputMode="numeric"
+                        value={ targetState }
+                        onChange={ handleChange }
+                        placeholder="0,00"
+                        className="pl-9 w-full"
+                        aria-invalid={ !!error }
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col gap-2 mt-4">
-            <Label htmlFor="price-input" className="gap-1 flex items-center">
-                <DollarSign className="h-4 w-4" />
+            {
+                withLabel && (
+                    <Label htmlFor="price-input" className="gap-1 flex items-center">
+                        <DollarSign className="h-4 w-4" />
                 Preço
-            </Label>
+                    </Label>
+                )
+            }
             <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                 <Input

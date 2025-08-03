@@ -3,7 +3,6 @@
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import { type CreateBookingFormSchemaType, createBookingFormSchema } from "@/lib/zod/CreateBookingValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectGear } from "./SelectGear";
@@ -21,6 +20,9 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-provider";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 import { SelectAddress } from "./SelectAddress";
+import { QuickBookingPaymentModePopover } from "./QuickBookingPaymentModePopover";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { createBookingFormSchema, CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
 export interface GetDayBookingsResponse {
   hourInMinutes: number,
@@ -40,6 +42,7 @@ export function CreateBookingForm() {
             gearAmount: 0,
             bookingStatus: "Pendente",
             paymentStatus: "Pendente",
+            paymentMode: undefined,
             price: "",
             addressId: "",
             filialId: user?.sourceFilial.filialId,
@@ -49,7 +52,7 @@ export function CreateBookingForm() {
     const [ bookingSchedule, setBookingSchedule ] = useState<GetDayBookingsResponse[] | undefined>();
     const [ maximumGearAmountAvailable, setMaximumGearAmountAvailable ] = useState(0);
     const [ shouldCheckout, setShouldCheckout ] = useState(false);
-
+    const [ isQuickBookingPaymentModeDialogOpen, setQuickBookingPaymentModeDialogOpen ] = useState(false);
     const {
         handleSubmit,
         reset,
@@ -70,12 +73,6 @@ export function CreateBookingForm() {
     const watchGearId = watch("gear");
     const watchPrice = watch("price");
     const isDateInPast = selectedDate && selectedDate < new Date();
-
-    useEffect(() => {
-        setValue("startHourInMinutes", 0);
-        setValue("totalDurationInMinutes", 0);
-        setMaximumGearAmountAvailable(0);
-    }, [ watchGearId, setValue ]);
 
     useEffect(() => {
         setBookingSchedule(undefined);
@@ -109,10 +106,10 @@ export function CreateBookingForm() {
                 style: { fontSize: "1rem" },
             });
         }
-
+        console.log("HANDLE ADD TO CART");
         window.scroll({ top: 0 });
         setBookingSchedule(undefined);
-        // @ts-expect-error booking cannot be sended withou date, but is set as undefined to reset after user put some item in the cart.
+        // @ts-expect-error booking cannot be sended without date, but is set as undefined to reset after user put some item in the cart.
         setValue("date", undefined);
         setValue("startHourInMinutes", 0);
         setValue("totalDurationInMinutes", 0);
@@ -121,13 +118,6 @@ export function CreateBookingForm() {
         setValue("gearAmount", 0);
         setValue("price", "");
         setValue("observations", "");
-        setValue("paymentStatus", "Pendente");
-    };
-
-    const handleQuickBooking = (formData: CreateBookingFormSchemaType) => {
-        handleAddToCart(formData);
-        setShouldCheckout(true);
-        reset();
     };
 
     useEffect(() => {
@@ -137,6 +127,10 @@ export function CreateBookingForm() {
             clearCart();
         }
     }, [ items, shouldCheckout, clearCart, handleCheckout ]);
+
+    useEffect(() => {
+        console.log("errors;" ,errors);
+    }, [ errors ]);
 
     return (
         <div className="">
@@ -222,7 +216,7 @@ export function CreateBookingForm() {
                             bookingSchedule={ bookingSchedule }
                         />
                         {/* Amount and Price */}
-                        <div className="pb-0 flex w-full justify-center gap-3">
+                        <div className="pb-0 flex flex-col w-full justify-center gap-3">
                             <Card className="transition-all duration-200 hover:shadow-md">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="flex items-center gap-2 text-lg">
@@ -346,16 +340,24 @@ export function CreateBookingForm() {
                                 <Plus className="h-4 w-4 mr-2" />
                                 <span className="md:flex hidden md:items-center">Adicionar ao Carrinho</span>
                             </Button>
+                            <Popover open={ isQuickBookingPaymentModeDialogOpen } onOpenChange={ setQuickBookingPaymentModeDialogOpen }>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        disabled={ !startHour || !watchGearId || items.length > 0 || !watchPrice || watchGearAmount === 0 }
+                                        type="button"
+                                        // onClick={ handleSubmit((data) => handleQuickBooking(data)) }
+                                        className="flex-1">
 
-                            <Button
-                                disabled={ !startHour || !watchGearId || items.length > 0 || !watchPrice || watchGearAmount === 0 }
-                                type="button"
-                                onClick={ handleSubmit(handleQuickBooking) }
-                                className="flex-1">
-
-                                <Check className="h-4 w-4 mr-2" />
-                                <span className="md:flex hidden md:items-center">Criar Reserva Rápida</span>
-                            </Button>
+                                        <Check className="h-4 w-4 mr-2" />
+                                        <span className="md:flex hidden md:items-center">Criar Reserva Rápida</span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <QuickBookingPaymentModePopover
+                                    setQuickBookingPaymentModeDialogOpen={ setQuickBookingPaymentModeDialogOpen }
+                                    handleAddToCart={ handleAddToCart }
+                                    setShouldCheckout={ setShouldCheckout }
+                                />
+                            </Popover>
                         </div>
                     </div>
                 </FormProvider>
