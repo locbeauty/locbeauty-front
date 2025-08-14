@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const res = await fetch("http://localhost:3333/api/me", { next: { tags: [ "get-logged-user" ] }, credentials: "include" });
+                const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/me`, { next: { tags: [ "get-logged-user" ] }, credentials: "include" });
 
                 if (!res.ok) throw new Error("Não autenticado");
 

@@ -35,7 +35,7 @@ export default function LoginPage() {
     });
 
     async function handleLogin({ documentNumber, password }: LoginSchemaType) {
-        const res = await fetch("http://localhost:3000/api/login", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/login`, {
             method: "POST",
             credentials: "include",
             headers: {
