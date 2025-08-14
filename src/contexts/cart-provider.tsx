@@ -10,16 +10,16 @@ interface CartContextType {
   paymentStatus: PaymentStatuses
   paymentMode: PaymentModes | undefined
   items: CustomBookingFormSchemaType[]
-  addItem: (item: CreateBookingFormSchemaType) => void
-  changePaymentStatus: (paymentStatus: PaymentStatuses) => void
-  changePaymentMode: (paymentMode: PaymentModes) => void
-  removeItem: (id: string) => void
+  addItem: (_item: CreateBookingFormSchemaType) => void
+  changePaymentStatus: (_paymentStatus: PaymentStatuses) => void
+  changePaymentMode: (_paymentMode: PaymentModes) => void
+  removeItem: (_id: string) => void
   clearCart: () => void
   getTotalPrice: () => number
   getTotalItems: () => number
   handleCheckout: () => void
   partialPaymentValue: string,
-  changePartialPaymentValue: (value: string) => void
+  changePartialPaymentValue: (_value: string) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);

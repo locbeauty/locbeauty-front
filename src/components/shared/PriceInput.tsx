@@ -18,7 +18,7 @@ interface PriceInputProps<TFieldValues extends Record<string, any>> {
     name?: Path<TFieldValues>;
     isUncontrolled?: boolean
     targetState?: string
-    setTargetState?: (value: string) => void
+    setTargetState?: (_value: string) => void
     withLabel?: boolean
 }
 

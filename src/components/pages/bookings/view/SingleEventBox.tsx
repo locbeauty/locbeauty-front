@@ -8,7 +8,7 @@ import type { FlattenedBooking } from "./WeekView";
 interface SingleEventBoxProps {
   group: FlattenedBooking[]
   dayIndex: number
-  openBookingDetails: (booking: FlattenedBooking) => void
+  openBookingDetails: (_booking: FlattenedBooking) => void
 }
 
 export function SingleEventBox({ group, dayIndex, openBookingDetails }: SingleEventBoxProps) {

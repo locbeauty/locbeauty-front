@@ -21,7 +21,7 @@ import type { FlattenedBooking } from "./WeekView";
 interface DayViewProps {
   currentDate: Date
   checkouts: Checkout[]
-  openBookingDetails: (booking: FlattenedBooking) => void
+  openBookingDetails: (_booking: FlattenedBooking) => void
 }
 
 export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewProps) {

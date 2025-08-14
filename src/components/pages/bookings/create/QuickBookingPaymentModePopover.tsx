@@ -15,7 +15,7 @@ import { parseStringToCents } from "@/utils/parseStringToCents";
 
 interface QuickBookingPaymentModePopoverProps {
   setQuickBookingPaymentModeDialogOpen: Dispatch<SetStateAction<boolean>>;
-  handleAddToCart: (formData: CreateBookingFormSchemaType) => void
+  handleAddToCart: (_formData: CreateBookingFormSchemaType) => void
   setShouldCheckout: Dispatch<SetStateAction<boolean>>;
 }
 
