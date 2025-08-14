@@ -1,8 +1,9 @@
 
-import { MetaMensal, StatusMeta } from "@/app/(main)/goals/page";
+import { MetaMensal } from "@/app/(main)/goals/page";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { StatusMeta } from "@/lib/zod/Goals";
 import { getMonthName } from "@/utils/getMonthName";
 import {
     Building2,

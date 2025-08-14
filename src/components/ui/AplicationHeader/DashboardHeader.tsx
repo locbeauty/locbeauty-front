@@ -8,9 +8,6 @@ import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { UserDropdown } from "./UserDropdown";
 import { CartSheet } from "@/components/pages/bookings/create/cart-sheet";
 import { ROUTES } from "@/utils/routes";
-import { Label } from "../label";
-import { Progress } from "../progress";
-import { Badge } from "../badge";
 
 export function DashboardHeader({
     setSidebarOpen,
