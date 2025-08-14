@@ -21,44 +21,9 @@ import { GoalCard } from "@/components/pages/goals/GoalCard";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SelectFilial } from "@/components/shared/SelectFilial";
-import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-export const FilterGoalsSchema = z
-    .object({
-        filterFilial: z.string().optional(),
-        filterStatus: z.string().optional(),
-        filterStartYear: z.string().optional(),
-        filterStartMonth: z.string().optional(),
-        filterEndYear: z.string().optional(),
-        filterEndMonth: z.string().optional(),
-    })
-    .refine((data) => {
-        if (!data.filterStartYear || !data.filterStartMonth) return true;
-        if (!data.filterEndYear || !data.filterEndMonth) return true;
-
-        const startYear = parseInt(data.filterStartYear, 10);
-        const endYear = parseInt(data.filterEndYear, 10);
-        const startMonth = parseInt(data.filterStartMonth, 10);
-        const endMonth = parseInt(data.filterEndMonth, 10);
-
-        if (isNaN(startYear) || isNaN(endYear) || isNaN(startMonth) || isNaN(endMonth)) {
-            return false;
-        }
-
-        if (startYear > endYear) return false;
-        if (startYear === endYear && startMonth > endMonth) return false;
-
-        return true;
-    }, {
-        message: "A data inicial não pode ser posterior à data final.",
-        path: [ "filterStartYear" ],
-    });
-
-type filterGoalsType = z.infer<typeof FilterGoalsSchema>
-
-export type StatusMeta = "Concluida" | "EM_ANDAMENTO" | "NAO_ATINGIDA" | "PARCIALMENTE_CONCLUIDA"
+import { FilterGoalsSchema, filterGoalsType, StatusMeta } from "@/lib/zod/Goals";
 
 export type MetaMensal = {
     filialId: string;
