@@ -13,7 +13,12 @@ export interface Employee {
   role: string
   sourceFilial: {
     filialId: string;
-    description: string;
+    filialName: string;
+    address: {
+      state: {
+        UF: string
+      }
+    }
   };
   address: Address;
 }

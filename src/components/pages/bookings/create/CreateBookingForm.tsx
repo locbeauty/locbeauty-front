@@ -55,7 +55,6 @@ export function CreateBookingForm() {
     const [ isQuickBookingPaymentModeDialogOpen, setQuickBookingPaymentModeDialogOpen ] = useState(false);
     const {
         handleSubmit,
-        reset,
         register,
         watch,
         setValue,
@@ -240,11 +239,11 @@ export function CreateBookingForm() {
                                                         onChange={ field.onChange }
                                                         error={ !!errors.gearAmount }
                                                         disabled={ watchGearId ? false : true }
-                                                        max={ maximumGearAmountAvailable }
+                                                        max={ Math.min(maximumGearAmountAvailable, 3) }
                                                     />
                                                     {
                                                         startHour && selectedDate && watchTotalDurationInMinutes && watchTotalDurationInMinutes > 0 ? (
-                                                            <span className="text-sm">Máximo: {maximumGearAmountAvailable}</span>
+                                                            <span className="text-sm">Máximo: { Math.min(maximumGearAmountAvailable, 3)}</span>
                                                         ) : (
                                                             <span className="text-sm">Escolha a data, a hora inicial e a duração da reserva para mostrar a quantidade máxima de unidades disponíveis</span>
                                                         )

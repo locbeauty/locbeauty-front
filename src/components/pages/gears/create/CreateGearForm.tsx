@@ -3,7 +3,6 @@
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
@@ -55,9 +54,6 @@ export function CreateGearForm() {
             if (!response.ok) {
                 toast.warning(data.message, { style: { fontSize: "1rem" } });
                 window.scroll({ top: 0 });
-                // if(response.status === 409) {
-                //     setError("documentNumber", { message: "Documento já cadastrado." });
-                // }
             } else {
                 toast.success("Equipamento criado com sucesso!", {
                     style: { fontSize: "1rem" },
@@ -112,24 +108,6 @@ export function CreateGearForm() {
                                 </div>
                             )
                         }
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="description">Descrição</Label>
-                        <Textarea
-                            id="description"
-                            placeholder="Descreva o equipamento"
-                            className={ `placeholder:text-sm placeholder:text-placeholder ${
-                                errors.description
-                                    ? "border-destructive focus-visible:ring-destructive"
-                                    : ""
-                            }` }
-                            { ...register("description") }
-                        />
-                        {errors.description && (
-                            <p className="text-sm text-destructive">
-                                {errors.description.message}
-                            </p>
-                        )}
                     </div>
                 </div>
                 <div className="space-y-2 flex-1 mt-4">

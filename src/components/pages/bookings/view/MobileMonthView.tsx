@@ -39,7 +39,7 @@ export function MobileMonthView({ currentDate, bookings, openBookingDetails }: M
                 gear: booking.gear,
                 customer: checkout.customer,
                 sourceFilial: checkout.sourceFilial,
-                bookingStatus: checkout.bookingStatus,
+                bookingStatus: booking.bookingStatus,
                 paymentStatus: checkout.paymentStatus,
                 totalPrice: checkout.totalPrice,
                 address: checkout.address

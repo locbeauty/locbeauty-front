@@ -3,7 +3,6 @@ import { MetaMensal, StatusMeta } from "@/app/(main)/goals/page";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import { getMonthName } from "@/utils/getMonthName";
 import {
     Building2,
@@ -38,7 +37,7 @@ export function GoalCard({ goal }: { goal: MetaMensal }) {
     };
 
     const confirmedPercentage = (goal.currentValue / goal.targetValue) * 100;
-    const estimatedPercentage = ((goal.estimatedValue + goal.currentValue) / goal.targetValue) * 100;
+    const estimatedPercentage = (goal.estimatedValue / goal.targetValue) * 100;
     const pendingValue = goal.estimatedValue;
 
     return (
@@ -101,10 +100,8 @@ export function GoalCard({ goal }: { goal: MetaMensal }) {
                         </div>
 
                         <div className="flex justify-between items-center text-sm">
-                            <span
-                                className={ cn("font-medium", estimatedPercentage >= 100 ? "text-green-600" : "text-muted-foreground") }
-                            >
-                                {estimatedPercentage.toFixed(1)}% estimado
+                            <span>
+                                {estimatedPercentage.toFixed(1)}% estimado / {confirmedPercentage.toFixed(1)}% confirmado
                             </span>
                             <span className="text-muted-foreground">
                 Faltam: {formatarValor(Math.max(goal.targetValue - goal.currentValue, 0))}

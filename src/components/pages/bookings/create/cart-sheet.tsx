@@ -12,7 +12,6 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/contexts/cart-provider";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import PriceInput from "@/components/shared/PriceInput";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 

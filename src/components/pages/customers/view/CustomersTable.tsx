@@ -7,6 +7,7 @@ import { UpdateCustomerDialog } from "../update/UpdateCustomerDialog";
 import { CustomerDetailsDialog } from "./CustomerDetailsDialog";
 import { Button } from "@/components/ui/button";
 import { Customer } from "@/utils/@types/customer";
+import { format } from "date-fns";
 
 export function CustomersTable() {
     const [ customers, setCustomers ] = useState<Customer[] | null>(null);
@@ -90,7 +91,7 @@ export function CustomersTable() {
                                     </td>
                                     <td className="p-3 text-center">
                                         {customer.lastBooking
-                                            ? customer.lastBooking.toLocaleDateString()
+                                            ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
                                             : "Não informado"}
                                     </td>
                                     <td className="p-3 flex justify-center items-center gap-4">
@@ -147,7 +148,7 @@ export function CustomersTable() {
                             {
                                 itemLabel: "Ultimo registro:",
                                 itemInfo: customer.lastBooking
-                                    ? customer.lastBooking.toLocaleDateString()
+                                    ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
                                     : "Não informado",
                             },
                         ],

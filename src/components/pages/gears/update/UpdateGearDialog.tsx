@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
     SelectContent,
@@ -109,19 +108,8 @@ export function UpdateGearDialog({
                             <Label>Nome</Label>
                             <Input
                                 name="name"
-                                value={ selectedGear.name }
+                                value={ selectedGear.gearName }
                                 onChange={ handleInputChange }
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-3">
-                            <Label htmlFor="description">Descrição</Label>
-                            <Textarea
-                                id="description"
-                                name="description"
-                                value={ selectedGear.description }
-                                onChange={ handleInputChange }
-                                rows={ 3 }
                             />
                         </div>
 
@@ -129,7 +117,7 @@ export function UpdateGearDialog({
                             <div className="grid grid-cols-1 gap-3">
                                 <Label htmlFor="filial-select">Filial</Label>
                                 <Select
-                                    value={ selectedGear.filialId }
+                                    value={ selectedGear.SourceFilial.filialId }
                                     onValueChange={ (value) => handleSelectChange(value, "filialId") }
                                 >
                                     <SelectTrigger id="filial-select">
@@ -140,9 +128,9 @@ export function UpdateGearDialog({
                                             return (
                                                 <SelectItem
                                                     key={ filial.filialId }
-                                                    value={ filial.description }
+                                                    value={ filial.filialId }
                                                 >
-                                                    {filial.description}, {filial.address.state.stateName}
+                                                    {filial.filialName}, {filial.address.state.stateName}
                                                 </SelectItem>
                                             );
                                         })}

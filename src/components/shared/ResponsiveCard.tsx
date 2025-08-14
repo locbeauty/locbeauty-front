@@ -6,7 +6,7 @@ interface ResponsiveCardProps<T = unknown> {
     cardData: {
         id: string,
         title: string,
-        description: string,
+        description?: string,
         transferableIndicator?: boolean
         transferable?: boolean
         items: {

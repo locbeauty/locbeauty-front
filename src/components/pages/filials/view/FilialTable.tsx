@@ -57,30 +57,28 @@ export function FilialsTable() {
                 <table className="w-full">
                     <thead className="bg-muted">
                         <tr>
-                            <th className="text-left p-3 font-medium">CNPJ</th>
-                            <th className="text-left p-3 font-medium">Descrição</th>
-                            <th className="text-left p-3 font-medium">Gerente</th>
-                            <th className="text-left p-3 font-medium">Endereço</th>
-                            <th className="text-left p-3 font-medium">Telefone</th>
-                            <th className="text-left p-3 font-medium">Email</th>
-                            <th className="text-left p-3 font-medium">Ações</th>
+                            <th className="text-left p-3 font-medium text-sm">CNPJ</th>
+                            <th className="text-left p-3 font-medium text-sm">Gerente</th>
+                            <th className="text-left p-3 font-medium text-sm">Endereço</th>
+                            <th className="text-center p-3 font-medium text-sm">Telefone</th>
+                            <th className="text-center p-3 font-medium text-sm">Email</th>
+                            <th className="text-left p-3 font-medium text-sm">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {allFilials.map((filial) => (
                             <tr key={ filial.filialId } className="border-t hover:bg-muted/50">
-                                <td className="p-3">{filial.CNPJ}</td>
-                                <td className="p-3">{filial.description}</td>
-                                <td className="p-3">{filial.managerEmployeeId}</td>
-                                <td className="p-3">
+                                <td className="p-3 text-sm text-nowrap">{filial.CNPJ}</td>
+                                <td className="p-3 text-sm text-nowrap">{filial.managerEmployee.fullname}</td>
+                                <td className="p-3 text-sm">
                                     {filial.address.street.streetName}, {filial.address.buildingNumber} -{" "}
                                     {filial.address.city.cityName}/{filial.address.state.UF}{" "}
                                 </td>
-                                <td className="p-3">{filial.cellphone}</td>
-                                <td className="p-3">{filial.email}</td>
-                                <td className="p-3 flex justify-center items-center gap-4">
+                                <td className="p-3 text-sm text-nowrap text-center">{filial.cellphone}</td>
+                                <td className="p-3 text-sm text-center">{filial.email}</td>
+                                <td className="">
                                     <Button
-                                        onClick={ () => handleToggleUpdateFilialDialog(true, filial) }
+                                        onClick={ () => handleToggleFilialDetailsDialog(true, filial) }
                                     >
                                         <Eye />
                                     </Button>
@@ -103,7 +101,6 @@ export function FilialsTable() {
                         cardData={ {
                             id: filial.filialId,
                             title: filial.address.state.stateName,
-                            description: filial.description,
                             items: [
                                 { itemLabel: "Email: ", itemInfo: filial.email },
                                 {

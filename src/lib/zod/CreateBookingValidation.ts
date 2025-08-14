@@ -19,7 +19,7 @@ export const createBookingFormSchema = z
         }),
         filialId: z.string(),
         gearAmount: z.number().min(1, { message: "Quantidade deve ser maior que zero." }),
-        date: z.date({ message: "Data é obrigatória." }).refine((val) => val >= new Date(), {
+        date: z.date({ message: "Data é obrigatória." }).refine((val) => val > new Date(), {
             message: "Data precisa ser no futuro.",
         }),
         startHourInMinutes: z.number(),

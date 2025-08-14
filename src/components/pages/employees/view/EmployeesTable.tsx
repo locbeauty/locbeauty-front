@@ -74,7 +74,7 @@ export function EmployeesTable() {
                                 <td className="p-3">{employee.fullname}</td>
                                 <td className="p-3">{employee.documentNumber}</td>
                                 <td className="p-3 text-center">{employee.role}</td>
-                                <td className="p-3 text-center">{employee.sourceFilial.description}</td>
+                                <td className="p-3 text-center">{employee.sourceFilial.filialName}</td>
                                 <td className="p-3 text-center">{employee.cellphone ?? "-"}</td>
                                 <td className="p-3 text-center">{employee.email ?? "-"}</td>
                                 <td className="p-3 flex justify-center items-center gap-4">

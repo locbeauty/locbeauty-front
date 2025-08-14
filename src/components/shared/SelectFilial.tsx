@@ -50,7 +50,7 @@ export function SelectFilial<T extends FieldValues>({
                         {allFilials.map((filial) => {
                             return (
                                 <SelectItem key={ filial.filialId } value={ filial.filialId }>
-                                    {filial.description}
+                                    {filial.filialName}
                                 </SelectItem>
                             );
                         })}

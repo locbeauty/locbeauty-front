@@ -3,14 +3,8 @@ import {
     Mail,
     Phone,
     User,
-    MapPin,
-    Building,
-    Calendar,
-    Award,
-    Shield,
-    TrendingUp,
-    CheckCircle,
-    AlertCircle,
+    MapPin, Calendar,
+    Award, TrendingUp
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +19,7 @@ interface EmployeeDetailsCardProps {
 export function EmployeeDetailsCard({
     selectedEmployee,
 }: EmployeeDetailsCardProps) {
+
     if (!selectedEmployee) {
         return (
             <Card>
@@ -38,7 +33,6 @@ export function EmployeeDetailsCard({
     // Cálculos de idade e tempo de empresa
     const age = selectedEmployee.birthdate ?
         (new Date().getFullYear() - new Date(selectedEmployee.birthdate).getFullYear()) : null;
-    const isWorkingToday = Math.random() > 0.3; // Simulação de status
 
     // Endereço formatado
     const fullAddress = selectedEmployee.address
@@ -83,26 +77,6 @@ export function EmployeeDetailsCard({
                     <Badge className={ getRoleBadgeColor(selectedEmployee.role) }>
                         <Award className="h-3 w-3 mr-1" />
                         {selectedEmployee.role}
-                    </Badge>
-                    <Badge
-                        variant="outline"
-                        className={
-                            isWorkingToday
-                                ? "text-green-600 border-green-200"
-                                : "text-gray-600 border-gray-200"
-                        }
-                    >
-                        {isWorkingToday ? (
-                            <>
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                Ativo
-                            </>
-                        ) : (
-                            <>
-                                <AlertCircle className="h-3 w-3 mr-1" />
-                Ausente
-                            </>
-                        )}
                     </Badge>
                 </div>
             </CardHeader>
@@ -158,6 +132,12 @@ export function EmployeeDetailsCard({
                                 <span className="text-sm">{selectedEmployee.cellphone}</span>
                             </div>
                         </div>
+                        <div className="flex items-center gap-2">
+                            <Label className="text-sm font-medium">Filial de Origem: </Label>
+                            <span className="text-sm font-semibold">
+                                {selectedEmployee.sourceFilial.filialName}/{selectedEmployee.sourceFilial.address.state.UF}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -179,75 +159,6 @@ export function EmployeeDetailsCard({
 
                 <Separator />
 
-                {/* Informações Profissionais */}
-                <div>
-                    <h4 className="font-semibold mb-3 flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-            Informações Profissionais
-                    </h4>
-                    {/* TODO: fetch employee regional data to show here: */}
-                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">Regional de Origem:</Label>
-                                <span className="text-sm font-semibold">{selectedEmployee.sourceRegional}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">Regional Atual:</Label>
-                                <span className="text-sm">{selectedEmployee.regional.title}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">CNPJ Regional:</Label>
-                                <span className="font-mono text-xs">{selectedEmployee.regional.CNPJ}</span>
-                            </div>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">Estado:</Label>
-                                <Badge variant="outline" className="text-blue-600 border-blue-200">
-                                    {selectedEmployee.regional.state.UF} - {selectedEmployee.regional.state.stateName}
-                                </Badge>
-                            </div>
-                        </div>
-                    </div> */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">Filial de Origem:</Label>
-                                <span className="text-sm font-semibold">
-                                    {selectedEmployee.sourceFilial.filialId}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">Filial Atual:</Label>
-                                <span className="text-sm">
-                                    {selectedEmployee.sourceFilial.filialId}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">CNPJ Regional:</Label>
-                                <span className="font-mono text-xs">
-                                    {selectedEmployee.sourceFilial.filialId}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">Estado:</Label>
-                                <Badge
-                                    variant="outline"
-                                    className="text-blue-600 border-blue-200"
-                                >
-                                    {selectedEmployee.sourceFilial.filialId} -{" "}
-                                    {selectedEmployee.sourceFilial.filialId}
-                                </Badge>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <Separator />
-
                 {/* Estatísticas de Performance */}
                 <div>
                     <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -259,18 +170,6 @@ export function EmployeeDetailsCard({
                             <div className="text-2xl font-bold text-blue-600">2.5</div>
                             <div className="text-xs text-muted-foreground">
                 Anos na Empresa
-                            </div>
-                        </div>
-                        <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <div className="text-2xl font-bold text-green-600">94%</div>
-                            <div className="text-xs text-muted-foreground">
-                Taxa de Presença
-                            </div>
-                        </div>
-                        <div className="text-center p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                            <div className="text-2xl font-bold text-purple-600">4.7</div>
-                            <div className="text-xs text-muted-foreground">
-                Avaliação (5.0)
                             </div>
                         </div>
                         <div className="text-center p-4 bg-orange-50 border border-orange-200 rounded-lg">
@@ -297,55 +196,16 @@ export function EmployeeDetailsCard({
                                 <span>Último acesso: hoje às 08:15</span>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
-                                <CheckCircle className="h-4 w-4" />
-                                <span>Tarefas concluídas hoje: 8/10</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
                                 <TrendingUp className="h-4 w-4" />
                                 <span>Performance mensal: +8%</span>
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Award className="h-4 w-4" />
-                                <span>Certificações: 3 ativas</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Shield className="h-4 w-4" />
-                                <span>Nível de acesso: Autorizado</span>
-                            </div>
+                        {/* <div className="space-y-2">
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <Clock className="h-4 w-4" />
                                 <span>Próximo treinamento: em 15 dias</span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Status Atual */}
-                <div
-                    className={ `mt-4 p-3 rounded-lg ${
-                        isWorkingToday
-                            ? "bg-green-50 border border-green-200"
-                            : "bg-yellow-50 border border-yellow-200"
-                    }` }
-                >
-                    <div className="flex items-center gap-2">
-                        {isWorkingToday ? (
-                            <>
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                                <span className="text-sm font-medium text-green-800">
-                  Funcionário Ativo - Presente no expediente de hoje
-                                </span>
-                            </>
-                        ) : (
-                            <>
-                                <AlertCircle className="h-4 w-4 text-yellow-600" />
-                                <span className="text-sm font-medium text-yellow-800">
-                  Funcionário Ausente - Férias programadas até 15/06
-                                </span>
-                            </>
-                        )}
+                        </div> */}
                     </div>
                 </div>
 

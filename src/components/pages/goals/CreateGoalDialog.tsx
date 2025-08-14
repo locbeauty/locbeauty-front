@@ -20,12 +20,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import { getMonthName } from "@/utils/getMonthName";
 import { toast } from "sonner";
+import PriceInput from "@/components/shared/PriceInput";
+import { parseStringToCents } from "@/utils/parseStringToCents";
 
 const CreateGoalSchema = z.object({
     filialId: z.string({ message: "Filial é obrigatória" }),
     year: z.number({ message: "Ano é obrigatório" }),
     monthIndex: z.number(),
-    targetValue: z.number({ message: "Adicione um valor objetivo" }),
+    targetValue: z.string({ message: "Adicione um valor objetivo" }),
     status: z.enum([ "Concluida", "EM_ANDAMENTO", "NAO_ATINGIDA" ]),
 }).refine((data) => {
     const today = new Date();
@@ -46,18 +48,20 @@ type CreateGoalType = z.infer<typeof CreateGoalSchema>
 export function CreateGoalDialog() {
     const [ dialogNovaMeta, setDialogNovaMeta ] = useState(false);
 
-    const { control, register, handleSubmit, formState: { errors } } = useForm<CreateGoalType>({
+    const { control, register, handleSubmit, formState: { errors }, setValue, watch } = useForm<CreateGoalType>({
         resolver: zodResolver(CreateGoalSchema),
         defaultValues: {
             monthIndex: new Date().getMonth(),
-            status: "EM_ANDAMENTO"
+            status: "EM_ANDAMENTO",
+            targetValue: ""
         }
     });
+    const watchTargetValue = watch("targetValue");
 
     async function handleCreateGoal(newGoalData: CreateGoalType) {
-        const fixedGoalData: CreateGoalType = {
+        const fixedGoalData = {
             ...newGoalData,
-            targetValue: newGoalData.targetValue * 100
+            targetValue: parseStringToCents(String(newGoalData.targetValue))
         };
         const response = await fetch("http://localhost:3333/api/goals/create",
             {
@@ -112,11 +116,18 @@ export function CreateGoalDialog() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="valorMeta">Valor da Meta *</Label>
-                                <Input
+                                {/* <Input
                                     id="valorMeta"
                                     type="number"
                                     { ...register("targetValue", { valueAsNumber: true }) }
                                     placeholder="Ex: 500000"
+                                /> */}
+                                <PriceInput
+                                    register={ register("targetValue") }
+                                    value={ watchTargetValue }
+                                    setValue={ setValue }
+                                    name="targetValue"
+                                    withLabel={ false }
                                 />
                                 <div className="h-3">
                                     {errors.targetValue && (

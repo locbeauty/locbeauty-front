@@ -8,7 +8,6 @@ export const createGearFormSchema = z.object({
         .max(100, {
             message: "Nome do equipamento deve ter no máximo 100 caracteres",
         }),
-    description: z.string().trim().optional(),
     sourceFilialId: z
         .string({ message: "Filial é obrigatória" })
         .trim()
@@ -27,15 +26,3 @@ export const createGearFormSchema = z.object({
 });
 
 export type CreateGearFormSchemaType = z.infer<typeof createGearFormSchema>;
-
-// gearId: string,
-// name: string,
-// description: string,
-// filialId: string,
-// availableUnits: number,
-// outOfServiceUnits: number,
-// totalUnits: number,
-// acquisitionDate: Date | null,
-// transferable: boolean,
-// nextMaintenance: Date | null,
-// lastMaintenance: Date | null,

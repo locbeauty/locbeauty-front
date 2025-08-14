@@ -44,7 +44,7 @@ export default function EmployeesPage() {
                 </div>
                 <CustomFilterSelect
                     items={ EmployeeFilterStatusTypes }
-                    placeholder="Status"
+                    placeholder="Filial"
                     triggerProps={ {
                         className: "w-[180px]",
                         disabled: false,

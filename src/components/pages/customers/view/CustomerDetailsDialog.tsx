@@ -59,7 +59,7 @@ export function CustomerDetailsDialog({
                         isCustomerDetailsModalOpen={ isCustomerDetailsModalOpen }
                         selectedCustomer={ selectedCustomer }
                     />
-                    <DialogFooter className="border-t pt-4">
+                    <DialogFooter className="pt-4">
                         <Button onClick={ handleOpenUpdateCustomerDialog } className="gap-2">
                             <Pencil className="h-4 w-4" />
               Editar Cliente

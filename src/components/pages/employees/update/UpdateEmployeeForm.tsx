@@ -23,7 +23,7 @@ export function UpdateEmployeeForm({
             documentNumber: selectedEmployee.documentNumber,
             email: selectedEmployee.email,
             fullname: selectedEmployee.fullname,
-            roleId: selectedEmployee.role,
+            role: selectedEmployee.role,
             sourceFilialId: selectedEmployee.sourceFilial.filialId,
         },
     });
