@@ -7,7 +7,7 @@ const hoursToMinutes = (hours: number, minutes: number = 0): number => {
 };
 
 // Mock checkouts data
-export const checkouts: Checkout[] = [
+export const bookings: Checkout[] = [
     {
         checkoutId: "checkout-001",
         paymentStatus: "Pago",
