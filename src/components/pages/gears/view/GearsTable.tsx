@@ -38,6 +38,7 @@ export function GearsTable() {
             const response = await fetch(url, { credentials: "include" });
 
             const { data } = await response.json();
+            console.log("data: ", data);
             setGears(data);
         }
         getGears();
@@ -50,7 +51,6 @@ export function GearsTable() {
                     <thead className="bg-muted">
                         <tr>
                             <th className="text-left p-3 font-medium">Nome</th>
-                            <th className="text-left p-3 font-medium">Descrição</th>
                             <th className="text-center p-3 font-medium">Filial</th>
                             <th className="text-center p-3 font-medium">
                 Unidades disponíveis
@@ -77,10 +77,7 @@ export function GearsTable() {
                                 className="border-t hover:bg-muted/50 items-stretch"
                             >
                                 <td className="p-3">{gear.gearName}</td>
-                                <td className="p-3 max-w-[700px] truncate whitespace-nowrap overflow-hidden">
-                                    {gear.description}
-                                </td>
-                                <td className="p-3 text-center">{gear.SourceFilial.description}</td>
+                                <td className="p-3 text-center">{gear.SourceFilial.filialName}</td>
                                 <td className="p-3 text-center">{gear.availableUnits}</td>
                                 <td className="p-3 text-center">{gear.totalUnits}</td>
                                 <td className="p-3 text-center">{gear.acquisitionDate ? new Date(gear.acquisitionDate).toLocaleDateString("pt-BR") : "Não informado"}</td>
@@ -113,11 +110,10 @@ export function GearsTable() {
                         cardData={ {
                             id: gear.gearId,
                             title: gear.gearName,
-                            description: gear.description,
                             transferableIndicator: true,
                             transferable: gear.transferable,
                             items: [
-                                { itemLabel: "Filial:", itemInfo: gear.filialId },
+                                { itemLabel: "Filial:", itemInfo: gear.SourceFilial.filialId },
                                 {
                                     itemLabel: "Unidades disponíveis: ",
                                     itemInfo: gear.availableUnits,

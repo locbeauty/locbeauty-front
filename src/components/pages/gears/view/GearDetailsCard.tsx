@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Gear } from "@/utils/@types/gears";
+import { format } from "date-fns";
 
 interface GearDetailsCardProps {
     selectedGear: Gear | null
@@ -31,11 +32,8 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Settings className="h-5 w-5" />
-                    {selectedGear.name}
+                    {selectedGear.gearName}
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                    {selectedGear.description}
-                </p>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Informações Básicas */}
@@ -50,12 +48,12 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
                                 <Label className="text-sm font-medium">Filial:</Label>
                                 <div className="flex items-center gap-1">
                                     <MapPin className="h-3 w-3 text-muted-foreground" />
-                                    <span className="font-mono text-sm">{selectedGear.filialId}</span>
+                                    <span className="font-mono text-sm">{selectedGear.SourceFilial.filialName}</span>
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Data de Aquisição:</Label>
-                                {/* <span className="font-mono text-sm">{selectedGear.acquisitionDate ? selectedGear.acquisitionDate.toLocaleDateString() : "Não informado"}</span> */}
+                                <span className="font-mono text-sm">{selectedGear.acquisitionDate ? format(new Date(selectedGear.acquisitionDate), "dd/MM/yyyy") : "Não informado"}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Transferível:</Label>

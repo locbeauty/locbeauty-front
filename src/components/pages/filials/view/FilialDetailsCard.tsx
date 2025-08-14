@@ -9,7 +9,6 @@ import {
     Users,
     TrendingUp,
     Calendar,
-    CheckCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,12 +49,8 @@ export function FilialDetailsCard({
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Building className="h-5 w-5" />
-          Filial {selectedFilial.description}
+                    {selectedFilial.filialName}
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                    {selectedFilial.address.state.stateName} -{" "}
-                    {selectedFilial.address.city.cityName}
-                </p>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Informações Básicas */}
@@ -100,13 +95,6 @@ export function FilialDetailsCard({
                                     {selectedFilial.address.neighborhood.neighborhoodName}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">Status:</Label>
-                                <Badge className="bg-green-100 text-green-800 border-green-200">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                  Ativa
-                                </Badge>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -142,7 +130,7 @@ export function FilialDetailsCard({
                                 <User className="h-4 w-4 text-muted-foreground" />
                                 <Label className="text-sm font-medium">Gerente:</Label>
                                 <span className="text-sm font-semibold">
-                                    {selectedFilial.managerEmployeeId}
+                                    {selectedFilial.managerEmployee.fullname}
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -218,16 +206,6 @@ export function FilialDetailsCard({
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <TrendingUp className="h-4 w-4" />
                                 <span>Crescimento mensal: +12%</span>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <CheckCircle className="h-4 w-4" />
-                                <span>Taxa de satisfação: 4.8/5.0</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Clock className="h-4 w-4" />
-                                <span>Tempo médio de atendimento: 2.3h</span>
                             </div>
                         </div>
                     </div>

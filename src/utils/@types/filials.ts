@@ -1,10 +1,13 @@
 import { Address } from "./address";
 
 export interface Filial {
-  managerEmployeeId: string;
+  managerEmployee: {
+    employeeId: string,
+    fullname: string
+  },
   filialId: string;
   CNPJ: string;
-  description: string;
+  filialName: string;
   address: Address;
   cellphone: string;
   email: string;

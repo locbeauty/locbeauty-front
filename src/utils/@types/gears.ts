@@ -1,8 +1,6 @@
 export type Gear = {
     gearId: string,
     gearName: string,
-    description: string,
-    filialId: string,
     availableUnits: number,
     outOfServiceUnits: number,
     totalUnits: number,
@@ -12,6 +10,6 @@ export type Gear = {
     lastMaintenance: Date | null,
     SourceFilial: {
       filialId: string,
-      description: string,
+      filialName: string,
   }
 }

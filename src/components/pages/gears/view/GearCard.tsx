@@ -29,7 +29,7 @@ export function GearCard() {
                     onClick={ () => handleOpenDialog(gear) }
                 >
                     <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold text-lg">{gear.name}</h3>
+                        <h3 className="font-semibold text-lg">{gear.gearName}</h3>
                         <div
                             className={ `flex items-center gap-1 ${
                                 gear.transferable ? "text-green-500" : "text-red-500"
@@ -48,13 +48,10 @@ export function GearCard() {
                             )}
                         </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                        {gear.description}
-                    </p>
 
                     <div className="grid grid-cols-2 gap-y-2 text-sm">
                         <div className="font-medium">Filial:</div>
-                        <div>{gear.filialId}</div>
+                        <div>{gear.SourceFilial.filialId}</div>
 
                         <div className="font-medium">Unidades disponíveis:</div>
                         <div>{gear.availableUnits}</div>

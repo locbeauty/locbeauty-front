@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
 import { Customer } from "@/utils/@types/customer";
+import { format } from "date-fns";
 
 interface CustomerDetailsCardProps {
   selectedCustomer: Customer | null;
@@ -34,6 +35,14 @@ export function CustomerDetailsCard({
                             <span className="font-medium">Número do documento:</span>
                             <span className="font-mono">
                                 {selectedCustomer?.documentNumber}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">Data de nascimento:</span>
+                            <span className="font-mono">
+                                {selectedCustomer?.birthdate ? format(new Date(selectedCustomer.birthdate), "dd/MM/yyyy") : "Não informado"}
                             </span>
                         </div>
                     </div>

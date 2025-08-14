@@ -47,7 +47,7 @@ export function EmployeeDetailsDialog({
             >
                 <div className="flex items-center justify-between">
                     <DialogTitle className="text-3xl font-bold">
-            Detalhes do Cliente:
+            Detalhes do funcionário:
                     </DialogTitle>
                 </div>
 

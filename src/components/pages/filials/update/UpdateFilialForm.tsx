@@ -35,8 +35,8 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
             cellphone: selectedFilial.cellphone,
             CNPJ: selectedFilial.CNPJ,
             email: selectedFilial.email,
-            managerEmployeeId: selectedFilial.managerEmployeeId,
-            description: selectedFilial.description,
+            managerEmployeeId: selectedFilial.managerEmployee.employeeId,
+            filialName: selectedFilial.filialName,
         },
     });
 
@@ -97,7 +97,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
                 <div className="space-y-2">
                     <Label htmlFor="email">Descrição</Label>
                     <Textarea
-                        { ...register("description") }
+                        { ...register("filialName") }
                         placeholder="Informações adicionais sobre a filial"
                         className="placeholder:text-placeholder max-h-[200px]"
                     />
@@ -111,7 +111,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
                 <div className="space-y-2">
                     <Label htmlFor="gerente">Gerente</Label>
                     <SelectEmployee
-                        managerEmployeeId={ selectedFilial.managerEmployeeId }
+                        managerEmployeeId={ selectedFilial.managerEmployee.employeeId }
                         control={ control }
                         name="managerEmployeeId"
                     />

@@ -9,7 +9,7 @@ import type { FlattenedBooking } from "./WeekView";
 interface MobileWeekViewProps {
   currentDate: Date
   bookings: Checkout[]
-  openBookingDetails: (booking: FlattenedBooking) => void
+  openBookingDetails: (_booking: FlattenedBooking) => void
 }
 
 export function MobileWeekView({ currentDate, bookings, openBookingDetails }: MobileWeekViewProps) {
@@ -39,7 +39,7 @@ export function MobileWeekView({ currentDate, bookings, openBookingDetails }: Mo
                 gear: booking.gear,
                 customer: checkout.customer,
                 sourceFilial: checkout.sourceFilial,
-                bookingStatus: checkout.bookingStatus,
+                bookingStatus: booking.bookingStatus,
                 paymentStatus: checkout.paymentStatus,
                 totalPrice: checkout.totalPrice,
                 address: checkout.address,

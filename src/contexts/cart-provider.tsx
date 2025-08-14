@@ -1,43 +1,73 @@
 "use client";
 
-import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { CreateBookingFormSchemaType, CustomBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { PaymentModes, PaymentStatuses } from "@/utils/@types/bookings";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 interface CartContextType {
   paymentStatus: PaymentStatuses
-  paymentMode: PaymentModes
-  items: CreateBookingFormSchemaType[]
-  addItem: (item: CreateBookingFormSchemaType) => void
-  changePaymentStatus: (paymentStatus: PaymentStatuses) => void
-  changePaymentModes: (paymentMode: PaymentModes) => void
-  removeItem: (id: string) => void
+  paymentMode: PaymentModes | undefined
+  items: CustomBookingFormSchemaType[]
+  addItem: (_item: CreateBookingFormSchemaType) => void
+  changePaymentStatus: (_paymentStatus: PaymentStatuses) => void
+  changePaymentMode: (_paymentMode: PaymentModes) => void
+  removeItem: (_id: string) => void
   clearCart: () => void
   getTotalPrice: () => number
   getTotalItems: () => number
   handleCheckout: () => void
+  partialPaymentValue: string,
+  changePartialPaymentValue: (_value: string) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-    const [ items, setItems ] = useState<CreateBookingFormSchemaType[]>([]
+    const [ items, setItems ] = useState<CustomBookingFormSchemaType[]>([
+        // {
+        //     customer: {
+        //         customerId: "cmdiregdv000018ylygtzx83o",
+        //         fullname: "Antonio Marcelo Barreto",
+        //         documentNumber: "***.***.864-99",
+        //     },
+        //     gear: {
+        //         gearId: "813626b8-04ef-4e44-8544-ee1e0302e4fd",
+        //         gearName: "depilador"
+        //     },
+        //     filialId: "cmdis1kod0000183a1ud1w2f6",
+        //     gearAmount: 1,
+        //     date: new Date("2025-07-30T03:00:00.000Z"),
+        //     startHourInMinutes: 300,
+        //     totalDurationInMinutes: 240,
+        //     price: 333331,
+        //     bookingStatus: "Pendente",
+        //     paymentStatus: "Pendente",
+        //     observations: "",
+        //     addressId: "cmdiregeh000118ylaj5pl9w6",
+        //     // id: "1753833685193"
+        // }
+    ]
     );
 
     const [ paymentStatus, setPaymentStatus ] = useState<PaymentStatuses>("Pendente");
-    const [ paymentMode, setPaymentMode ] = useState<PaymentModes>("PIX");
+    const [ paymentMode, setPaymentMode ] = useState<PaymentModes | undefined>(undefined);
+    const [ partialPaymentValue, setPartialPaymentValue ] = useState("0");
 
     const addItem = (item: CreateBookingFormSchemaType) => {
-        setItems((prev) => [ ...prev, { ...item, id: Date.now().toString() } ]);
+        setItems((prev) => [ ...prev, { ...item, id: Date.now().toString(), price: parseStringToCents(item.price) } ]);
+    };
+
+    const changePartialPaymentValue = (value: string) => {
+        setPartialPaymentValue(value);
     };
 
     const changePaymentStatus = (paymentStatus: PaymentStatuses) => {
         setPaymentStatus(paymentStatus);
     };
 
-    const changePaymentModes = (paymentMode: PaymentModes) => {
+    const changePaymentMode = (paymentMode: PaymentModes) => {
         setPaymentMode(paymentMode);
     };
 
@@ -50,7 +80,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     const getTotalPrice = () => {
-        return items.reduce((total, item) => total + parseStringToCents(item.price), 0);
+        return items.reduce((total, item) => total + item.price, 0);
     };
 
     const getTotalItems = () => {
@@ -58,7 +88,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     async function handleCheckout() {
-        const bookingsArray = items.map(booking => ({ ...booking, price: parseStringToCents(booking.price) }));
         try {
             const response = await fetch("http://localhost:3333/api/bookings/create", {
                 method: "POST",
@@ -66,7 +95,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(bookingsArray),
+                body: JSON.stringify(items),
             });
             const data = await response.json();
 
@@ -84,9 +113,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    // useEffect(() => {
-    //     console.log("items: ", items);
-    // }, [ items ]);
+    useEffect(() => {
+        console.log("items: ", items);
+    }, [ items ]);
 
     return (
         <CartContext.Provider
@@ -99,9 +128,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 getTotalItems,
                 handleCheckout,
                 changePaymentStatus,
-                changePaymentModes,
+                changePaymentMode,
                 paymentMode,
-                paymentStatus
+                paymentStatus,
+                partialPaymentValue,
+                changePartialPaymentValue
             } }
         >
             {children}

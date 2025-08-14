@@ -83,7 +83,7 @@ export function BookingsTable() {
                                 <td className="p-3 text-center">{isSame(startTimes)}</td>
                                 <td className="p-3 text-center">{isSame(endTimes)}</td>
                                 <td className="p-3 text-center">
-                                    <BookingStatusBadge status={ checkout.bookingStatus } />
+                                    <BookingStatusBadge status={ checkout.checkoutStatus } />
                                 </td>
                                 <td className="p-3 text-center">
                                     <BookingPaymentStatusBadge status={ checkout.paymentStatus } />

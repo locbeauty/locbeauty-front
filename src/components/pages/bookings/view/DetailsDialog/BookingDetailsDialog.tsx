@@ -34,6 +34,7 @@ import {
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../../common/BookingPaymentStatusBadge";
 import { FlattenedBooking } from "../WeekView";
+import { toast } from "sonner";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -46,6 +47,17 @@ export function BookingDetailsDialog({
     setBookingDetailsDialogOpen,
     selectedAgendamento,
 }: BookingDetailsDialogProps) {
+
+    async function handleMarkAsConcluded() {
+        const response = await fetch(`http://localhost:3333/api/bookings/config/concluded?bookingId=${selectedAgendamento?.bookingId}&date=${selectedAgendamento?.date.toString()}`, { credentials: "include" });
+
+        if(!response.ok) {
+            toast.warning("Erro ao marcar agendamento como concluído.", { style: { fontSize: "1rem" } });
+        } else {
+            toast.success("Agendamento marcado como concluído!", { style: { fontSize: "1rem" } });
+            setBookingDetailsDialogOpen(false);
+        }
+    }
     return (
         <Dialog
             open={ isBookingDetailsDialogOpen }
@@ -177,7 +189,7 @@ export function BookingDetailsDialog({
                                         <span>
                       Valor por hora:{ " " }
                                             { formatCurrency(
-                                                selectedAgendamento.price / (selectedAgendamento.totalDurationInMinutes / 60)
+                                                (selectedAgendamento.price) / (selectedAgendamento.totalDurationInMinutes / 60)
                                             ) }
                                         </span>
                                     </div>
@@ -210,6 +222,16 @@ export function BookingDetailsDialog({
                                 </Link>
                             </Button>
                             <Button
+                                variant="default"
+                                className="flex items-center justify-center cursor-pointer"
+                                onClick={ () => handleMarkAsConcluded() }
+                                disabled={ selectedAgendamento.bookingStatus === "Concluido" }
+                            >
+                                <Trash2 className="" />
+                                <span className="md:block hidden">Marcar como concluído</span>
+                            </Button>
+                            <Button
+                                disabled={ selectedAgendamento.bookingStatus === "Concluido" }
                                 variant="destructive"
                                 className="flex items-center justify-center cursor-pointer"
                             >

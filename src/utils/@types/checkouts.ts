@@ -3,7 +3,7 @@ import { BookingStatuses, PaymentStatuses } from "./bookings";
 
 export type Checkout = {
     checkoutId: string;
-    bookingStatus: BookingStatuses;
+    checkoutStatus: BookingStatuses;
     paymentStatus: PaymentStatuses;
     totalPrice: number;
     Bookings: {
@@ -14,6 +14,7 @@ export type Checkout = {
         totalDurationInMinutes: number;
         price: number;
         observations: string | null;
+        bookingStatus: BookingStatuses;
         gear: {
             gearId: string;
             gearName: string;

@@ -4,6 +4,7 @@ export const ROUTES = {
     CUSTOMERS: "/customers",
     CREATE_CUSTOMER: "/customers/create",
     GEARS: "/gears",
+    GOALS: "/goals",
     CREATE_GEAR: "/gears/create",
     FILIALS: "/filials",
     CREATE_FILIAL: "/filials/create",
