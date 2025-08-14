@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
             body: JSON.stringify(body),
             credentials: "include",
         });
+        console.log("process.env.NEXT_PUBLIC_SERVER_URL: ", process.env.NEXT_PUBLIC_SERVER_URL);
 
         const rawSetCookie = fastifyRes.headers.get("set-cookie");
 
