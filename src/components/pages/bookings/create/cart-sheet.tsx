@@ -242,14 +242,17 @@ export function CartSheet() {
                                                             <SelectValue placeholder="Clique para escolher" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            {paymentModes.map((mode) => (
-                                                                <SelectItem key={ mode } value={ mode as "PIX" | "Crédito" | "Débito" | "Dinheiro" | "Parcial" } className="cursor-pointer">
-                                                                    <div className="flex items-center gap-2">
-                                                                        {getPaymentIcon(mode)}
-                                                                        {mode}
-                                                                    </div>
-                                                                </SelectItem>
-                                                            ))}
+                                                            {paymentModes.map((mode) => {
+                                                                if(!mode) return;
+                                                                return (
+                                                                    <SelectItem key={ mode } value={ mode } className="cursor-pointer">
+                                                                        <div className="flex items-center gap-2">
+                                                                            {getPaymentIcon(mode)}
+                                                                            {mode}
+                                                                        </div>
+                                                                    </SelectItem>
+                                                                );
+                                                            })}
                                                         </SelectContent>
                                                     </Select>
                                                 </>

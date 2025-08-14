@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 interface CartContextType {
   paymentStatus: PaymentStatuses
-  paymentMode: PaymentModes
+  paymentMode: PaymentModes | undefined
   items: CustomBookingFormSchemaType[]
   addItem: (item: CreateBookingFormSchemaType) => void
   changePaymentStatus: (paymentStatus: PaymentStatuses) => void

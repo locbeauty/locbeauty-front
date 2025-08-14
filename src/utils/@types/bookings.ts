@@ -2,7 +2,7 @@ import { Filial } from "./filials";
 
 export type BookingStatuses = "Pendente" | "Concluido" | "Cancelado"
 export const paymentStatuses = [ "Pendente", "Parcial", "Pago" ] as const;
-export const paymentModes = [ "PIX", "Crédito", "Débito", "Dinheiro", undefined ] as const;
+export const paymentModes = [ "PIX", "Crédito", "Débito", "Dinheiro" ] as const;
 
 export type PaymentStatuses = (typeof paymentStatuses)[number];
 export type PaymentModes = (typeof paymentModes)[number];
