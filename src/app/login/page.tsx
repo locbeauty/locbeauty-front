@@ -15,7 +15,7 @@ import Image from "next/image";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import DocumentInput from "@/components/shared/DocumentInput";
@@ -34,7 +34,29 @@ export default function LoginPage() {
         resolver: zodResolver(LoginSchema)
     });
 
-    async function handleLogin({ documentNumber, password }: LoginSchemaType) {
+    // async function handleLogin({ documentNumber, password }: LoginSchemaType) {
+    //     const res = await fetch("https://locbeauty-fastify.onrender.com/api/signin", {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({ documentNumber, password }),
+    //     });
+
+    //     const loginResponse = await res.json();
+
+    //     if(res.status !== 200) {
+    //         setErrorMessage(loginResponse.error);
+    //     }
+
+    //     console.log("accessToken: ", loginResponse.accessToken);
+    //     localStorage.setItem("accessToken", loginResponse.accessToken);
+
+    //     if(loginResponse.success === true) {
+    //         redirect("/dashboard");
+    //     }
+    // }
+    const router = useRouter();
+
+    async function handleLogin(documentNumber: string, password: string) {
         const res = await fetch("https://locbeauty-fastify.onrender.com/api/signin", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -45,14 +67,11 @@ export default function LoginPage() {
 
         if(res.status !== 200) {
             setErrorMessage(loginResponse.error);
+            return;
         }
 
-        console.log("accessToken: ", loginResponse.accessToken);
         localStorage.setItem("accessToken", loginResponse.accessToken);
-
-        if(loginResponse.success === true) {
-            redirect("/dashboard");
-        }
+        router.push("/dashboard");
     }
 
     const token = localStorage.getItem("accessToken");
