@@ -9,6 +9,7 @@ import {
     CreateCustomerFormSchemaType,
 } from "@/lib/zod/CreateCustomerValidation";
 import { toast } from "sonner";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function CreateCustomerForm() {
 
@@ -32,7 +33,7 @@ export function CreateCustomerForm() {
     } = createCustomerMethods;
 
     async function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers/create`, {
+        const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers/create`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
