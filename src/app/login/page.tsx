@@ -56,7 +56,7 @@ export default function LoginPage() {
     // }
     const router = useRouter();
 
-    async function handleLogin(documentNumber: string, password: string) {
+    async function handleLogin({ documentNumber, password }: LoginSchemaType) {
         const res = await fetch("https://locbeauty-fastify.onrender.com/api/signin", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -74,12 +74,12 @@ export default function LoginPage() {
         router.push("/dashboard");
     }
 
-    const token = localStorage.getItem("accessToken");
+    // const token = localStorage.getItem("accessToken");
 
-    if (token) {
-        redirect("/dashboard");
-        return;
-    }
+    // if (token) {
+    //     redirect("/dashboard");
+    //     return;
+    // }
 
     return (
         <div className="h-dvh flex items-center justify-center bg-background">
