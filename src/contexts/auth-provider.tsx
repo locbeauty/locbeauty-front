@@ -4,8 +4,6 @@ import { Loader2 } from "lucide-react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { redirect } from "next/navigation";
 
-
-
 type User = {
     sub: string
     employeeName: string
