@@ -63,7 +63,7 @@ export function CreateGoalDialog() {
             ...newGoalData,
             targetValue: parseStringToCents(String(newGoalData.targetValue))
         };
-        const response = await fetch("http://localhost:3333/api/goals/create",
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/goals/create`,
             {
                 credentials: "include",
                 headers: {

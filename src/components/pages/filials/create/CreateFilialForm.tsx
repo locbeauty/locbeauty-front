@@ -30,7 +30,7 @@ export function CreateFilialForm() {
         newFilialData: CreateFilialFormSchemaType
     ) {
         try {
-            const response = await fetch("http://localhost:3333/api/filials/create", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials/create`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

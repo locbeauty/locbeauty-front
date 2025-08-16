@@ -26,7 +26,7 @@ export function SelectFilial<T extends FieldValues>({
 
     useEffect(() => {
         async function handleGetAllFilials() {
-            const response = await fetch("http://localhost:3333/api/filials", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials`, {
                 credentials: "include",
                 next: {
                     tags: [ "get-all-filials" ],

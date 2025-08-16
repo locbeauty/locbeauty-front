@@ -62,7 +62,7 @@ export default function MetasMensaisPage() {
 
     useEffect(() => {
         async function GetAllGoals() {
-            const response = await fetch("http://localhost:3333/api/goals", { credentials: "include" });
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/goals`, { credentials: "include" });
             const { data }: { data: MetaMensal[] } = await response.json();
 
             const currentMonth = new Date().getMonth();

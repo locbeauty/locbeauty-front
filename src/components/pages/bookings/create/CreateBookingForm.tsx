@@ -82,7 +82,7 @@ export function CreateBookingForm() {
         setValue("totalDurationInMinutes", 0);
         setValue("gearAmount", 0);
         async function getDayBookings() {
-            const response = await fetch(`http://localhost:3333/api/bookings/available?filialId=${watchFilialId}&gearId=${watchGearId.gearId}&date=${selectedDate}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/available?filialId=${watchFilialId}&gearId=${watchGearId.gearId}&date=${selectedDate}`, {
                 credentials: "include",
             });
             const { data }: {data: GetDayBookingsResponse[]} = await response.json();

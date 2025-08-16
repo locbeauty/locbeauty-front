@@ -32,7 +32,7 @@ export function CreateCustomerForm() {
     } = createCustomerMethods;
 
     async function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
-        const response = await fetch("http://localhost:3333/api/customers/create", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers/create`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

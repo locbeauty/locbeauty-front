@@ -49,7 +49,7 @@ export function BookingDetailsDialog({
 }: BookingDetailsDialogProps) {
 
     async function handleMarkAsConcluded() {
-        const response = await fetch(`http://localhost:3333/api/bookings/config/concluded?bookingId=${selectedAgendamento?.bookingId}&date=${selectedAgendamento?.date.toString()}`, { credentials: "include" });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/config/concluded?bookingId=${selectedAgendamento?.bookingId}&date=${selectedAgendamento?.date.toString()}`, { credentials: "include" });
 
         if(!response.ok) {
             toast.warning("Erro ao marcar agendamento como concluído.", { style: { fontSize: "1rem" } });

@@ -89,7 +89,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     async function handleCheckout() {
         try {
-            const response = await fetch("http://localhost:3333/api/bookings/create", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/create`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

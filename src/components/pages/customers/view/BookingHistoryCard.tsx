@@ -259,7 +259,7 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
     useEffect(() => {
         async function GetAllCustomerBookings() {
             const response = await fetch(
-                `http://localhost:3333/api/bookings/customer?customerId=${selectedCustomer?.customerId}`,
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/customer?customerId=${selectedCustomer?.customerId}`,
                 {
                     credentials: "include",
                 },

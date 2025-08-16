@@ -28,7 +28,7 @@ export function SelectEmployee<T extends FieldValues>({
 
     useEffect(() => {
         const getEmployees = async () => {
-            const response = await fetch("http://localhost:3333/api/employees", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees`, {
                 credentials: "include",
             });
             const { data } = await response.json();

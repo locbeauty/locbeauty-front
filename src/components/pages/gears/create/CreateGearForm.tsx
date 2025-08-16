@@ -41,7 +41,7 @@ export function CreateGearForm() {
 
     async function handleCreateGear(newGearData: CreateGearFormSchemaType) {
         try {
-            const response = await fetch("http://localhost:3333/api/gears/create", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears/create`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

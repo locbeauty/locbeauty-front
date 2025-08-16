@@ -24,7 +24,7 @@ export function CreateEmployeeForm() {
 
     async function handleCreateEmployee(newEmployeeData: CreateEmployeeFormSchemaType) {
         try {
-            const response = await fetch("http://localhost:3333/api/employees/create", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees/create`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

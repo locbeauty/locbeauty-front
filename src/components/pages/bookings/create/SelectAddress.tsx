@@ -21,7 +21,7 @@ export function SelectAddress({ disabled = false }: {disabled?: boolean}) {
 
     useEffect(() => {
         async function getCustomerAddresses() {
-            const response = await fetch(`http://localhost:3333/api/customer/addresses?customerId=${watchCustomer.customerId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${watchCustomer.customerId}`, {
                 credentials: "include",
             });
             const { data }: {data: Address[]} = await response.json();
