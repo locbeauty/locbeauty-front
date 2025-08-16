@@ -35,12 +35,9 @@ export default function LoginPage() {
     });
 
     async function handleLogin({ documentNumber, password }: LoginSchemaType) {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/login`, {
+        const res = await fetch("https://locbeauty-fastify.onrender.com/api/signin", {
             method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ documentNumber, password }),
         });
 
@@ -50,9 +47,19 @@ export default function LoginPage() {
             setErrorMessage(loginResponse.error);
         }
 
+        console.log("accessToken: ", loginResponse.accessToken);
+        localStorage.setItem("accessToken", loginResponse.accessToken);
+
         if(loginResponse.success === true) {
             redirect("/dashboard");
         }
+    }
+
+    const token = localStorage.getItem("accessToken");
+
+    if (token) {
+        redirect("/dashboard");
+        return;
     }
 
     return (
