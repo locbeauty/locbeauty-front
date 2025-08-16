@@ -16,7 +16,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { redirect, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import DocumentInput from "@/components/shared/DocumentInput";
 
@@ -75,12 +75,16 @@ export default function LoginPage() {
         router.push("/dashboard");
     }
 
-    // const token = localStorage.getItem("accessToken");
+    useEffect(() => {
 
-    // if (token) {
-    //     redirect("/dashboard");
-    //     return;
-    // }
+        const token = localStorage.getItem("accessToken");
+
+        if (token) {
+            redirect("/dashboard");
+            return;
+        }
+
+    }, []);
 
     return (
         <div className="h-dvh flex items-center justify-center bg-background">
