@@ -32,35 +32,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [ user, setUser ] = useState<User | null>(null);
     const [ isLoading, setIsLoading ] = useState(true);
 
-    // useEffect(() => {
-    //     const fetchUser = async () => {
-    //         try {
-    //             const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/me`,
-    //                 { next: { tags: [ "get-logged-user" ] },
-    //                     credentials: "include",
-    //                     headers: {
-    //                         "Content-Type": "application/json",
-    //                         Cookie: `accessToken=${acct}`, // <-- aqui você injeta manualmente
-    //                     },
-    //                 });
-
-    //             if (!res.ok) throw new Error("Não autenticado");
-
-    //             const data = await res.json();
-    //             setUser(data.user);
-    //         } catch {
-    //             setUser(null);
-    //         } finally {
-    //             setIsLoading(false);
-    //         }
-    //     };
-
-    //     fetchUser();
-    // }, []);
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const res = await fetch("/api/me");
+                const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/me`,
+                    { next: { tags: [ "get-logged-user" ] },
+                        credentials: "include",
+                    });
 
                 if (!res.ok) throw new Error("Não autenticado");
 
