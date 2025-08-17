@@ -59,7 +59,7 @@ export function SelectEmployee<T extends FieldValues>({
                             <SelectItem
                                 // defaultValue={ selectedEmployee?.fullname }
                                 key={ employee.employeeId }
-                                value={ employee.fullname }
+                                value={ employee.employeeId }
                             >
                                 {employee.fullname}
                             </SelectItem>
