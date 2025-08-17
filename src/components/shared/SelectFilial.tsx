@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { Filial } from "@/utils/@types/filials";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 type SelectFilialProps<T extends FieldValues> = {
   control: Control<T>;
@@ -26,7 +27,7 @@ export function SelectFilial<T extends FieldValues>({
 
     useEffect(() => {
         async function handleGetAllFilials() {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials`, {
                 credentials: "include",
                 next: {
                     tags: [ "get-all-filials" ],

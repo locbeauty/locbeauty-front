@@ -23,6 +23,7 @@ import { SelectAddress } from "./SelectAddress";
 import { QuickBookingPaymentModePopover } from "./QuickBookingPaymentModePopover";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { createBookingFormSchema, CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export interface GetDayBookingsResponse {
   hourInMinutes: number,
@@ -82,7 +83,7 @@ export function CreateBookingForm() {
         setValue("totalDurationInMinutes", 0);
         setValue("gearAmount", 0);
         async function getDayBookings() {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/available?filialId=${watchFilialId}&gearId=${watchGearId.gearId}&date=${selectedDate}`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/available?filialId=${watchFilialId}&gearId=${watchGearId.gearId}&date=${selectedDate}`, {
                 credentials: "include",
             });
             const { data }: {data: GetDayBookingsResponse[]} = await response.json();

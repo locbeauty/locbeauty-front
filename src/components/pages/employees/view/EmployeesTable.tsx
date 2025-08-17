@@ -6,6 +6,7 @@ import { Eye, Pencil } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import { UpdateEmployeeDialog } from "../update/UpdateEmployeeDialog";
 import { EmployeeDetailsDialog } from "./EmployeeDetailsDialog";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function EmployeesTable() {
     const [ isUpdateEmployeeDialogOpen, setIsUpdateEmployeeDialogOpen ] =
@@ -39,7 +40,7 @@ export function EmployeesTable() {
 
     useEffect(() => {
         async function getEmployees() {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees`, {
                 credentials: "include",
             });
 

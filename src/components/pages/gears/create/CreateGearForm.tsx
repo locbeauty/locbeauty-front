@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { TransferableCheckbox } from "../shared/canBeTransferredCheckbox";
 import { useAuth } from "@/contexts/auth-provider";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function CreateGearForm() {
     const { user } = useAuth();
@@ -41,7 +42,7 @@ export function CreateGearForm() {
 
     async function handleCreateGear(newGearData: CreateGearFormSchemaType) {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears/create`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears/create`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

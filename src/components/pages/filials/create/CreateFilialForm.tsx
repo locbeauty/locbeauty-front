@@ -13,6 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";
 import { toast } from "sonner";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function CreateFilialForm() {
     const createFilialMethods = useForm<CreateFilialFormSchemaType>({
@@ -30,7 +31,7 @@ export function CreateFilialForm() {
         newFilialData: CreateFilialFormSchemaType
     ) {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials/create`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials/create`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

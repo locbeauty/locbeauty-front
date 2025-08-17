@@ -8,6 +8,7 @@ import { CustomerDetailsDialog } from "./CustomerDetailsDialog";
 import { Button } from "@/components/ui/button";
 import { Customer } from "@/utils/@types/customer";
 import { format } from "date-fns";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function CustomersTable() {
     const [ customers, setCustomers ] = useState<Customer[] | null>(null);
@@ -23,7 +24,7 @@ export function CustomersTable() {
 
     useEffect(() => {
         async function handleGetAllCustomers() {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers`, {
                 credentials: "include",
             });
             const { data }: { data: Customer[] } = await response.json();

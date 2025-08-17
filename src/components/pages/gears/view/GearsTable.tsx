@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { GearDetailsDialog } from "./GearDetailsDialog";
 import { Gear } from "@/utils/@types/gears";
 import { useAuth } from "@/contexts/auth-provider";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function GearsTable() {
     const [ gears, setGears ] = useState<Gear[]>([]);
@@ -35,7 +36,7 @@ export function GearsTable() {
             if(user && user?.role !== "Gerente") {
                 url.searchParams.append("filialId", user?.sourceFilial.filialId);
             }
-            const response = await fetch(url, { credentials: "include" });
+            const response = await fetchWithToken(url, { credentials: "include" });
 
             const { data } = await response.json();
             console.log("data: ", data);

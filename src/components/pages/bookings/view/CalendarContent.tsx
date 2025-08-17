@@ -5,6 +5,7 @@ import { MonthView } from "./MonthView";
 import { useAuth } from "@/contexts/auth-provider";
 import { useEffect, useState } from "react";
 import { Checkout } from "@/utils/@types/checkouts";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 interface CalendarContentProps {
     viewType: "semana" | "dia" | "mes"
@@ -51,7 +52,7 @@ export function CalendarContent({ viewType, currentDate, openBookingDetails }: C
                 url.searchParams.append("endDate", lastDayOfMonth.toString());
             }
 
-            const response = await fetch(url, {
+            const response = await fetchWithToken(url, {
                 credentials: "include",
             });
             const { data }: { data: Checkout[] } = await response.json();

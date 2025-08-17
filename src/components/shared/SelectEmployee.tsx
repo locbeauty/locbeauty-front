@@ -11,6 +11,7 @@ import {
 // import { employees } from "@/utils/mocks/employees";
 import { useEffect, useState } from "react";
 import { Employee } from "@/utils/@types/employee";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 type SelectEmployeeProps<T extends FieldValues> = {
   control: Control<T>;
@@ -28,7 +29,7 @@ export function SelectEmployee<T extends FieldValues>({
 
     useEffect(() => {
         const getEmployees = async () => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees`, {
                 credentials: "include",
             });
             const { data } = await response.json();

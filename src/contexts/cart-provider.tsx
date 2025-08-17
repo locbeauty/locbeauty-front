@@ -2,6 +2,7 @@
 
 import { CreateBookingFormSchemaType, CustomBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { PaymentModes, PaymentStatuses } from "@/utils/@types/bookings";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -89,7 +90,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     async function handleCheckout() {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/create`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/create`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

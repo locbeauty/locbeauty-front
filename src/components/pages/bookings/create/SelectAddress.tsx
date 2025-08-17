@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { Address } from "@/utils/@types/address";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function SelectAddress({ disabled = false }: {disabled?: boolean}) {
     const isMounted = useMounted();
@@ -21,7 +22,7 @@ export function SelectAddress({ disabled = false }: {disabled?: boolean}) {
 
     useEffect(() => {
         async function getCustomerAddresses() {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${watchCustomer.customerId}`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${watchCustomer.customerId}`, {
                 credentials: "include",
             });
             const { data }: {data: Address[]} = await response.json();

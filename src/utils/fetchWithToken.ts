@@ -1,5 +1,5 @@
 export async function fetchWithToken(
-    url: string,
+    url: string | URL,
     options: RequestInit = {}
 ): Promise<Response> {
     const token = localStorage.getItem("accessToken");

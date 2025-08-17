@@ -11,6 +11,7 @@ import { useMounted } from "@/hooks/useMounted";
 import { useEffect, useState } from "react";
 import { Customer } from "@/utils/@types/customer";
 import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function SelectCustomer({ disabled = false }: {disabled?: boolean}) {
     const isMounted = useMounted();
@@ -23,7 +24,7 @@ export function SelectCustomer({ disabled = false }: {disabled?: boolean}) {
 
     useEffect(() => {
         async function handleGetAllCustomers() {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers`, {
                 credentials: "include",
                 next: {
                     tags: [ "get-all-filials" ],

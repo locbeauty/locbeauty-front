@@ -7,6 +7,7 @@ import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { FilialDetailsDialog } from "./FilialDetailsDialog";
 import { UpdateFilialDialog } from "../update/UpdateFilialDialog";
 import { Filial } from "@/utils/@types/filials";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function FilialsTable() {
     const [ isUpdateFilialDialogOpen, setIsUpdateFilialDialogOpen ] =
@@ -38,7 +39,7 @@ export function FilialsTable() {
 
     useEffect(() => {
         async function handleGetAllFilials() {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials`, {
                 credentials: "include",
                 next: {
                     tags: [ "get-all-filials" ]

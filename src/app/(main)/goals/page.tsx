@@ -24,6 +24,7 @@ import { SelectFilial } from "@/components/shared/SelectFilial";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FilterGoalsSchema, filterGoalsType, StatusMeta } from "@/lib/zod/Goals";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export type MetaMensal = {
     filialId: string;
@@ -62,7 +63,7 @@ export default function MetasMensaisPage() {
 
     useEffect(() => {
         async function GetAllGoals() {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/goals`, { credentials: "include" });
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/goals`, { credentials: "include" });
             const { data }: { data: MetaMensal[] } = await response.json();
 
             const currentMonth = new Date().getMonth();

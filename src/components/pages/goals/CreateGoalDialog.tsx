@@ -22,6 +22,7 @@ import { getMonthName } from "@/utils/getMonthName";
 import { toast } from "sonner";
 import PriceInput from "@/components/shared/PriceInput";
 import { parseStringToCents } from "@/utils/parseStringToCents";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 const CreateGoalSchema = z.object({
     filialId: z.string({ message: "Filial é obrigatória" }),
@@ -63,7 +64,7 @@ export function CreateGoalDialog() {
             ...newGoalData,
             targetValue: parseStringToCents(String(newGoalData.targetValue))
         };
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/goals/create`,
+        const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/goals/create`,
             {
                 credentials: "include",
                 headers: {

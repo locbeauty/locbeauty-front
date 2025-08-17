@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { EmployeeForm } from "../forms/EmployeeForm";
 import { EmployeeAddressForm } from "../forms/EmployeeAddressForm";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function CreateEmployeeForm() {
     const CreateEmployeeMethods = useForm<CreateEmployeeFormSchemaType>({
@@ -24,7 +25,7 @@ export function CreateEmployeeForm() {
 
     async function handleCreateEmployee(newEmployeeData: CreateEmployeeFormSchemaType) {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees/create`, {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees/create`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

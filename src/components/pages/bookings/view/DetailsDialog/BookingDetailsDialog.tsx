@@ -35,6 +35,7 @@ import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingSt
 import { BookingPaymentStatusBadge } from "../../common/BookingPaymentStatusBadge";
 import { FlattenedBooking } from "../WeekView";
 import { toast } from "sonner";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -49,7 +50,7 @@ export function BookingDetailsDialog({
 }: BookingDetailsDialogProps) {
 
     async function handleMarkAsConcluded() {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/config/concluded?bookingId=${selectedAgendamento?.bookingId}&date=${selectedAgendamento?.date.toString()}`, { credentials: "include" });
+        const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/config/concluded?bookingId=${selectedAgendamento?.bookingId}&date=${selectedAgendamento?.date.toString()}`, { credentials: "include" });
 
         if(!response.ok) {
             toast.warning("Erro ao marcar agendamento como concluído.", { style: { fontSize: "1rem" } });

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-provider";
 import { Checkout } from "@/utils/@types/checkouts";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function BookingsTable() {
     const [ checkouts, setCheckouts ] = useState<Checkout[] | null>(null);
@@ -21,7 +22,7 @@ export function BookingsTable() {
 
             // url.searchParams.append("startDate", new Date().toString());
             // url.searchParams.append("endDate", new Date("08-11-2025").toString());
-            const response = await fetch(url, {
+            const response = await fetchWithToken(url, {
                 credentials: "include",
             });
             const { data }: { data: Checkout[] } = await response.json();
