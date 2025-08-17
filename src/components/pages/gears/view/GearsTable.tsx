@@ -123,7 +123,7 @@ export function GearsTable() {
                             transferableIndicator: true,
                             transferable: gear.transferable,
                             items: [
-                                { itemLabel: "Filial:", itemInfo: gear.SourceFilial.filialId },
+                                { itemLabel: "Filial:", itemInfo: gear.SourceFilial.filialName },
                                 {
                                     itemLabel: "Unidades disponíveis: ",
                                     itemInfo: gear.availableUnits,
