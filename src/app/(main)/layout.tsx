@@ -7,38 +7,17 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { AuthProvider } from "@/contexts/auth-provider";
 import { CartProvider } from "@/contexts/cart-provider";
+import PageWithAuth from "./page";
 
 export default function DashboardLayout({
     children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const [ sidebarOpen, setSidebarOpen ] = useState(false);
 
     return (
         <AuthProvider>
-            <CartProvider>
-
-                <div className="max-h-screen flex bg-background">
-                    <Sidebar
-                        className={ cn(sidebarOpen ? "translate-x-0" : "-translate-x-full") }
-                    />
-
-                    <div className="flex-1 md:ml-48">
-                        <DashboardHeader setSidebarOpen={ setSidebarOpen } />
-                        <main className="p-6">{children}</main>
-                    </div>
-
-                    {/* Overlay for mobile */}
-                    {sidebarOpen && (
-                        <div
-                            className="fixed inset-0 z-40 bg-black/50 md:hidden"
-                            onClick={ () => setSidebarOpen(false) }
-                        />
-                    )}
-                    <Toaster />
-                </div>
-            </CartProvider>
+            <PageWithAuth>{children}</PageWithAuth>
         </AuthProvider>
     );
 }

@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     async function handleLogout() {
-        localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
         redirect("/login");
     }
 

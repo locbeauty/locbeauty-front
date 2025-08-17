@@ -47,14 +47,14 @@ export function BookingsTable() {
                     </tr>
                 </thead>
                 <tbody>
-                    {!checkouts || checkouts.length === 0 && (
+                    {(checkouts?.length === 0) && (
                         <tr>
                             <td className="text-center p-4" colSpan={ 8 }>
           Nada a mostrar por aqui.
                             </td>
                         </tr>
                     )}
-                    {checkouts?.map((checkout) => {
+                    {checkouts ? (checkouts.map((checkout) => {
                         const bookingDates = checkout.Bookings.map((b) =>
                             new Date(b.date).toLocaleDateString("pt-BR" )
                         );
@@ -91,7 +91,16 @@ export function BookingsTable() {
                                 </td>
                             </tr>
                         );
-                    })}
+                    })) : (
+                        <tr>
+                            <td
+                                colSpan={ 8 }
+                                className="p-4 text-center text-muted-foreground"
+                            >
+                  Carregando...
+                            </td>
+                        </tr>
+                    )}
                 </tbody>
             </table>
         </div>

@@ -13,7 +13,7 @@ export function CreationPageFooter({ cancelUrl, formId }: CreationPageFooterProp
             <Button variant="outline" asChild>
                 <Link href={ cancelUrl }>Cancelar</Link>
             </Button>
-            <Button form={ formId }>
+            <Button className="cursor-pointer" form={ formId }>
                 <Save className="mr-2 h-4 w-4" />
                 Salvar
             </Button>

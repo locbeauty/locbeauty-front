@@ -11,7 +11,7 @@ import { fetchWithToken } from "@/utils/fetchWithToken";
 export function EmployeesTable() {
     const [ isUpdateEmployeeDialogOpen, setIsUpdateEmployeeDialogOpen ] =
     useState(false);
-    const [ allEmployees, setAllEmployees ] = useState<Employee[]>();
+    const [ allEmployees, setAllEmployees ] = useState<Employee[] | null>(null);
     const [ selectedEmployee, setSelectedEmployee ] = useState<Employee | null>(
         null
     );
@@ -67,7 +67,14 @@ export function EmployeesTable() {
                         </tr>
                     </thead>
                     <tbody>
-                        {allEmployees?.map((employee) => (
+                        {(allEmployees?.length === 0) && (
+                            <tr>
+                                <td className="text-center p-4" colSpan={ 8 }>
+          Nada a mostrar por aqui.
+                                </td>
+                            </tr>
+                        )}
+                        {allEmployees ? (allEmployees.map((employee) => (
                             <tr
                                 key={ employee.employeeId }
                                 className="border-t hover:bg-muted/50"
@@ -96,7 +103,16 @@ export function EmployeesTable() {
                                     </Button>
                                 </td>
                             </tr>
-                        ))}
+                        ))) : (
+                            <tr>
+                                <td
+                                    colSpan={ 8 }
+                                    className="p-4 text-center text-muted-foreground"
+                                >
+                  Carregando...
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>

@@ -5,7 +5,7 @@ export async function fetchWithToken(
     const token = localStorage.getItem("accessToken");
 
     if (!token) {
-        throw new Error("No access token found");
+        console.log("No access token found");
     }
 
     const headers = {

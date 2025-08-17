@@ -27,7 +27,7 @@ interface UpdateGearDialogProps {
   setIsUpdateGearDialogOpen: Dispatch<SetStateAction<boolean>>;
   selectedGear: Gear | null;
   setSelectedGear: Dispatch<SetStateAction<Gear | null>>;
-  setGears: Dispatch<SetStateAction<Gear[]>>;
+  setGears: Dispatch<SetStateAction<Gear[] | null>>;
 }
 
 export function UpdateGearDialog({

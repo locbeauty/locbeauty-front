@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/auth-provider";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function GearsTable() {
-    const [ gears, setGears ] = useState<Gear[]>([]);
+    const [ gears, setGears ] = useState<Gear[] | null>(null);
 
     const [ isUpdateGearDialogOpen, setIsUpdateGearDialogOpen ] = useState(false);
     const [ isGearDetailsDialogOpen, setIsGearDetailsDialogOpen ] = useState(false);
@@ -72,7 +72,7 @@ export function GearsTable() {
                                 </td>
                             </tr>
                         )}
-                        {gears && gears?.map((gear) => (
+                        {gears ? (gears.map((gear) => (
                             <tr
                                 key={ gear.gearId }
                                 className="border-t hover:bg-muted/50 items-stretch"
@@ -101,11 +101,20 @@ export function GearsTable() {
                                     </Button>
                                 </td>
                             </tr>
-                        ))}
+                        ) )) : (
+                            <tr>
+                                <td
+                                    colSpan={ 8 }
+                                    className="p-4 text-center text-muted-foreground"
+                                >
+                  Carregando...
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
-            {gears.map((gear) => (
+            {gears && gears.map((gear) => (
                 <Fragment key={ gear.gearId }>
                     <ResponsiveCard
                         cardData={ {

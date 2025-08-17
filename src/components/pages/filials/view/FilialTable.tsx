@@ -16,7 +16,7 @@ export function FilialsTable() {
 
     const [ isFilialDetailsDialogOpen, setIsFilialDetailsDialogOpen ] =
     useState(false);
-    const [ allFilials, setAllFilials ] = useState<Filial[]>([]);
+    const [ allFilials, setAllFilials ] = useState<Filial[] | null>(null);
 
     const handleToggleUpdateFilialDialog = (
         openStatus: boolean,
@@ -67,7 +67,14 @@ export function FilialsTable() {
                         </tr>
                     </thead>
                     <tbody>
-                        {allFilials.map((filial) => (
+                        {allFilials?.length === 0 && (
+                            <tr>
+                                <td className="text-center p-4" colSpan={ 8 }>
+          Nada a mostrar por aqui.
+                                </td>
+                            </tr>
+                        )}
+                        {allFilials ? (allFilials.map((filial) => (
                             <tr key={ filial.filialId } className="border-t hover:bg-muted/50">
                                 <td className="p-3 text-sm text-nowrap">{filial.CNPJ}</td>
                                 <td className="p-3 text-sm text-nowrap">{filial.managerEmployee.fullname}</td>
@@ -91,12 +98,21 @@ export function FilialsTable() {
                                     </Button>
                                 </td>
                             </tr>
-                        ))}
+                        ))) : (
+                            <tr>
+                                <td
+                                    colSpan={ 8 }
+                                    className="p-4 text-center text-muted-foreground"
+                                >
+                  Carregando...
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
 
-            {allFilials.map((filial) => (
+            {allFilials && allFilials.map((filial) => (
                 <Fragment key={ filial.filialId }>
                     <ResponsiveCard
                         cardData={ {

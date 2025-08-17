@@ -57,6 +57,7 @@ export function EmployeeForm() {
                 <div className="space-y-2">
                     <Label htmlFor="cpf">CPF</Label>
                     <DocumentInput
+                        isCPF={ true }
                         placeholder="000.000.000-00"
                         register={ register("documentNumber") }
                     />
