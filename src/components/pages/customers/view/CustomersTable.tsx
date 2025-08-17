@@ -160,6 +160,10 @@ export function CustomersTable() {
             </Fragment>
         ))}
 
+            {!customers || customers.length === 0 && (
+                <h1 className="w-full text-center">Nada a mostrar aqui</h1>
+            )}
+
             <CustomerDetailsDialog
                 selectedCustomer={ selectedCustomer }
                 handleToggleUpdateCustomerDialog={ handleToggleUpdateCustomerDialog }
