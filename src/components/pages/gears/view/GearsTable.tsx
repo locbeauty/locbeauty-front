@@ -77,11 +77,11 @@ export function GearsTable() {
                                 key={ gear.gearId }
                                 className="border-t hover:bg-muted/50 items-stretch"
                             >
-                                <td className="p-3">{gear.gearName}</td>
-                                <td className="p-3 text-center">{gear.SourceFilial.filialName}</td>
-                                <td className="p-3 text-center">{gear.availableUnits}</td>
-                                <td className="p-3 text-center">{gear.totalUnits}</td>
-                                <td className="p-3 text-center">{gear.acquisitionDate ? new Date(gear.acquisitionDate).toLocaleDateString("pt-BR") : "Não informado"}</td>
+                                <td className="p-3 text-sm">{gear.gearName}</td>
+                                <td className="p-3 text-center text-sm">{gear.SourceFilial.filialName}</td>
+                                <td className="p-3 text-center text-sm">{gear.availableUnits}</td>
+                                <td className="p-3 text-center text-sm">{gear.totalUnits}</td>
+                                <td className="p-3 text-center text-sm">{gear.acquisitionDate ? new Date(gear.acquisitionDate).toLocaleDateString("pt-BR") : "Não informado"}</td>
                                 <td className="p-0 h-full">
                                     <div className="h-full flex justify-center items-center">
                                         {gear.transferable ? (

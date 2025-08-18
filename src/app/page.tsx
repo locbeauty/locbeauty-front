@@ -11,6 +11,8 @@ export default function EntryPage() {
 
         if (!token) {
             router.replace("/login");
+        } else {
+            router.replace("/dashboard");
         }
     }, [ router ]);
 

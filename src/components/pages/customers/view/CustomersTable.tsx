@@ -81,16 +81,16 @@ export function CustomersTable() {
                                     key={ customer.customerId }
                                     className="border-t hover:bg-muted/50"
                                 >
-                                    <td className="p-3">
+                                    <td className="p-3 text-sm">
                                         {customer.fullname || customer.companyName}
                                     </td>
-                                    <td className="p-3 text-center">{customer.documentNumber}</td>
-                                    <td className="p-3 text-center">{customer.email}</td>
-                                    <td className="p-3 text-center">{customer.cellphone}</td>
-                                    <td className="p-3 text-center">
+                                    <td className="p-3 text-center text-sm">{customer.documentNumber}</td>
+                                    <td className="p-3 text-center text-sm">{customer.email}</td>
+                                    <td className="p-3 text-center text-sm">{customer.cellphone}</td>
+                                    <td className="p-3 text-center text-sm">
                                         <CustomerStatusBadge status={ customer.customerStatus } />
                                     </td>
-                                    <td className="p-3 text-center">
+                                    <td className="p-3 text-center text-sm">
                                         {customer.lastBooking
                                             ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
                                             : "Não informado"}

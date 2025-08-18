@@ -55,7 +55,7 @@ export function SelectEmployee<T extends FieldValues>({
                         <SelectValue placeholder="Selecione o funcionário" />
                     </SelectTrigger>
                     <SelectContent>
-                        {allEmployees.map((employee) => (
+                        {allEmployees?.map((employee) => (
                             <SelectItem
                                 // defaultValue={ selectedEmployee?.fullname }
                                 key={ employee.employeeId }

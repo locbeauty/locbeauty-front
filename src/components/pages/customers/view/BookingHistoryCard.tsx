@@ -239,6 +239,7 @@ import type { Customer } from "@/utils/@types/customer";
 import type { BookingWithCheckout } from "@/utils/@types/bookings";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 import { format } from "date-fns";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 interface BookingHistoryCardProps {
   isCustomerDetailsModalOpen: boolean
@@ -258,7 +259,7 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
 
     useEffect(() => {
         async function GetAllCustomerBookings() {
-            const response = await fetch(
+            const response = await fetchWithToken(
                 `${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/customer?customerId=${selectedCustomer?.customerId}`,
                 {
                     credentials: "include",
