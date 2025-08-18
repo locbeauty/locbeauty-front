@@ -33,7 +33,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
             //     streetName: selectedFilial.address.streetName,
             // },
             cellphone: selectedFilial.cellphone,
-            CNPJ: selectedFilial.CNPJ,
+            // CNPJ: selectedFilial.CNPJ,
             email: selectedFilial.email,
             managerEmployeeId: selectedFilial.managerEmployee.employeeId,
             filialName: selectedFilial.filialName,
@@ -59,7 +59,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
         >
             <CardContent className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                         <Label htmlFor="telefone">CNPJ/CPF</Label>
                         <DocumentInput disabled register={ register("CNPJ") } />
                         {errors.cellphone && (
@@ -67,7 +67,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
                                 {errors.cellphone.message}
                             </p>
                         )}
-                    </div>
+                    </div> */}
                     <div className="space-y-2">
                         <Label htmlFor="telefone">Telefone</Label>
                         <PhoneInput register={ register("cellphone") } />
