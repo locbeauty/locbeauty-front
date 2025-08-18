@@ -14,6 +14,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";
 import { toast } from "sonner";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import DocumentInput from "@/components/shared/DocumentInput";
 
 export function CreateFilialForm() {
     const createFilialMethods = useForm<CreateFilialFormSchemaType>({
@@ -97,6 +98,16 @@ export function CreateFilialForm() {
                             {errors.email && (
                                 <p className="text-sm font-medium text-destructive">
                                     {errors.email.message}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="telefone">CNPJ/CPF</Label>
+                            <DocumentInput register={ register("CNPJ") } />
+                            {errors.CNPJ && (
+                                <p className="text-sm font-medium text-destructive">
+                                    {errors.CNPJ.message}
                                 </p>
                             )}
                         </div>

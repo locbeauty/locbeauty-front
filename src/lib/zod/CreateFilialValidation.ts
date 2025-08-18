@@ -3,7 +3,7 @@ import { addressSchema } from "./address";
 
 export const createFilialFormSchema = z
     .object({
-        // CNPJ: z.string().optional(),
+        CNPJ: z.string(),
         email: z
             .string()
             .min(1, { message: "Email é obrigatório" })
