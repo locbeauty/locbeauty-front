@@ -31,3 +31,5 @@ export const addressSchema = z.object({
         .optional()
         .nullable(),
 });
+
+export type AddressTypeSchema = z.infer<typeof addressSchema>

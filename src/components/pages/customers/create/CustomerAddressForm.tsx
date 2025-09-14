@@ -13,8 +13,14 @@ import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
+import { Button } from "@/components/ui/button";
+import { Plus, PlusCircle } from "lucide-react";
 
-export function CustomerAddressForm() {
+interface CustomerAddressFormProps {
+    isUpdateCustomerForm?: boolean
+}
+
+export function CustomerAddressForm({ isUpdateCustomerForm = false }: CustomerAddressFormProps) {
     const {
         register,
         trigger,
@@ -28,7 +34,7 @@ export function CustomerAddressForm() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Endereço</CardTitle>
+                <CardTitle>Cadastrar endereço</CardTitle>
                 <CardDescription>
           Preencha os dados de endereço do cliente
                 </CardDescription>
@@ -111,6 +117,14 @@ export function CustomerAddressForm() {
                         placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
                     />
                 </div>
+                {
+                    isUpdateCustomerForm && (
+                        <div className="flex">
+                            <Button className="ml-auto flex">Adicionar<Plus /></Button>
+                        </div>
+                    )
+                }
+
             </CardContent>
         </Card>
     );
