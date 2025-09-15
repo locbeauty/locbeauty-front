@@ -27,7 +27,7 @@ export function UpdateFilialDialog({
     handleToggleUpdateFilialDialog,
 }: UpdateFilialDialogProps) {
     const handleSaveUpdatedCustomer = () => {
-        console.log("UPDATED:");
+        console.log("UPDATED2:");
     };
 
     return (

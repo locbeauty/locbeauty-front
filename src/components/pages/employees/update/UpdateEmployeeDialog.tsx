@@ -26,7 +26,7 @@ export function UpdateEmployeeDialog({
     handleToggleUpdateEmployeeDialog,
 }: UpdateEmployeeDialogProps) {
     const handleSaveUpdatedEmployee = () => {
-        console.log("UPDATED:");
+        console.log("UPDATED3:");
     };
 
     return (

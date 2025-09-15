@@ -25,8 +25,9 @@ export function UpdateCustomerDialog({
     selectedCustomer,
     handleToggleUpdateCustomerDialog,
 }: UpdateCustomerDialogProps) {
-    const handleSaveUpdatedCustomer = () => {
-        console.log("UPDATED:");
+
+    const handleSaveUpdatedCustomer = (data: any) => {
+        console.log("UPDATED4:", data);
     };
 
     return (
@@ -54,11 +55,11 @@ export function UpdateCustomerDialog({
                                 handleToggleUpdateCustomerDialog(false, selectedCustomer)
                             }
                         >
-              Cancelar
+                            Cancelar
                         </Button>
                         <Button onClick={ handleSaveUpdatedCustomer }>
                             <Save className="mr-2 h-4 w-4" />
-              Salvar alterações
+                            Salvar alterações
                         </Button>
                     </DialogFooter>
                 </div>

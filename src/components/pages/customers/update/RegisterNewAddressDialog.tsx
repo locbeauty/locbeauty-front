@@ -22,7 +22,7 @@ interface RegisterNewAddressDialogProps {
 
 export function RegisterNewAddressDialog({ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen }: RegisterNewAddressDialogProps) {
     const handleSaveUpdatedCustomer = () => {
-        console.log("UPDATED:");
+        console.log("UPDATED5:");
     };
 
     const createAddressMethods = useForm<AddressTypeSchema>({

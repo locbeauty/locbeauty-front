@@ -16,6 +16,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
 
 export function CustomerGeneralInformationForm() {
     const {
@@ -26,7 +27,7 @@ export function CustomerGeneralInformationForm() {
         trigger,
         clearErrors,
         formState: { errors },
-    } = useFormContext<CreateCustomerFormSchemaType>();
+    } = useFormContext<UpdateCustomerFormSchemaType>();
 
     const birthdate = watch("birthdate");
 
