@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
-import { Controller , FormProvider, useForm } from "react-hook-form";
+import { Controller , FormProvider, useForm, useFormContext } from "react-hook-form";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { CreateCustomerFormSchemaType ,
     createCustomerFormSchema
@@ -34,23 +34,8 @@ interface UpdateCustomerFormProps {
 export function UpdateCustomerForm({
     selectedCustomer,
 }: UpdateCustomerFormProps) {
-    const updateCustomerMethods = useForm<CreateCustomerFormSchemaType>({
-        resolver: zodResolver(createCustomerFormSchema),
-        defaultValues: {
-            birthdate: selectedCustomer.birthdate
-                ? new Date(selectedCustomer.birthdate)
-                : null,
-            cellphone: selectedCustomer.cellphone,
-            documentNumber: selectedCustomer.documentNumber,
-            companyName: selectedCustomer.companyName,
-            fullname: selectedCustomer.fullname,
-            email: selectedCustomer.email,
-            instagram: selectedCustomer.instagram,
-            // address: selectedCustomer.Addresses[0]
-        },
-    });
 
-    const { handleSubmit, formState: { errors }, register, setValue, control } = updateCustomerMethods;
+    const { handleSubmit, formState: { errors }, register, setValue, control } = useFormContext<UpdateCustomerFormSchemaType>();
     const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(null);
 
     useEffect(() => {
@@ -75,11 +60,7 @@ export function UpdateCustomerForm({
     }
 
     return (
-        <form
-            id="update-customer-form"
-            onSubmit={ handleSubmit(handleUpdateCustomer) }
-            className="flex flex-col gap-5 mt-5"
-        >
+        <>
             {/* <CustomerGeneralInformationForm /> */}
             <Card>
                 <CardHeader>
@@ -189,6 +170,6 @@ export function UpdateCustomerForm({
                 </CardContent>
             </Card>
             <ListCustomerAddressesCard customerAddresses={ customerAddresses } />
-        </form>
+        </>
     );
 }

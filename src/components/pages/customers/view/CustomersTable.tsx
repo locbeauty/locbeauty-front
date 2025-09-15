@@ -33,6 +33,10 @@ export function CustomersTable() {
         handleGetAllCustomers();
     }, []);
 
+    useEffect(() => {
+        console.log("selectedCustomer: ",selectedCustomer);
+    }, [ selectedCustomer ]);
+
     const handleToggleUpdateCustomerDialog = (
         openStatus: boolean,
         customer: Customer | null
@@ -173,7 +177,7 @@ export function CustomersTable() {
 
             <UpdateCustomerDialog
                 isUpdateCustomerDialogOpen={ isUpdateCustomerDialogOpen }
-                selectedCustomer={ selectedCustomer! }
+                selectedCustomer={ selectedCustomer }
                 setSelectedCustomer={ setSelectedCustomer }
                 handleToggleUpdateCustomerDialog={ handleToggleUpdateCustomerDialog }
             />
