@@ -39,7 +39,6 @@ export function GearsTable() {
             const response = await fetchWithToken(url, { credentials: "include" });
 
             const { data } = await response.json();
-            console.log("data: ", data);
             setGears(data);
         }
         getGears();

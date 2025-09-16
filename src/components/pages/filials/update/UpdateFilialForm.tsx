@@ -48,7 +48,6 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
     } = updateFilialMethods;
 
     function handleUpdateFilial(updatedFilialData: CreateFilialFormSchemaType) {
-        console.log("updatedFilialData: ", updatedFilialData);
         toast.success("Filial editada com sucesso!");
     }
     return (

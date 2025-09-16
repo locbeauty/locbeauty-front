@@ -54,7 +54,6 @@ export const createBookingFormSchema = z
                     message: "Valor pendente é obrigatório quando o pagamento for parcial.",
                 });
             } else if (!isNaN(partialValue) && !isNaN(priceValue) && partialValue >= priceValue) {
-                console.log("partialValue >= priceValue: ", partialValue, priceValue);
                 ctx.addIssue({
                     path: [ "partialPayment" ],
                     code: z.ZodIssueCode.custom,

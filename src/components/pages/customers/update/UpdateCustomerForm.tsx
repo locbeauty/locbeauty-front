@@ -28,7 +28,7 @@ import { Address } from "@/utils/@types/address";
 import { ListCustomerAddressesCard } from "./ListAddressCard";
 
 interface UpdateCustomerFormProps {
-  selectedCustomer: Customer;
+  selectedCustomer: Customer | null;
 }
 
 export function UpdateCustomerForm({
@@ -39,15 +39,15 @@ export function UpdateCustomerForm({
     const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(null);
 
     useEffect(() => {
-        async function getCustomerAddresses() {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${selectedCustomer.customerId}`, {
+        async function getCustomerAddresses(customerId: string) {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${customerId}`, {
                 credentials: "include",
             });
             const { data }: {data: Address[]} = await response.json();
             setCustomerAddresses(data);
         }
         if(selectedCustomer && selectedCustomer.customerId) {
-            getCustomerAddresses();
+            getCustomerAddresses(selectedCustomer.customerId);
         }
     }, [ selectedCustomer ]);
 
