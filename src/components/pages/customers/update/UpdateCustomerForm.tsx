@@ -11,16 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
-import { Controller , FormProvider, useForm, useFormContext } from "react-hook-form";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { CreateCustomerFormSchemaType ,
-    createCustomerFormSchema
-} from "@/lib/zod/CreateCustomerValidation";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { useFormContext } from "react-hook-form";
 import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
 import { toast } from "sonner";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Customer } from "@/utils/@types/customer";
 import { useEffect, useState } from "react";
 import { fetchWithToken } from "@/utils/fetchWithToken";
@@ -58,6 +51,8 @@ export function UpdateCustomerForm({
         console.log("updatedCustomerData: ", updatedCustomerData);
         toast.success("Cliente editado com sucesso!");
     }
+
+    if(!selectedCustomer) return;
 
     return (
         <>
@@ -169,7 +164,7 @@ export function UpdateCustomerForm({
                     </div>
                 </CardContent>
             </Card>
-            <ListCustomerAddressesCard customerAddresses={ customerAddresses } />
+            <ListCustomerAddressesCard customerId={ selectedCustomer.customerId } customerAddresses={ customerAddresses } />
         </>
     );
 }

@@ -25,30 +25,29 @@ export interface GetViaCepAddressDetailsResponse {
 }
 
 interface HandleZipCodeChangeParams<T extends FieldValues> {
-  e: React.ChangeEvent<HTMLInputElement>;
-  setValue: UseFormSetValue<T>;
-  trigger: UseFormTrigger<T>;
-  setError: UseFormSetError<T>
-  setIsLoadingZipCode: (_value: boolean) => void;
+    e: React.ChangeEvent<HTMLInputElement>;
+    setValue: UseFormSetValue<T>;
+    trigger: UseFormTrigger<T>;
+    setError: UseFormSetError<T>
+    isUpdateForm?: boolean
+    setIsLoadingZipCode: (_value: boolean) => void;
     clearErrors: UseFormClearErrors<T>
 }
 
-export async function handleCepChange<T extends FieldValues>({ e, setValue, trigger, setIsLoadingZipCode, setError, clearErrors }: HandleZipCodeChangeParams<T>) {
+export async function handleCepChange<T extends FieldValues>({ e, setValue, trigger, setIsLoadingZipCode, setError, clearErrors, isUpdateForm = false }: HandleZipCodeChangeParams<T>) {
 
     const zipCodeParsed = e.target.value.replace(/\D/g, "");
 
-    const {
-        zipCode = "address.zipCode" as Path<T>,
-        city = "address.cityName" as Path<T>,
-        state = "address.stateName" as Path<T>,
-        neighborhood = "address.neighborhoodName" as Path<T>,
-        street = "address.streetName" as Path<T>,
-    } = {};
+    const zipCode: Path<T> = (isUpdateForm ? "zipCode" : "address.zipCode") as Path<T>;
+    const city: Path<T> = (isUpdateForm ? "cityName" : "address.cityName") as Path<T>;
+    const state: Path<T> = (isUpdateForm ? "stateName" : "address.stateName") as Path<T>;
+    const neighborhood: Path<T> = (isUpdateForm ? "neighborhoodName" : "address.neighborhoodName") as Path<T>;
+    const street: Path<T> = (isUpdateForm ? "streetName" : "address.streetName") as Path<T>;
+
     const zipCodeValue = e.target.value.replace(/\D/g, "");
+
     if (zipCodeParsed.length === 0) clearErrors(zipCode);
-    if (zipCodeValue.length !== 8) {
-        return;
-    };
+    if (zipCodeValue.length !== 8) return;
 
     try {
         setIsLoadingZipCode(true);

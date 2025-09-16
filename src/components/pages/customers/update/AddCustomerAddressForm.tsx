@@ -12,12 +12,16 @@ import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
-import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 import { Button } from "@/components/ui/button";
-import { Plus, PlusCircle } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useEffect } from "react";
+import { AddressTypeSchema } from "@/lib/zod/address";
 
-export function CustomerAddressForm() {
+interface AddCustomerAddressFormProps {
+    handleSaveUpdatedCustomer: (newAddressData: AddressTypeSchema) => void
+}
+
+export function AddCustomerAddressForm({ handleSaveUpdatedCustomer }: AddCustomerAddressFormProps) {
     const {
         register,
         trigger,
@@ -25,8 +29,9 @@ export function CustomerAddressForm() {
         control,
         setError,
         setValue,
+        handleSubmit,
         formState: { errors },
-    } = useFormContext<CreateCustomerFormSchemaType>();
+    } = useFormContext<AddressTypeSchema>();
 
     return (
         <Card>
@@ -43,7 +48,8 @@ export function CustomerAddressForm() {
                     setError={ setError }
                     setValue={ setValue }
                     trigger={ trigger }
-                    zipCodeError={ errors.address?.zipCode?.message }
+                    isUpdateForm={ true }
+                    zipCodeError={ errors.zipCode?.message }
                 />
 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -51,7 +57,7 @@ export function CustomerAddressForm() {
                         <Label htmlFor="cidade">Cidade</Label>
                         <Input
                             disabled
-                            { ...register("address.cityName") }
+                            { ...register("cityName") }
                             placeholder="Cidade"
                             className=""
                             id="cidade"
@@ -61,7 +67,7 @@ export function CustomerAddressForm() {
                         <Label htmlFor="estado">Estado</Label>
                         <Input
                             disabled
-                            { ...register("address.stateName") }
+                            { ...register("stateName") }
                             placeholder="Estado"
                         />
                     </div>
@@ -71,7 +77,7 @@ export function CustomerAddressForm() {
                     <Label htmlFor="bairro">Bairro</Label>
                     <Input
                         disabled
-                        { ...register("address.neighborhoodName") }
+                        { ...register("neighborhoodName") }
                         placeholder="Bairro"
                         className="placeholder:text-placeholder"
                         id="bairro"
@@ -82,7 +88,7 @@ export function CustomerAddressForm() {
                         <Label htmlFor="rua">Rua</Label>
                         <Input
                             disabled
-                            { ...register("address.streetName") }
+                            { ...register("streetName") }
                             id="rua"
                             className="placeholder:text-placeholder"
                             placeholder="Nome da rua"
@@ -91,15 +97,15 @@ export function CustomerAddressForm() {
                     <div className="space-y-2">
                         <Label htmlFor="number">Número</Label>
                         <Input
-                            { ...register("address.buildingNumber") }
+                            { ...register("buildingNumber") }
                             id="number"
                             className="placeholder:text-placeholder"
                             placeholder="Número"
                         />
                         <div className="min-h-[20px]">
-                            {errors.address?.buildingNumber && (
+                            {errors.buildingNumber && (
                                 <p className="text-sm font-medium text-destructive">
-                                    {errors.address.buildingNumber.message}
+                                    {errors.buildingNumber.message}
                                 </p>
                             )}
                         </div>
@@ -109,11 +115,15 @@ export function CustomerAddressForm() {
                     <Label htmlFor="number">Complemento</Label>
 
                     <Textarea
-                        { ...register("address.addressComplement") }
+                        { ...register("addressComplement") }
                         className="h-[100px] resize-none max-w-[80vw] placeholder:text-placeholder"
                         placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
                     />
                 </div>
+                <div className="flex">
+                    <Button type="submit" onClick={ handleSubmit((data: AddressTypeSchema) => handleSaveUpdatedCustomer(data)) } className="ml-auto flex">Adicionar<Plus /></Button>
+                </div>
+
             </CardContent>
         </Card>
     );

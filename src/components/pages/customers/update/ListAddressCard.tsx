@@ -8,8 +8,9 @@ import { useState } from "react";
 
 interface ListCustomerAddressesCardProps {
     customerAddresses: Address[] | null
+    customerId: string,
 }
-export function ListCustomerAddressesCard({ customerAddresses }: ListCustomerAddressesCardProps) {
+export function ListCustomerAddressesCard({ customerAddresses, customerId }: ListCustomerAddressesCardProps) {
     const [ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen ] = useState(false);
 
     return (
@@ -32,6 +33,7 @@ export function ListCustomerAddressesCard({ customerAddresses }: ListCustomerAdd
                 }
 
                 <RegisterNewAddressDialog
+                    customerId={ customerId }
                     isRegisterNewAddressDialogOpen={ isRegisterNewAddressDialogOpen }
                     setIsRegisterNewAddressDialogOpen={ setIsRegisterNewAddressDialogOpen }
                 />
