@@ -1,11 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
-import { MapPinX, Trash2 } from "lucide-react";
+import { MapPinX, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { Address } from "@/utils/@types/address";
 import { RegisterNewAddressDialog } from "./RegisterNewAddressDialog";
 import { useState } from "react";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ListCustomerAddressesCardProps {
     customerAddresses: Address[] | null
@@ -38,9 +39,16 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
                         return (
                             <div key={ addr.addressId } className="flex justify-between items-center">
                                 <p>{ addr.street.streetName }, { addr.neighborhood.neighborhoodName }, {addr.buildingNumber}, {addr.addressComplement} - { addr.city.cityName }/{ addr.state.UF }</p>
-                                <Button disabled={ !addr.isActive } type="button" onClick={ () => handleDeactivateAddress(addr.addressId) } variant="outline">
-                                    <MapPinX className="size-5" />
-                                </Button>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button disabled={ !addr.isActive } type="button" onClick={ () => handleDeactivateAddress(addr.addressId) } variant="outline">
+                                            <X className="size-5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Desativar endereço</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             </div>
                         );
                     })
