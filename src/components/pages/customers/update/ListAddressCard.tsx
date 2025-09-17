@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Address } from "@/utils/@types/address";
 import { RegisterNewAddressDialog } from "./RegisterNewAddressDialog";
 import { useState } from "react";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 interface ListCustomerAddressesCardProps {
     customerAddresses: Address[] | null
@@ -12,6 +13,18 @@ interface ListCustomerAddressesCardProps {
 }
 export function ListCustomerAddressesCard({ customerAddresses, customerId }: ListCustomerAddressesCardProps) {
     const [ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen ] = useState(false);
+
+    async function handleDeactivateAddress(addressId: string) {
+        const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/address/deactivate?addressId=${addressId}`, {
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+        });
+        const data = await response.json();
+        console.log("data: ", data);
+
+    }
 
     return (
         <Card className="">
@@ -21,10 +34,11 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
             <CardContent>
                 {
                     customerAddresses?.map(addr => {
+                        console.log("ADDR: ", addr);
                         return (
                             <div key={ addr.addressId } className="flex justify-between items-center">
                                 <p>{ addr.street.streetName }, { addr.neighborhood.neighborhoodName }, {addr.buildingNumber}, {addr.addressComplement} - { addr.city.cityName }/{ addr.state.UF }</p>
-                                <Button variant="outline">
+                                <Button disabled={ !addr.isActive } type="button" onClick={ () => handleDeactivateAddress(addr.addressId) } variant="outline">
                                     <MapPinX className="size-5" />
                                 </Button>
                             </div>

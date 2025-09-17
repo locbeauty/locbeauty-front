@@ -63,7 +63,7 @@ export function UpdateCustomerForm({
                     <CardDescription>Preencha os dados pessoais do cliente</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="border p-4 rounded-md md:h-[420px] h-[400px]">
+                    <div className="border p-4 rounded-md md:h-[300px] h-[400px]">
                         <h3 className="text-lg font-medium mb-4">Informações do Cliente</h3>
 
                         <div className="space-y-4">
