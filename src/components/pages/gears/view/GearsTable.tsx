@@ -90,7 +90,7 @@ export function GearsTable() {
                                         )}
                                     </div>
                                 </td>
-                                <td className="p-3 text-center flex items-center gap-4">
+                                <td className="p-3 justify-center flex items-center gap-4">
                                     <Button onClick={ () => handleToggleGearDetailsDialog(true, gear) }>
                                         <Eye />
                                     </Button>

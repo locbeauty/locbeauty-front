@@ -7,9 +7,14 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { UpdateFilialForm } from "./UpdateFilialForm";
 import { Filial } from "@/utils/@types/filials";
+import { FormProvider, useForm } from "react-hook-form";
+import { fetchWithToken } from "@/utils/fetchWithToken";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { updateFilialFormSchema, UpdateFilialFormSchemaType } from "@/lib/zod/UpdateFilialValidation";
 
 interface UpdateFilialDialogProps {
   isUpdateFilialDialogOpen: boolean;
@@ -26,10 +31,77 @@ export function UpdateFilialDialog({
     selectedFilial,
     handleToggleUpdateFilialDialog,
 }: UpdateFilialDialogProps) {
-    const handleSaveUpdatedCustomer = () => {
-        console.log("UPDATED2:");
-    };
 
+    const updateFilialMethods = useForm<UpdateFilialFormSchemaType>({
+        resolver: zodResolver(updateFilialFormSchema),
+        // defaultValues: {
+        //     cellphone: selectedFilial.cellphone,
+        //     // CNPJ: selectedFilial.CNPJ,
+        //     email: selectedFilial.email,
+        //     filialName: selectedFilial.filialName,
+        //     managerEmployeeId: selectedFilial.managerEmployee.employeeId,
+        //     address: {
+        //         addressComplement: selectedFilial.address.addressComplement,
+        //         zipCode: selectedFilial.address.zipCode,
+        //         cityName: selectedFilial.address.city.cityName,
+        //         buildingNumber: selectedFilial.address.buildingNumber,
+        //         neighborhoodName: selectedFilial.address.neighborhood.neighborhoodName,
+        //         stateName: selectedFilial.address.state.stateName,
+        //         streetName: selectedFilial.address.street.streetName,
+        //     },
+        // },
+    });
+    const {
+        handleSubmit,
+        register,
+        control,
+        reset,
+        formState: { errors, isDirty },
+    } = updateFilialMethods;
+
+    useEffect(() => {
+        if (selectedFilial) {
+            reset({
+                cellphone: selectedFilial.cellphone, // só números
+                // CNPJ: selectedFilial.CNPJ,
+                email: selectedFilial.email,
+                filialName: selectedFilial.filialName,
+                managerEmployeeId: selectedFilial.managerEmployee.employeeId,
+                address: {
+                    addressComplement: selectedFilial.address.addressComplement,
+                    zipCode: selectedFilial.address.zipCode,
+                    cityName: selectedFilial.address.city.cityName,
+                    buildingNumber: selectedFilial.address.buildingNumber,
+                    neighborhoodName: selectedFilial.address.neighborhood.neighborhoodName,
+                    stateName: selectedFilial.address.state.stateName,
+                    streetName: selectedFilial.address.street.streetName,
+                },
+            });
+        }
+    }, [ selectedFilial, reset ]);
+
+    async function handleUpdateFilial(updatedFilialData: UpdateFilialFormSchemaType) {
+        // console.log("Filial editada com sucesso!", updatedFilialData);
+        const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials/update?filialId=${selectedFilial.filialId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify(updatedFilialData)
+        });
+        const data = await response.json();
+
+        console.log("data: ", data);
+
+        if(!response.ok) {
+            toast.warning(data.message, { style: { fontSize: "1rem" } });
+        } else {
+            toast.success("Filial atualizada com sucesso!", { style: { fontSize: "1rem" } });
+            handleToggleUpdateFilialDialog(false, null);
+            reset();
+        }
+    }
     return (
         <Dialog
             open={ isUpdateFilialDialogOpen }
@@ -47,24 +119,31 @@ export function UpdateFilialDialog({
             Edite a filial:
                     </DialogTitle>
                 </DialogHeader>
+                <form
+                    onSubmit={ handleSubmit(handleUpdateFilial) }
+                    className="flex flex-col gap-5"
+                >
+                    <FormProvider { ...updateFilialMethods }>
 
-                <div className="space-y-6">
-                    <UpdateFilialForm selectedFilial={ selectedFilial } />
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={ () =>
-                                handleToggleUpdateFilialDialog(false, selectedFilial)
-                            }
-                        >
+                        <div className="space-y-6">
+                            <UpdateFilialForm selectedFilial={ selectedFilial } />
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={ () =>
+                                        handleToggleUpdateFilialDialog(false, selectedFilial)
+                                    }
+                                >
               Cancelar
-                        </Button>
-                        <Button onClick={ handleSaveUpdatedCustomer }>
-                            <Save className="mr-2 h-4 w-4" />
+                                </Button>
+                                <Button disabled={ !isDirty }>
+                                    <Save className="mr-2 h-4 w-4" />
               Salvar alterações
-                        </Button>
-                    </DialogFooter>
-                </div>
+                                </Button>
+                            </DialogFooter>
+                        </div>
+                    </FormProvider>
+                </form>
             </DialogContent>
         </Dialog>
     );

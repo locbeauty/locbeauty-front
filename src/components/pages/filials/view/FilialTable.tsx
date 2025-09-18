@@ -58,6 +58,7 @@ export function FilialsTable() {
                 <table className="w-full">
                     <thead className="bg-muted">
                         <tr>
+                            <th className="text-left p-3 font-medium text-sm">Filial</th>
                             <th className="text-left p-3 font-medium text-sm">CNPJ</th>
                             <th className="text-left p-3 font-medium text-sm">Gerente</th>
                             <th className="text-left p-3 font-medium text-sm">Endereço</th>
@@ -76,26 +77,29 @@ export function FilialsTable() {
                         )}
                         {allFilials ? (allFilials.map((filial) => (
                             <tr key={ filial.filialId } className="border-t hover:bg-muted/50">
-                                <td className="p-3 text-sm text-nowrap">{filial.CNPJ}</td>
-                                <td className="p-3 text-sm text-nowrap">{filial.managerEmployee.fullname}</td>
-                                <td className="p-3 text-sm">
+                                <td className="p-3 text-sm truncate max-w-[200px]">{filial.filialName}</td>
+                                <td className="p-3 text-sm">{filial.CNPJ}</td>
+                                <td className="p-3 text-sm">{filial.managerEmployee.fullname}</td>
+                                <td className="p-3 text-center text-sm truncate max-w-[200px]">
                                     {filial.address.street.streetName}, {filial.address.buildingNumber} -{" "}
                                     {filial.address.city.cityName}/{filial.address.state.UF}{" "}
                                 </td>
-                                <td className="p-3 text-sm text-nowrap text-center">{filial.cellphone}</td>
-                                <td className="p-3 text-sm text-center">{filial.email}</td>
+                                <td className="p-3 text-center text-sm">{filial.cellphone}</td>
+                                <td className="p-3 text-center text-sm">{filial.email}</td>
                                 <td className="">
-                                    <Button
-                                        onClick={ () => handleToggleFilialDetailsDialog(true, filial) }
-                                    >
-                                        <Eye />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={ () => handleToggleUpdateFilialDialog(true, filial) }
-                                    >
-                                        <Pencil />
-                                    </Button>
+                                    <div className="flex gap-2 items-center">
+                                        <Button
+                                            onClick={ () => handleToggleFilialDetailsDialog(true, filial) }
+                                        >
+                                            <Eye />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={ () => handleToggleUpdateFilialDialog(true, filial) }
+                                        >
+                                            <Pencil />
+                                        </Button>
+                                    </div>
                                 </td>
                             </tr>
                         ))) : (

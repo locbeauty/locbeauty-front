@@ -23,7 +23,12 @@ export default function PhoneInput({ register }: PhoneInputProps) {
         };
 
         const mask = IMask(inputRef.current, maskOptions);
-
+        // mask.on("accept", () => {
+        //     if (inputRef.current) {
+        //         inputRef.current.value = mask.unmaskedValue; // <- só dígitos
+        //         inputRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+        //     }
+        // });
         return () => {
             mask.destroy();
         };
