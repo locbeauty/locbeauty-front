@@ -9,18 +9,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Dispatch, SetStateAction } from "react";
-import { gears } from "@/utils/mocks/gears";
-import { filials } from "@/utils/mocks/filials";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { Gear } from "@/utils/@types/gears";
+import { useAuth } from "@/contexts/auth-provider";
+import { Controller, FormProvider, useForm } from "react-hook-form";
+import { updateGearFormSchema, UpdateGearFormSchemaType } from "@/lib/zod/UpdateGearValidation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { SelectFilial } from "@/components/shared/SelectFilial";
+import { TransferableCheckbox } from "../shared/canBeTransferredCheckbox";
+import { AmountControlButton } from "@/components/shared/AmountControlButton";
+import { fetchWithToken } from "@/utils/fetchWithToken";
+import { toast } from "sonner";
 
 interface UpdateGearDialogProps {
   isUpdateGearDialogOpen: boolean;
@@ -37,54 +36,65 @@ export function UpdateGearDialog({
     setSelectedGear,
     setGears,
 }: UpdateGearDialogProps) {
-    const handleInputChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
+    const { user } = useAuth();
+
+    const updateGearMethods = useForm<UpdateGearFormSchemaType>({
+        resolver: zodResolver(updateGearFormSchema),
+    });
+
+    const {
+        control,
+        register,
+        handleSubmit,
+        setValue,
+        watch,
+        trigger,
+        reset,
+        formState: { errors, isDirty },
+    } = updateGearMethods;
+
+    useEffect(() => {
         if (selectedGear) {
-            setSelectedGear({
-                ...selectedGear,
-                [e.target.name]: e.target.value,
+            reset({
+                transferable: selectedGear?.transferable,
+                sourceFilialId: selectedGear?.SourceFilial.filialId,
+                // acquisitionDate: new Date(selectedGear.acquisitionDate),
+                availableUnits: selectedGear?.availableUnits,
+                gearName: selectedGear?.gearName,
+                outOfServiceUnits: selectedGear?.outOfServiceUnits,
+                totalUnits: selectedGear?.totalUnits,
             });
         }
-    };
+    }, [ selectedGear, reset ]);
 
-    // Handle number input changes
-    const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (selectedGear) {
-            setSelectedGear({
-                ...selectedGear,
-                [e.target.name]: Number.parseInt(e.target.value, 10) || 0,
+    useEffect(() => {
+        console.log("ERRORS: ", errors);
+    }, [ errors ]);
+
+    const handleSaveGear = async (targetGearData: UpdateGearFormSchemaType) => {
+        try {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears/update?gearId=${selectedGear?.gearId}`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(targetGearData),
             });
-        }
-    };
+            const data = await response.json();
 
-    // Handle select changes
-    const handleSelectChange = (value: string, field: string) => {
-        if (selectedGear) {
-            setSelectedGear({
-                ...selectedGear,
-                [field]: value,
-            });
-        }
-    };
+            if (!response.ok) {
+                toast.warning(data.message, { style: { fontSize: "1rem" } });
+            } else {
+                toast.success("Equipamento atualizado com sucesso!", {
+                    style: { fontSize: "1rem" },
+                });
 
-    const handleSaveGear = () => {
-        if (selectedGear) {
-            setGears(
-                gears.map((gear) =>
-                    gear.gearId === selectedGear.gearId ? selectedGear : gear
-                )
-            );
-            setIsUpdateGearDialogOpen(false);
-        }
-    };
-
-    const handleSwitchChange = (checked: boolean) => {
-        if (selectedGear) {
-            setSelectedGear({
-                ...selectedGear,
-                transferable: checked,
-            });
+                reset();
+                setIsUpdateGearDialogOpen(false);
+            }
+        } catch {
+            toast.error("Erro ao atualizar equipamento.");
         }
     };
 
@@ -103,113 +113,150 @@ export function UpdateGearDialog({
                 </DialogHeader>
 
                 {selectedGear && (
-                    <div className="grid gap-6 py-4">
+                    <form onSubmit={ handleSubmit(handleSaveGear) } className="grid gap-6 py-4">
                         <div className="grid grid-cols-1 gap-3">
                             <Label>Nome</Label>
                             <Input
-                                name="name"
-                                value={ selectedGear.gearName }
-                                onChange={ handleInputChange }
+                                { ...register("gearName") }
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid grid-cols-1 gap-3">
-                                <Label htmlFor="filial-select">Filial</Label>
-                                <Select
-                                    value={ selectedGear.SourceFilial.filialId }
-                                    onValueChange={ (value) => handleSelectChange(value, "filialId") }
-                                >
-                                    <SelectTrigger id="filial-select">
-                                        <SelectValue placeholder="Selecione uma filial" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {filials.map((filial) => {
-                                            return (
-                                                <SelectItem
-                                                    key={ filial.filialId }
-                                                    value={ filial.filialId }
-                                                >
-                                                    {filial.filialName}, {filial.address.state.stateName}
-                                                </SelectItem>
-                                            );
-                                        })}
-                                    </SelectContent>
-                                </Select>
+                                {
+                                    user?.role === "Gerente" && (
+
+                                        <div className="space-y-2">
+                                            <Label>Filial</Label>
+                                            <FormProvider { ...updateGearMethods }>
+                                                <SelectFilial<UpdateGearFormSchemaType>
+                                                    control={ control }
+                                                    name="sourceFilialId"
+                                                />
+                                            </FormProvider>
+                                            {errors.sourceFilialId && (
+                                                <p className="text-sm text-destructive mt-2">
+                                                    {errors.sourceFilialId.message}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )
+                                }
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3">
-                                <Label htmlFor="acquisitionDate">Data da aquisição</Label>
-                                <Input
-                                    id="acquisitionDate"
-                                    name="acquisitionDate"
-                                    value={
-                                        selectedGear.acquisitionDate
-                                            ? selectedGear.acquisitionDate && new Date(selectedGear.acquisitionDate).toLocaleDateString("pt-BR")
-                                            : "Não informado"
-                                    }
-                                    onChange={ handleInputChange }
+                            {/* <div className="flex flex-col gap-6 mt-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="acquisitionDate">Data de aquisição</Label>
+                                    <Controller
+                                        control={ control }
+                                        name="acquisitionDate"
+                                        render={ ({ field }) => (
+                                            <DatePicker
+                                                placeholder="Selecione a data de aquisição"
+                                                value={ field.value }
+                                                onChange={ (date) => {
+                                                    setValue("acquisitionDate", date!);
+                                                    trigger("acquisitionDate");
+                                                } }
+                                                classNames={ {
+                                                    trigger:
+                                                  errors.acquisitionDate &&
+                                                  "border-destructive focus-visible:ring-destructive",
+                                                } }
+                                            />
+                                        ) }
+                                    />
+                                    {errors.acquisitionDate && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.acquisitionDate.message}
+                                        </p>
+                                    )}
+                                </div>
+                            </div> */}
+                            <div>
+                                <TransferableCheckbox
+                                    control={ control }
+                                    errors={ errors }
+                                    name="transferable"
                                 />
                             </div>
                         </div>
 
                         <div className="flex flex-col gap-3 max-w-[90%] md:max-w-[40%]">
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="totalUnits">Unidades totais</Label>
-                                <Input
-                                    id="totalUnits"
+                            <div className="space-y-2 flex-1 mt-4">
+                                <Label htmlFor="totalUnits">Estoque</Label>
+                                <Controller
+                                    control={ control }
                                     name="totalUnits"
-                                    type="number"
-                                    value={ selectedGear.totalUnits }
-                                    onChange={ handleNumberChange }
+                                    render={ ({ field }) => (
+                                        <AmountControlButton
+                                            value={ field.value || 0 }
+                                            onChange={ field.onChange }
+                                            error={ !!errors.totalUnits }
+                                        />
+                                    ) }
                                 />
+                                {errors.totalUnits && (
+                                    <p className="text-sm text-destructive mt-2">
+                                        {errors.totalUnits.message}
+                                    </p>
+                                )}
                             </div>
-                            <div className="flex flex-col gap-3">
-                                <Label htmlFor="availableUnits">Unidades disponíveis</Label>
-                                <Input
-                                    id="availableUnits"
+                            <div className="space-y-2 flex-1 mt-4">
+                                <Label htmlFor="totalUnits">Unidades disponíveis</Label>
+                                <Controller
+                                    control={ control }
                                     name="availableUnits"
-                                    type="number"
-                                    value={ selectedGear.availableUnits }
-                                    onChange={ handleNumberChange }
+                                    render={ ({ field }) => (
+                                        <AmountControlButton
+                                            value={ field.value || 0 }
+                                            onChange={ field.onChange }
+                                            error={ !!errors.totalUnits }
+                                        />
+                                    ) }
                                 />
+                                {errors.availableUnits && (
+                                    <p className="text-sm text-destructive mt-2">
+                                        {errors.availableUnits.message}
+                                    </p>
+                                )}
                             </div>
 
-                            <div className="flex flex-col gap-3">
+                            <div className="space-y-2 flex-1 mt-4">
                                 <Label htmlFor="totalUnits">Unidades defeituosas</Label>
-                                <Input
-                                    id="totalUnits"
-                                    name="totalUnits"
-                                    type="number"
-                                    value={ selectedGear.outOfServiceUnits }
-                                    onChange={ handleNumberChange }
+                                <Controller
+                                    control={ control }
+                                    name="outOfServiceUnits"
+                                    render={ ({ field }) => (
+                                        <AmountControlButton
+                                            value={ field.value || 0 }
+                                            onChange={ field.onChange }
+                                            error={ !!errors.totalUnits }
+                                        />
+                                    ) }
                                 />
+                                {errors.outOfServiceUnits && (
+                                    <p className="text-sm text-destructive mt-2">
+                                        {errors.outOfServiceUnits.message}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-2">
-                            <Switch
-                                id="transferable"
-                                checked={ selectedGear.transferable }
-                                onCheckedChange={ handleSwitchChange }
-                            />
-                            <Label htmlFor="transferable">Pode ser transferido</Label>
-                        </div>
-                    </div>
-                )}
-
-                <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={ () => setIsUpdateGearDialogOpen(false) }
-                    >
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                onClick={ () => setIsUpdateGearDialogOpen(false) }
+                            >
             Cancelar
-                    </Button>
-                    <Button onClick={ handleSaveGear }>
-                        <Save className="mr-2 h-4 w-4" />
+                            </Button>
+                            <Button disabled={ !isDirty }>
+                                <Save className="mr-2 h-4 w-4" />
             Salvar alterações
-                    </Button>
-                </DialogFooter>
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                )}
             </DialogContent>
         </Dialog>
     );
