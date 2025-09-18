@@ -7,6 +7,9 @@ import {
     CreateEmployeeFormSchemaType,
 } from "@/lib/zod/CreateEmployeeValidation";
 import { EmployeeForm } from "../forms/EmployeeForm";
+import { UpdateEmployeeDialog } from "./UpdateEmployeeDialog";
+import { FilialUpdateAddressForm } from "../../filials/update/FilialUpdateAddressForm";
+import { useEffect } from "react";
 
 interface UpdateEmployeeFormProps {
   selectedEmployee: Employee;
@@ -15,36 +18,19 @@ interface UpdateEmployeeFormProps {
 export function UpdateEmployeeForm({
     selectedEmployee,
 }: UpdateEmployeeFormProps) {
-    const updateEmployeeMethods = useForm<CreateEmployeeFormSchemaType>({
-        resolver: zodResolver(createEmployeeFormSchema),
-        defaultValues: {
-            birthdate: selectedEmployee.birthdate,
-            cellphone: selectedEmployee.cellphone,
-            documentNumber: selectedEmployee.documentNumber,
-            email: selectedEmployee.email,
-            fullname: selectedEmployee.fullname,
-            role: selectedEmployee.role,
-            sourceFilialId: selectedEmployee.sourceFilial.filialId,
-        },
-    });
 
-    const { handleSubmit } = updateEmployeeMethods;
+    // useEffect(() => {
+    //     if (selectedEmployee) {
+    //         reset({
 
-    function handleUpdateEmployee(
-        updatedEmployeeData: CreateEmployeeFormSchemaType
-    ) {
-    // TODO: selecionar as informações antes de enviar pra
-        toast.success("Funcionário editado com sucesso!");
-    }
+    //         });
+    //     }
+    // }, [ selectedEmployee, reset ]);
+
     return (
-        <form
-            id="update-customer-form"
-            onSubmit={ handleSubmit(handleUpdateEmployee) }
-            className="flex flex-col gap-5 mt-5"
-        >
-            <FormProvider { ...updateEmployeeMethods }>
-                <EmployeeForm />
-            </FormProvider>
-        </form>
+        <>
+            <EmployeeForm />
+            <FilialUpdateAddressForm />
+        </>
     );
 }
