@@ -44,14 +44,6 @@ export function UpdateCustomerForm({
         }
     }, [ selectedCustomer ]);
 
-    function handleUpdateCustomer(
-        updatedCustomerData: UpdateCustomerFormSchemaType
-    ) {
-    // TODO: selecionar as informações antes de enviar pra
-        console.log("updatedCustomerData: ", updatedCustomerData);
-        toast.success("Cliente editado com sucesso!");
-    }
-
     if(!selectedCustomer) return;
 
     return (

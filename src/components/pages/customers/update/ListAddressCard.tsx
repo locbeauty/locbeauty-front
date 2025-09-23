@@ -7,6 +7,7 @@ import { RegisterNewAddressDialog } from "./RegisterNewAddressDialog";
 import { useState } from "react";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 interface ListCustomerAddressesCardProps {
     customerAddresses: Address[] | null
@@ -23,8 +24,13 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
             credentials: "include",
         });
         const data = await response.json();
-        console.log("data: ", data);
 
+        if(!response.ok) {
+            toast.warning(data.message, { style: { fontSize: "1rem" } });
+            window.scroll({ top: 0 });
+        } else {
+            toast.success("Endereço desativado com sucesso!", { style: { fontSize: "1rem" } });
+        }
     }
 
     return (
@@ -35,21 +41,65 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
             <CardContent>
                 {
                     customerAddresses?.map(addr => {
-                        console.log("ADDR: ", addr);
                         return (
-                            <div key={ addr.addressId } className="flex justify-between items-center">
-                                <p>{ addr.street.streetName }, { addr.neighborhood.neighborhoodName }, {addr.buildingNumber}, {addr.addressComplement} - { addr.city.cityName }/{ addr.state.UF }</p>
+                            <div
+                                key={ addr.addressId }
+                                className="flex justify-between items-center"
+                            >
+                                <p>
+                                    {addr.street.streetName}, {addr.neighborhood.neighborhoodName},{" "}
+                                    {addr.buildingNumber}, {addr.addressComplement} -{" "}
+                                    {addr.city.cityName}/{addr.state.UF}
+                                </p>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button disabled={ !addr.isActive } type="button" onClick={ () => handleDeactivateAddress(addr.addressId) } variant="outline">
-                                            <X className="size-5" />
-                                        </Button>
+                                        <span>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                onClick={ () => addr.isActive && handleDeactivateAddress(addr.addressId) }
+                                                className={
+                                                    !addr.isActive
+                                                        ? "pointer-events-none opacity-50 hover:bg-transparent"
+                                                        : ""
+                                                }
+                                            >
+                                                <X className="size-5" />
+                                            </Button>
+                                        </span>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        <p>Desativar endereço</p>
+                                        {addr.isActive ? (
+                                            <p>Desativar endereço</p>
+                                        ) : (
+                                            <p>Endereço já desativado</p>
+                                        )}
                                     </TooltipContent>
                                 </Tooltip>
                             </div>
+
+                        // <Tooltip key={ addr.addressId }>
+                        //     <TooltipTrigger asChild>
+                        //         <div className="flex justify-between items-center">
+                        //             <p>{ addr.street.streetName }, { addr.neighborhood.neighborhoodName }, {addr.buildingNumber}, {addr.addressComplement} - { addr.city.cityName }/{ addr.state.UF }</p>
+                        //             <Button
+                        //                 type="button"
+                        //                 onClick={ () => handleDeactivateAddress(addr.addressId) }
+                        //                 variant="outline"
+                        //                 disabled={ !addr.isActive }
+                        //             >
+                        //                 <X className="size-5" />
+                        //             </Button>
+                        //         </div>
+                        //     </TooltipTrigger>
+                        //     <TooltipContent>
+                        //         {addr.isActive ? (
+                        //             <p>Desativar endereço</p>
+                        //         ) : (
+                        //             <p>Endereço já desativado</p>
+                        //         )}
+                        //     </TooltipContent>
+                        // </Tooltip>
                         );
                     })
                 }
