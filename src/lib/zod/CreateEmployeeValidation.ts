@@ -35,3 +35,10 @@ export const createEmployeeFormSchema = z.object({
 export type CreateEmployeeFormSchemaType = z.infer<
   typeof createEmployeeFormSchema
 >;
+
+export const updateEmployeeFormSchema = createEmployeeFormSchema
+    .partial();
+
+export type UpdateEmployeeFormSchemaType = z.infer<
+  typeof updateEmployeeFormSchema
+>;

@@ -6,9 +6,14 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { Employee } from "@/utils/@types/employee";
 import { UpdateEmployeeForm } from "./UpdateEmployeeForm";
+import { FormProvider, useForm } from "react-hook-form";
+import { CreateEmployeeFormSchemaType, updateEmployeeFormSchema, UpdateEmployeeFormSchemaType } from "@/lib/zod/CreateEmployeeValidation";
+import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 interface UpdateEmployeeDialogProps {
   isUpdateEmployeeDialogOpen: boolean;
@@ -25,9 +30,67 @@ export function UpdateEmployeeDialog({
     selectedEmployee,
     handleToggleUpdateEmployeeDialog,
 }: UpdateEmployeeDialogProps) {
-    const handleSaveUpdatedEmployee = () => {
-        console.log("UPDATED3:");
-    };
+    const updateEmployeeMethods = useForm<UpdateEmployeeFormSchemaType>({
+        resolver: zodResolver(updateEmployeeFormSchema),
+    });
+
+    const { handleSubmit, reset, formState: { isDirty, errors } } = updateEmployeeMethods;
+
+    useEffect(() => {
+        if(selectedEmployee) {
+            reset({
+                birthdate: selectedEmployee.birthdate ? new Date(selectedEmployee.birthdate) : null,
+                cellphone: selectedEmployee.cellphone,
+                documentNumber: selectedEmployee.documentNumber,
+                email: selectedEmployee.email,
+                fullname: selectedEmployee.fullname,
+                role: selectedEmployee.role,
+                sourceFilialId: selectedEmployee.sourceFilial.filialId,
+                address: {
+                    zipCode: selectedEmployee.address.zipCode,
+                    stateName: selectedEmployee.address.state.stateName,
+                    cityName: selectedEmployee.address.city.cityName,
+                    addressComplement: selectedEmployee.address.addressComplement,
+                    buildingNumber: selectedEmployee.address.buildingNumber,
+                    neighborhoodName: selectedEmployee.address.neighborhood.neighborhoodName,
+                    streetName: selectedEmployee.address.street.streetName
+                }
+            }
+            );
+        }
+    }, [ reset, selectedEmployee ]);
+    useEffect(() => {
+        console.log("errors: ", errors);
+    }, [ errors ]);
+
+    async function handleUpdateEmployee(
+        updatedEmployeeData: UpdateEmployeeFormSchemaType
+    ) {
+        try {
+            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees/update?employeeId=${selectedEmployee.employeeId}`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedEmployeeData),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.warning(data.message, { style: { fontSize: "1rem" } });
+                window.scroll({ top: 0 });
+            } else {
+                toast.success("Funcionário atualizado com sucesso!", {
+                    style: { fontSize: "1rem" },
+                });
+                window.scroll({ top: 0 });
+                reset();
+            }
+        } catch {
+            toast.error("Erro ao criar equipamento.");
+        }
+    }
 
     return (
         <Dialog
@@ -45,22 +108,32 @@ export function UpdateEmployeeDialog({
           Edite o funcionário:
                 </DialogTitle>
                 <div className="space-y-6">
-                    <UpdateEmployeeForm selectedEmployee={ selectedEmployee } />
+                    <form
+                        id="update-customer-form"
+                        onSubmit={ handleSubmit(handleUpdateEmployee) }
+                        className="flex flex-col gap-5 mt-5"
+                    >
+                        <FormProvider { ...updateEmployeeMethods }>
 
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={ () =>
-                                handleToggleUpdateEmployeeDialog(false, selectedEmployee)
-                            }
-                        >
+                            <UpdateEmployeeForm selectedEmployee={ selectedEmployee } />
+
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={ () =>
+                                        handleToggleUpdateEmployeeDialog(false, selectedEmployee)
+                                    }
+                                >
               Cancelar
-                        </Button>
-                        <Button onClick={ handleSaveUpdatedEmployee }>
-                            <Save className="mr-2 h-4 w-4" />
+                                </Button>
+                                <Button disabled={ !isDirty }>
+                                    <Save className="mr-2 h-4 w-4" />
               Salvar alterações
-                        </Button>
-                    </DialogFooter>
+                                </Button>
+                            </DialogFooter>
+                        </FormProvider>
+
+                    </form>
                 </div>
             </DialogContent>
         </Dialog>
