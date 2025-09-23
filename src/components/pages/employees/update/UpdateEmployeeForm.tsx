@@ -34,7 +34,6 @@ export function UpdateEmployeeForm({
         updatedEmployeeData: CreateEmployeeFormSchemaType
     ) {
     // TODO: selecionar as informações antes de enviar pra
-        console.log("updatedEmployeeData: ", updatedEmployeeData);
         toast.success("Funcionário editado com sucesso!");
     }
     return (

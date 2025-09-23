@@ -4,7 +4,7 @@ export type Gear = {
     availableUnits: number,
     outOfServiceUnits: number,
     totalUnits: number,
-    acquisitionDate: Date | null,
+    acquisitionDate: Date,
     transferable: boolean,
     nextMaintenance: Date | null,
     lastMaintenance: Date | null,

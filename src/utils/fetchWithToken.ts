@@ -13,5 +13,17 @@ export async function fetchWithToken(
         Authorization: `Bearer ${token}`,
     };
 
-    return fetch(url, { ...options, headers });
+    const response = fetch(url, { ...options, headers });
+
+    if((await response).status === 403) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+
+        // Redireciona
+        if (typeof window !== "undefined") {
+            window.location.href = "/login";
+        }
+    }
+
+    return response;
 }

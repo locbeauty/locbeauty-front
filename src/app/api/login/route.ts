@@ -31,7 +31,6 @@ export async function POST(req: NextRequest) {
 
         for (const cookie of cookieParts) {
             response.headers.append("set-cookie", cookie);
-            console.log("cookie: ", cookie);
         }
 
         return response;

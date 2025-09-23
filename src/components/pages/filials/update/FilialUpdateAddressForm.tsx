@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import {
     Card,
     CardContent,
@@ -12,12 +13,9 @@ import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
-import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
-import { Button } from "@/components/ui/button";
-import { Plus, PlusCircle } from "lucide-react";
-import { useEffect } from "react";
+import { UpdateFilialFormSchemaType } from "@/lib/zod/UpdateFilialValidation";
 
-export function CustomerAddressForm() {
+export function FilialUpdateAddressForm() {
     const {
         register,
         trigger,
@@ -26,12 +24,12 @@ export function CustomerAddressForm() {
         setError,
         setValue,
         formState: { errors },
-    } = useFormContext<CreateCustomerFormSchemaType>();
+    } = useFormContext<UpdateFilialFormSchemaType>();
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Cadastrar endereço</CardTitle>
+                <CardTitle>Endereço</CardTitle>
                 <CardDescription>
           Preencha os dados de endereço do cliente
                 </CardDescription>
@@ -77,7 +75,7 @@ export function CustomerAddressForm() {
                         id="bairro"
                     />
                 </div>
-                <div className="flex md:flex-row flex-col md:items-start gap-4">
+                <div className="flex md:flex-row flex-col md:items-center gap-4">
                     <div className="space-y-2 flex-1">
                         <Label htmlFor="rua">Rua</Label>
                         <Input
@@ -96,13 +94,11 @@ export function CustomerAddressForm() {
                             className="placeholder:text-placeholder"
                             placeholder="Número"
                         />
-                        <div className="min-h-[20px]">
-                            {errors.address?.buildingNumber && (
-                                <p className="text-sm font-medium text-destructive">
-                                    {errors.address.buildingNumber.message}
-                                </p>
-                            )}
-                        </div>
+                        {errors.address?.buildingNumber && (
+                            <p className="text-sm font-medium text-destructive">
+                                {errors.address.buildingNumber.message}
+                            </p>
+                        )}
                     </div>
                 </div>
                 <div className="space-y-2">
@@ -110,7 +106,7 @@ export function CustomerAddressForm() {
 
                     <Textarea
                         { ...register("address.addressComplement") }
-                        className="h-[100px] resize-none max-w-[80vw] placeholder:text-placeholder"
+                        className="h-[120px] resize-none max-w-[80vw] placeholder:text-placeholder"
                         placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
                     />
                 </div>

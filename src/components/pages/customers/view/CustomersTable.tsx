@@ -173,7 +173,7 @@ export function CustomersTable() {
 
             <UpdateCustomerDialog
                 isUpdateCustomerDialogOpen={ isUpdateCustomerDialogOpen }
-                selectedCustomer={ selectedCustomer! }
+                selectedCustomer={ selectedCustomer }
                 setSelectedCustomer={ setSelectedCustomer }
                 handleToggleUpdateCustomerDialog={ handleToggleUpdateCustomerDialog }
             />

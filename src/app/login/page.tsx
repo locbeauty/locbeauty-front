@@ -57,7 +57,7 @@ export default function LoginPage() {
     const router = useRouter();
 
     async function handleLogin({ documentNumber, password }: LoginSchemaType) {
-        const res = await fetch("https://locbeauty-fastify.onrender.com/api/signin", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/signin`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ documentNumber, password }),

@@ -54,7 +54,7 @@ export function SelectAddress({ disabled = false }: {disabled?: boolean}) {
                             { customerAddresses && customerAddresses.map((addr) => {
                                 return (
                                     <SelectItem key={ addr.addressId } value={ addr.addressId }>
-                                        { addr.street.streetName }, { addr.neighborhood.neighborhoodName } - { addr.city.cityName }/{ addr.state.UF }
+                                        { addr.street.streetName }, { addr.neighborhood.neighborhoodName }, {addr.addressComplement} - { addr.city.cityName }/{ addr.state.UF }
                                     </SelectItem>
                                 );
 

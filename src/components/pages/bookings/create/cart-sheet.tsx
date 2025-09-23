@@ -47,10 +47,6 @@ export function CartSheet() {
     }
 
     useEffect(() => {
-        console.log("partialPaymentValue: ", partialPaymentValue);
-    }, [ partialPaymentValue ]);
-
-    useEffect(() => {
         if(paymentStatus === "Parcial") {
             if(parseStringToCents(partialPaymentValue) >= getTotalPrice()) {
                 setErrorMessage("Valor maior que o preço total. Escolha a opção \"Pago\".");

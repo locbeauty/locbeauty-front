@@ -15,13 +15,15 @@ interface CEPInputProps<T extends FieldValues> extends React.InputHTMLAttributes
     setError: UseFormSetError<T>;
     clearErrors: UseFormClearErrors<T>;
     zipCodeError?: string;
+    isUpdateForm?: boolean
 }
 
-export default function CEPInput<T extends FieldValues>({ clearErrors, control, setError, setValue, trigger, zipCodeError, ...props }: CEPInputProps<T>) {
+export default function CEPInput<T extends FieldValues>({ clearErrors, control, setError, setValue, trigger, zipCodeError, isUpdateForm = false, ...props }: CEPInputProps<T>) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [ isLoadingZipCode, setIsLoadingZipCode ] = useState(false);
 
-    const zipCode = "address.zipCode" as Path<T>;
+    // const zipCode = isUpdateForm ? "zipCode" : "address.zipCode" as Path<T>;
+    const zipCode: Path<T> = isUpdateForm ? "zipCode" as Path<T> : "address.zipCode" as Path<T>;
 
     useEffect(() => {
         if (!inputRef.current) return;
@@ -56,6 +58,7 @@ export default function CEPInput<T extends FieldValues>({ clearErrors, control, 
                                     setIsLoadingZipCode,
                                     setValue,
                                     trigger,
+                                    isUpdateForm,
                                     setError,
                                     clearErrors,
                                 });

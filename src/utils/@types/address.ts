@@ -38,6 +38,7 @@ export interface Address {
     addressComplement: string | null;
     createdAt: string;
     updatedAt: string;
+    isActive: boolean;
     state: {
       stateId: string;
       stateName: StateName;

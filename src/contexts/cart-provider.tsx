@@ -114,10 +114,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    useEffect(() => {
-        console.log("items: ", items);
-    }, [ items ]);
-
     return (
         <CartContext.Provider
             value={ {

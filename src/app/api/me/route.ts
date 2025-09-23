@@ -5,7 +5,6 @@ import { getCookie, getCookies, setCookie, deleteCookie, hasCookie } from "cooki
 export async function GET(req: NextRequest) {
     try {
         const cookies = await getCookies();
-        console.log("COOKIES: ", cookies);
 
         const fastifyRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/me`, {
             method: "GET",

@@ -79,12 +79,12 @@ export function EmployeesTable() {
                                 key={ employee.employeeId }
                                 className="border-t hover:bg-muted/50"
                             >
-                                <td className="p-3">{employee.fullname}</td>
-                                <td className="p-3">{employee.documentNumber}</td>
-                                <td className="p-3 text-center">{employee.role}</td>
-                                <td className="p-3 text-center">{employee.sourceFilial.filialName}</td>
-                                <td className="p-3 text-center">{employee.cellphone ?? "-"}</td>
-                                <td className="p-3 text-center">{employee.email ?? "-"}</td>
+                                <td className="p-3 text-sm">{employee.fullname}</td>
+                                <td className="p-3 text-sm">{employee.documentNumber}</td>
+                                <td className="p-3 text-center text-sm">{employee.role}</td>
+                                <td className="p-3 text-center text-sm">{employee.sourceFilial.filialName}</td>
+                                <td className="p-3 text-center text-sm">{employee.cellphone ?? "-"}</td>
+                                <td className="p-3 text-center text-sm">{employee.email ?? "-"}</td>
                                 <td className="p-3 flex justify-center items-center gap-4">
                                     <Button
                                         onClick={ () =>
