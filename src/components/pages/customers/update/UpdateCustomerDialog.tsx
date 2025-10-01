@@ -10,15 +10,12 @@ import { Dispatch, SetStateAction, useEffect } from "react";
 import { Customer } from "@/utils/@types/customer";
 
 import { FormProvider, useForm } from "react-hook-form";
-import {
-    CreateCustomerFormSchemaType,
-    createCustomerFormSchema
-} from "@/lib/zod/CreateCustomerValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UpdateCustomerForm } from "./UpdateCustomerForm";
 import { updateCustomerFormSchema, UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
-import { fetchWithToken } from "@/utils/fetchWithToken";
 import { toast } from "sonner";
+import { UpdateCustomer } from "@/services/customers.service";
+import { queryClient } from "@/app/(main)/layout";
 
 interface UpdateCustomerDialogProps {
   isUpdateCustomerDialogOpen: boolean;
@@ -60,20 +57,19 @@ export function UpdateCustomerDialog({
 
     const handleSaveUpdatedCustomer = async (customerData: UpdateCustomerFormSchemaType) => {
         if(selectedCustomer) {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers/update?customerId=${selectedCustomer.customerId}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: "include",
-                body: JSON.stringify(customerData)
+            const response = await UpdateCustomer({
+                body: customerData,
+                queryParams: {
+                    customerId: selectedCustomer.customerId
+                }
             });
-            const data = await response.json();
 
-            if(!response.ok) {
-                toast.warning(data.message, { style: { fontSize: "1rem" } });
+            if(response.statusCode !== 201) {
+                toast.warning(response.message, { style: { fontSize: "1rem" } });
             } else {
-                toast.success("Cliente atualizado com sucesso!", { style: { fontSize: "1rem" } });
+                queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+
+                toast.success(response.message, { style: { fontSize: "1rem" } });
                 handleToggleUpdateCustomerDialog(false, null);
                 reset();
             }

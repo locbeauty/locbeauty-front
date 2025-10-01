@@ -1,13 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
-import { MapPinX, Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { Address } from "@/utils/@types/address";
 import { RegisterNewAddressDialog } from "./RegisterNewAddressDialog";
 import { useState } from "react";
-import { fetchWithToken } from "@/utils/fetchWithToken";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { queryClient } from "@/app/(main)/layout";
+import { useMutation } from "@tanstack/react-query";
+import { DeactivateCustomerAddress } from "@/services/addresses.service";
 
 interface ListCustomerAddressesCardProps {
     customerAddresses: Address[] | null
@@ -16,21 +18,27 @@ interface ListCustomerAddressesCardProps {
 export function ListCustomerAddressesCard({ customerAddresses, customerId }: ListCustomerAddressesCardProps) {
     const [ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen ] = useState(false);
 
-    async function handleDeactivateAddress(addressId: string) {
-        const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/address/deactivate?addressId=${addressId}`, {
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-        });
-        const data = await response.json();
+    const { mutateAsync: deactivateAddress, isPending } = useMutation({
+        mutationFn: ({ addressId }: { addressId: string }) =>
+            DeactivateCustomerAddress({ addressId }),
 
-        if(!response.ok) {
-            toast.warning(data.message, { style: { fontSize: "1rem" } });
-            window.scroll({ top: 0 });
-        } else {
+        onSuccess: (_, variables) => {
             toast.success("Endereço desativado com sucesso!", { style: { fontSize: "1rem" } });
-        }
+
+            // revalida os endereços do cliente específico
+            queryClient.invalidateQueries({
+                queryKey: [ "get-all-customer-addresses" ],
+            });
+        },
+
+        onError: (error: any) => {
+            toast.warning(error.message, { style: { fontSize: "1rem" } });
+            window.scroll({ top: 0 });
+        },
+    });
+
+    async function handleDeactivateAddress(addressId: string) {
+        await deactivateAddress({ addressId });
     }
 
     return (
@@ -40,7 +48,7 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
             </CardHeader>
             <CardContent>
                 {
-                    customerAddresses?.map(addr => {
+                    customerAddresses?.sort((a, b) => a.street.streetName.localeCompare(b.street.streetName)).map(addr => {
                         return (
                             <div
                                 key={ addr.addressId }
@@ -77,29 +85,6 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
                                     </TooltipContent>
                                 </Tooltip>
                             </div>
-
-                        // <Tooltip key={ addr.addressId }>
-                        //     <TooltipTrigger asChild>
-                        //         <div className="flex justify-between items-center">
-                        //             <p>{ addr.street.streetName }, { addr.neighborhood.neighborhoodName }, {addr.buildingNumber}, {addr.addressComplement} - { addr.city.cityName }/{ addr.state.UF }</p>
-                        //             <Button
-                        //                 type="button"
-                        //                 onClick={ () => handleDeactivateAddress(addr.addressId) }
-                        //                 variant="outline"
-                        //                 disabled={ !addr.isActive }
-                        //             >
-                        //                 <X className="size-5" />
-                        //             </Button>
-                        //         </div>
-                        //     </TooltipTrigger>
-                        //     <TooltipContent>
-                        //         {addr.isActive ? (
-                        //             <p>Desativar endereço</p>
-                        //         ) : (
-                        //             <p>Endereço já desativado</p>
-                        //         )}
-                        //     </TooltipContent>
-                        // </Tooltip>
                         );
                     })
                 }

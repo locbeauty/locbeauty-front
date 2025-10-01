@@ -1,22 +1,17 @@
-import { Save } from "lucide-react";
 import {
     Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogTitle,
-    DialogTrigger,
+    DialogContent, DialogTitle,
+    DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Dispatch, SetStateAction } from "react";
-import { UpdateCustomerForm } from "./UpdateCustomerForm";
-import { Customer } from "@/utils/@types/customer";
-import { CustomerAddressForm } from "../create/CustomerAddressForm";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addressSchema, AddressTypeSchema } from "@/lib/zod/address";
 import { AddCustomerAddressForm } from "./AddCustomerAddressForm";
-import { fetchWithToken } from "@/utils/fetchWithToken";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { CreateCustomerAddress } from "@/services/addresses.service";
+import { queryClient } from "@/app/(main)/layout";
 
 interface RegisterNewAddressDialogProps {
     isRegisterNewAddressDialogOpen: boolean,
@@ -30,23 +25,27 @@ export function RegisterNewAddressDialog({ isRegisterNewAddressDialogOpen, setIs
         resolver: zodResolver(addressSchema)
     });
 
-    const handleSaveUpdatedCustomer = async (newAddressData: AddressTypeSchema) => {
-        const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/address/create?customerId=${customerId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify(newAddressData)
-        });
-        const data = await response.json();
-
-        if(!response.ok) {
-            toast.warning(data.message, { style: { fontSize: "1rem" } });
-        } else {
+    const { mutate, isPending } = useMutation({
+        mutationFn: (data: { customerId: string; body: unknown }) =>
+            CreateCustomerAddress(data),
+        onSuccess: (data) => {
             toast.success("Endereço criado com sucesso!", { style: { fontSize: "1rem" } });
             setIsRegisterNewAddressDialogOpen(false);
-        }
+
+            // revalida os endereços
+            queryClient.invalidateQueries({
+                queryKey: [ "get-all-customer-addresses", customerId ],
+            });
+        },
+        onError: (error: any) => {
+            toast.warning(error.message ?? "Erro ao criar endereço", {
+                style: { fontSize: "1rem" },
+            });
+        },
+    });
+
+    const handleSaveUpdatedCustomer = (values: AddressTypeSchema) => {
+        mutate({ customerId, body: values });
     };
 
     return (

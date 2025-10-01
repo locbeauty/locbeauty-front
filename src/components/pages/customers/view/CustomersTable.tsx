@@ -9,9 +9,20 @@ import { Button } from "@/components/ui/button";
 import { Customer } from "@/utils/@types/customer";
 import { format } from "date-fns";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { useQuery } from "@tanstack/react-query";
+import { GetAllCustomers } from "@/services/customers.service";
+import { ApiResponse } from "@/lib/api";
 
 export function CustomersTable() {
-    const [ customers, setCustomers ] = useState<Customer[] | null>(null);
+
+    const { data, isLoading, error, refetch } = useQuery<ApiResponse<Customer[]>, Error>({
+        queryKey: [ "get-all-customers" ],
+        queryFn: GetAllCustomers,
+        staleTime: 1000 * 60, // 1 minuto de cache
+        // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
+    });
+
+    const customers = data?.data;
 
     const [ isUpdateCustomerDialogOpen, setIsUpdateCustomerDialogOpen ] =
     useState(false);
@@ -21,17 +32,6 @@ export function CustomersTable() {
 
     const [ isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen ] =
     useState(false);
-
-    useEffect(() => {
-        async function handleGetAllCustomers() {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers`, {
-                credentials: "include",
-            });
-            const { data }: { data: Customer[] } = await response.json();
-            setCustomers(data);
-        }
-        handleGetAllCustomers();
-    }, []);
 
     const handleToggleUpdateCustomerDialog = (
         openStatus: boolean,
@@ -76,7 +76,7 @@ export function CustomersTable() {
                             </tr>
                         )}
                         {customers ? (
-                            customers.map((customer) => (
+                            customers.sort((a, b) => a.fullname.localeCompare(b.fullname)).map((customer) => (
                                 <tr
                                     key={ customer.customerId }
                                     className="border-t hover:bg-muted/50"

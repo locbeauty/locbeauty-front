@@ -6,8 +6,7 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectGear } from "./SelectGear";
-import { AmountControlButton } from "@/components/shared/AmountControlButton";
-import { AlertCircle, User, Package, MessageSquare, Plus, Check } from "lucide-react";
+import { AlertCircle, User, MessageSquare, Plus, Check, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
@@ -208,6 +207,30 @@ export function CreateBookingForm() {
                             </CardContent>
                         </Card>
 
+                        {/* <div className=""> */}
+                        <Card className="transition-all duration-200 hover:shadow-md">
+                            <CardHeader className="">
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <DollarSign className="h-5 w-5 text-primary" />
+                                        Valor
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="flex md:flex-row flex-col md:items-end items-center gap-5">
+                                    <div className="flex flex-col flex-1">
+                                        <PriceInput register={ register("price") } value={ watchPrice } setValue={ setValue } name="price" />
+                                        {errors.price && (
+                                            <p className="text-sm text-destructive flex items-center gap-1">
+                                                <AlertCircle className="h-3 w-3" />
+                                                {errors.price.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        {/* </div> */}
+
                         {/* Date and Time Selection */}
                         <BookingTimeSelector
                             name="date"
@@ -217,62 +240,6 @@ export function CreateBookingForm() {
                         />
                         {/* Amount and Price */}
                         <div className="pb-0 flex flex-col w-full justify-center gap-3">
-                            <Card className="transition-all duration-200 hover:shadow-md">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center gap-2 text-lg">
-                                        <Package className="h-5 w-5 text-primary" />
-                  Quantidade e valor
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="amount" className="text-sm font-medium">
-                    Quantidade
-                                        </Label>
-                                        <Controller
-                                            control={ control }
-                                            name="gearAmount"
-                                            render={ ({ field }) => (
-                                                <div className="flex gap-3 flex-col justify-center">
-                                                    <AmountControlButton
-                                                        value={ field.value || 0 }
-                                                        onChange={ field.onChange }
-                                                        error={ !!errors.gearAmount }
-                                                        disabled={ watchGearId ? false : true }
-                                                        max={ Math.min(maximumGearAmountAvailable, 3) }
-                                                    />
-                                                    {
-                                                        startHour && selectedDate && watchTotalDurationInMinutes && watchTotalDurationInMinutes > 0 ? (
-                                                            <span className="text-sm">Máximo: { Math.min(maximumGearAmountAvailable, 3)}</span>
-                                                        ) : (
-                                                            <span className="text-sm">Escolha a data, a hora inicial e a duração da reserva para mostrar a quantidade máxima de unidades disponíveis</span>
-                                                        )
-                                                    }
-                                                </div>
-                                            ) }
-                                        />
-                                        {errors.gearAmount && (
-                                            <p className="text-sm text-destructive flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                {errors.gearAmount.message}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="flex md:flex-row flex-col md:items-end items-center gap-5">
-                                        <div className="flex flex-col flex-1">
-                                            <PriceInput register={ register("price") } value={ watchPrice } setValue={ setValue } name="price" />
-                                            {errors.price && (
-                                                <p className="text-sm text-destructive flex items-center gap-1">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                    {errors.price.message}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
 
                             {/* Observations */}
                             <Card className="transition-all duration-200 hover:shadow-md">

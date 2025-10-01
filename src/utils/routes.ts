@@ -12,5 +12,6 @@ export const ROUTES = {
     CREATE_EMPLOYEE: "/employees/create",
     BOOKINGS: "/bookings",
     CREATE_BOOKING: "/bookings/create",
-    VIEW_CALENDAR: "/bookings/view"
+    VIEW_CALENDAR: "/bookings/view",
+    TRAININGS: "/trainings"
 };
