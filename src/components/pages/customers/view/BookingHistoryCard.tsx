@@ -105,7 +105,7 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">Carregando agendamentos...</p>
                     </div>
-                ) : bookings?.length === 0 ? (
+                ) : allBookings?.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                         <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>Nenhum agendamento encontrado</p>

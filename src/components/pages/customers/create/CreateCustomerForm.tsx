@@ -9,7 +9,7 @@ import {
     CreateCustomerFormSchemaType,
 } from "@/lib/zod/CreateCustomerValidation";
 import { toast } from "sonner";
-import { fetchWithToken } from "@/utils/fetchWithToken";
+import { CreateCustomer } from "@/services/customers.service";
 
 export function CreateCustomerForm() {
 
@@ -33,24 +33,16 @@ export function CreateCustomerForm() {
     } = createCustomerMethods;
 
     async function handleCreateCustomer(newCustomerData: CreateCustomerFormSchemaType) {
-        const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers/create`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify(newCustomerData)
-        });
-        const data = await response.json();
+        const response = await CreateCustomer(newCustomerData);
 
-        if(!response.ok) {
-            toast.warning(data.message, { style: { fontSize: "1rem" } });
+        if(response.statusCode !== 201) {
+            toast.warning(response.message, { style: { fontSize: "1rem" } });
             window.scroll({ top: 0 });
-            if(response.status === 409) {
+            if(response.statusCode === 409) {
                 setError("documentNumber", { message: "Documento já cadastrado." });
             }
         } else {
-            toast.success("Cliente criado com sucesso!", { style: { fontSize: "1rem" } });
+            toast.success(response.message, { style: { fontSize: "1rem" } });
             window.scroll({ top: 0 });
             reset();
         }

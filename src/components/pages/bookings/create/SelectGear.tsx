@@ -33,10 +33,12 @@ import { Gear } from "@/utils/@types/gears";
 import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { useCart } from "@/contexts/cart-provider";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { useAuth } from "@/contexts/auth-provider";
 
 export function SelectGear() {
     const [ originalGears, setOriginalGears ] = useState<Gear[]>([]);
     const [ filteredGears, setFilteredGears ] = useState<Gear[]>([]);
+    const { user } = useAuth();
 
     const isMounted = useMounted();
     const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -44,20 +46,22 @@ export function SelectGear() {
 
     const {
         control,
-        watch
     } = useFormContext<CreateBookingFormSchemaType>();
 
-    const watchFilialId = watch("filialId");
     useEffect(() => {
         async function getAllGears() {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears?filialId=${watchFilialId}`, {
+            const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears`);
+            if(user && user?.role !== "Gerente") {
+                url.searchParams.append("filialId", user?.sourceFilial.filialId);
+            }
+            const response = await fetchWithToken(url, {
                 credentials: "include",
             });
             const { data } = await response.json();
             setOriginalGears(data);
         }
         getAllGears();
-    }, [ watchFilialId ]);
+    }, [ user ]);
 
     useEffect(() => {
         const updated = originalGears.filter(
