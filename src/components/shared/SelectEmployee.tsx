@@ -8,7 +8,6 @@ import {
     SelectContent,
     SelectItem,
 } from "@/components/ui/select";
-// import { employees } from "@/utils/mocks/employees";
 import { useEffect, useState } from "react";
 import { Employee } from "@/utils/@types/employee";
 import { fetchWithToken } from "@/utils/fetchWithToken";
