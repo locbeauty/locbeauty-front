@@ -13,6 +13,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+    Loader2,
     Plus
 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -35,7 +36,7 @@ export function CreateProfessorDialog({ dialogNovoProfessor, setDialogNovoProfes
         resolver: zodResolver(CreateProfessorSchema),
     });
 
-    const { reset } = professorForm;
+    const { reset, formState: { errors, isSubmitting } } = professorForm;
 
     const onSubmitProfessor = async (data: CreateProfessorFormDataType) => {
         const response = await CreateProfessor(data);
@@ -124,7 +125,11 @@ export function CreateProfessorDialog({ dialogNovoProfessor, setDialogNovoProfes
                         >
                       Cancelar
                         </Button>
-                        <Button type="submit">Cadastrar Professor</Button>
+                        <Button disabled={ isSubmitting } className="cursor-pointer" type="submit">
+                            {
+                                isSubmitting ? <Loader2 className="animate-spin" /> : "Cadastrar Professor"
+                            }
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

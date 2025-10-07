@@ -15,6 +15,7 @@ export interface Training {
   Student: {
     studentId: string;
     name: string;
+    documentNumber: string;
   }
   dueDate: Date;
   Address: Address

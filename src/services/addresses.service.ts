@@ -7,6 +7,12 @@ export async function GetAllCustomerAddresses({ customerId }: {customerId: strin
     return response;
 }
 
+export async function GetAllStudentAddresses({ studentId }: {studentId: string}) {
+    const response = await apiRequest<Address[]>({ endpoint: "student/addresses", queryParams: { studentId } });
+
+    return response;
+}
+
 export async function CreateCustomerAddress({ customerId, body }: {customerId: string, body: unknown}) {
     const response = await apiRequest<Address[]>({ endpoint: "address/create", queryParams: { customerId }, body, method: "POST" });
 

@@ -20,6 +20,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+    Loader2,
     Plus
 } from "lucide-react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
@@ -33,15 +34,24 @@ import { CreateTraining } from "@/services/trainings.service";
 import { toast } from "sonner";
 import { queryClient } from "@/app/(main)/layout";
 import PriceInput from "@/components/shared/PriceInput";
+import { SelectStudent } from "./SelectStudent";
+import { SelectProfessor } from "./SelectProfessor";
+import { Gear } from "@/utils/@types/gears";
+import { SelectTrainingAddress } from "./SelectTrainingAddress";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse } from "@/lib/api";
+import { Address } from "@/utils/@types/address";
+import { GetAllCustomerAddresses, GetAllStudentAddresses } from "@/services/addresses.service";
 
 interface CreateTrainingDialogProps {
     dialogNovoTreinamento: boolean,
     setDialogNovoTreinamento: (openStatus: boolean) => void
     professors: Professor[] | undefined,
     students: Student[] | undefined
+    gears: Gear[] | undefined
 }
 
-export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTreinamento, professors, students }: CreateTrainingDialogProps) {
+export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTreinamento, professors, students, gears }: CreateTrainingDialogProps) {
 
     const createTrainingMethods = useForm<CreateTrainingDataType>({
         resolver: zodResolver(CreateTrainingSchema),
@@ -57,17 +67,36 @@ export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTrein
         }
     });
 
-    const { handleSubmit, formState, watch, setValue, control, reset } = createTrainingMethods;
+    const { handleSubmit, formState: { errors, isSubmitting }, watch, setValue, control, reset } = createTrainingMethods;
 
     const watchPrice = watch("price");
 
     const [ selectedStudent, setSelectedStudent ] = useState<Student | undefined>(undefined);
+    const [ selectedProfessorName, setSelectedProfessorName ] = useState<string | undefined>(undefined);
+    const [ selectedStudentName, setSelectedStudentName ] = useState<string | undefined>(undefined);
+    const [ selectedGearName, setSelectedGearName ] = useState<string | undefined>(undefined);
+
     const watchSelectedStudentId = watch("studentId");
+    const watchSelectedProfessorId = watch("professorId");
+    const watchSelectedAddress = watch("addressId");
+
+    const addressesData = useQuery<ApiResponse<Address[]>, Error>({
+        queryKey: [ "get-all-student-addresses", watchSelectedStudentId ],
+        queryFn: () => GetAllStudentAddresses({ studentId: watchSelectedStudentId }),
+        staleTime: 1000 * 60,
+    });
+    const allCustomerAddresses = addressesData.data?.data;
 
     useEffect(() => {
         const student = students?.find((student) => student.studentId === watchSelectedStudentId);
         setSelectedStudent(student);
+        setSelectedStudentName(student?.name);
     }, [ watchSelectedStudentId, students ]);
+
+    useEffect(() => {
+        const professor = professors?.find((professor) => professor.professorId === watchSelectedProfessorId);
+        setSelectedProfessorName(professor?.name);
+    }, [ watchSelectedProfessorId, professors ]);
 
     const onSubmitTraining = async (data: CreateTrainingDataType) => {
         const response = await CreateTraining(data);
@@ -81,12 +110,13 @@ export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTrein
             toast.success(response.message, { style: { fontSize: "1rem" } });
             window.scroll({ top: 0 });
             reset();
+            setSelectedProfessorName(undefined);
+            setSelectedStudentName(undefined);
             setDialogNovoTreinamento(false);
         }
     };
 
     return (
-
         <Dialog
             open={ dialogNovoTreinamento }
             onOpenChange={ setDialogNovoTreinamento }
@@ -94,130 +124,95 @@ export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTrein
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                  Novo Treinamento
+                    Novo Treinamento
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl overflow-scroll">
                 <form onSubmit={ handleSubmit(onSubmitTraining) }>
                     <DialogHeader>
                         <DialogTitle>
-                        Criar Nova Sessão de Treinamento
+                            Criar Nova Sessão de Treinamento
                         </DialogTitle>
                         <DialogDescription>
-                        Preencha as informações para criar uma nova sessão
+                            Preencha as informações para criar uma nova sessão
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="space-y-2">
-                            <FormProvider { ...createTrainingMethods }>
-                                <SelectTrainingGear />
-                            </FormProvider>
-                            {formState.errors.gearId && (
+                            <Label htmlFor="gearId">Equipamento *</Label>
+                            <SelectTrainingGear
+                                selectedGear={ selectedGearName }
+                                onGearChange={ (gearName) => {
+                                    const gear = gears?.find(g => g.gearName === gearName);
+                                    if (gear) {
+                                        setValue("gearId", gear.gearId);
+                                        setSelectedGearName(gearName);
+                                    }
+                                } }
+                            />
+                            {errors.gearId && (
                                 <p className="text-sm text-red-600">
-                                    {formState.errors.gearId.message}
+                                    {errors.gearId.message}
                                 </p>
                             )}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="professorId">Professor *</Label>
-                                <Controller
-                                    control={ control }
-                                    name="professorId"
-                                    render={ ({ field }) => (
-                                        <Select
-                                            value={ field.value ?? "" }
-                                            onValueChange={ field.onChange }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecione o professor" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {professors?.map((professor) => (
-                                                    <SelectItem
-                                                        key={ professor.professorId }
-                                                        value={ professor.professorId }
-                                                    >
-                                                        {professor.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    ) }
-                                />
-                                {formState.errors.professorId && (
-                                    <p className="text-sm text-red-600">
-                                        {
-                                            formState.errors.professorId
-                                                .message
+                                <SelectProfessor
+                                    professors={ professors }
+                                    selectedProfessor={ selectedProfessorName }
+                                    onProfessorChange={ (professorName) => {
+                                        const professor = professors?.find(p => p.name === professorName);
+                                        if (professor) {
+                                            setValue("professorId", professor.professorId);
+                                            setSelectedProfessorName(professorName);
                                         }
+                                    } }
+                                />
+                                {errors.professorId && (
+                                    <p className="text-sm text-red-600">
+                                        {errors.professorId.message}
                                     </p>
                                 )}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="studentId">Aluno *</Label>
-                                <Controller
-                                    control={ control }
-                                    name="studentId"
-                                    render={ ({ field }) => (
-                                        <Select
-                                            value={ field.value }
-                                            onValueChange={ field.onChange }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecione o aluno" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {students?.map((student) => (
-                                                    <SelectItem
-                                                        key={ student.studentId }
-                                                        value={ student.studentId }
-                                                    >
-                                                        {student.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    ) }
+                                <SelectStudent
+                                    students={ students }
+                                    selectedStudent={ selectedStudentName }
+                                    onStudentChange={ (studentName) => {
+                                        const student = students?.find(s => s.name === studentName);
+                                        if (student) {
+                                            setValue("studentId", student.studentId);
+                                            setSelectedStudentName(studentName);
+                                        }
+                                    } }
                                 />
-                                {formState.errors.studentId && (
+                                {errors.studentId && (
                                     <p className="text-sm text-red-600">
-                                        {formState.errors.studentId.message}
+                                        {errors.studentId.message}
                                     </p>
                                 )}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="address-input">Endereço *</Label>
-                                <Select
-                                    value={ watch("addressId") }
-                                    onValueChange={ (value) =>
-                                        setValue("addressId", value)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione o endereço" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {
-                                            selectedStudent?.Addresses.map(addr => (
-                                                <SelectItem
-                                                    key={ addr.addressId }
-                                                    value={ addr.addressId }
-                                                >
-                                                    { addr.street.streetName }, { addr.neighborhood.neighborhoodName }, {addr.addressComplement} - { addr.city.cityName }/{ addr.state.UF }
-                                                </SelectItem>
-                                            ))
-                                        }
-                                    </SelectContent>
-                                </Select>
-                                {formState.errors.addressId && (
+                                <SelectTrainingAddress
+                                    studentId={ watchSelectedStudentId }
+                                    addresses={ allCustomerAddresses }
+                                    selectedAddress={ watchSelectedAddress }
+                                    onAddressChange={ (addressId) => {
+                                        // Atualizar o estado ou form
+                                        setValue("addressId", addressId);
+                                    } }
+                                />
+                                {errors.addressId && (
                                     <p className="text-sm text-red-600">
-                                        {formState.errors.addressId.message}
+                                        {errors.addressId.message}
                                     </p>
                                 )}
                             </div>
                         </div>
-                        {/* <div className="space-y-2 flex items-center gap-10"> */}
                         <div className="space-y-2 flex items-start gap-10">
                             <div className="space-y-2">
                                 <Label htmlFor="dueDate">Data do Treinamento *</Label>
@@ -244,9 +239,9 @@ export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTrein
                                         />
                                     ) }
                                 />
-                                {formState.errors.dueDate && (
+                                {errors.dueDate && (
                                     <p className="text-sm text-red-600">
-                                        {formState.errors.dueDate.message}
+                                        {errors.dueDate.message}
                                     </p>
                                 )}
                             </div>
@@ -275,9 +270,9 @@ export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTrein
                                         </Select>
                                     ) }
                                 />
-                                {formState.errors.hour && (
+                                {errors.hour && (
                                     <p className="text-sm text-red-600">
-                                        {formState.errors.hour.message}
+                                        {errors.hour.message}
                                     </p>
                                 )}
                             </div>
@@ -309,9 +304,9 @@ export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTrein
                                         </Select>
                                     ) }
                                 />
-                                {formState.errors.minute && (
+                                {errors.minute && (
                                     <p className="text-sm text-red-600">
-                                        {formState.errors.minute.message}
+                                        {errors.minute.message}
                                     </p>
                                 )}
                             </div>
@@ -322,13 +317,18 @@ export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTrein
                                 control={ control }
                                 name="price"
                                 render={ ({ field }) => (
-                                    <PriceInput withLabel={ false } register={ createTrainingMethods.register("price") } value={ watchPrice } setValue={ setValue } name="price" />
-
+                                    <PriceInput
+                                        withLabel={ false }
+                                        register={ createTrainingMethods.register("price") }
+                                        value={ watchPrice }
+                                        setValue={ setValue }
+                                        name="price"
+                                    />
                                 ) }
                             />
-                            {formState.errors.price && (
+                            {errors.price && (
                                 <p className="text-sm text-red-600">
-                                    {formState.errors.price.message}
+                                    {errors.price.message}
                                 </p>
                             )}
                         </div>
@@ -339,9 +339,11 @@ export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTrein
                             type="button"
                             onClick={ () => setDialogNovoTreinamento(false) }
                         >
-                      Cancelar
+                            Cancelar
                         </Button>
-                        <Button type="submit">Criar Treinamento</Button>
+                        <Button disabled={ isSubmitting } className="cursor-pointer" type="submit">
+                            {isSubmitting ? <Loader2 className="animate-spin" /> : "Criar Treinamento"}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

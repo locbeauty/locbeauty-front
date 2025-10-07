@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GetAllStudents } from "@/services/students.service";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +17,8 @@ import { TrainingsList } from "@/components/pages/trainings/TrainingsList";
 import { StudentsList } from "@/components/pages/trainings/StudentsList";
 import { ProfessorsList } from "@/components/pages/trainings/ProfessorsList";
 import { SummarySection } from "@/components/pages/trainings/SummarySection";
+import { GetAllGears } from "@/services/gears.service";
+import { Gear } from "@/utils/@types/gears";
 
 export default function Treinamentos() {
     const [ activeTab, setActiveTab ] = useState("treinamentos");
@@ -42,9 +44,20 @@ export default function Treinamentos() {
         staleTime: 1000 * 60, // 1 minuto de cache
     });
 
+    const gearsData = useQuery<ApiResponse<Gear[]>, Error>({
+        queryKey: [ "get-all-gears" ],
+        queryFn: () => GetAllGears({}),
+        staleTime: 1000 * 60, // 1 minuto de cache
+    });
+
     const professors = professorsData.data?.data;
     const students = studentsData.data?.data;
     const trainings = trainingsData.data?.data;
+    const gears = gearsData.data?.data;
+
+    useEffect(() => {
+        console.log("gears: ",gears);
+    },[ gears ]);
 
     return (
         <div className="container mx-auto py-6">
@@ -69,7 +82,7 @@ export default function Treinamentos() {
                 </TabsList>
 
                 {/* Tab Treinamentos */}
-                <TabsContent value="treinamentos" className="space-y-4">
+                <TabsContent value="treinamentos" className="space-y-4 ml-2 mt-10">
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold">Sessões de Treinamento</h2>
                         <CreateTrainingDialog
@@ -77,6 +90,7 @@ export default function Treinamentos() {
                             setDialogNovoTreinamento={ setDialogNovoTreinamento }
                             professors={ professors }
                             students={ students }
+                            gears={ gears }
                         />
                     </div>
 
