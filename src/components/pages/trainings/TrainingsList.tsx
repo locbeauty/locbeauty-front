@@ -52,7 +52,6 @@ export function TrainingsList({ trainings }: TrainingsListProps) {
     });
     const allStudents = studentsData.data?.data;
 
-
     const professorsData = useQuery<ApiResponse<Professor[]>, Error>({
         queryKey: [ "get-all-professors" ],
         queryFn: GetAllProfessors,
