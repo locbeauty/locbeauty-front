@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Professor } from "@/utils/@types/professor";
 import { Student } from "@/utils/@types/student";
 import { Training } from "@/utils/@types/training";
-import { GraduationCap, Users, Calendar, BookOpen } from "lucide-react";
+import { GraduationCap, Users, Calendar, BookOpen, Loader2 } from "lucide-react";
 
 interface SummarySectionProps {
     professors: Professor[] | undefined
@@ -33,9 +33,15 @@ export function SummarySection({ professors, students, trainings }: SummarySecti
                     <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">
-                        {estatisticas.totalTreinamentos}
-                    </div>
+                    {estatisticas.totalTreinamentos ? (
+                        <div className="text-2xl font-bold">
+                            {estatisticas.totalTreinamentos}
+                        </div>
+                    ): (
+                        <div className="text-2xl font-bold">
+                            <Loader2 className="animate-spin"/>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             <Card>
@@ -44,9 +50,15 @@ export function SummarySection({ professors, students, trainings }: SummarySecti
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">
-                        {estatisticas.agendados}
-                    </div>
+                    {estatisticas.agendados ? (
+                        <div className="text-2xl font-bold">
+                            {estatisticas.agendados}
+                        </div>
+                    ): (
+                        <div className="text-2xl font-bold">
+                            <Loader2 className="animate-spin"/>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             <Card>
@@ -55,9 +67,15 @@ export function SummarySection({ professors, students, trainings }: SummarySecti
                     <GraduationCap className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">
-                        {estatisticas.totalProfessores}
-                    </div>
+                    {estatisticas.totalProfessores ? (
+                        <div className="text-2xl font-bold">
+                            {estatisticas.totalProfessores}
+                        </div>
+                    ): (
+                        <div className="text-2xl font-bold">
+                            <Loader2 className="animate-spin"/>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             <Card>
@@ -66,7 +84,15 @@ export function SummarySection({ professors, students, trainings }: SummarySecti
                     <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{estatisticas.totalAlunos}</div>
+                    {estatisticas.totalAlunos ? (
+                        <div className="text-2xl font-bold">
+                            {estatisticas.totalAlunos}
+                        </div>
+                    ): (
+                        <div className="text-2xl font-bold">
+                            <Loader2 className="animate-spin"/>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

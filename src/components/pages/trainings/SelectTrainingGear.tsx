@@ -1,65 +1,187 @@
 "use client";
 
-import { Controller, useFormContext } from "react-hook-form";
-import { useMounted } from "@/hooks/useMounted";
-import { useEffect, useState } from "react";
-import { Gear } from "@/utils/@types/gears";
-import { fetchWithToken } from "@/utils/fetchWithToken";
-import { useAuth } from "@/contexts/auth-provider";
+import { Button } from "@/components/ui/button";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { CreateTrainingDataType } from "@/lib/zod/CreateTrainingValidation";
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
+import {
+    Drawer,
+    DrawerContent,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { useMediaQuery } from "usehooks-ts";
+import { useMounted } from "@/hooks/useMounted";
+import { useState } from "react";
+import { Gear } from "@/utils/@types/gears";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse } from "@/lib/api";
+import { GetAllGears } from "@/services/gears.service";
 
-export function SelectTrainingGear() {
-    const [ originalGears, setOriginalGears ] = useState<Gear[]>([]);
-    const { user } = useAuth();
+interface SelectTrainingGearProps {
+    disabled?: boolean;
+    selectedGear: string | undefined;
+    onGearChange: (gearName: string) => void;
+}
+
+export function SelectTrainingGear({
+    disabled = false,
+    selectedGear,
+    onGearChange
+}: SelectTrainingGearProps) {
     const isMounted = useMounted();
-    const { control } = useFormContext<CreateTrainingDataType>();
+    const isDesktop = useMediaQuery("(min-width: 768px)");
 
-    useEffect(() => {
-        async function getAllGears() {
-            const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears`);
-            if (user && user?.role !== "Gerente") {
-                url.searchParams.append("filialId", user?.sourceFilial.filialId);
-            }
-            const response = await fetchWithToken(url, {
-                credentials: "include",
-            });
-            const { data } = await response.json();
-            setOriginalGears(data);
-        }
-        getAllGears();
-    }, [ user ]);
+    const gearsData = useQuery<ApiResponse<Gear[]>, Error>({
+        queryKey: [ "get-all-gears" ],
+        queryFn: () => GetAllGears({}),
+        staleTime: 1000 * 60,
+    });
+
+    const gears = gearsData.data?.data;
 
     if (!isMounted) {
         return <div className="h-10 w-full" />;
     }
 
     return (
-        <div className="flex flex-col space-y-1">
-            <Controller
-                control={ control }
-                name="gearId"
-                render={ ({ field }) => (
-                    <Select value={ field.value } onValueChange={ field.onChange }>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Equipamento" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {originalGears.map((item) => (
-                                <SelectItem key={ item.gearId } value={ item.gearId }>
-                                    {item.gearName}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                ) }
-            />
+        <div className="flex flex-col space-y-1 w-full">
+            {isDesktop ? (
+                <DesktopSelect
+                    disabled={ disabled }
+                    allGears={ gears }
+                    selectedGear={ selectedGear }
+                    onGearChange={ onGearChange }
+                />
+            ) : (
+                <MobileSelect
+                    allGears={ gears }
+                    selectedGear={ selectedGear }
+                    onGearChange={ onGearChange }
+                />
+            )}
         </div>
     );
+}
+
+interface SelectProps {
+    disabled?: boolean;
+    allGears: Gear[] | undefined;
+    selectedGear: string | undefined;
+    onGearChange: (gearName: string) => void;
+}
+
+function DesktopSelect({ disabled, allGears, selectedGear, onGearChange }: SelectProps) {
+    const [ open, setOpen ] = useState(false);
+
+    const selectedValue = getDisplayValue(selectedGear, allGears);
+
+    return (
+        <Popover open={ open } onOpenChange={ setOpen } modal={ true }>
+            <PopoverTrigger asChild>
+                <Button disabled={ disabled } variant="outline" className="w-full justify-start group cursor-pointer">
+                    {selectedValue ? (
+                        <>{selectedValue.gearName}</>
+                    ) : (
+                        <span className="text-placeholder group-hover:text-white">Selecione o equipamento</span>
+                    )}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 w-full" align="start" sideOffset={ 4 }>
+                <GearsList
+                    allGears={ allGears }
+                    setOpen={ setOpen }
+                    onGearChange={ onGearChange }
+                />
+            </PopoverContent>
+        </Popover>
+    );
+}
+
+function MobileSelect({ allGears, selectedGear, onGearChange }: Omit<SelectProps, "disabled">) {
+    const [ open, setOpen ] = useState(false);
+
+    const selectedValue = getDisplayValue(selectedGear, allGears);
+
+    return (
+        <Drawer open={ open } onOpenChange={ setOpen }>
+            <DrawerTrigger asChild>
+                <Button variant="outline" className="w-full justify-start">
+                    {selectedValue ? (
+                        <>{selectedValue.gearName}</>
+                    ) : (
+                        <span className="text-placeholder">Selecione o equipamento</span>
+                    )}
+                </Button>
+            </DrawerTrigger>
+            <DrawerContent className="w-full" aria-describedby={ undefined }>
+                <DrawerTitle>
+                    <div className="mt-4 border-t">
+                        <GearsList
+                            allGears={ allGears }
+                            setOpen={ setOpen }
+                            onGearChange={ onGearChange }
+                        />
+                    </div>
+                </DrawerTitle>
+            </DrawerContent>
+        </Drawer>
+    );
+}
+
+interface GearsListProps {
+    setOpen: (_open: boolean) => void;
+    onGearChange: (gearName: string) => void;
+    allGears: Gear[] | undefined;
+}
+
+function GearsList({ setOpen, onGearChange, allGears }: GearsListProps) {
+    const handleSelect = (gear: Gear) => {
+        onGearChange(gear.gearName);
+        setOpen(false);
+    };
+
+    return (
+        <Command>
+            <CommandInput placeholder="Filtrar equipamentos..." />
+            <CommandList>
+                <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+                <CommandGroup>
+                    {allGears?.map((gear) => (
+                        <CommandItem
+                            key={ gear.gearId }
+                            value={ gear.gearName }
+                            onSelect={ () => handleSelect(gear) }
+                            className="cursor-pointer"
+                        >
+                            {gear.gearName}
+                        </CommandItem>
+                    ))}
+                </CommandGroup>
+            </CommandList>
+        </Command>
+    );
+}
+
+function getDisplayValue(gearName: string | undefined, allGears: Gear[] | undefined): { gearName: string } | null {
+    if (!gearName || !allGears) return null;
+
+    const gear = allGears.find(g => g.gearName === gearName);
+    if (gear) {
+        return {
+            gearName: gear.gearName
+        };
+    }
+
+    return null;
 }
