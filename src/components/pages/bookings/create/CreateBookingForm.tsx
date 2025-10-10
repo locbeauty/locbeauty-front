@@ -6,7 +6,7 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectGear } from "./SelectGear";
-import { AlertCircle, User, MessageSquare, Plus, Check, DollarSign } from "lucide-react";
+import { AlertCircle, User, MessageSquare, Plus, Check, DollarSign, Settings, Pin, ShipWheel, FerrisWheel, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ import { QuickBookingPaymentModePopover } from "./QuickBookingPaymentModePopover
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { createBookingFormSchema, CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { SelectEmployee } from "@/components/shared/SelectEmployee";
 
 export interface GetDayBookingsResponse {
   hourInMinutes: number,
@@ -167,7 +168,8 @@ export function CreateBookingForm() {
                             <CardContent className="space-y-6 w-full">
                                 <div className="space-y-2 w-full">
                                     <Label htmlFor="cliente" className="text-sm font-medium">
-                    Cliente
+                                        <User />
+                                        Cliente
                                     </Label>
                                     <SelectCustomer disabled={ getTotalItems() > 0 } />
                                     {errors.customer && errors.customer.customerId && (
@@ -180,6 +182,7 @@ export function CreateBookingForm() {
 
                                 <div className="space-y-2 w-full">
                                     <Label htmlFor="cliente" className="text-sm font-medium">
+                                        <Pin />
                                         Endereço
                                     </Label>
                                     <SelectAddress disabled={ getTotalItems() > 0 } />
@@ -193,9 +196,59 @@ export function CreateBookingForm() {
 
                                 <div className="space-y-2">
                                     <Label htmlFor="equipamento" className="text-sm font-medium">
+                                        <Settings />
                                 Equipamento
                                     </Label>
                                     <SelectGear />
+
+                                    {errors.gear && errors.gear.gearId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <AlertCircle className="h-3 w-3" />
+                                            {errors.gear.gearId.message}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="equipamento" className="text-sm font-medium">
+                                        <DollarSign className="h-5 w-5 text-primary" />
+                                        Valor
+                                    </Label>
+                                    {/* <div className="flex md:flex-row flex-col md:items-end items-center gap-5"> */}
+                                    <div className="flex flex-col flex-1">
+                                        <PriceInput withLabel={ false } register={ register("price") } value={ watchPrice } setValue={ setValue } name="price" />
+                                        {errors.price && (
+                                            <p className="text-sm text-destructive flex items-center gap-1">
+                                                <AlertCircle className="h-3 w-3" />
+                                                {errors.price.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {/* </div> */}
+
+                                    {errors.gear && errors.gear.gearId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1">
+                                            <AlertCircle className="h-3 w-3" />
+                                            {errors.gear.gearId.message}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="equipamento" className="text-sm font-medium">
+                                        <Truck className="h-5 w-5 text-primary" />
+                                        Motorista
+                                    </Label>
+                                    {/* <div className="flex md:flex-row flex-col md:items-end items-center gap-5"> */}
+                                    <div className="flex flex-col flex-1">
+                                        <SelectEmployee control={ control } name="driverId" />
+
+                                        {errors.price && (
+                                            <p className="text-sm text-destructive flex items-center gap-1">
+                                                <AlertCircle className="h-3 w-3" />
+                                                {errors.price.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {/* </div> */}
 
                                     {errors.gear && errors.gear.gearId && (
                                         <p className="text-sm text-destructive flex items-center gap-1">
@@ -208,27 +261,16 @@ export function CreateBookingForm() {
                         </Card>
 
                         {/* <div className=""> */}
-                        <Card className="transition-all duration-200 hover:shadow-md">
+                        {/* <Card className="transition-all duration-200 hover:shadow-md">
                             <CardHeader className="">
                                 <CardTitle className="flex items-center gap-2 text-lg">
-                                    <DollarSign className="h-5 w-5 text-primary" />
-                                        Valor
+
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="flex md:flex-row flex-col md:items-end items-center gap-5">
-                                    <div className="flex flex-col flex-1">
-                                        <PriceInput register={ register("price") } value={ watchPrice } setValue={ setValue } name="price" />
-                                        {errors.price && (
-                                            <p className="text-sm text-destructive flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                {errors.price.message}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
+
                             </CardContent>
-                        </Card>
+                        </Card> */}
                         {/* </div> */}
 
                         {/* Date and Time Selection */}

@@ -37,6 +37,8 @@ export const createBookingFormSchema = z
             .optional(),
         observations: z.string().trim().optional(),
         addressId: z.string(),
+        driverId: z.string(),
+        accountableEmployeeId: z.string()
     })
     .superRefine((data, ctx) => {
         const priceValue = parseFloat(data.price.replace(",", "."));
