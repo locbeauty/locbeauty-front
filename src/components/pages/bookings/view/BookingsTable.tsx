@@ -12,11 +12,12 @@ import { GetAllCheckouts } from "@/services/checkouts.service";
 export function BookingsTable() {
     const { user } = useAuth();
 
-    const queryParams = user
-        ? user.role === "Gerente"
-            ? {} // gerente não filtra por filial
-            : { filialId: user.sourceFilial.filialId }
-        : undefined;
+    const queryParams: Record<string, string> =
+  user
+      ? user.role === "Gerente"
+          ? {}
+          : { filialId: user.sourceFilial.filialId }
+      : {};
 
     const { data, isLoading } = useQuery<ApiResponse<Checkout[]>, Error>({
         queryKey: [ "get-all-checkouts", queryParams ],
