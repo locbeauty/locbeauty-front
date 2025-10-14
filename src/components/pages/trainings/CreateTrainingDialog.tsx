@@ -225,16 +225,12 @@ export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTrein
                                             type="date"
                                             value={
                                                 field.value
-                                                    ? new Date(field.value)
-                                                        .toISOString()
-                                                        .split("T")[0]
+                                                    ? new Date(field.value).toLocaleDateString("en-CA") // yyyy-MM-dd
                                                     : ""
                                             }
                                             onChange={ (e) => {
                                                 const dateValue = e.target.value;
-                                                field.onChange(
-                                                    dateValue ? new Date(dateValue) : null
-                                                );
+                                                field.onChange(dateValue ? new Date(`${dateValue}T00:00:00`) : null);
                                             } }
                                         />
                                     ) }
