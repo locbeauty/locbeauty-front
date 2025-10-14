@@ -265,7 +265,7 @@ export function WeekView({ currentDate, checkouts, openBookingDetails }: WeekVie
 
     return (
         <>
-            <MobileWeekView bookings={ checkouts } currentDate={ currentDate } openBookingDetails={ openBookingDetails } />
+            {/* <MobileWeekView bookings={ checkouts } currentDate={ currentDate } openBookingDetails={ openBookingDetails } /> */}
             <div className="hidden md:block min-w-full">
                 <CalendarWeekHeader weekDays={ weekDays } />
 
