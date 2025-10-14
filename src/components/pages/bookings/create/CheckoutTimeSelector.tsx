@@ -1,28 +1,31 @@
 "use client";
 
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Calendar, AlertCircle } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import TimePicker from "./time-picker";
 import { Control, Controller, FieldValues, Path, useFormContext } from "react-hook-form";
-import { GetDayBookingsResponse } from "./CreateBookingForm";
-import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { GetDayCheckoutsResponse } from "./CreateBookingForm";
+import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
-interface BookingTimeSelectorProps<T extends FieldValues> {
+interface CheckoutTimeSelectorProps<T extends FieldValues> {
     control: Control<T>
     name: Path<T>
-    bookingSchedule: GetDayBookingsResponse[] | undefined
-    setMaximumGearAmountAvailable: Dispatch<SetStateAction<number>>
+    checkoutSchedule: GetDayCheckoutsResponse[] | undefined
 }
 
-export default function BookingTimeSelector<T extends FieldValues>({ control, name, bookingSchedule, setMaximumGearAmountAvailable }: BookingTimeSelectorProps<T>) {
-    const { setValue, watch } = useFormContext<CreateBookingFormSchemaType>();
+export default function CheckoutTimeSelector<T extends FieldValues>({ name, checkoutSchedule, control }: CheckoutTimeSelectorProps<T>) {
+    const { setValue, watch } = useFormContext<CreateCheckoutFormSchemaType>();
 
     const watchDate = watch("date");
 
     const isDateInPast = watchDate && watchDate < new Date();
+
+    useEffect(() => {
+        console.log("checkoutSchedule: ", checkoutSchedule);
+    },[ checkoutSchedule ]);
 
     return (
         <div className="space-y-10">
@@ -69,8 +72,7 @@ export default function BookingTimeSelector<T extends FieldValues>({ control, na
 
             {/* Seleção de Horário */}
             <TimePicker
-                setMaximumGearAmountAvailable={ setMaximumGearAmountAvailable }
-                bookingSchedule={ bookingSchedule }
+                checkoutSchedule={ checkoutSchedule }
                 selectedDate={ watchDate && !isDateInPast ? watchDate : undefined }
             />
         </div>

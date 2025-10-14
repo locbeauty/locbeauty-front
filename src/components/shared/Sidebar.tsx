@@ -39,7 +39,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>
         },
         {
             name: "Agendamentos",
-            href: ROUTES.BOOKINGS,
+            href: ROUTES.BOOKINGS_CALENDAR,
             icon: Calendar,
         },
         {

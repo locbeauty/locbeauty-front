@@ -8,34 +8,38 @@ import {
     SelectContent,
     SelectItem,
 } from "@/components/ui/select";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Employee } from "@/utils/@types/employee";
-import { fetchWithToken } from "@/utils/fetchWithToken";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse } from "@/lib/api";
+import { GetAllEmployees } from "@/services/employees.service";
+import { ROLES } from "@/utils/@types/roles";
+import { hideDocumentNumber } from "@/utils/hideDocumentNumber";
 
 type SelectEmployeeProps<T extends FieldValues> = {
-  control: Control<T>;
-  name: FieldPath<T>;
-  managerEmployeeId?: string;
+    control: Control<T>;
+    name: FieldPath<T>;
+    employeeRole?: ROLES;
+    filialId?: string;
+    setDriverString?: Dispatch<SetStateAction<string>>
 };
 
 export function SelectEmployee<T extends FieldValues>({
     control,
     name,
-    // managerEmployeeId,
+    employeeRole,
+    filialId,
+    setDriverString
 }: SelectEmployeeProps<T>) {
-    const [ allEmployees, setAllEmployees ] = useState<Employee[]>([]);
-    // const [ selectedEmployee, setSelectedEmployee ] = useState<Employee | null>(null);
 
-    useEffect(() => {
-        const getEmployees = async () => {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees`, {
-                credentials: "include",
-            });
-            const { data } = await response.json();
-            setAllEmployees(data);
-        };
-        getEmployees();
-    }, []);
+    const { data } = useQuery<ApiResponse<Employee[]>, Error>({
+        queryKey: [ "get-all-employees" ],
+        queryFn: () => GetAllEmployees({ employeeRole, filialId }),
+        staleTime: 1000 * 60, // 1 minuto de cache
+        // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
+    });
+
+    const allEmployees = data?.data;
 
     return (
         <Controller
@@ -43,13 +47,20 @@ export function SelectEmployee<T extends FieldValues>({
             control={ control }
             render={ ({ field }) => (
                 <Select
-                    onValueChange={ field.onChange }
+                    onValueChange={ (value) => {
+                        field.onChange(value);
+                        const driverStr = allEmployees?.find(emplyee => emplyee.employeeId === value);
+                        if (driverStr && setDriverString) {
+                            const addressString = `${driverStr.fullname} - ${hideDocumentNumber(driverStr.documentNumber)}`;
+                            setDriverString(addressString);
+                        }
+                    } }
                     value={ field.value }
                     defaultValue={ field.value }
                 >
                     <SelectTrigger
                         id="employee"
-                        className="data-[placeholder]:text-placeholder"
+                        className="data-[placeholder]:text-placeholder w-full"
                     >
                         <SelectValue placeholder="Selecione o funcionário" />
                     </SelectTrigger>
@@ -60,7 +71,7 @@ export function SelectEmployee<T extends FieldValues>({
                                 key={ employee.employeeId }
                                 value={ employee.employeeId }
                             >
-                                {employee.fullname}
+                                {employee.fullname} - {hideDocumentNumber(employee.documentNumber)}
                             </SelectItem>
                         ))}
                     </SelectContent>

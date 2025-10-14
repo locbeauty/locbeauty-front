@@ -66,7 +66,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
             <div className="space-y-2">
                 <Label htmlFor="gerente">Gerente</Label>
                 <SelectEmployee
-                    managerEmployeeId={ selectedFilial.managerEmployee.employeeId }
+                    // managerEmployeeId={ selectedFilial.managerEmployee.employeeId }
                     control={ control }
                     name="managerEmployeeId"
                 />

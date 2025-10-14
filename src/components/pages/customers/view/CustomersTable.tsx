@@ -15,7 +15,7 @@ import { ApiResponse } from "@/lib/api";
 
 export function CustomersTable() {
 
-    const { data, isLoading, error, refetch } = useQuery<ApiResponse<Customer[]>, Error>({
+    const { data } = useQuery<ApiResponse<Customer[]>, Error>({
         queryKey: [ "get-all-customers" ],
         queryFn: GetAllCustomers,
         staleTime: 1000 * 60, // 1 minuto de cache

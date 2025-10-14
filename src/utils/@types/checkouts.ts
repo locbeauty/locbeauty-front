@@ -1,20 +1,17 @@
 import { Address } from "./address";
-import { BookingStatuses, PaymentStatuses } from "./bookings";
+import { CheckoutStatuses, PaymentStatuses } from "./bookings";
 
 export type Checkout = {
     checkoutId: string;
-    checkoutStatus: BookingStatuses;
+    checkoutStatus: CheckoutStatuses;
     paymentStatus: PaymentStatuses;
+    date: Date;
+    startHourInMinutes: number;
+    totalDurationInMinutes: number;
     totalPrice: number;
+    observations: string | null;
     Bookings: {
         bookingId: string;
-        date: Date;
-        gearAmount: number;
-        startHourInMinutes: number;
-        totalDurationInMinutes: number;
-        price: number;
-        observations: string | null;
-        bookingStatus: BookingStatuses;
         gear: {
             gearId: string;
             gearName: string;

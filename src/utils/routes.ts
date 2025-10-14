@@ -10,8 +10,9 @@ export const ROUTES = {
     CREATE_FILIAL: "/filials/create",
     EMPLOYEES: "/employees",
     CREATE_EMPLOYEE: "/employees/create",
-    BOOKINGS: "/bookings",
+    BOOKINGS_CALENDAR: "/bookings",
     CREATE_BOOKING: "/bookings/create",
-    VIEW_CALENDAR: "/bookings/view",
+    BOOKING_TABLE: "/bookings/view",
+    VIEW_CALENDAR: "/bookings",
     TRAININGS: "/trainings"
 };

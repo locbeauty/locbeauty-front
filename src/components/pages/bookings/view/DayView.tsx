@@ -19,22 +19,20 @@ import type { Checkout } from "@/utils/@types/checkouts";
 import type { FlattenedBooking } from "./WeekView";
 
 interface DayViewProps {
-  currentDate: Date
-  checkouts: Checkout[]
-  openBookingDetails: (_booking: FlattenedBooking) => void
+    currentDate: Date;
+    checkouts: Checkout[];
+    openBookingDetails: (_booking: FlattenedBooking) => void;
 }
 
 export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewProps) {
-    // Flatten bookings from checkouts
-    const flattenedBookings: FlattenedBooking[] = checkouts?.flatMap((checkout) =>
+    const flattenedBookings: FlattenedBooking[] = checkouts.flatMap((checkout) =>
         checkout.Bookings.map((booking) => {
-            // Convert startHourInMinutes to actual start and end dates
-            const startDate = new Date(booking.date);
-            startDate.setHours(Math.floor(booking.startHourInMinutes / 60));
-            startDate.setMinutes(booking.startHourInMinutes % 60);
+            const startDate = new Date(checkout.date);
+            startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
+            startDate.setMinutes(checkout.startHourInMinutes % 60);
 
             const endDate = new Date(startDate);
-            endDate.setMinutes(endDate.getMinutes() + booking.totalDurationInMinutes);
+            endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
 
             return {
                 id: booking.bookingId,
@@ -42,28 +40,24 @@ export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewP
                 endDate,
                 checkoutId: checkout.checkoutId,
                 bookingId: booking.bookingId,
-                date: booking.date,
-                gearAmount: booking.gearAmount,
-                startHourInMinutes: booking.startHourInMinutes,
-                totalDurationInMinutes: booking.totalDurationInMinutes,
-                price: booking.price / 100,
-                observations: booking.observations,
+                date: checkout.date,
+                gearAmount: 1, // cada booking é uma gear
+                startHourInMinutes: checkout.startHourInMinutes,
+                totalDurationInMinutes: checkout.totalDurationInMinutes,
+                price: checkout.totalPrice / 100,
+                observations: checkout.observations,
                 gear: booking.gear,
                 customer: checkout.customer,
                 sourceFilial: checkout.sourceFilial,
-                bookingStatus: booking.bookingStatus,
+                bookingStatus: checkout.checkoutStatus,
                 paymentStatus: checkout.paymentStatus,
                 totalPrice: checkout.totalPrice / 100,
                 address: checkout.address,
-                email: checkout.customer.email,
             };
-        }),
+        })
     );
 
-    // Filter bookings for the current day
     const dayBookings = flattenedBookings.filter((booking) => isSameDay(booking.startDate, currentDate));
-
-    // Group overlapping bookings
     const bookingGroups = groupOverlappingEvents(dayBookings);
 
     return (
@@ -71,10 +65,8 @@ export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewP
             <MobileDayView checkouts={ checkouts } currentDate={ currentDate } openBookingDetails={ openBookingDetails } />
 
             <div className="hidden md:block min-w-full">
-                {/* Day header */}
                 <CalendarDayHeader currentDate={ currentDate } />
 
-                {/* Time grid */}
                 <div className="relative">
                     {workingHours.map((hour) => (
                         <div
@@ -87,7 +79,6 @@ export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewP
                         </div>
                     ))}
 
-                    {/* Render grouped bookings */}
                     {bookingGroups.map((group) =>
                         group.map((booking, index) => {
                             const startHour = booking.startDate.getHours();
@@ -97,11 +88,9 @@ export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewP
                             const height = getEventBoxHeigh(durationInHours);
 
                             const width =
-                group.length > 1 ? `calc((100% - 100px - 6px) / ${group.length})` : "calc(100% - 100px - 6px)";
+                                group.length > 1 ? `calc((100% - 100px - 6px) / ${group.length})` : "calc(100% - 100px - 6px)";
                             const baseLeft = "calc(100px + 2px)";
                             const left = group.length > 1 ? `calc(${baseLeft} + (${index} * ${width}))` : baseLeft;
-
-                            // Convert totalDuration from minutes to hours for styling logic
 
                             return (
                                 <div
@@ -110,18 +99,18 @@ export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewP
                                         "absolute rounded-md border-l-4 p-2 overflow-auto shadow-sm cursor-pointer hover:shadow-md transition-shadow",
                                         "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
                                         durationInHours === 4 &&
-                      "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
+                                            "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
                                         durationInHours === 6 &&
-                      "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
+                                            "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
                                         durationInHours >= 8 &&
-                      durationInHours <= 12 &&
-                      "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
+                                            durationInHours <= 12 &&
+                                            "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
                                     ) }
                                     style={ {
                                         top: `${top}px`,
                                         height: `${height}px`,
-                                        left: left,
-                                        width: width,
+                                        left,
+                                        width,
                                     } }
                                     onClick={ () => openBookingDetails(booking) }
                                 >
@@ -153,7 +142,7 @@ export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewP
                                     </div>
                                 </div>
                             );
-                        }),
+                        })
                     )}
                 </div>
             </div>

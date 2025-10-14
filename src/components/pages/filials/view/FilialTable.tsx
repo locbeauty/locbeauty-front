@@ -10,6 +10,7 @@ import { Filial } from "@/utils/@types/filials";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function FilialsTable() {
+
     const [ isUpdateFilialDialogOpen, setIsUpdateFilialDialogOpen ] =
     useState(false);
     const [ selectedFilial, setSelectedFilial ] = useState<Filial | null>(null);
@@ -61,7 +62,7 @@ export function FilialsTable() {
                             <th className="text-left p-3 font-medium text-sm">Filial</th>
                             <th className="text-left p-3 font-medium text-sm">CNPJ</th>
                             <th className="text-left p-3 font-medium text-sm">Gerente</th>
-                            <th className="text-left p-3 font-medium text-sm">Endereço</th>
+                            <th className="text-center p-3 font-medium text-sm">Endereço</th>
                             <th className="text-center p-3 font-medium text-sm">Telefone</th>
                             <th className="text-center p-3 font-medium text-sm">Email</th>
                             <th className="text-left p-3 font-medium text-sm">Ações</th>

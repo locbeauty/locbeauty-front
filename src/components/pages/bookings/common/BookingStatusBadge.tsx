@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 import { Badge } from "../../../ui/badge";
-import { BookingStatuses } from "@/utils/@types/bookings";
+import { CheckoutStatuses } from "@/utils/@types/bookings";
 
 interface BookingStatusBadgeProps {
-  status: BookingStatuses;
+  status: CheckoutStatuses;
   shrink?: boolean;
 }
 
