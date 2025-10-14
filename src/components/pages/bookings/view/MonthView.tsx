@@ -50,11 +50,11 @@ export function MonthView({ currentDate, checkouts, openBookingDetails }: MonthV
 
     return (
         <>
-            <MobileMonthView
+            {/* <MobileMonthView
                 bookings={ checkouts }
                 currentDate={ currentDate }
                 openBookingDetails={ openBookingDetails }
-            />
+            /> */}
             <div className="hidden md:block min-w-full">
                 <CalendarMonthHeader />
 
