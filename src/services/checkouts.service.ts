@@ -20,7 +20,7 @@ export async function CreateCheckout(body: CreateCheckoutValidationWithMoneyInCe
 //     return response;
 // }
 
-export async function GetAllCheckouts({ queryParams }: { queryParams?: Record<string, unknown> }) {
+export async function GetAllCheckouts({ queryParams }: { queryParams?: Record<string, string> }) {
     const response = await apiRequest<Checkout[]>({ endpoint: "checkouts", queryParams });
     return response;
 }
