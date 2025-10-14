@@ -155,15 +155,19 @@ export function CalendarContent({ viewType, currentDate, openBookingDetails }: C
         }
     })();
 
+    const params = Object.fromEntries(
+        Object.entries({
+            ...(queryParams || {}),
+            startDate: startDate?.toISOString(),
+            endDate: endDate?.toISOString(),
+        }).filter(([ _, v ]) => v !== undefined)
+    ) as Record<string, string>;
+
     const { data, isLoading } =useQuery<ApiResponse<Checkout[]>, Error>({
         queryKey: [ "get-all-checkouts", queryParams, startDate, endDate ],
         queryFn: () =>
             GetAllCheckouts({
-                queryParams: {
-                    ...(queryParams || {}),
-                    startDate: startDate?.toISOString(),
-                    endDate: endDate?.toISOString(),
-                },
+                queryParams: params
             }),
         enabled: !!user,
         staleTime: 1000 * 60,
