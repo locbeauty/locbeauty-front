@@ -191,7 +191,7 @@ export type FlattenedBooking = {
     checkoutId: string;
     bookingId: string;
     date: Date;
-    gearAmount: number;
+    // gearAmount: number;
     startHourInMinutes: number;
     totalDurationInMinutes: number;
     price: number;
