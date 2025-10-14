@@ -28,6 +28,7 @@ import { CreateCheckout, getDayCheckouts } from "@/services/checkouts.service";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { hideDocumentNumber } from "@/utils/hideDocumentNumber";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/app/(main)/layout";
 
 export interface GetDayCheckoutsResponse {
   hourInMinutes: number,
@@ -200,6 +201,7 @@ export function CreateBookingForm() {
             window.scroll({ top: 0 });
         }
 
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
         handleResetValues();
     };
 
