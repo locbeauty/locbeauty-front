@@ -1,23 +1,70 @@
-import { BookingsTable } from "@/components/pages/bookings/view/BookingsTable";
-import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FilterBookingPaymentStatusTypes, FilterBookingStatusTypes } from "@/utils/filterOptions";
-import { ROUTES } from "@/utils/routes";
-import { Eye, Plus, Search } from "lucide-react";
-import Link from "next/link";
+"use client";
 
-export default function BookingsPage() {
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Plus, ArrowLeft, Table } from "lucide-react";
+import Link from "next/link";
+import { ROUTES } from "@/utils/routes";
+import { useRouter } from "next/navigation";
+import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
+import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
+import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
+// import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
+import { FlattenedBooking } from "@/components/pages/bookings/view/WeekView";
+import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
+
+export default function AgendamentosPage() {
+    // Estado para controlar a semana atual
+    const [ currentDate, setCurrentDate ] = useState(new Date());
+    const [ selectedBooking, setSelectedBooking ] = useState<FlattenedBooking | null>(null);
+    const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] = useState(false);
+    const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("semana");
+    const [ isMobile, setIsMobile ] = useState(false);
+
+    useEffect(() => {
+        const checkIfMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkIfMobile();
+
+        window.addEventListener("resize", checkIfMobile);
+
+        return () => window.removeEventListener("resize", checkIfMobile);
+    }, []);
+
+    useEffect(() => {
+        if (isMobile) {
+            setViewType("mes");
+        } else {
+            setViewType("semana");
+        }
+    }, [ isMobile ]);
+
+    const router = useRouter();
+
+    const openBookingDetails = (booking: FlattenedBooking) => {
+        setSelectedBooking(booking);
+        setBookingDetailsDialogOpen(true);
+    };
+
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
-                    <p className="text-muted-foreground">
-            Gerencie os agendamentos de locações de equipamentos
-                    </p>
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                    <Button onClick={ () => router.back() } variant="outline" size="icon">
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">Voltar</span>
+                    </Button>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
+                        <p className="text-muted-foreground">
+              Visualize os agendamentos de locações
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-4">
+
+                <div className="flex gap-4 justify-center">
                     <Button className="flex justify-center items-center" asChild>
                         <Link
                             className="flex justify-center items-center"
@@ -27,50 +74,36 @@ export default function BookingsPage() {
                             <span className="hidden md:inline">Novo Agendamento</span>
                         </Link>
                     </Button>
-                    <Button
-                        variant="outline"
-                        className="flex justify-center items-center"
-                        asChild
-                    >
+                    <Button className="flex justify-center items-center" variant="outline" asChild>
                         <Link
                             className="flex justify-center items-center"
-                            href={ ROUTES.VIEW_CALENDAR }
+                            href={ ROUTES.BOOKING_TABLE }
                         >
-                            <Eye className="" />
-                            <span className="hidden md:inline">Visualizar Agenda</span>
+                            <Table className="" />
+                            {/* <span className="hidden md:inline">Tabela de agendamentos</span> */}
                         </Link>
                     </Button>
                 </div>
             </div>
 
-            <div className="flex md:flex-row flex-col md:items-center gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Buscar agendamentos..."
-                        className="pl-8"
-                    />
-                </div>
-                <CustomFilterSelect
-                    items={ FilterBookingStatusTypes }
-                    placeholder="Status do agendamento"
-                    triggerProps={ {
-                        className: "w-[200px]",
-                        disabled: false,
-                    } }
-                />
-                <CustomFilterSelect
-                    items={ FilterBookingPaymentStatusTypes }
-                    placeholder="Status do pagamento"
-                    triggerProps={ {
-                        className: "w-[200px]",
-                        disabled: false,
-                    } }
-                />
-            </div>
+            <CalendarControls
+                currentDate={ currentDate }
+                setCurrentDate={ setCurrentDate }
+                viewType={ viewType }
+                setViewType={ setViewType }
+            />
+            <CalendarContent
+                currentDate={ currentDate }
+                openBookingDetails={ openBookingDetails }
+                viewType={ viewType }
+            />
+            <CalendarFooter />
 
-            <BookingsTable />
+            <BookingDetailsDialog
+                isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen }
+                setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
+                selectedAgendamento={ selectedBooking }
+            />
         </div>
     );
 }

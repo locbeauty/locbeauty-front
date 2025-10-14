@@ -10,24 +10,29 @@ import { useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
 import { useEffect, useState } from "react";
 import { Customer } from "@/utils/@types/customer";
-import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { hideDocumentNumber } from "@/utils/hideDocumentNumber";
+import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
 export function SelectCustomer({ disabled = false }: {disabled?: boolean}) {
     const isMounted = useMounted();
     const {
         control,
-    } = useFormContext<CreateBookingFormSchemaType>();
+    } = useFormContext<CreateCheckoutFormSchemaType>();
     const isDesktop = useMediaQuery("(min-width: 768px)");
 
     const [ allCustomers, setAllCustomers ] = useState<Customer[]>([]);
+
+    useEffect(() => {
+        console.log("allCustomers: ", allCustomers);
+    }, [ allCustomers ]);
 
     useEffect(() => {
         async function handleGetAllCustomers() {
             const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers`, {
                 credentials: "include",
                 next: {
-                    tags: [ "get-all-filials" ],
+                    tags: [ "get-all-customers" ],
                 },
             });
             const { data }: { data: Customer[] } = await response.json();
@@ -51,7 +56,7 @@ export function SelectCustomer({ disabled = false }: {disabled?: boolean}) {
     );
 }
 
-function DesktopSelect({ disabled, field, allCustomers }: { disabled?: boolean, field: ControllerRenderProps<CreateBookingFormSchemaType, "customer">, allCustomers: Customer[] }) {
+function DesktopSelect({ disabled, field, allCustomers }: { disabled?: boolean, field: ControllerRenderProps<CreateCheckoutFormSchemaType, "customer">, allCustomers: Customer[] }) {
     const [ open, setOpen ] = useState(false);
 
     const selectedCustomer = field.value;
@@ -74,7 +79,7 @@ function DesktopSelect({ disabled, field, allCustomers }: { disabled?: boolean, 
     );
 }
 
-function MobileSelect({ field, allCustomers }: { field: ControllerRenderProps<CreateBookingFormSchemaType, "customer">, allCustomers: Customer[] }) {
+function MobileSelect({ field, allCustomers }: { field: ControllerRenderProps<CreateCheckoutFormSchemaType, "customer">, allCustomers: Customer[] }) {
     const [ open, setOpen ] = useState(false);
 
     const selectedCustomer = field.value;
@@ -107,8 +112,8 @@ function CustomersList({
     allCustomers
 }: {
   setOpen: (_open: boolean) => void
-  onChange: (_value: { customerId: string, fullname: string, documentNumber: string }) => void
-  value: { customerId: string, fullname: string, documentNumber: string }
+  onChange: (_value: { customerId: string, fullname: string, documentNumber: string, cellphone: string }) => void
+  value: { customerId: string, fullname: string, documentNumber: string, cellphone: string }
   allCustomers: Customer[]
 }) {
     return (
@@ -127,7 +132,8 @@ function CustomersList({
                                     {
                                         customerId: customer.customerId,
                                         fullname: customer.fullname,
-                                        documentNumber: hideDocumentNumber(customer.documentNumber)
+                                        documentNumber: hideDocumentNumber(customer.documentNumber),
+                                        cellphone: customer.cellphone ?? ""
                                     }
                                 );
                                 setOpen(false);
@@ -142,21 +148,3 @@ function CustomersList({
     );
 }
 
-function hideDocumentNumber(documentNumber: string) {
-    const digits = documentNumber.replace(/\D/g, "");
-
-    if (digits.length === 11) {
-    // CPF: ***.***.999-99
-        const visible = digits.slice(6); // últimos 5 dígitos
-        return `***.***.${visible.slice(0, 3)}-${visible.slice(3)}`;
-    }
-
-    if (digits.length === 14) {
-    // CNPJ: **.***.***/0001-99
-        const visible = digits.slice(8); // últimos 6 dígitos
-        return `**.***.***/${visible.slice(0, 4)}-${visible.slice(4)}`;
-    }
-
-    // Número inválido ou não reconhecido
-    return documentNumber;
-}

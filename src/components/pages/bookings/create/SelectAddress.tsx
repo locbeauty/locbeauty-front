@@ -3,18 +3,23 @@
 import { Controller, useFormContext } from "react-hook-form";
 
 import { useMounted } from "@/hooks/useMounted";
-import { useEffect, useState } from "react";
-import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Address } from "@/utils/@types/address";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
-export function SelectAddress({ disabled = false }: {disabled?: boolean}) {
+interface SelectAddressProps {
+    setAddressString: Dispatch<SetStateAction<string>>
+    disabled?: boolean
+}
+
+export function SelectAddress({ disabled = false, setAddressString }: SelectAddressProps) {
     const isMounted = useMounted();
     const {
         control,
         watch
-    } = useFormContext<CreateBookingFormSchemaType>();
+    } = useFormContext<CreateCheckoutFormSchemaType>();
 
     const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(null);
 
@@ -43,7 +48,17 @@ export function SelectAddress({ disabled = false }: {disabled?: boolean}) {
             control={ control }
             render={ ({ field }) => {
                 return (
-                    <Select disabled={ !watchCustomer || disabled } onValueChange={ field.onChange } value={ field.value }>
+                    <Select disabled={ !watchCustomer || disabled }
+                        value={ field.value }
+                        onValueChange={ (value) => {
+                            field.onChange(value);
+                            const selectedAddress = customerAddresses?.find(addr => addr.addressId === value);
+                            if (selectedAddress) {
+                                const addressString = `${selectedAddress.street.streetName}, ${selectedAddress.neighborhood.neighborhoodName}, ${selectedAddress.buildingNumber} - ${selectedAddress.city.cityName}/${selectedAddress.state.UF}${selectedAddress.addressComplement ? `, ${selectedAddress.addressComplement}` : ""}`;
+                                setAddressString(addressString);
+                            }
+                        } }
+                    >
                         <SelectTrigger className="w-full data-[placeholder]:text-placeholder">
                             <SelectValue
                                 placeholder="Selecione a função do funcionário"
@@ -52,6 +67,7 @@ export function SelectAddress({ disabled = false }: {disabled?: boolean}) {
                         </SelectTrigger>
                         <SelectContent>
                             { customerAddresses && customerAddresses.map((addr) => {
+                                if(!addr.isActive) return null;
                                 return (
                                     <SelectItem key={ addr.addressId } value={ addr.addressId }>
                                         { addr.street.streetName }, { addr.neighborhood.neighborhoodName }, {addr.addressComplement} - { addr.city.cityName }/{ addr.state.UF }

@@ -7,20 +7,20 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, Clock, Timer, CheckCircle2 } from "lucide-react";
-import { GetDayBookingsResponse } from "./CreateBookingForm";
 import { useFormContext } from "react-hook-form";
-import { CreateBookingFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
+import { GetDayCheckoutsResponse } from "./CreateBookingForm";
+import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
 interface TimePickerProps {
   selectedDate?: Date
-  bookingSchedule: GetDayBookingsResponse[] | undefined
-  setMaximumGearAmountAvailable: Dispatch<SetStateAction<number>>
+  checkoutSchedule: GetDayCheckoutsResponse[] | undefined
+//   setMaximumGearAmountAvailable: Dispatch<SetStateAction<number>>
 }
 
-export default function TimePicker({ selectedDate, bookingSchedule, setMaximumGearAmountAvailable }: TimePickerProps) {
+export default function TimePicker({ selectedDate, checkoutSchedule }: TimePickerProps) {
     const [ durationInMinutes, setDurationInMinutes ] = useState(0);
-    const [ selectedHour, setSelectedHour ] = useState<GetDayBookingsResponse | undefined>(undefined);
+    const [ selectedHour, setSelectedHour ] = useState<GetDayCheckoutsResponse | undefined>(undefined);
 
     const calculateEndTime = (startTime: number, durationHoursInMinutes: number) => {
         const hours = Math.floor(startTime / 60);
@@ -30,33 +30,36 @@ export default function TimePicker({ selectedDate, bookingSchedule, setMaximumGe
         return minutesToHHMM(totalMinutes);
     };
 
-    const { setValue, watch, getValues } = useFormContext<CreateBookingFormSchemaType>();
+    const { setValue, watch, getValues } = useFormContext<CreateCheckoutFormSchemaType>();
+
+    useEffect(() => {
+        console.log("bookingSchedule: ", checkoutSchedule);
+    },[ checkoutSchedule ]);
 
     const watchStartHourInMinutes = watch("startHourInMinutes");
-    const watchGearId = watch("gear.gearId");
+    const watchGears = watch("gears");
     const watchTotalDuration = watch("totalDurationInMinutes");
     const startHour = watch("startHourInMinutes");
 
     useEffect(() => {
         const handleShowHourDurations = () => {
             if(startHour) {
-                const selectedTimeDurations = bookingSchedule?.filter(hour => hour.hourInMinutes === startHour)[0];
+                const selectedTimeDurations = checkoutSchedule?.filter(hour => hour.hourInMinutes === startHour)[0];
                 setSelectedHour(selectedTimeDurations);
             } else {
                 setSelectedHour(undefined);
             }
         };
         handleShowHourDurations();
-    }, [ bookingSchedule, getValues, startHour ]);
+    }, [ checkoutSchedule, getValues, startHour ]);
 
     const handleDurationButtonClick = (durationValue: number, maxGearAmount: number) => {
-        setValue("gearAmount", 0);
         setValue("totalDurationInMinutes", durationValue);
-        setMaximumGearAmountAvailable(maxGearAmount);
+        // setMaximumGearAmountAvailable(maxGearAmount);
         setDurationInMinutes(durationValue);
     };
 
-    if (!selectedDate || !watchGearId) {
+    if (!selectedDate || watchGears.length === 0) {
         return (
             <Card className="transition-all duration-200 hover:shadow-md">
                 <CardHeader className="pb-4">
@@ -96,7 +99,7 @@ export default function TimePicker({ selectedDate, bookingSchedule, setMaximumGe
                     <Label className="text-sm font-medium">Horário de início</Label>
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                         {
-                            bookingSchedule?.map((hour) => {
+                            checkoutSchedule?.map((hour) => {
                                 const hasSomeAvailableGapTime = hour.availability.some(item => item.available);
                                 return (
                                     <Button
