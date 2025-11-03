@@ -4,14 +4,15 @@ import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { formatCurrency, formatTime, getDistanceFromTop, getEventBoxHeigh } from "./bookingViewHelpers";
 import { cn } from "@/lib/utils";
 import type { FlattenedBooking } from "./WeekView";
+import { centsToString } from "@/utils/centsToString";
 
 interface SingleEventBoxProps {
   group: FlattenedBooking[]
   dayIndex: number
-  openBookingDetails: (_booking: FlattenedBooking) => void
+  openCheckoutDetails: (_booking: FlattenedBooking) => void
 }
 
-export function SingleEventBox({ group, dayIndex, openBookingDetails }: SingleEventBoxProps) {
+export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleEventBoxProps) {
     // If the group has only one event, use full width
     const hourColumnWidth = 100;
     const booking = group[0];
@@ -33,7 +34,7 @@ export function SingleEventBox({ group, dayIndex, openBookingDetails }: SingleEv
     // Convert totalDuration from minutes to hours for styling logic
     return (
         <div
-            key={ booking.id }
+            key={ booking.checkoutId }
             className={ cn(
                 "absolute rounded-md border-l-4 p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-y-auto",
                 // Default colors for bookings with durations different than 4, 6 and 8-12 hours
@@ -53,9 +54,9 @@ export function SingleEventBox({ group, dayIndex, openBookingDetails }: SingleEv
                 left,
                 width,
             } }
-            onClick={ () => openBookingDetails(booking) }
+            onClick={ () => openCheckoutDetails(booking) }
         >
-            <div className="font-medium text-sm truncate">{booking.gear.gearName}</div>
+            <div className="font-medium text-sm truncate">{booking.bookings.map(item => item.gearName).join(", ")}</div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <User className="h-3 w-3" />
@@ -64,7 +65,7 @@ export function SingleEventBox({ group, dayIndex, openBookingDetails }: SingleEv
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <MapPin className="h-3 w-3" />
-                {booking.sourceFilial.description}
+                {booking.address.city.cityName}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
@@ -74,13 +75,8 @@ export function SingleEventBox({ group, dayIndex, openBookingDetails }: SingleEv
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <DollarSign className="h-3 w-3" />
-                {formatCurrency(booking.price)}
+                {centsToString(booking.totalPrice)}
             </div>
-
-            {/* <div className="flex flex-col gap-1 mt-2">
-                <BookingStatusBadge status={ booking.bookingStatus } />
-                <BookingPaymentStatusBadge status={ booking.paymentStatus } />
-            </div> */}
         </div>
     );
 }

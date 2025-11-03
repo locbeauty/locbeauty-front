@@ -1,5 +1,5 @@
 import { Address } from "./address";
-import { CheckoutStatuses, PaymentStatuses } from "./bookings";
+import { CheckoutStatuses, PaymentModes, PaymentStatuses } from "./bookings";
 
 export type Checkout = {
     checkoutId: string;
@@ -10,8 +10,26 @@ export type Checkout = {
     totalDurationInMinutes: number;
     totalPrice: number;
     observations: string | null;
+    basePrice: number,
+    distanceInKm: number,
+    foodCost: number,
+    fuelCost: number,
+    lodgingCost: number,
+    additionalTransportCost: number,
+    pendingValue: number,
+    // paymentMode: PaymentModes,
+    paymentMode: string,
+    driverId: string,
+    accountableEmployee: {
+        employeeId: string,
+        fullname: string,
+        documentNumber: string
+    },
     Bookings: {
         bookingId: string;
+        extraMachineCosts: number,
+        extraMachineCostsDescription: string,
+        individualPrice: number,
         gear: {
             gearId: string;
             gearName: string;
@@ -31,7 +49,7 @@ export type Checkout = {
     };
     sourceFilial: {
         filialId: string;
-        description: string;
+        filialName: string;
     };
     address: Address;
 }

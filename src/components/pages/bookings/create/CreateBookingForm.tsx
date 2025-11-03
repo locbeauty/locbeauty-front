@@ -29,6 +29,7 @@ import { parseStringToCents } from "@/utils/parseStringToCents";
 import { useQuery } from "@tanstack/react-query";
 import { AdditionalCostsDialog } from "./AdditionalCostsDialog";
 import { centsToString } from "@/utils/centsToString";
+import { queryClient } from "@/app/(main)/layout";
 
 export interface GetDayCheckoutsResponse {
   hourInMinutes: number,
@@ -264,13 +265,16 @@ export function CreateBookingForm() {
 
         if(response.statusCode !== 201) {
             toast.warning(response.message, { style: { fontSize: "1rem" } });
+            queryClient.invalidateQueries({
+                queryKey: [ "get-all-checkouts" ]
+            });
+            handleResetValues();
             window.scroll({ top: 0 });
         } else {
             toast.success(response.message, { style: { fontSize: "1rem" } });
             window.scroll({ top: 0 });
         }
 
-        // handleResetValues();
     };
 
     return (
