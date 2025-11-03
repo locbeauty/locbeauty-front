@@ -84,10 +84,10 @@ export default function PriceInput<TFieldValues extends Record<string, any>>({
     }
 
     return (
-        <div className="flex flex-col gap-2 mt-4">
+        <div className="flex flex-col gap-2">
             {
                 withLabel && (
-                    <Label htmlFor="price-input" className="gap-1 flex items-center">
+                    <Label htmlFor="price-input" className="gap-1 flex items-center mt-4">
                         <DollarSign className="h-4 w-4" />
                 Preço
                     </Label>

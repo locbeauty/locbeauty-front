@@ -171,7 +171,7 @@ export function CheckoutPaymentMethod() {
                         </Label>
                     </div>
                     <Controller
-                        name="bookingStatus"
+                        name="checkoutStatus"
                         control={ control }
                         render={ ({ field }) => (
                             <Select onValueChange={ field.onChange } value={ field.value }>

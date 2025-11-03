@@ -6,8 +6,8 @@ import { Controller, FormProvider, useForm, useFormContext } from "react-hook-fo
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectGear } from "./SelectGear";
-import { AlertCircle, User, MessageSquare, Check, DollarSign, Settings, Pin, Truck, X, Copy } from "lucide-react";
-import { useState } from "react";
+import { AlertCircle, User, MessageSquare, Check, Settings, Pin, Truck, X, Copy, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-provider";
@@ -26,8 +26,9 @@ import { ApiResponse } from "@/lib/api";
 import { createCheckoutFormSchema, CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { CreateCheckout, getDayCheckouts } from "@/services/checkouts.service";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { hideDocumentNumber } from "@/utils/hideDocumentNumber";
 import { useQuery } from "@tanstack/react-query";
+import { AdditionalCostsDialog } from "./AdditionalCostsDialog";
+import { centsToString } from "@/utils/centsToString";
 
 export interface GetDayCheckoutsResponse {
   hourInMinutes: number,
@@ -43,18 +44,46 @@ export function GearsSection() {
     const {
         watch,
         setValue,
+        register,
         formState: { errors },
-    } = useFormContext();
+    } = useFormContext<CreateCheckoutFormSchemaType>();
 
-    const watchSelectedGears = watch("gears") || [];
+    const watchedGears = watch("gears");
+
+    const watchSelectedGears = useMemo(() => watchedGears || [], [ watchedGears ]);
+
+    useEffect(() => {
+        const selectedGearsCost = watchSelectedGears.reduce(
+            (acc, item) => acc + parseStringToCents(item.individualPrice),
+            0
+        );
+
+        setValue("basePrice", centsToString(selectedGearsCost));
+        setValue("totalPrice", centsToString(selectedGearsCost));
+    }, [ watchSelectedGears, setValue ]);
 
     function handleAddGear(gear: Gear) {
-        setValue("gears", [ ...watchSelectedGears, { gearId: gear.gearId, gearName: gear.gearName } ]);
+        setValue("gears", [
+            ...watchSelectedGears,
+            {
+                gearId: gear.gearId,
+                gearName: gear.gearName,
+                individualPrice: "0",
+            },
+        ]);
     }
 
     function handleRemoveGear(gearId: string) {
-        const updated = watchSelectedGears.filter((g: Gear) => g.gearId !== gearId);
-        setValue("gears", updated);
+        setValue(
+            "gears",
+            watchSelectedGears.filter((g) => g.gearId !== gearId)
+        );
+    }
+
+    function handlePriceChange(index: number, value: string) {
+        const updatedGears = [ ...watchSelectedGears ];
+        updatedGears[index].individualPrice = value;
+        setValue("gears", updatedGears);
     }
 
     return (
@@ -64,51 +93,66 @@ export function GearsSection() {
                 className="text-sm font-medium flex items-center gap-1"
             >
                 <Settings className="w-4 h-4" />
-    Equipamento
+                Equipamentos
             </Label>
 
-            {/* Container horizontal */}
-            <div className="flex flex-wrap gap-2">
-                {/* Lista de máquinas selecionadas */}
-                {watchSelectedGears.map((gear: { gearName: string; gearId: string }) => (
-                    <div
-                        key={ gear.gearId }
-                        className="flex items-center space-x-2"
-                    >
+            <div className="flex flex-col gap-2">
+                {watchSelectedGears.map((gear, index) => (
+                    <div key={ gear.gearId } className="flex gap-2 items-center">
                         <Button
                             variant="outline"
-                            className="justify-start text-black font-black"
+                            className="justify-start text-black font-black min-w-[200px]"
                             disabled
                         >
                             {gear.gearName}
                         </Button>
+
+                        <div className="flex flex-col w-[150px]">
+                            <PriceInput
+                                withLabel={ false }
+                                name={ `gears.${index}.individualPrice` }
+                                value={ gear.individualPrice }
+                                onChange={ (val: string) =>
+                                    handlePriceChange(index, val)
+                                }
+                            />
+                            <div>
+                                {errors.gears?.[index]?.individualPrice && (
+                                    <p className="text-sm text-destructive flex items-center gap-1">
+                                        <AlertCircle className="h-3 w-3" />
+                                        {
+                                            errors.gears[index].individualPrice.message
+                                        }
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
                         <Button
                             type="button"
                             variant="destructive"
                             size="xs"
                             onClick={ () => handleRemoveGear(gear.gearId) }
                         >
-                            <X className="w-4 h-4" />
+                            <X className="size-4" />
                         </Button>
                     </div>
                 ))}
 
-                {/* Select aparece ao lado das máquinas */}
                 {watchSelectedGears.length < 3 && (
-                    <div className="min-w-[200px]">
+                    <div className="w-[200px]">
                         <SelectGear onSelect={ handleAddGear } />
                     </div>
                 )}
             </div>
 
-            {errors.gears && (
+            {typeof errors.gears?.message === "string" && (
                 <p className="text-sm text-destructive flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
-                    {errors.gears.message?.toString()}
+                    {errors.gears.message}
                 </p>
             )}
         </div>
-
     );
 }
 
@@ -117,10 +161,10 @@ export function CreateBookingForm() {
     const createBookingFormMethods = useForm<CreateCheckoutFormSchemaType>({
         resolver: zodResolver(createCheckoutFormSchema),
         defaultValues: {
-            bookingStatus: "Pendente",
+            checkoutStatus: "Pendente",
             paymentStatus: "Pendente",
             paymentMode: undefined,
-            totalPrice: "",
+            basePrice: "",
             addressId: "",
             filialId: user?.sourceFilial.filialId,
             accountableEmployeeId: user?.sub
@@ -128,6 +172,7 @@ export function CreateBookingForm() {
     });
 
     const [ isQuickBookingPaymentModeDialogOpen, setQuickBookingPaymentModeDialogOpen ] = useState(false);
+    const [ isAdditionalCostsDialogOpen, setAdditionalCostsDialogOpen ] = useState(false);
     const [ addressString, setAddressString ] = useState("");
     const [ driverString, setDriverString ] = useState("");
 
@@ -146,9 +191,18 @@ export function CreateBookingForm() {
     const selectedDate = watch("date");
     const watchFilialId = watch("filialId");
     const watchSelectedGears = watch("gears");
-    const watchPrice = watch("totalPrice");
     const watchCustomer = watch("customer");
     const isDateInPast = selectedDate && selectedDate < new Date();
+
+    const watchBasePrice = watch("basePrice");
+    const watchTotalPrice = watch("totalPrice");
+    const watchExtraMachineCosts = watch("extraMachineCosts");
+
+    const watchDistanceInKm = watch("distanceInKm");
+    const watchLodgingCost = watch("lodgingCost");
+    const watchFoodCost = watch("foodCost");
+    const watchFuelCost = watch("fuelCost");
+    const watchAdditionalTransportCost = watch("additionalTransportCost");
 
     const params = {
         filialId: watchFilialId,
@@ -166,10 +220,10 @@ export function CreateBookingForm() {
 
     function handleResetValues() {
         reset({
-            bookingStatus: "Pendente",
+            checkoutStatus: "Pendente",
             paymentStatus: "Pendente",
             paymentMode: undefined,
-            totalPrice: "",
+            totalPrice: "0",
             addressId: "",
             filialId: user?.sourceFilial.filialId,
             accountableEmployeeId: user?.sub,
@@ -181,16 +235,32 @@ export function CreateBookingForm() {
             observations: "",
             driverId: "",
             partialPayment: "",
+            additionalTransportCost: "0",
+            basePrice: "0",
+            distanceInKm: 0,
+            extraMachineCosts: "0",
+            foodCost: "0",
+            fuelCost: "0",
+            lodgingCost: "0",
         });
     }
 
     async function handleCreateNewCheckout(newCheckoutData: CreateCheckoutFormSchemaType) {
-        const response = await CreateCheckout(
-            {
-                ...newCheckoutData,
-                totalPrice: parseStringToCents(newCheckoutData.totalPrice),
-                partialPayment: parseStringToCents(newCheckoutData.partialPayment || "0"),
-            });
+        const response = await CreateCheckout({
+            ...newCheckoutData,
+            basePrice: newCheckoutData.basePrice ? parseStringToCents(newCheckoutData.basePrice) : 0,
+            extraMachineCosts: newCheckoutData.extraMachineCosts ? parseStringToCents(newCheckoutData.extraMachineCosts) : 0,
+            lodgingCost: newCheckoutData.lodgingCost ? parseStringToCents(newCheckoutData.lodgingCost) : 0,
+            foodCost: newCheckoutData.foodCost ? parseStringToCents(newCheckoutData.foodCost) : 0,
+            fuelCost: newCheckoutData.fuelCost ? parseStringToCents(newCheckoutData.fuelCost) : 0,
+            additionalTransportCost: newCheckoutData.additionalTransportCost ? parseStringToCents(newCheckoutData.additionalTransportCost) : 0,
+            totalPrice: newCheckoutData.totalPrice ? parseStringToCents(newCheckoutData.totalPrice) : 0,
+            partialPayment: newCheckoutData.partialPayment ? parseStringToCents(newCheckoutData.partialPayment) : 0,
+            gears: newCheckoutData.gears.map(item => ({
+                ...item,
+                individualPrice: item.individualPrice ? parseStringToCents(item.individualPrice) : 0
+            }))
+        });
 
         if(response.statusCode !== 201) {
             toast.warning(response.message, { style: { fontSize: "1rem" } });
@@ -200,7 +270,7 @@ export function CreateBookingForm() {
             window.scroll({ top: 0 });
         }
 
-        handleResetValues();
+        // handleResetValues();
     };
 
     return (
@@ -267,23 +337,13 @@ export function CreateBookingForm() {
 
                                 <GearsSection />
 
+                                <AdditionalCostsDialog
+                                    setAdditionalCostsDialogOpen={ setAdditionalCostsDialogOpen }
+                                    isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
+                                />
+
                                 <div className="space-y-2">
-                                    <Label htmlFor="equipamento" className="text-sm font-medium">
-                                        <DollarSign className="h-5 w-5 text-primary" />
-                                        Valor
-                                    </Label>
-                                    <div className="flex flex-col flex-1">
-                                        <PriceInput withLabel={ false } register={ register("totalPrice") } value={ watchPrice } setValue={ setValue } name="totalPrice" />
-                                        {errors.totalPrice && (
-                                            <p className="text-sm text-destructive flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                {errors.totalPrice.message}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="equipamento" className="text-sm font-medium">
+                                    <Label className="text-sm font-medium">
                                         <Truck className="h-5 w-5 text-primary" />
                                         Motorista
                                     </Label>
@@ -313,6 +373,7 @@ export function CreateBookingForm() {
                             control={ control }
                             checkoutSchedule={ checkoutSchedule }
                         />
+
                         {/* Amount and Price */}
                         <div className="pb-0 flex flex-col w-full justify-center gap-3">
 
@@ -345,7 +406,7 @@ export function CreateBookingForm() {
                         </Card>
 
                         {/* Resumo Final */}
-                        {selectedDate && startHour && watchTotalDurationInMinutes && watchPrice && !isDateInPast && (
+                        {selectedDate && startHour && watchTotalDurationInMinutes && watchTotalPrice && !isDateInPast && (
                             <Card className="bg-primary/5 border-primary/20 w-[80%] ml-auto mr-auto">
                                 <CardHeader>
                                     <CardTitle className="text-lg text-primary flex justify-between">
@@ -360,11 +421,11 @@ Equipamento${watchSelectedGears.length > 1 ? "s" : ""}: ${watchSelectedGears.map
 Data: ${selectedDate.toLocaleDateString("pt-BR")}
 Horário: ${minutesToHHMM(startHour)} - ${minutesToHHMM(startHour + watchTotalDurationInMinutes)}
 Duração: ${watchTotalDurationInMinutes / 60}h
-Preço: R$ ${watchPrice}
-Cliente: ${watchCustomer.fullname} - ${hideDocumentNumber(watchCustomer.documentNumber)}
+Preço: R$ ${watchTotalPrice}
+Cliente: ${watchCustomer.fullname} - ${watchCustomer.documentNumber}
 Contato: ${watchCustomer.cellphone}
 Endereço: ${addressString}
-Motorista: ${driverString}
+Motorista: ${driverString || "A definir"}
     `
                                                     .replace(/[ \t]+\n/g, "\n")
                                                     .trim();
@@ -397,11 +458,11 @@ Motorista: ${driverString}
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Preço:</span>
-                                        <span className="font-medium">R$ {watchPrice}</span>
+                                        <span className="font-medium">R$ {watchTotalPrice}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Cliente:</span>
-                                        <span className="font-medium">{watchCustomer.fullname} - {hideDocumentNumber(watchCustomer.documentNumber)}</span>
+                                        <span className="font-medium">{watchCustomer.fullname} - {watchCustomer.documentNumber}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Contato:</span>
@@ -413,7 +474,7 @@ Motorista: ${driverString}
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Motorista:</span>
-                                        <span className="font-medium text-right">{driverString}</span>
+                                        <span className="font-medium text-right">{driverString || "A definir"}</span>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -424,7 +485,7 @@ Motorista: ${driverString}
                             <Popover open={ isQuickBookingPaymentModeDialogOpen } onOpenChange={ setQuickBookingPaymentModeDialogOpen }>
                                 <PopoverTrigger asChild>
                                     <Button
-                                        disabled={ !startHour || watchSelectedGears.length < 0 || !watchPrice }
+                                        disabled={ !startHour || watchSelectedGears.length < 0 || !watchTotalPrice || watchTotalPrice === "0,00" }
                                         type="button"
                                         onClick={ handleSubmit((data) => handleCreateNewCheckout(data)) }
                                         className="flex-1">

@@ -24,10 +24,6 @@ export function SelectCustomer({ disabled = false }: {disabled?: boolean}) {
     const [ allCustomers, setAllCustomers ] = useState<Customer[]>([]);
 
     useEffect(() => {
-        console.log("allCustomers: ", allCustomers);
-    }, [ allCustomers ]);
-
-    useEffect(() => {
         async function handleGetAllCustomers() {
             const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers`, {
                 credentials: "include",
@@ -89,7 +85,7 @@ function MobileSelect({ field, allCustomers }: { field: ControllerRenderProps<Cr
             <DrawerTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
                     {selectedCustomer ? (
-                        <>{selectedCustomer.fullname} - {hideDocumentNumber(selectedCustomer.documentNumber)}</>
+                        <>{selectedCustomer.fullname} - {selectedCustomer.documentNumber}</>
                     ) : (
                         <span className="text-placeholder">Selecione o cliente</span>
                     )}
@@ -132,7 +128,7 @@ function CustomersList({
                                     {
                                         customerId: customer.customerId,
                                         fullname: customer.fullname,
-                                        documentNumber: hideDocumentNumber(customer.documentNumber),
+                                        documentNumber: customer.documentNumber,
                                         cellphone: customer.cellphone ?? ""
                                     }
                                 );
