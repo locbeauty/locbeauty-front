@@ -68,54 +68,11 @@ export type FlattenedBooking = {
 interface WeekViewProps {
     currentDate: Date;
     checkouts: Checkout[];
-    openCheckoutDetails: (booking: FlattenedBooking) => void;
+    openCheckoutDetails: (checkout: Checkout) => void;
 }
 
 export function WeekView({ currentDate, checkouts, openCheckoutDetails }: WeekViewProps) {
     const weekDays = getWeekDays(currentDate);
-
-    const flattenedBookings: FlattenedBooking[] = checkouts.map((checkout) => {
-        const startDate = new Date(checkout.date);
-        startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
-        startDate.setMinutes(checkout.startHourInMinutes % 60);
-
-        const endDate = new Date(startDate);
-        endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
-
-        return {
-            checkoutId: checkout.checkoutId,
-            startDate,
-            endDate,
-            date: checkout.date,
-            startHourInMinutes: checkout.startHourInMinutes,
-            totalDurationInMinutes: checkout.totalDurationInMinutes,
-            observations: checkout.observations,
-            customer: checkout.customer,
-            sourceFilial: checkout.sourceFilial,
-            checkoutStatus: checkout.checkoutStatus,
-            paymentStatus: checkout.paymentStatus,
-            totalPrice: checkout.totalPrice,
-            address: checkout.address,
-            bookings: checkout.Bookings.map((booking) => ({
-                bookingId: booking.bookingId,
-                extraMachineCosts: booking.extraMachineCosts,
-                extraMachineCostsDescription: booking.extraMachineCostsDescription,
-                individualPrice: booking.individualPrice,
-                gearId: booking.gear.gearId,
-                gearName: booking.gear.gearName,
-            })),
-            accountableEmployee: checkout.accountableEmployee,
-            basePrice: checkout.basePrice,
-            distanceInKm: checkout.distanceInKm,
-            foodCost: checkout.foodCost,
-            fuelCost: checkout.fuelCost,
-            lodgingCost: checkout.lodgingCost,
-            pendingValue: checkout.pendingValue,
-            additionalTransportCost: checkout.additionalTransportCost,
-            paymentMode: checkout.paymentMode,
-            driverId: checkout.driverId,
-        };
-    });
 
     return (
         <>
@@ -139,14 +96,14 @@ export function WeekView({ currentDate, checkouts, openCheckoutDetails }: WeekVi
 
                     {(() => {
                         // Agrupa bookings por dia
-                        const bookingsByDay: Record<number, FlattenedBooking[]> = {};
-                        flattenedBookings.forEach((booking) => {
-                            if (!isAgendamentoInWeek(booking, weekDays)) return;
-                            const dayIndex = getDayIndex(booking.startDate, weekDays);
+                        const bookingsByDay: Record<number, Checkout[]> = {};
+                        checkouts.forEach((checkout) => {
+                            if (!isAgendamentoInWeek(checkout, weekDays)) return;
+                            const dayIndex = getDayIndex(checkout.date, weekDays);
                             if (dayIndex === -1) return;
 
                             if (!bookingsByDay[dayIndex]) bookingsByDay[dayIndex] = [];
-                            bookingsByDay[dayIndex].push(booking);
+                            bookingsByDay[dayIndex].push(checkout);
                         });
 
                         return Object.entries(bookingsByDay).flatMap(([ dayIndexStr, dayBookings ]) => {
@@ -154,7 +111,6 @@ export function WeekView({ currentDate, checkouts, openCheckoutDetails }: WeekVi
 
                             // Agrupa eventos sobrepostos
                             const bookingGroups = groupOverlappingEvents(dayBookings);
-
                             return bookingGroups?.flatMap((group) => {
                                 return (
                                     group.length === 1 ? (

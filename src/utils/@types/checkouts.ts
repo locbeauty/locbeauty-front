@@ -45,7 +45,7 @@ export type Checkout = {
         birthdate: string,
         companyName: string,
         customerStatus: string,
-        lastBooking: Date,
+        lastBooking: Date | null,
     };
     sourceFilial: {
         filialId: string;

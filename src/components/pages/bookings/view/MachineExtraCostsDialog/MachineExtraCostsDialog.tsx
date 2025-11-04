@@ -23,12 +23,14 @@ import { Booking } from "@/utils/@types/bookings";
 import { centsToString } from "@/utils/centsToString";
 import { queryClient } from "@/app/(main)/layout";
 import { FlattenedBooking } from "../WeekView";
+import { Checkout } from "@/utils/@types/checkouts";
 
 interface MachineExtraCostsDialogProps {
     setMachineExtraCostsDialogOpen: Dispatch<SetStateAction<boolean>>;
     isMachineExtraCostsDialogOpen: boolean;
-    selectedBookingId: string
-    setSelectedCheckout: Dispatch<SetStateAction<FlattenedBooking | null>>
+    selectedBookingId: string | null
+    // selectedCheckout: Checkout | null
+    setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>
     setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
 
 }
@@ -38,16 +40,17 @@ export function MachineExtraCostsDialog({
     setMachineExtraCostsDialogOpen,
     selectedBookingId,
     setSelectedCheckout,
-    setBookingDetailsDialogOpen
+    // selectedCheckout,
+    // setBookingDetailsDialogOpen
 }: MachineExtraCostsDialogProps) {
 
     const [ individualPrice, setIndividualPrice ] = useState("0");
     const [ extraMachineCosts, setExtraMachineCosts ] = useState("0");
     const [ extraMachineCostsDescription, setExtraMachineCostsDescription ] = useState("");
-
+    console.log("selectedBooking: ", selectedBookingId);
     const { data } = useQuery<Booking | undefined, Error>({
         queryKey: [ "get-booking-by-id", selectedBookingId ],
-        queryFn: () => GetBookingById({ bookingId: selectedBookingId }), // Agora retorna Promise<Booking>
+        queryFn: () => GetBookingById({ bookingId: selectedBookingId! }),
         enabled: !!selectedBookingId, // só roda quando selectedBookingId existe
         staleTime: 1000 * 60,
     });
@@ -63,26 +66,124 @@ export function MachineExtraCostsDialog({
             individualPrice: parseStringToCents(individualPrice),
             extraMachineCosts: parseStringToCents(extraMachineCosts),
             extraMachineCostsDescription
-        }, bookingId: selectedBookingId });
+        }, bookingId: selectedBookingId! });
+        // console.log("fora");
 
         if(response.statusCode !== 201) {
             queryClient.invalidateQueries({
                 queryKey: [ "get-all-checkouts" ],
             });
-            queryClient.invalidateQueries({ queryKey: [ "get-booking-by-id", selectedBookingId ] });
-            // Atualize também o agendamento selecionado (estado pai)
-            const updatedBooking = await GetBookingById({ bookingId: selectedBookingId });
-            setSelectedCheckout(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    bookings: prev.bookings.map(b =>
-                        b.bookingId === selectedBookingId ? { ...b, ...updatedBooking } : b
-                    )
-                };
-            });
+
+            // console.log("dentro", centsToString(selectedBooking.extraMachineCosts), extraMachineCosts);
+
+            // if (selectedBooking && centsToString(selectedBooking.extraMachineCosts) !== extraMachineCosts) {
+            //     // console.log("dentro dentro");
+            //     setSelectedCheckout((prev) => {
+            //         if (!prev) return prev;
+
+            //         // Clona o checkout atual
+            //         const updatedCheckout = { ...prev };
+
+            //         // Encontra o booking correspondente dentro do checkout
+            //         const bookingIndex = updatedCheckout.Bookings.findIndex(
+            //             (b) => b.bookingId === selectedBooking.bookingId
+            //         );
+
+            //         if (bookingIndex === -1) return prev;
+            //         const oldValue = updatedCheckout.Bookings[bookingIndex].extraMachineCosts;
+            //         const newValue = extraMachineCosts;
+
+            //         // Atualiza o valor do booking
+            //         updatedCheckout.Bookings[bookingIndex] = {
+            //             ...updatedCheckout.Bookings[bookingIndex],
+            //             extraMachineCosts: parseStringToCents(newValue),
+            //         };
+
+            //         // console.log("PARSED: ", updatedCheckout.totalPrice, oldValue, parseStringToCents(newValue));
+            //         // Atualiza o total (ou outro campo que dependa disso)
+            //         updatedCheckout.totalPrice = updatedCheckout.totalPrice - oldValue + parseStringToCents(newValue);
+            //         return updatedCheckout;
+            //     });
+            // }
+
+            // if (selectedBooking && centsToString(selectedBooking.individualPrice) !== individualPrice) {
+            //     // console.log("dentro dentro");
+            //     setSelectedCheckout((prev) => {
+            //         if (!prev) return prev;
+
+            //         // Clona o checkout atual
+            //         const updatedCheckout = { ...prev };
+
+            //         // Encontra o booking correspondente dentro do checkout
+            //         const bookingIndex = updatedCheckout.Bookings.findIndex(
+            //             (b) => b.bookingId === selectedBooking.bookingId
+            //         );
+
+            //         if (bookingIndex === -1) return prev;
+            //         const oldValue = updatedCheckout.Bookings[bookingIndex].individualPrice;
+            //         const newValue = individualPrice;
+
+            //         // Atualiza o valor do booking
+            //         updatedCheckout.Bookings[bookingIndex] = {
+            //             ...updatedCheckout.Bookings[bookingIndex],
+            //             individualPrice: parseStringToCents(newValue),
+            //         };
+
+            //         // console.log("PARSED: ", updatedCheckout.totalPrice, oldValue, parseStringToCents(newValue));
+            //         // Atualiza o total (ou outro campo que dependa disso)
+            //         updatedCheckout.basePrice = updatedCheckout.basePrice - oldValue + parseStringToCents(newValue);
+            //         updatedCheckout.totalPrice = updatedCheckout.totalPrice - oldValue + parseStringToCents(newValue);
+            //         return updatedCheckout;
+            //     });
+            // }
+
+            if (selectedBookingId) {
+                const newExtraMachineCosts = parseStringToCents(extraMachineCosts);
+                const newIndividualPrice = parseStringToCents(individualPrice);
+
+                setSelectedCheckout((prev) => {
+                    if (!prev) return prev;
+
+                    const updatedCheckout = { ...prev };
+                    const bookingIndex = updatedCheckout.Bookings.findIndex(
+                        (b) => b.bookingId === selectedBookingId
+                    );
+                    if (bookingIndex === -1) return prev;
+
+                    const booking = updatedCheckout.Bookings[bookingIndex];
+
+                    // Valores antigos
+                    const oldExtra = booking.extraMachineCosts;
+                    const oldIndividual = booking.individualPrice;
+
+                    // Verifica diferenças e atualiza booking
+                    const updatedBooking = { ...booking };
+
+                    if (centsToString(oldExtra) !== extraMachineCosts)
+                        updatedBooking.extraMachineCosts = newExtraMachineCosts;
+
+                    if (centsToString(oldIndividual) !== individualPrice)
+                        updatedBooking.individualPrice = newIndividualPrice;
+
+                    updatedCheckout.Bookings[bookingIndex] = updatedBooking;
+
+                    // Atualiza totais de forma acumulada
+                    let totalDelta = 0;
+
+                    if (centsToString(oldExtra) !== extraMachineCosts)
+                        totalDelta += newExtraMachineCosts - oldExtra;
+
+                    if (centsToString(oldIndividual) !== individualPrice)
+                        totalDelta += newIndividualPrice - oldIndividual;
+
+                    updatedCheckout.basePrice += newIndividualPrice - oldIndividual;
+                    updatedCheckout.totalPrice += totalDelta;
+
+                    return updatedCheckout;
+                });
+            }
+
             toast.warning(response.message, { style: { fontSize: "1rem" } });
-            setBookingDetailsDialogOpen(false);
             setMachineExtraCostsDialogOpen(false);
             window.scroll({ top: 0 });
         } else {

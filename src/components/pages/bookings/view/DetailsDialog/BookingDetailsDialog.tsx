@@ -52,12 +52,13 @@ import { parseStringToCents } from "@/utils/parseStringToCents";
 import { centsToString } from "@/utils/centsToString";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkout } from "@/utils/@types/checkouts";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
   isBookingDetailsDialogOpen: boolean;
-  selectedCheckout: FlattenedBooking | null;
-  setSelectedCheckout: Dispatch<SetStateAction<FlattenedBooking | null>>
+  selectedCheckout: Checkout | null;
+  setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>
 }
 
 export function BookingDetailsDialog({
@@ -67,7 +68,7 @@ export function BookingDetailsDialog({
     setSelectedCheckout
 }: BookingDetailsDialogProps) {
 
-    const [ selectedBookingForExtraCosts, setSelectedBookingForExtraCosts ] = useState<string | null>(null);
+    const [ selectedBookingIdForExtraCosts, setSelectedBookingIdForExtraCosts ] = useState<string | null>(null);
 
     async function handleMarkAsConcluded(bookingId: string) {
         const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/config/concluded?bookingId=${bookingId}&date=${selectedCheckout?.date.toString()}`, { credentials: "include" });
@@ -79,6 +80,14 @@ export function BookingDetailsDialog({
             setBookingDetailsDialogOpen(false);
         }
     }
+    if(!selectedCheckout) return null;
+
+    const startDate = new Date(selectedCheckout.date);
+    startDate.setHours(Math.floor(selectedCheckout.startHourInMinutes / 60));
+    startDate.setMinutes(selectedCheckout.startHourInMinutes % 60);
+
+    const endDate = new Date(startDate);
+    endDate.setMinutes(endDate.getMinutes() + selectedCheckout.totalDurationInMinutes);
 
     return (
         <Dialog
@@ -103,7 +112,7 @@ export function BookingDetailsDialog({
                                 <div className="flex items-center gap-2">
                                     <Package className="h-5 w-5 text-primary" />
                                     <h3 className="text-lg font-semibold">
-                                        { selectedCheckout.bookings.map(item => item.gearName).join(", ") }
+                                        {selectedCheckout.Bookings.sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName)).map(item => item.gear.gearName).join(", ")}
                                     </h3>
                                 </div>
                                 <div className="flex gap-2">
@@ -210,13 +219,14 @@ export function BookingDetailsDialog({
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="flex items-center gap-2">
                                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                                        <span>{ formatDate(selectedCheckout.startDate) }</span>
+                                        <span>{ formatDate(selectedCheckout.date) }</span>
+                                        {/* <span>{ selectedCheckout.date.toString() }</span> */}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-4 w-4 text-muted-foreground" />
                                         <span>
-                                            { formatTime(selectedCheckout.startDate) } -{ " " }
-                                            { formatTime(selectedCheckout.endDate) }
+                                            { formatTime(startDate) } -{ " " }
+                                            { formatTime(endDate) }
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -238,8 +248,8 @@ export function BookingDetailsDialog({
                                 <Card>
                                     <CardContent>
                                         { /* Informações individuais de cada booking */ }
-                                        {selectedCheckout.bookings
-                                            .sort((a, b) => a.gearName.localeCompare(b.gearName))
+                                        {selectedCheckout.Bookings
+                                            .sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName))
                                             .map((booking, index, arr) => {
                                                 const isLast = index === arr.length - 1;
                                                 return (
@@ -249,7 +259,7 @@ export function BookingDetailsDialog({
                                                     >
                                                         <div className="flex items-center gap-2 col-span-3">
                                                             <Package className="h-4 w-4 text-muted-foreground" />
-                                                            <span>{booking.gearName}</span>
+                                                            <span>{booking.gear.gearName}</span>
                                                         </div>
 
                                                         <div className="flex flex-col gap-2 col-span-7">
@@ -272,7 +282,7 @@ export function BookingDetailsDialog({
                                                         <div className="flex items-center justify-end col-span-2">
                                                             <Tooltip defaultOpen={ false }>
                                                                 <TooltipTrigger defaultChecked={ false } asChild>
-                                                                    <Button variant="outline" size="xs" className="size-8" onClick={ () => setSelectedBookingForExtraCosts(booking.bookingId) }>
+                                                                    <Button variant="outline" size="xs" className="size-8" onClick={ () => setSelectedBookingIdForExtraCosts(booking.bookingId) }>
                                                                         <Pencil />
                                                                     </Button>
                                                                 </TooltipTrigger>
@@ -284,9 +294,9 @@ export function BookingDetailsDialog({
                                                             <MachineExtraCostsDialog
                                                                 setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
                                                                 setSelectedCheckout={ setSelectedCheckout }
-                                                                selectedBookingId={ selectedBookingForExtraCosts || "" }
-                                                                isMachineExtraCostsDialogOpen={ !!selectedBookingForExtraCosts }
-                                                                setMachineExtraCostsDialogOpen={ () => setSelectedBookingForExtraCosts(null) }
+                                                                selectedBookingId={ selectedBookingIdForExtraCosts }
+                                                                isMachineExtraCostsDialogOpen={ !!selectedBookingIdForExtraCosts }
+                                                                setMachineExtraCostsDialogOpen={ () => setSelectedBookingIdForExtraCosts(null) }
                                                             />
                                                         </div>
                                                     </div>

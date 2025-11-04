@@ -36,8 +36,8 @@ export interface Address {
     zipCode: string;
     buildingNumber: string;
     addressComplement: string | null;
-    createdAt: string;
-    updatedAt: string;
+    createdAt: Date;
+    updatedAt: Date;
     isActive: boolean;
     state: {
       stateId: string;

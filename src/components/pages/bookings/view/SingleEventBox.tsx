@@ -5,20 +5,23 @@ import { formatCurrency, formatTime, getDistanceFromTop, getEventBoxHeigh } from
 import { cn } from "@/lib/utils";
 import type { FlattenedBooking } from "./WeekView";
 import { centsToString } from "@/utils/centsToString";
+import { Checkout } from "@/utils/@types/checkouts";
 
 interface SingleEventBoxProps {
-  group: FlattenedBooking[]
+  group: Checkout[]
   dayIndex: number
-  openCheckoutDetails: (_booking: FlattenedBooking) => void
+  openCheckoutDetails: (_checkout: Checkout) => void
 }
 
 export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleEventBoxProps) {
     // If the group has only one event, use full width
     const hourColumnWidth = 100;
-    const booking = group[0];
-    const startHour = booking.startDate.getHours();
-    const startMinute = booking.startDate.getMinutes();
-    const durationInHours = booking.totalDurationInMinutes / 60;
+    const checkout = group[0];
+    // const startHour = booking.startDate.getHours();
+    // const startMinute = booking.startDate.getMinutes();
+    const startHour = Math.floor(checkout.startHourInMinutes / 60);
+    const startMinute = checkout.startHourInMinutes % 60;
+    const durationInHours = checkout.totalDurationInMinutes / 60;
 
     // Calculate position and height
     const top = getDistanceFromTop(startHour, startMinute);
@@ -34,7 +37,7 @@ export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleE
     // Convert totalDuration from minutes to hours for styling logic
     return (
         <div
-            key={ booking.checkoutId }
+            key={ checkout.checkoutId }
             className={ cn(
                 "absolute rounded-md border-l-4 p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-y-auto",
                 // Default colors for bookings with durations different than 4, 6 and 8-12 hours
@@ -54,28 +57,30 @@ export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleE
                 left,
                 width,
             } }
-            onClick={ () => openCheckoutDetails(booking) }
+            onClick={ () => openCheckoutDetails(checkout) }
         >
-            <div className="font-medium text-sm truncate">{booking.bookings.map(item => item.gearName).join(", ")}</div>
+            <div className="font-medium text-sm truncate">
+                {checkout.Bookings.sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName)).map(item => item.gear.gearName).join(", ")}
+            </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <User className="h-3 w-3" />
-                {booking.customer.fullname}
+                {checkout.customer.fullname}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <MapPin className="h-3 w-3" />
-                {booking.address.city.cityName}
+                {checkout.address.city.cityName}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <Clock className="h-3 w-3" />
-                {formatTime(booking.startDate)}
+                {formatTime(checkout.date)}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <DollarSign className="h-3 w-3" />
-                {centsToString(booking.totalPrice)}
+                {centsToString(checkout.totalPrice)}
             </div>
         </div>
     );

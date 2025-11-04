@@ -14,7 +14,7 @@ import { ApiResponse } from "@/lib/api";
 interface CalendarContentProps {
     viewType: "semana" | "dia" | "mes";
     currentDate: Date;
-    openCheckoutDetails: (_agendamento: FlattenedBooking) => void;
+    openCheckoutDetails: (_agendamento: Checkout) => void;
 }
 
 export function CalendarContent({ viewType, currentDate, openCheckoutDetails }: CalendarContentProps) {
@@ -82,6 +82,9 @@ export function CalendarContent({ viewType, currentDate, openCheckoutDetails }: 
     });
 
     const checkouts = data?.data;
+
+    // console.log("checkouts: ", checkouts);
+    // console.log("viewType: ", viewType);
 
     return (
         <Card className="overflow-hidden py-0">

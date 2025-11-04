@@ -14,15 +14,31 @@ export async function CreateCheckout(body: CreateCheckoutValidationWithMoneyInCe
     return response;
 }
 
-// export async function GetAllCheckouts({ queryParams }: {queryParams?: Record<string, unknown>}) {
-//     const response = await apiRequest<Checkout[]>({ endpoint: "checkouts", queryParams });
-
-//     return response;
-// }
-
 export async function GetAllCheckouts({ queryParams }: { queryParams?: Record<string, string> }) {
     const response = await apiRequest<Checkout[]>({ endpoint: "checkouts", queryParams });
-    return response;
+
+    if (!response?.data) return response;
+
+    const parsedData: Checkout[] = response?.data?.map((checkout) => ({
+        ...checkout,
+        date: new Date(checkout.date),
+        customer: {
+            ...checkout.customer,
+            lastBooking: checkout.customer.lastBooking
+                ? new Date(checkout.customer.lastBooking)
+                : null,
+        },
+        address: {
+            ...checkout.address,
+            createdAt: new Date(checkout.address.createdAt),
+            updatedAt: new Date(checkout.address.updatedAt),
+        },
+        Bookings: checkout.Bookings.map((b) => ({
+            ...b,
+        })),
+    }));
+
+    return { ...response, data: parsedData };
 }
 
 export async function getDayCheckouts(

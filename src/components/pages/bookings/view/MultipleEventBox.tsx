@@ -6,11 +6,12 @@ import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 import { formatCurrency, formatTime, getDistanceFromTop, getEventBoxHeigh } from "./bookingViewHelpers";
 import { cn } from "@/lib/utils";
 import type { FlattenedBooking } from "./WeekView";
+import { Checkout } from "@/utils/@types/checkouts";
 
 interface MultipleEventBoxProps {
-  group: FlattenedBooking[]
+  group: Checkout[]
   dayIndex: number
-  openCheckoutDetails: (_booking: FlattenedBooking) => void
+  openCheckoutDetails: (_checkout: Checkout) => void
 }
 
 export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: MultipleEventBoxProps) {
@@ -37,7 +38,11 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
         const left = `calc(${baseLeft} + (${bookingIndex} * ${eventWidth}))`;
 
         // Calculate initial position
-        const top = getDistanceFromTop(booking.startDate.getHours(), booking.startDate.getMinutes());
+        // const top = getDistanceFromTop(booking.startDate.getHours(), booking.startDate.getMinutes());
+        const startHour = Math.floor(booking.startHourInMinutes / 60);
+        const startMinute = booking.startHourInMinutes % 60;
+
+        const top = getDistanceFromTop(startHour, startMinute);
 
         // Convert totalDuration from minutes to hours for styling logic
 
@@ -66,7 +71,7 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
                 } }
                 onClick={ () => openCheckoutDetails(booking) }
             >
-                <div className="font-medium text-sm truncate">{booking.bookings.map(item => item.gearName).join(", ")}</div>
+                <div className="font-medium text-sm truncate">{booking.Bookings.map(item => item.gear.gearName).join(", ")}</div>
 
                 <div className="flex items-center text-xs gap-1 truncate">
                     <User className="h-3 w-3" />
@@ -80,7 +85,7 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
 
                 <div className="flex items-center text-xs gap-1 truncate">
                     <Clock className="h-3 w-3" />
-                    {formatTime(booking.startDate)}
+                    {formatTime(booking.date)}
                 </div>
 
                 <div className="flex items-center text-xs gap-1 truncate">

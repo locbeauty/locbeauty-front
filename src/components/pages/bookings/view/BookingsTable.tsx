@@ -17,7 +17,7 @@ import { FlattenedBooking } from "./WeekView";
 export function BookingsTable() {
     const { user } = useAuth();
     const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] = useState(false);
-    const [ selectedCheckout, setSelectedCheckout ] = useState<FlattenedBooking | null>(null);
+    const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(null);
 
     const queryParams: Record<string, string> =
   user
@@ -50,41 +50,7 @@ export function BookingsTable() {
         const endDate = new Date(startDate);
         endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
 
-        const flattenedSelectedBooking: FlattenedBooking = {
-            checkoutId: checkout.checkoutId,
-            startDate,
-            endDate,
-            date: checkout.date,
-            startHourInMinutes: checkout.startHourInMinutes,
-            totalDurationInMinutes: checkout.totalDurationInMinutes,
-            observations: checkout.observations,
-            customer: checkout.customer,
-            sourceFilial: checkout.sourceFilial,
-            checkoutStatus: checkout.checkoutStatus,
-            paymentStatus: checkout.paymentStatus,
-            totalPrice: checkout.totalPrice,
-            address: checkout.address,
-            bookings: checkout.Bookings.map((booking) => ({
-                bookingId: booking.bookingId,
-                extraMachineCosts: booking.extraMachineCosts,
-                extraMachineCostsDescription: booking.extraMachineCostsDescription,
-                individualPrice: booking.individualPrice,
-                gearId: booking.gear.gearId,
-                gearName: booking.gear.gearName,
-            })),
-            accountableEmployee: checkout.accountableEmployee,
-            basePrice: checkout.basePrice,
-            distanceInKm: checkout.distanceInKm,
-            foodCost: checkout.foodCost,
-            fuelCost: checkout.fuelCost,
-            lodgingCost: checkout.lodgingCost,
-            pendingValue: checkout.pendingValue,
-            additionalTransportCost: checkout.additionalTransportCost,
-            paymentMode: checkout.paymentMode,
-            driverId: checkout.driverId,
-        };
-
-        setSelectedCheckout(flattenedSelectedBooking);
+        setSelectedCheckout(checkout);
         setBookingDetailsDialogOpen(true);
     };
 
