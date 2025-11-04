@@ -29,13 +29,16 @@ interface MachineExtraCostsDialogProps {
     isMachineExtraCostsDialogOpen: boolean;
     selectedBookingId: string
     setSelectedCheckout: Dispatch<SetStateAction<FlattenedBooking | null>>
+    setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
+
 }
 
 export function MachineExtraCostsDialog({
     isMachineExtraCostsDialogOpen,
     setMachineExtraCostsDialogOpen,
     selectedBookingId,
-    setSelectedCheckout
+    setSelectedCheckout,
+    setBookingDetailsDialogOpen
 }: MachineExtraCostsDialogProps) {
 
     const [ individualPrice, setIndividualPrice ] = useState("0");
@@ -79,6 +82,8 @@ export function MachineExtraCostsDialog({
                 };
             });
             toast.warning(response.message, { style: { fontSize: "1rem" } });
+            setBookingDetailsDialogOpen(false);
+            setMachineExtraCostsDialogOpen(false);
             window.scroll({ top: 0 });
         } else {
             toast.success(response.message, { style: { fontSize: "1rem" } });

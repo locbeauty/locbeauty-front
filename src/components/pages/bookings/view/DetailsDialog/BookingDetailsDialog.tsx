@@ -31,6 +31,7 @@ import {
     CoinsIcon,
     ContrastIcon,
     FileText,
+    Pencil,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -67,7 +68,6 @@ export function BookingDetailsDialog({
 }: BookingDetailsDialogProps) {
 
     const [ selectedBookingForExtraCosts, setSelectedBookingForExtraCosts ] = useState<string | null>(null);
-    const [ rerenderComand, setRerenderComand ] = useState(false);
 
     async function handleMarkAsConcluded(bookingId: string) {
         const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/config/concluded?bookingId=${bookingId}&date=${selectedCheckout?.date.toString()}`, { credentials: "include" });
@@ -241,10 +241,7 @@ export function BookingDetailsDialog({
                                         {selectedCheckout.bookings
                                             .sort((a, b) => a.gearName.localeCompare(b.gearName))
                                             .map((booking, index, arr) => {
-                                                // const data = bookingQueries[index]?.data;
-                                                // if (!data) return null;
                                                 const isLast = index === arr.length - 1;
-                                                console.log("booking: ", booking);
                                                 return (
                                                     <div
                                                         key={ booking.bookingId }
@@ -273,10 +270,10 @@ export function BookingDetailsDialog({
                                                         </div>
 
                                                         <div className="flex items-center justify-end col-span-2">
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
+                                                            <Tooltip defaultOpen={ false }>
+                                                                <TooltipTrigger defaultChecked={ false } asChild>
                                                                     <Button variant="outline" size="xs" className="size-8" onClick={ () => setSelectedBookingForExtraCosts(booking.bookingId) }>
-                                                                        <Plus />
+                                                                        <Pencil />
                                                                     </Button>
                                                                 </TooltipTrigger>
                                                                 <TooltipContent>
@@ -285,6 +282,7 @@ export function BookingDetailsDialog({
                                                             </Tooltip>
 
                                                             <MachineExtraCostsDialog
+                                                                setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
                                                                 setSelectedCheckout={ setSelectedCheckout }
                                                                 selectedBookingId={ selectedBookingForExtraCosts || "" }
                                                                 isMachineExtraCostsDialogOpen={ !!selectedBookingForExtraCosts }
@@ -317,15 +315,15 @@ export function BookingDetailsDialog({
                                             {selectedCheckout.pendingValue > 0 && (
                                                 <div><span className="font-bold">Valor pendente:</span> {centsToString(selectedCheckout.pendingValue)}</div>
                                             )}
-                                            {selectedCheckout.additionalTransportCost && (
+                                            {selectedCheckout.additionalTransportCost > 0 && (
                                                 <div><span className="font-bold">Valores adicionais de transporte:</span> {centsToString(selectedCheckout.additionalTransportCost)}</div>
                                             )}
                                             {selectedCheckout.paymentMode && (
                                                 <div><span className="font-bold">Modo de pagamento:</span> {selectedCheckout.paymentMode}</div>
                                             )}
-                                            {selectedCheckout.driverId && (
-                                                <div><span className="font-bold">Motorista:</span> {selectedCheckout.driverId}</div>
-                                            )}
+                                            {/* {selectedCheckout.driverId && ( */}
+                                            <div><span className="font-bold">Motorista:</span> {selectedCheckout.driverId || "A definir"}</div>
+                                            {/* )} */}
                                         </div>
                                         <Separator className="my-6" />
 

@@ -104,7 +104,6 @@ export default function AgendamentosPage() {
                 setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
                 selectedCheckout={ selectedCheckout }
                 setSelectedCheckout={ setSelectedCheckout }
-
             />
         </div>
     );
