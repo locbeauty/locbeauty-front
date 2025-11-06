@@ -47,7 +47,7 @@ export function MachineExtraCostsDialog({
     const [ individualPrice, setIndividualPrice ] = useState("0");
     const [ extraMachineCosts, setExtraMachineCosts ] = useState("0");
     const [ extraMachineCostsDescription, setExtraMachineCostsDescription ] = useState("");
-    console.log("selectedBooking: ", selectedBookingId);
+
     const { data } = useQuery<Booking | undefined, Error>({
         queryKey: [ "get-booking-by-id", selectedBookingId ],
         queryFn: () => GetBookingById({ bookingId: selectedBookingId! }),
@@ -74,69 +74,6 @@ export function MachineExtraCostsDialog({
                 queryKey: [ "get-all-checkouts" ],
             });
 
-            // console.log("dentro", centsToString(selectedBooking.extraMachineCosts), extraMachineCosts);
-
-            // if (selectedBooking && centsToString(selectedBooking.extraMachineCosts) !== extraMachineCosts) {
-            //     // console.log("dentro dentro");
-            //     setSelectedCheckout((prev) => {
-            //         if (!prev) return prev;
-
-            //         // Clona o checkout atual
-            //         const updatedCheckout = { ...prev };
-
-            //         // Encontra o booking correspondente dentro do checkout
-            //         const bookingIndex = updatedCheckout.Bookings.findIndex(
-            //             (b) => b.bookingId === selectedBooking.bookingId
-            //         );
-
-            //         if (bookingIndex === -1) return prev;
-            //         const oldValue = updatedCheckout.Bookings[bookingIndex].extraMachineCosts;
-            //         const newValue = extraMachineCosts;
-
-            //         // Atualiza o valor do booking
-            //         updatedCheckout.Bookings[bookingIndex] = {
-            //             ...updatedCheckout.Bookings[bookingIndex],
-            //             extraMachineCosts: parseStringToCents(newValue),
-            //         };
-
-            //         // console.log("PARSED: ", updatedCheckout.totalPrice, oldValue, parseStringToCents(newValue));
-            //         // Atualiza o total (ou outro campo que dependa disso)
-            //         updatedCheckout.totalPrice = updatedCheckout.totalPrice - oldValue + parseStringToCents(newValue);
-            //         return updatedCheckout;
-            //     });
-            // }
-
-            // if (selectedBooking && centsToString(selectedBooking.individualPrice) !== individualPrice) {
-            //     // console.log("dentro dentro");
-            //     setSelectedCheckout((prev) => {
-            //         if (!prev) return prev;
-
-            //         // Clona o checkout atual
-            //         const updatedCheckout = { ...prev };
-
-            //         // Encontra o booking correspondente dentro do checkout
-            //         const bookingIndex = updatedCheckout.Bookings.findIndex(
-            //             (b) => b.bookingId === selectedBooking.bookingId
-            //         );
-
-            //         if (bookingIndex === -1) return prev;
-            //         const oldValue = updatedCheckout.Bookings[bookingIndex].individualPrice;
-            //         const newValue = individualPrice;
-
-            //         // Atualiza o valor do booking
-            //         updatedCheckout.Bookings[bookingIndex] = {
-            //             ...updatedCheckout.Bookings[bookingIndex],
-            //             individualPrice: parseStringToCents(newValue),
-            //         };
-
-            //         // console.log("PARSED: ", updatedCheckout.totalPrice, oldValue, parseStringToCents(newValue));
-            //         // Atualiza o total (ou outro campo que dependa disso)
-            //         updatedCheckout.basePrice = updatedCheckout.basePrice - oldValue + parseStringToCents(newValue);
-            //         updatedCheckout.totalPrice = updatedCheckout.totalPrice - oldValue + parseStringToCents(newValue);
-            //         return updatedCheckout;
-            //     });
-            // }
-
             if (selectedBookingId) {
                 const newExtraMachineCosts = parseStringToCents(extraMachineCosts);
                 const newIndividualPrice = parseStringToCents(individualPrice);
@@ -155,6 +92,7 @@ export function MachineExtraCostsDialog({
                     // Valores antigos
                     const oldExtra = booking.extraMachineCosts;
                     const oldIndividual = booking.individualPrice;
+                    const oldDescription = booking.extraMachineCostsDescription;
 
                     // Verifica diferenças e atualiza booking
                     const updatedBooking = { ...booking };
@@ -164,6 +102,9 @@ export function MachineExtraCostsDialog({
 
                     if (centsToString(oldIndividual) !== individualPrice)
                         updatedBooking.individualPrice = newIndividualPrice;
+
+                    if (oldDescription !== extraMachineCostsDescription)
+                        updatedBooking.extraMachineCostsDescription = extraMachineCostsDescription;
 
                     updatedCheckout.Bookings[bookingIndex] = updatedBooking;
 

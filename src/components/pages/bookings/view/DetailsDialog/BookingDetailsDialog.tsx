@@ -20,39 +20,31 @@ import {
     Package,
     Building,
     Phone,
-    Mail,
-    Edit,
-    Trash2,
-    CircleEllipsis,
-    Wrench,
-    Plus,
-    Text,
-    Coins,
-    CoinsIcon,
-    ContrastIcon,
-    FileText,
+    Mail, Trash2,
+    CircleEllipsis, Text, FileText,
     Pencil,
+    Copy,
+    Scroll,
+    Check
 } from "lucide-react";
-import Link from "next/link";
 import {
-    formatCurrency,
     formatDate,
-    formatTime,
+    formatTime
 } from "@/components/pages/bookings/view/bookingViewHelpers";
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../../common/BookingPaymentStatusBadge";
-import { FlattenedBooking } from "../WeekView";
 import { toast } from "sonner";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { MachineExtraCostsDialog } from "../MachineExtraCostsDialog/MachineExtraCostsDialog";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { Booking } from "@/utils/@types/bookings";
-import { GetBookingById } from "@/services/bookings.service";
-import { parseStringToCents } from "@/utils/parseStringToCents";
-import { centsToString } from "@/utils/centsToString";
-import { Card, CardContent } from "@/components/ui/card";
+import { centsToString, centsToStringWithCurrencyMark } from "@/utils/centsToString";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkout } from "@/utils/@types/checkouts";
+import { AdditionalCostsDialog } from "../AdditionalCostsDialog/AdditionalCostsDialog";
+import { Textarea } from "@/components/ui/textarea";
+import { UpdateCheckout } from "@/services/checkouts.service";
+import { queryClient } from "@/app/(main)/layout";
+import { CheckoutPaymentMethodDialog } from "../CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -68,7 +60,41 @@ export function BookingDetailsDialog({
     setSelectedCheckout
 }: BookingDetailsDialogProps) {
 
+    const [ checkoutObservations, setCheckoutObservations ] = useState("");
     const [ selectedBookingIdForExtraCosts, setSelectedBookingIdForExtraCosts ] = useState<string | null>(null);
+    const [ isAdditionalCostsDialogOpen, setAdditionalCostsDialogOpen ] = useState(false);
+    const [ isCheckoutPaymentMethodDialogOpen, setIsCheckoutPaymentMethodDialogOpen ] = useState(false);
+
+    useEffect(() => {
+        setCheckoutObservations(selectedCheckout?.observations || "");
+    }, [ selectedCheckout ]);
+
+    async function handleUpdateCheckoutObservations() {
+        const response = await UpdateCheckout({
+            body: {
+                observations: checkoutObservations
+            },
+            checkoutId: selectedCheckout!.checkoutId,
+        });
+
+        if (response.statusCode !== 200) {
+            toast.warning(response.message, { style: { fontSize: "1rem" } });
+            window.scroll({ top: 0 });
+            return;
+        }
+
+        toast.success(response.message, { style: { fontSize: "1rem" } });
+
+        setSelectedCheckout(prev => {
+            if(!prev) return prev;
+            return {
+                ...prev,
+                observations: checkoutObservations
+            };
+        });
+
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+    }
 
     async function handleMarkAsConcluded(bookingId: string) {
         const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/config/concluded?bookingId=${bookingId}&date=${selectedCheckout?.date.toString()}`, { credentials: "include" });
@@ -94,7 +120,7 @@ export function BookingDetailsDialog({
             open={ isBookingDetailsDialogOpen }
             onOpenChange={ setBookingDetailsDialogOpen }
         >
-            <DialogContent className="max-h-[90vh] w-[90vw] md:w-[600px] overflow-scroll dark:bg-gray-900">
+            <DialogContent className="max-h-[90vh] w-[80vw] overflow-scroll dark:bg-gray-900">
                 { selectedCheckout && (
                     <>
                         <DialogHeader>
@@ -139,7 +165,7 @@ export function BookingDetailsDialog({
                                     </div>
                                     { selectedCheckout.customer.email && (
                                         <div className="flex items-center gap-2">
-                                            <Mail className="h-4 w-4 text-muted-foreground" />
+                                            <FileText className="h-4 w-4 text-muted-foreground" />
                                             <span>{ selectedCheckout.accountableEmployee.documentNumber }</span>
                                         </div>
                                     ) }
@@ -240,6 +266,17 @@ export function BookingDetailsDialog({
 
                             <Separator />
 
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-sm text-muted-foreground">
+                  MOTORISTA
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>{selectedCheckout.driverId || "A definir"}</div>
+                                </div>
+                            </div>
+
+                            <Separator className="my-6" />
+
                             { /* Informações financeiras */ }
                             <div className="space-y-2">
                                 <h4 className="font-medium text-sm text-muted-foreground">
@@ -265,11 +302,11 @@ export function BookingDetailsDialog({
                                                         <div className="flex flex-col gap-2 col-span-7">
                                                             <div className="flex items-center gap-2">
                                                                 <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                                                <span><span className="font-bold">Valor:</span> {centsToString(booking.individualPrice)}</span>
+                                                                <span><span className="font-bold">Valor:</span> {centsToStringWithCurrencyMark(booking.individualPrice)}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                                                <span className="text-sm"><span className="font-bold">Custo extra máquina:</span> {centsToString(booking.extraMachineCosts)}</span>
+                                                                <span className="text-sm"><span className="font-bold">Custo extra máquina:</span> {centsToStringWithCurrencyMark(booking.extraMachineCosts)}</span>
                                                             </div>
                                                             {booking.extraMachineCostsDescription && (
                                                                 <div className="flex items-center gap-2">
@@ -308,67 +345,120 @@ export function BookingDetailsDialog({
                                         { /* Informações do checkout em geral */ }
                                         <div className="flex flex-col gap-4 text-sm text-muted-foreground mb-4">
                                             {selectedCheckout.basePrice > 0 && (
-                                                <div><span className="font-bold">Preço base:</span> {centsToString(selectedCheckout.basePrice)}</div>
+                                                <div><span className="font-bold">Preço base:</span> {centsToStringWithCurrencyMark(selectedCheckout.basePrice)}</div>
                                             )}
                                             {selectedCheckout.distanceInKm > 0 && (
                                                 <div><span className="font-bold">Distância (km):</span> {selectedCheckout.distanceInKm}</div>
                                             )}
                                             {selectedCheckout.fuelCost > 0 && (
-                                                <div><span className="font-bold">Preço combustível:</span> {centsToString(selectedCheckout.fuelCost)}</div>
+                                                <div><span className="font-bold">Preço combustível:</span> {centsToStringWithCurrencyMark(selectedCheckout.fuelCost)}</div>
                                             )}
                                             {selectedCheckout.foodCost > 0 && (
-                                                <div><span className="font-bold">Alimentação:</span> {centsToString(selectedCheckout.foodCost)}</div>
+                                                <div><span className="font-bold">Alimentação:</span> {centsToStringWithCurrencyMark(selectedCheckout.foodCost)}</div>
                                             )}
                                             {selectedCheckout.lodgingCost > 0 && (
-                                                <div><span className="font-bold">Hospedagem:</span> {centsToString(selectedCheckout.lodgingCost)}</div>
+                                                <div><span className="font-bold">Hospedagem:</span> {centsToStringWithCurrencyMark(selectedCheckout.lodgingCost)}</div>
                                             )}
                                             {selectedCheckout.pendingValue > 0 && (
-                                                <div><span className="font-bold">Valor pendente:</span> {centsToString(selectedCheckout.pendingValue)}</div>
+                                                <div><span className="font-bold">Valor pendente:</span> {centsToStringWithCurrencyMark(selectedCheckout.pendingValue)}</div>
                                             )}
                                             {selectedCheckout.additionalTransportCost > 0 && (
-                                                <div><span className="font-bold">Valores adicionais de transporte:</span> {centsToString(selectedCheckout.additionalTransportCost)}</div>
+                                                <div><span className="font-bold">Valores adicionais de transporte:</span> {centsToStringWithCurrencyMark(selectedCheckout.additionalTransportCost)}</div>
                                             )}
                                             {selectedCheckout.paymentMode && (
                                                 <div><span className="font-bold">Modo de pagamento:</span> {selectedCheckout.paymentMode}</div>
                                             )}
-                                            {/* {selectedCheckout.driverId && ( */}
-                                            <div><span className="font-bold">Motorista:</span> {selectedCheckout.driverId || "A definir"}</div>
-                                            {/* )} */}
+                                            <div className="flex items-center justify-end col-span-2">
+                                                <Tooltip defaultOpen={ false }>
+                                                    <TooltipTrigger defaultChecked={ false } asChild>
+                                                        <Button variant="outline" size="xs" className="size-8" onClick={ () => setAdditionalCostsDialogOpen(true) }>
+                                                            <Pencil />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>Adicionar ou editar custos extras</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+
+                                                <AdditionalCostsDialog
+                                                    selectedCheckout={ selectedCheckout }
+                                                    setAdditionalCostsDialogOpen={ setAdditionalCostsDialogOpen }
+                                                    isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
+                                                    setSelectedCheckout={ setSelectedCheckout }
+                                                />
+                                            </div>
                                         </div>
                                         <Separator className="my-6" />
 
-                                        <div className="flex items-center gap-2 mt-2">
-                                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                            <span><span className="font-bold">Total do checkout: </span>{centsToString(selectedCheckout.totalPrice)}</span>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex gap-2 items-center">
+                                                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                                <span><span className="font-bold">Total do checkout: </span>{centsToStringWithCurrencyMark(selectedCheckout.totalPrice)}</span>
+                                            </div>
+
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                type="button"
+                                                onClick={ () => {
+                                                    if (!selectedCheckout) return;
+
+                                                    const lines = [
+                                                        `Equipamento${selectedCheckout.Bookings.length > 1 ? "s" : ""}: ${selectedCheckout.Bookings.map(item => item.gear.gearName).join(", ")}`,
+                                                        `Data: ${new Date(selectedCheckout.date).toLocaleDateString("pt-BR")}`,
+                                                        `Horário: ${formatTime(startDate)} - ${formatTime(endDate)}`,
+                                                        `Duração: ${selectedCheckout.totalDurationInMinutes / 60}h`,
+                                                        `Preço total: ${centsToStringWithCurrencyMark(selectedCheckout.totalPrice)}`,
+                                                        `Cliente: ${selectedCheckout.customer.fullname} - ${selectedCheckout.customer.documentNumber || "Sem documento"}`,
+                                                        `Contato: ${selectedCheckout.customer.cellphone || "Sem telefone"}`,
+                                                        `Endereço: ${selectedCheckout.address.street.streetName}, ${selectedCheckout.address.buildingNumber} - ${selectedCheckout.address.neighborhood.neighborhoodName}, ${selectedCheckout.address.city.cityName}`,
+                                                        `Motorista: ${selectedCheckout.driverId || "A definir"}`,
+                                                        selectedCheckout.foodCost > 0 && `Alimentação: ${centsToStringWithCurrencyMark(selectedCheckout.foodCost)}`,
+                                                        selectedCheckout.fuelCost > 0 && `Combustível: ${centsToStringWithCurrencyMark(selectedCheckout.fuelCost)}`,
+                                                        selectedCheckout.lodgingCost > 0 && `Hospedagem: ${centsToStringWithCurrencyMark(selectedCheckout.lodgingCost)}`,
+                                                        selectedCheckout.additionalTransportCost > 0 && `Custos adicionais de transporte: ${centsToStringWithCurrencyMark(selectedCheckout.additionalTransportCost)}`,
+                                                        selectedCheckout.observations && selectedCheckout.observations.trim().length > 0 && `Observações: ${selectedCheckout.observations}`
+                                                    ].filter(Boolean); // remove falsy (undefined/false) linhas
+
+                                                    const textToCopy = lines.join("\n");
+
+                                                    navigator.clipboard.writeText(textToCopy);
+                                                    toast.success("Resumo copiado para a área de transferência.");
+                                                } }
+                                            >
+                                                <Copy className="w-4 h-4 text-primary" />
+                                            </Button>
                                         </div>
                                     </CardContent>
                                 </Card>
                             </div>
 
                             { /* Observações */ }
-                            { selectedCheckout.observations && (
-                                <div className="space-y-2">
-                                    <h4 className="font-medium text-sm text-muted-foreground">
+                            <Card>
+                                <CardHeader>
+                                    <div className="space-y-2">
+                                        <h4 className="font-medium text-sm text-muted-foreground">
                     OBSERVAÇÕES
-                                    </h4>
-                                    <div className="bg-muted/30 p-3 rounded-md">
-                                        <div className="flex items-center gap-2">
-                                            <ClipboardList className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                                            <span>{ selectedCheckout.observations }</span>
-                                        </div>
+                                        </h4>
                                     </div>
-                                </div>
-                            ) }
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex flex-col items-end gap-3">
+                                        <Textarea placeholder="Adicione uma observação" value={ checkoutObservations } onChange={ (e) => setCheckoutObservations(e.target.value) } className="max-h-[150px]" maxLength={ 100 } />
+                                        <Button onClick={ () => handleUpdateCheckoutObservations() } disabled={ checkoutObservations === selectedCheckout.observations }>Salvar observação</Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
 
                         <DialogFooter className="flex flex-row gap-3 justify-center sm:justify-center items-center w-full">
-                            <Button variant="outline" className="" asChild>
-                                <Link
-                                    href={ `/dashboard/agendamentos/editar/${selectedCheckout.checkoutId}` }
-                                >
-                                    <Edit className="" />
-                  Editar
-                                </Link>
+                            <Button
+                                className="flex items-center justify-center cursor-pointer"
+                                variant={ "outline" }
+                                onClick={ () => setIsCheckoutPaymentMethodDialogOpen(true) }
+                            >
+                                <DollarSign className="" />
+                                <span className="md:block hidden">Gerenciar pagamento</span>
                             </Button>
                             <Button
                                 variant="default"
@@ -376,7 +466,7 @@ export function BookingDetailsDialog({
                                 // onClick={ () => handleMarkAsConcluded() }
                                 disabled={ selectedCheckout.checkoutStatus === "Concluido" }
                             >
-                                <Trash2 className="" />
+                                <Check className="" />
                                 <span className="md:block hidden">Marcar como concluído</span>
                             </Button>
                             <Button
@@ -390,6 +480,12 @@ export function BookingDetailsDialog({
                         </DialogFooter>
                     </>
                 ) }
+
+                <CheckoutPaymentMethodDialog
+                    selectedCheckout={ selectedCheckout }
+                    isCheckoutPaymentMethodDialogOpen={ isCheckoutPaymentMethodDialogOpen }
+                    setIsCheckoutPaymentMethodDialogOpen={ setIsCheckoutPaymentMethodDialogOpen }
+                />
             </DialogContent>
         </Dialog>
     );

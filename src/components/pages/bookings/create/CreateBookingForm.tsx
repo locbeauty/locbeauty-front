@@ -172,7 +172,6 @@ export function CreateBookingForm() {
         },
     });
 
-    const [ isQuickBookingPaymentModeDialogOpen, setQuickBookingPaymentModeDialogOpen ] = useState(false);
     const [ isAdditionalCostsDialogOpen, setAdditionalCostsDialogOpen ] = useState(false);
     const [ addressString, setAddressString ] = useState("");
     const [ driverString, setDriverString ] = useState("");
@@ -486,19 +485,15 @@ Motorista: ${driverString || "A definir"}
 
                         {/* Action Buttons */}
                         <div className="flex gap-3 pt-4">
-                            <Popover open={ isQuickBookingPaymentModeDialogOpen } onOpenChange={ setQuickBookingPaymentModeDialogOpen }>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        disabled={ !startHour || watchSelectedGears.length < 0 || !watchTotalPrice || watchTotalPrice === "0,00" }
-                                        type="button"
-                                        onClick={ handleSubmit((data) => handleCreateNewCheckout(data)) }
-                                        className="flex-1">
+                            <Button
+                                disabled={ !startHour || watchSelectedGears.length < 0 || !watchTotalPrice || watchTotalPrice === "0,00" }
+                                type="button"
+                                onClick={ handleSubmit((data) => handleCreateNewCheckout(data)) }
+                                className="flex-1">
 
-                                        <Check className="h-4 w-4 mr-2" />
-                                        <span className="md:flex hidden md:items-center">Finalizar Reserva</span>
-                                    </Button>
-                                </PopoverTrigger>
-                            </Popover>
+                                <Check className="h-4 w-4 mr-2" />
+                                <span className="md:flex hidden md:items-center">Finalizar Reserva</span>
+                            </Button>
                         </div>
                     </div>
                 </FormProvider>
