@@ -146,7 +146,7 @@ export function BookingDetailsDialog({
                                         status={ selectedCheckout.checkoutStatus }
                                     />
                                     <BookingPaymentStatusBadge
-                                        status={ selectedCheckout.paymentStatus }
+                                        status={ selectedCheckout.CheckoutPayment.paymentStatus }
                                     />
                                 </div>
                             </div>
@@ -359,14 +359,14 @@ export function BookingDetailsDialog({
                                             {selectedCheckout.lodgingCost > 0 && (
                                                 <div><span className="font-bold">Hospedagem:</span> {centsToStringWithCurrencyMark(selectedCheckout.lodgingCost)}</div>
                                             )}
-                                            {selectedCheckout.pendingValue > 0 && (
-                                                <div><span className="font-bold">Valor pendente:</span> {centsToStringWithCurrencyMark(selectedCheckout.pendingValue)}</div>
+                                            {selectedCheckout.totalPrice - selectedCheckout.CheckoutPayment.firstPaymentAmount && selectedCheckout.CheckoutPayment.paymentMode === "Parcelado" && (
+                                                <div><span className="font-bold">Valor pendente:</span> {centsToStringWithCurrencyMark(selectedCheckout.totalPrice - selectedCheckout.CheckoutPayment.firstPaymentAmount)}</div>
                                             )}
                                             {selectedCheckout.additionalTransportCost > 0 && (
                                                 <div><span className="font-bold">Valores adicionais de transporte:</span> {centsToStringWithCurrencyMark(selectedCheckout.additionalTransportCost)}</div>
                                             )}
-                                            {selectedCheckout.paymentMode && (
-                                                <div><span className="font-bold">Modo de pagamento:</span> {selectedCheckout.paymentMode}</div>
+                                            {selectedCheckout.CheckoutPayment.paymentMode && (
+                                                <div><span className="font-bold">Modo de pagamento:</span> {selectedCheckout.CheckoutPayment.paymentMode}</div>
                                             )}
                                             <div className="flex items-center justify-end col-span-2">
                                                 <Tooltip defaultOpen={ false }>

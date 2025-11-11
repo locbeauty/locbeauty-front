@@ -17,8 +17,8 @@ export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleE
     // If the group has only one event, use full width
     const hourColumnWidth = 100;
     const checkout = group[0];
-    // const startHour = booking.startDate.getHours();
-    // const startMinute = booking.startDate.getMinutes();
+    checkout.date.setHours(0, checkout.startHourInMinutes, 0, 0);
+
     const startHour = Math.floor(checkout.startHourInMinutes / 60);
     const startMinute = checkout.startHourInMinutes % 60;
     const durationInHours = checkout.totalDurationInMinutes / 60;
@@ -75,7 +75,8 @@ export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleE
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <Clock className="h-3 w-3" />
-                {formatTime(checkout.date)}
+                {checkout.date.getHours().toString().padStart(2, "0")}:
+                {checkout.date.getMinutes().toString().padStart(2, "0")}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">

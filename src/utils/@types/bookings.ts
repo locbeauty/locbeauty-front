@@ -1,12 +1,12 @@
 import { Filial } from "./filials";
 
-export const checkoutStatuses = [ "Pendente", "Concluido", "Cancelado" ] as const;
-export const paymentStatuses = [ "Pendente", "Parcial", "Pago" ] as const;
-export const paymentModes = [ "PIX", "Transferência bancária" ] as const;
+// export const checkoutStatuses = [ "Pendente", "Concluido", "Cancelado" ] as const;
+// export const paymentStatuses = [ "Pendente", "Parcial", "Pago" ] as const;
+// export const paymentModes = [ "PIX", "Transferência bancária" ] as const;
 
-export type CheckoutStatuses = (typeof checkoutStatuses)[number];
-export type PaymentStatuses = (typeof paymentStatuses)[number];
-export type PaymentModes = (typeof paymentModes)[number];
+// export type CheckoutStatuses = (typeof checkoutStatuses)[number];
+// export type PaymentStatuses = (typeof paymentStatuses)[number];
+// export type PaymentModes = (typeof paymentModes)[number];
 
 // export type Booking = {
 //     bookingId: string;

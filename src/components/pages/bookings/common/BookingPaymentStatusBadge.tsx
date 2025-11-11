@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../../../ui/badge";
 
 interface BookingPaymentStatusBadgeProps {
-  status: "Pendente" | "Parcial" | "Pago";
+  status: "Pendente" | "Parcial" | "Pago" | null | undefined;
   shrink?: boolean;
 }
 
@@ -10,6 +10,8 @@ export function BookingPaymentStatusBadge({
     status,
     shrink = false,
 }: BookingPaymentStatusBadgeProps) {
+
+    const parsedStatus = status ?? "Pendente";
     const variants = {
         Pendente:
       "border-1 border-red-800 bg-red-100 text-red-800 hover:bg-red-200",
@@ -21,12 +23,12 @@ export function BookingPaymentStatusBadge({
     return (
         <Badge
             className={ cn(
-                variants[status],
+                variants[parsedStatus],
                 shrink ? "whitespace-normal" : "whitespace-nowrap"
             ) }
             variant="secondary"
         >
-            {status}
+            {parsedStatus}
         </Badge>
     );
 }

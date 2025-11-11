@@ -83,7 +83,7 @@ export function CalendarContent({ viewType, currentDate, openCheckoutDetails }: 
 
     const checkouts = data?.data;
 
-    // console.log("checkouts: ", checkouts);
+    console.log("checkouts: ", checkouts);
     // console.log("viewType: ", viewType);
 
     return (

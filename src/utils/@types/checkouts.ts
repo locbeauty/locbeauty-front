@@ -1,10 +1,9 @@
+import { CheckoutStatuses, PaymentStatuses } from "../constants";
 import { Address } from "./address";
-import { CheckoutStatuses, PaymentModes, PaymentStatuses } from "./bookings";
 
 export type Checkout = {
     checkoutId: string;
     checkoutStatus: CheckoutStatuses;
-    paymentStatus: PaymentStatuses;
     date: Date;
     startHourInMinutes: number;
     totalDurationInMinutes: number;
@@ -16,9 +15,7 @@ export type Checkout = {
     fuelCost: number,
     lodgingCost: number,
     additionalTransportCost: number,
-    pendingValue: number,
-    // paymentMode: PaymentModes,
-    paymentMode: string,
+    CheckoutPayment: CheckoutPayment;
     driverId: string,
     accountableEmployee: {
         employeeId: string,
@@ -52,4 +49,17 @@ export type Checkout = {
         filialName: string;
     };
     address: Address;
+}
+
+export interface CheckoutPayment {
+  paymentStatus: PaymentStatuses;
+  paymentMode: string;
+  firstPaymentDate: string;
+  firstPaymentAmount: number;
+  firstPaymentMethod: string;
+  firstPaymentStatus: "Pendente" | "Pago";
+  secondPaymentDate: string | null;
+  secondPaymentAmount: number;
+  secondPaymentMethod: string;
+  secondPaymentStatus: "Pendente" | "Pago";
 }

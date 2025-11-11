@@ -6,7 +6,7 @@ import { Controller, FormProvider, useForm, useFormContext } from "react-hook-fo
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectGear } from "./SelectGear";
-import { AlertCircle, User, MessageSquare, Check, Settings, Pin, Truck, X, Copy, Plus } from "lucide-react";
+import { AlertCircle, User, MessageSquare, Check, Settings, Pin, Truck, X, Copy } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 import { SelectAddress } from "./SelectAddress";
 import { CheckoutPaymentMethod } from "./CheckoutPaymentMethod";
-import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { SelectEmployee } from "@/components/shared/SelectEmployee";
 import { Gear } from "@/utils/@types/gears";
 import { ApiResponse } from "@/lib/api";
@@ -45,12 +44,10 @@ export function GearsSection() {
     const {
         watch,
         setValue,
-        register,
         formState: { errors },
     } = useFormContext<CreateCheckoutFormSchemaType>();
 
     const watchedGears = watch("gears");
-
     const watchSelectedGears = useMemo(() => watchedGears || [], [ watchedGears ]);
 
     useEffect(() => {
@@ -58,9 +55,7 @@ export function GearsSection() {
             (acc, item) => acc + parseStringToCents(item.individualPrice),
             0
         );
-
         setValue("basePrice", centsToString(selectedGearsCost));
-        setValue("totalPrice", centsToString(selectedGearsCost));
     }, [ watchSelectedGears, setValue ]);
 
     function handleAddGear(gear: Gear) {
@@ -69,7 +64,7 @@ export function GearsSection() {
             {
                 gearId: gear.gearId,
                 gearName: gear.gearName,
-                individualPrice: "0",
+                individualPrice: "0,00",
             },
         ]);
     }
@@ -89,69 +84,40 @@ export function GearsSection() {
 
     return (
         <div className="space-y-2">
-            <Label
-                htmlFor="equipamento"
-                className="text-sm font-medium flex items-center gap-1"
-            >
+            <Label className="text-sm font-medium flex items-center gap-1">
                 <Settings className="w-4 h-4" />
                 Equipamentos
             </Label>
-
             <div className="flex flex-col gap-2">
                 {watchSelectedGears.map((gear, index) => (
                     <div key={ gear.gearId } className="flex gap-2 items-center">
-                        <Button
-                            variant="outline"
-                            className="justify-start text-black font-black min-w-[200px]"
-                            disabled
-                        >
+                        <Button variant="outline" className="justify-start text-black font-black min-w-[200px]" disabled>
                             {gear.gearName}
                         </Button>
-
                         <div className="flex flex-col w-[150px]">
                             <PriceInput
                                 withLabel={ false }
                                 name={ `gears.${index}.individualPrice` }
                                 value={ gear.individualPrice }
-                                onChange={ (val: string) =>
-                                    handlePriceChange(index, val)
-                                }
+                                onChange={ (val: string) => handlePriceChange(index, val) }
                             />
-                            <div>
-                                {errors.gears?.[index]?.individualPrice && (
-                                    <p className="text-sm text-destructive flex items-center gap-1">
-                                        <AlertCircle className="h-3 w-3" />
-                                        {
-                                            errors.gears[index].individualPrice.message
-                                        }
-                                    </p>
-                                )}
-                            </div>
+                            {errors.gears?.[index]?.individualPrice && (
+                                <p className="text-xs text-destructive mt-1">{errors.gears[index].individualPrice.message}</p>
+                            )}
                         </div>
-
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            size="xs"
-                            onClick={ () => handleRemoveGear(gear.gearId) }
-                        >
-                            <X className="size-4" />
+                        <Button type="button" variant="destructive" size="icon" className="h-9 w-9" onClick={ () => handleRemoveGear(gear.gearId) }>
+                            <X className="h-4 w-4" />
                         </Button>
                     </div>
                 ))}
-
                 {watchSelectedGears.length < 3 && (
                     <div className="w-[200px]">
                         <SelectGear onSelect={ handleAddGear } />
                     </div>
                 )}
             </div>
-
             {typeof errors.gears?.message === "string" && (
-                <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {errors.gears.message}
-                </p>
+                <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.gears.message}</p>
             )}
         </div>
     );
@@ -164,8 +130,22 @@ export function CreateBookingForm() {
         defaultValues: {
             checkoutStatus: "Pendente",
             paymentStatus: "Pendente",
-            paymentMode: undefined,
-            basePrice: "",
+            paymentInfo: {
+                paymentStatus: "Pendente",
+                firstPaymentDate: null,
+                secondPaymentDate: null,
+                firstPaymentAmount: "0,00",
+                firstPaymentStatus: "Pendente",
+                secondPaymentAmount: "0,00",
+                secondPaymentStatus: "Pendente"
+            },
+            basePrice: "0,00",
+            totalPrice: "0,00",
+            extraMachineCosts: "0,00",
+            lodgingCost: "0,00",
+            foodCost: "0,00",
+            fuelCost: "0,00",
+            additionalTransportCost: "0,00",
             addressId: "",
             filialId: user?.sourceFilial.filialId,
             accountableEmployeeId: user?.sub
@@ -180,11 +160,16 @@ export function CreateBookingForm() {
         handleSubmit,
         register,
         watch,
+        reset,
         setValue,
         formState: { errors },
         control,
-        reset
     } = createBookingFormMethods;
+    const v = watch();
+
+    useEffect(() => {
+        console.log("v: ", v);
+    }, [ v ]);
 
     const startHour = watch("startHourInMinutes");
     const watchTotalDurationInMinutes = watch("totalDurationInMinutes");
@@ -192,149 +177,162 @@ export function CreateBookingForm() {
     const watchFilialId = watch("filialId");
     const watchSelectedGears = watch("gears");
     const watchCustomer = watch("customer");
-    const isDateInPast = selectedDate && selectedDate < new Date();
-
-    const watchBasePrice = watch("basePrice");
     const watchTotalPrice = watch("totalPrice");
-    const watchExtraMachineCosts = watch("extraMachineCosts");
+    const watchBasePrice = watch("basePrice");
 
-    const watchDistanceInKm = watch("distanceInKm");
+    const watchExtraMachineCosts = watch("extraMachineCosts");
     const watchLodgingCost = watch("lodgingCost");
     const watchFoodCost = watch("foodCost");
     const watchFuelCost = watch("fuelCost");
+    const watchDistanceInKm = watch("distanceInKm");
     const watchAdditionalTransportCost = watch("additionalTransportCost");
 
-    const params = {
-        filialId: watchFilialId,
-        gears: watchSelectedGears,
-        date: selectedDate
-    };
+    const isDateInPast = selectedDate && selectedDate < new Date();
 
-    const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>,Error>({
+    useEffect(() => {
+        const base = parseStringToCents(watchBasePrice || "0");
+        const extraMachine = parseStringToCents(watchExtraMachineCosts || "0");
+        const lodging = parseStringToCents(watchLodgingCost || "0");
+        const food = parseStringToCents(watchFoodCost || "0");
+        const addTransport = parseStringToCents(watchAdditionalTransportCost || "0");
+        const fuelCents = parseStringToCents(watchFuelCost || "0");
+        const distance = watchDistanceInKm || 0;
+        const totalFuel = fuelCents * distance;
+
+        const total = base + extraMachine + lodging + food + totalFuel + addTransport;
+        setValue("totalPrice", centsToString(total));
+    }, [
+        watchBasePrice, watchExtraMachineCosts, watchLodgingCost,
+        watchFoodCost, watchFuelCost, watchDistanceInKm,
+        watchAdditionalTransportCost, setValue
+    ]);
+
+    const params = { filialId: watchFilialId, gears: watchSelectedGears, date: selectedDate };
+    const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
         queryKey: [ "get-day-checkouts", params ],
         queryFn: () => getDayCheckouts({ body: params }),
-        enabled: !!watchFilialId && !!selectedDate, // só executa se houver filial e data
+        enabled: !!watchFilialId && !!selectedDate,
         staleTime: 1000 * 60,
     });
     const checkoutSchedule = data?.data;
 
     function handleResetValues() {
-        reset({
-            checkoutStatus: "Pendente",
-            paymentStatus: "Pendente",
-            paymentMode: undefined,
-            totalPrice: "0",
-            addressId: "",
-            filialId: user?.sourceFilial.filialId,
-            accountableEmployeeId: user?.sub,
-            customer: undefined,
-            gears: [],
-            date: undefined,
-            startHourInMinutes: 0,
-            totalDurationInMinutes: 0,
-            observations: "",
-            driverId: "",
-            partialPayment: "",
-            additionalTransportCost: "0",
-            basePrice: "0",
-            distanceInKm: 0,
-            extraMachineCosts: "0",
-            foodCost: "0",
-            fuelCost: "0",
-            lodgingCost: "0",
-        });
+        reset(
+            {
+                checkoutStatus: "Pendente",
+                paymentStatus: "Pendente",
+                totalPrice: "0",
+                addressId: "",
+                filialId: user?.sourceFilial.filialId,
+                accountableEmployeeId: user?.sub,
+                customer: undefined,
+                gears: [],
+                date: undefined,
+                startHourInMinutes: 0,
+                totalDurationInMinutes: 0,
+                observations: "",
+                driverId: "",
+                additionalTransportCost: "0",
+                basePrice: "0",
+                distanceInKm: 0,
+                extraMachineCosts: "0",
+                foodCost: "0",
+                fuelCost: "0",
+                lodgingCost: "0",
+            }
+        );
     }
 
     async function handleCreateNewCheckout(newCheckoutData: CreateCheckoutFormSchemaType) {
-        const response = await CreateCheckout({
+        const parsed = {
             ...newCheckoutData,
-            basePrice: newCheckoutData.basePrice ? parseStringToCents(newCheckoutData.basePrice) : 0,
-            extraMachineCosts: newCheckoutData.extraMachineCosts ? parseStringToCents(newCheckoutData.extraMachineCosts) : 0,
-            lodgingCost: newCheckoutData.lodgingCost ? parseStringToCents(newCheckoutData.lodgingCost) : 0,
-            foodCost: newCheckoutData.foodCost ? parseStringToCents(newCheckoutData.foodCost) : 0,
-            fuelCost: newCheckoutData.fuelCost ? parseStringToCents(newCheckoutData.fuelCost) : 0,
-            additionalTransportCost: newCheckoutData.additionalTransportCost ? parseStringToCents(newCheckoutData.additionalTransportCost) : 0,
-            totalPrice: newCheckoutData.totalPrice ? parseStringToCents(newCheckoutData.totalPrice) : 0,
-            partialPayment: newCheckoutData.partialPayment ? parseStringToCents(newCheckoutData.partialPayment) : 0,
+
+            basePrice: parseStringToCents(newCheckoutData.basePrice || "0"),
+            extraMachineCosts: parseStringToCents(newCheckoutData.extraMachineCosts || "0"),
+            lodgingCost: parseStringToCents(newCheckoutData.lodgingCost || "0"),
+            foodCost: parseStringToCents(newCheckoutData.foodCost || "0"),
+            fuelCost: parseStringToCents(newCheckoutData.fuelCost || "0"),
+            additionalTransportCost: parseStringToCents(newCheckoutData.additionalTransportCost || "0"),
+            totalPrice: parseStringToCents(newCheckoutData.totalPrice || "0"),
+
+            paymentInfo: {
+                paymentStatus: newCheckoutData.paymentInfo.paymentStatus,
+                firstPaymentDate: newCheckoutData.paymentInfo.firstPaymentDate ?? null,
+                firstPaymentAmount: newCheckoutData.paymentInfo.firstPaymentAmount
+                    ? parseStringToCents(newCheckoutData.paymentInfo.firstPaymentAmount)
+                    : null,
+                firstPaymentMethod: newCheckoutData.paymentInfo.firstPaymentMethod ?? undefined,
+                firstPaymentStatus: newCheckoutData.paymentInfo.firstPaymentStatus,
+
+                secondPaymentDate: newCheckoutData.paymentInfo.secondPaymentDate ?? null,
+                secondPaymentAmount: newCheckoutData.paymentInfo.secondPaymentAmount
+                    ? parseStringToCents(newCheckoutData.paymentInfo.secondPaymentAmount)
+                    : null,
+                secondPaymentMethod: newCheckoutData.paymentInfo.secondPaymentMethod ?? undefined,
+                secondPaymentStatus: newCheckoutData.paymentInfo.secondPaymentStatus ?? undefined,
+            },
+
             gears: newCheckoutData.gears.map(item => ({
                 ...item,
-                individualPrice: item.individualPrice ? parseStringToCents(item.individualPrice) : 0
-            }))
-        });
+                individualPrice: parseStringToCents(item.individualPrice || "0"),
+            })),
+        };
+        const response = await CreateCheckout(parsed);
 
-        if(response.statusCode !== 201) {
-            toast.warning(response.message, { style: { fontSize: "1rem" } });
-            queryClient.invalidateQueries({
-                queryKey: [ "get-all-checkouts" ]
-            });
-            handleResetValues();
-            window.scroll({ top: 0 });
+        if (response.statusCode === 201) {
+            toast.success(response.message);
+            // handleResetValues();
+            queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+            window.scrollTo({ top: 0 });
         } else {
-            toast.success(response.message, { style: { fontSize: "1rem" } });
-            window.scroll({ top: 0 });
+            toast.warning(response.message);
         }
-
-    };
+    }
 
     return (
         <div className="">
             <div className="space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
                 <div className="ml-auto mr-auto w-[50%]">
-                    {
-                        user?.role === "Gerente" && (
-                            <Controller
-                                control={ control }
-                                name="filialId"
-                                render={ ({ field }) => (
-                                    <SelectFilial
-                                        control={ control }
-                                        name={ field.name }
-                                        defaultFilial={ user?.sourceFilial.filialId }
-                                    />
-                                ) }
-                            />
-                        )
-                    }
+                    {user?.role === "Gerente" && (
+                        <Controller
+                            control={ control }
+                            name="filialId"
+                            render={ ({ field }) => (
+                                <SelectFilial
+                                    control={ control }
+                                    name={ field.name }
+                                    defaultFilial={ user?.sourceFilial.filialId }
+                                />
+                            ) }
+                        />
+                    )}
                 </div>
             </div>
 
-            <form id="new-booking-form">
+            <form id="new-booking-form" onSubmit={ handleSubmit(handleCreateNewCheckout) }>
                 <FormProvider { ...createBookingFormMethods }>
                     <div className="flex flex-col gap-10">
-                        {/* Customer and Gear Selection */}
+                        {/* Card de Informações Básicas */}
                         <Card className="transition-all duration-200 hover:shadow-md">
                             <CardHeader className="pb-4">
                                 <CardTitle className="flex items-center gap-2 text-lg">
-                                    <User className="h-5 w-5 text-primary" />
-                  Informações básicas
+                                    <User className="h-5 w-5 text-primary" /> Informações básicas
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6 w-full">
                                 <div className="space-y-2 w-full">
-                                    <Label htmlFor="cliente" className="text-sm font-medium">
-                                        <User />
-                                        Cliente
-                                    </Label>
+                                    <Label className="text-sm font-medium flex items-center gap-1"><User className="w-4 h-4" /> Cliente</Label>
                                     <SelectCustomer />
-                                    {errors.customer && errors.customer.customerId && (
-                                        <p className="text-sm text-destructive flex items-center gap-1">
-                                            <AlertCircle className="h-3 w-3" />
-                                            {errors.customer.customerId.message}
-                                        </p>
+                                    {errors.customer?.customerId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.customer.customerId.message}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-2 w-full">
-                                    <Label htmlFor="cliente" className="text-sm font-medium">
-                                        <Pin />
-                                        Endereço
-                                    </Label>
+                                    <Label className="text-sm font-medium flex items-center gap-1"><Pin className="w-4 h-4" /> Endereço</Label>
                                     <SelectAddress setAddressString={ setAddressString } />
-                                    {errors.customer && errors.customer.customerId && (
-                                        <p className="text-sm text-destructive flex items-center gap-1">
-                                            <AlertCircle className="h-3 w-3" />
-                                            {errors.customer.customerId.message}
-                                        </p>
+                                    {errors.addressId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.addressId.message}</p>
                                     )}
                                 </div>
 
@@ -346,67 +344,42 @@ export function CreateBookingForm() {
                                 />
 
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium">
-                                        <Truck className="h-5 w-5 text-primary" />
-                                        Motorista
-                                    </Label>
-                                    <div className="flex flex-col flex-1">
-                                        <SelectEmployee
-                                            control={ control }
-                                            name="driverId"
-                                            setDriverString={ setDriverString }
-                                            employeeRole="Motorista"
-                                            filialId={ user?.role === "Gerente" ? undefined : user?.sourceFilial.filialId }
-                                        />
-
-                                        {errors.driverId && (
-                                            <p className="text-sm text-destructive flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                {errors.driverId.message}
-                                            </p>
-                                        )}
-                                    </div>
+                                    <Label className="text-sm font-medium flex items-center gap-1"><Truck className="h-5 w-5 text-primary" /> Motorista</Label>
+                                    <SelectEmployee
+                                        control={ control }
+                                        name="driverId"
+                                        setDriverString={ setDriverString }
+                                        employeeRole="Motorista"
+                                        filialId={ user?.role === "Gerente" ? undefined : user?.sourceFilial.filialId }
+                                    />
+                                    {errors.driverId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.driverId.message}</p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
 
-                        {/* Date and Time Selection */}
-                        <CheckoutTimeSelector
-                            name="date"
-                            control={ control }
-                            checkoutSchedule={ checkoutSchedule }
-                        />
+                        {/* Seletor de Data e Hora */}
+                        <CheckoutTimeSelector name="date" control={ control } checkoutSchedule={ checkoutSchedule } />
 
-                        {/* Amount and Price */}
-                        <div className="pb-0 flex flex-col w-full justify-center gap-3">
-
-                            {/* Observations */}
-                            <Card className="transition-all duration-200 hover:shadow-md">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center gap-2 text-lg">
-                                        <MessageSquare className="h-5 w-5 text-primary" />
-                                        Observações
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="observacoes" className="text-sm font-medium">
-                                        Detalhes adicionais (opcional)
-                                        </Label>
-                                        <Textarea
-                                            { ...register("observations") }
-                                            className="min-h-[120px] resize-none placeholder:text-muted-foreground/60 pb-0"
-                                            placeholder="Digite informações adicionais sobre o agendamento, requisitos especiais, ou outras observações relevantes..."
-                                        />
-
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                        </div>
-                        <Card>
-                            <CheckoutPaymentMethod />
+                        {/* Observações */}
+                        <Card className="transition-all duration-200 hover:shadow-md">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <MessageSquare className="h-5 w-5 text-primary" /> Observações
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea
+                                    { ...register("observations") }
+                                    className="min-h-[120px] resize-none"
+                                    placeholder="Digite informações adicionais..."
+                                />
+                            </CardContent>
                         </Card>
+
+                        {/* Novo Componente de Pagamento */}
+                        <CheckoutPaymentMethod />
 
                         {/* Resumo Final */}
                         {selectedDate && startHour && watchTotalDurationInMinutes && watchTotalPrice && !isDateInPast && (
@@ -483,16 +456,15 @@ Motorista: ${driverString || "A definir"}
                             </Card>
                         )}
 
-                        {/* Action Buttons */}
-                        <div className="flex gap-3 pt-4">
+                        {/* Botão de Envio */}
+                        <div className="pt-4">
                             <Button
-                                disabled={ !startHour || watchSelectedGears.length < 0 || !watchTotalPrice || watchTotalPrice === "0,00" }
-                                type="button"
-                                onClick={ handleSubmit((data) => handleCreateNewCheckout(data)) }
-                                className="flex-1">
-
-                                <Check className="h-4 w-4 mr-2" />
-                                <span className="md:flex hidden md:items-center">Finalizar Reserva</span>
+                                type="submit"
+                                className="w-full md:w-auto md:min-w-[300px] md:ml-auto flex"
+                                size="lg"
+                                disabled={ !startHour || watchSelectedGears.length === 0 || watchTotalPrice === "0,00" }
+                            >
+                                <Check className="h-5 w-5 mr-2" /> Finalizar Reserva
                             </Button>
                         </div>
                     </div>
@@ -500,5 +472,4 @@ Motorista: ${driverString || "A definir"}
             </form>
         </div>
     );
-
 }

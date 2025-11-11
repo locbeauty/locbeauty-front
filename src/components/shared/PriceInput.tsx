@@ -16,6 +16,7 @@ interface PriceInputProps<TFieldValues extends Record<string, any>> {
     register?: UseFormRegisterReturn<any>
     setValue?: UseFormSetValue<TFieldValues>;
     name?: Path<TFieldValues>;
+    disabled?: boolean
     isUncontrolled?: boolean
     targetState?: string
     setTargetState?: (_value: string) => void
@@ -24,6 +25,7 @@ interface PriceInputProps<TFieldValues extends Record<string, any>> {
 
 export default function PriceInput<TFieldValues extends Record<string, any>>({
     onChange,
+    disabled,
     error,
     register,
     setValue,
@@ -68,7 +70,8 @@ export default function PriceInput<TFieldValues extends Record<string, any>>({
                 <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                     <Input
-                        maxLength={ 12 }
+                        disabled={ disabled }
+                        maxLength={ 2 }
                         id="price-input"
                         type="text"
                         inputMode="numeric"
@@ -97,6 +100,7 @@ export default function PriceInput<TFieldValues extends Record<string, any>>({
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                 <Input
                     { ...register }
+                    disabled={ disabled }
                     maxLength={ 12 }
                     id="price-input"
                     type="text"
