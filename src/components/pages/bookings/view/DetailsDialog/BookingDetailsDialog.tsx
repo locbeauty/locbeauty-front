@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { differenceInDays , differenceInCalendarDays } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +43,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Checkout } from "@/utils/@types/checkouts";
 import { AdditionalCostsDialog } from "../AdditionalCostsDialog/AdditionalCostsDialog";
 import { Textarea } from "@/components/ui/textarea";
-import { MarkCheckoutAsConcluded, UpdateCheckout } from "@/services/checkouts.service";
+import { UpdateCheckout, UpdateCheckoutStatus } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { CheckoutPaymentMethodDialog } from "../CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 
@@ -64,6 +65,7 @@ export function BookingDetailsDialog({
     const [ selectedBookingIdForExtraCosts, setSelectedBookingIdForExtraCosts ] = useState<string | null>(null);
     const [ isAdditionalCostsDialogOpen, setAdditionalCostsDialogOpen ] = useState(false);
     const [ isCheckoutPaymentMethodDialogOpen, setIsCheckoutPaymentMethodDialogOpen ] = useState(false);
+    const [ isCancelBookingConfirmationDialogOpen, setCancelBookingConfirmationDialogOpen ] = useState(false);
 
     useEffect(() => {
         setCheckoutObservations(selectedCheckout?.observations || "");
@@ -96,24 +98,24 @@ export function BookingDetailsDialog({
         queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
     }
 
-    async function handleMarkAsConcluded(checkoutId: string) {
-        const response = await MarkCheckoutAsConcluded({
+    async function handleChangeCheckoutStatus(checkoutId: string, checkoutStatus: "Concluido" | "Cancelado") {
+        const response = await UpdateCheckoutStatus({
             checkoutId,
-            date: selectedCheckout!.date.toString()
+            date: selectedCheckout!.date.toString(),
+            checkoutStatus
         });
 
         if (response.statusCode !== 200) {
-            toast.warning(response.message, { style: { fontSize: "1rem" } });
-            // setBookingDetailsDialogOpen(false);
+            toast.warning(checkoutStatus === "Cancelado" ? "Erro ao cancelar agendamento." : "Erro ao marcar agendamento como concluído.", { style: { fontSize: "1rem" } });
         } else {
 
-            toast.success(response.message, { style: { fontSize: "1rem" } });
+            toast.success(checkoutStatus === "Cancelado" ? "Agendamento cancelado com sucesso." : "Agendamento marcado como concluído.", { style: { fontSize: "1rem" } });
 
             setSelectedCheckout(prev => {
                 if(!prev) return prev;
                 return {
                     ...prev,
-                    checkoutStatus: "Concluido"
+                    checkoutStatus
                 };
             });
 
@@ -475,15 +477,20 @@ export function BookingDetailsDialog({
                             <Button
                                 variant="default"
                                 className="flex items-center justify-center cursor-pointer"
-                                onClick={ () => handleMarkAsConcluded(selectedCheckout.checkoutId) }
-                                disabled={ selectedCheckout.checkoutStatus === "Concluido" || selectedCheckout.CheckoutPayment.paymentStatus !== "Pago" }
+                                onClick={ () => handleChangeCheckoutStatus(selectedCheckout.checkoutId, "Concluido") }
+                                disabled={
+                                    selectedCheckout.checkoutStatus === "Concluido" ||
+                                    selectedCheckout.checkoutStatus === "Cancelado" ||
+                                    selectedCheckout.CheckoutPayment.paymentStatus !== "Pago"
+                                }
                             >
                                 <Check className="" />
                                 <span className="md:block hidden">Marcar como concluído</span>
                             </Button>
                             <Button
-                                disabled={ selectedCheckout.checkoutStatus === "Concluido" }
+                                disabled={ selectedCheckout.checkoutStatus !== "Pendente" }
                                 variant="destructive"
+                                onClick={ () => setCancelBookingConfirmationDialogOpen(true) }
                                 className="flex items-center justify-center cursor-pointer"
                             >
                                 <Trash2 className="" />
@@ -499,6 +506,111 @@ export function BookingDetailsDialog({
                     isCheckoutPaymentMethodDialogOpen={ isCheckoutPaymentMethodDialogOpen }
                     setIsCheckoutPaymentMethodDialogOpen={ setIsCheckoutPaymentMethodDialogOpen }
                 />
+                <CancelBookingConfirmationDialog
+                    handleChangeCheckoutStatus={ handleChangeCheckoutStatus }
+                    selectedCheckout={ selectedCheckout }
+                    setSelectedCheckout={ setSelectedCheckout }
+                    setCancelBookingConfirmationDialogOpen={ setCancelBookingConfirmationDialogOpen }
+                    isCancelBookingConfirmationDialogOpen={ isCancelBookingConfirmationDialogOpen }
+                />
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+interface CancelBookingConfirmationDialogProps {
+    selectedCheckout: Checkout | null;
+    setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>
+    setCancelBookingConfirmationDialogOpen: Dispatch<SetStateAction<boolean>>;
+    isCancelBookingConfirmationDialogOpen: boolean;
+    handleChangeCheckoutStatus: (checkoutId: string, checkoutStatus: "Concluido" | "Cancelado") => void
+}
+
+export function CancelBookingConfirmationDialog({
+    selectedCheckout,
+    setSelectedCheckout,
+    isCancelBookingConfirmationDialogOpen,
+    setCancelBookingConfirmationDialogOpen,
+    handleChangeCheckoutStatus
+}: CancelBookingConfirmationDialogProps) {
+    if (!selectedCheckout) return null;
+
+    const bookingDate = new Date(selectedCheckout.date);
+    const today = new Date();
+    const daysUntilBooking = differenceInCalendarDays(bookingDate, today);
+    const hasFee = daysUntilBooking < 7;
+
+    return (
+        <Dialog open={ isCancelBookingConfirmationDialogOpen } onOpenChange={ setCancelBookingConfirmationDialogOpen }>
+            <DialogContent className="max-h-[90vh] w-[90vw] md:w-[500px] overflow-hidden dark:bg-gray-900">
+                <DialogHeader className="space-y-2 text-center">
+                    <DialogTitle className="text-2xl font-semibold text-red-600">
+                        Confirmar cancelamento
+                    </DialogTitle>
+                    <DialogDescription className="text-base text-gray-500 dark:text-gray-400 leading-relaxed">
+                        Este agendamento está previsto para acontecer{" "}
+                        {daysUntilBooking === 0
+                            ? "hoje"
+                            : daysUntilBooking === 1
+                                ? "amanhã"
+                                : `daqui a ${daysUntilBooking} dias`}
+                        . Cancelamentos realizados com{" "}
+                        <span className="font-semibold text-red-500">menos de 7 dias</span>{" "}
+                        de antecedência{" "}
+                        {hasFee ? (
+                            <>
+                                <span className="font-semibold">geram uma taxa de cancelamento</span>.
+                                Deseja prosseguir mesmo assim?
+                            </>
+                        ) : (
+                            <>
+                                <span className="font-semibold text-green-600">não geram taxa</span>.
+                                Deseja confirmar o cancelamento?
+                            </>
+                        )}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <CardContent className="mt-6 flex flex-col items-center justify-center space-y-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                        {(selectedCheckout.customer?.fullname ||
+                            selectedCheckout.customer?.companyName) && (
+                            <p>
+                                <span className="font-medium text-gray-700 dark:text-gray-200">
+                                    Cliente:
+                                </span>{" "}
+                                {selectedCheckout.customer.fullname ||
+                                    selectedCheckout.customer.companyName}
+                            </p>
+                        )}
+                        {selectedCheckout.date && (
+                            <p>
+                                <span className="font-medium text-gray-700 dark:text-gray-200">
+                                    Data do agendamento:
+                                </span>{" "}
+                                {bookingDate.toLocaleDateString("pt-BR")}
+                            </p>
+                        )}
+                    </div>
+                </CardContent>
+
+                <DialogFooter className="flex justify-end gap-3 mt-4">
+                    <Button
+                        variant="outline"
+                        onClick={ () => setCancelBookingConfirmationDialogOpen(false) }
+                    >
+                        Voltar
+                    </Button>
+                    <Button
+                        variant={ hasFee ? "destructive" : "default" }
+                        onClick={ () => {
+                            handleChangeCheckoutStatus(selectedCheckout.checkoutId, "Cancelado");
+                            setCancelBookingConfirmationDialogOpen(false);
+                        } }
+                    >
+                        {hasFee ? "Cancelar mesmo assim" : "Confirmar cancelamento"}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

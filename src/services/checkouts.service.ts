@@ -124,17 +124,19 @@ export async function UpdateCheckout({
     return response;
 }
 
-export async function MarkCheckoutAsConcluded({
+export async function UpdateCheckoutStatus({
     checkoutId,
     date,
+    checkoutStatus
 }: {
   date: string;
   checkoutId: string;
+  checkoutStatus: CheckoutStatuses;
 }) {
 
     const response = await apiRequest({
-        endpoint: "bookings/config/concluded",
-        queryParams: { checkoutId, date },
+        endpoint: "bookings/config/status",
+        queryParams: { checkoutId, date, checkoutStatus },
     });
 
     return response;
