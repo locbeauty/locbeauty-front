@@ -69,7 +69,7 @@ export default function LoginPage() {
             setErrorMessage(loginResponse.error);
             return;
         }
-        console.log("loginResponse: ", loginResponse);
+        // console.log("loginResponse: ", loginResponse);
 
         localStorage.setItem("accessToken", loginResponse.data);
         router.push("/dashboard");

@@ -32,7 +32,7 @@ export function CheckoutPaymentMethod() {
         const totalCents = parseStringToCents(watchedTotalPrice || "0");
 
         if (watchedPaymentStatus === "Pago") {
-            setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
+            // setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
             setValue("paymentInfo.firstPaymentStatus", "Pago");
             setValue("paymentInfo.secondPaymentAmount", "0,00");
             setValue("paymentInfo.secondPaymentStatus", undefined);
@@ -45,16 +45,16 @@ export function CheckoutPaymentMethod() {
             const firstCents = parseStringToCents(watchedFirstPaymentAmount || "0");
             const remainingCents = totalCents - firstCents;
 
-            if (remainingCents > 0) {
-                setValue("paymentInfo.secondPaymentAmount", centsToString(remainingCents));
-            } else {
-                setValue("paymentInfo.secondPaymentAmount", "0,00");
-            }
+            // if (remainingCents > 0) {
+            //     setValue("paymentInfo.secondPaymentAmount", centsToString(remainingCents));
+            // } else {
+            //     setValue("paymentInfo.secondPaymentAmount", "0,00");
+            // }
         }
 
         if (watchedPaymentStatus === "Pendente") {
             setValue("paymentInfo.firstPaymentStatus", "Pendente");
-            setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
+            // setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
             setValue("paymentInfo.secondPaymentAmount", "0,00");
             setValue("paymentInfo.secondPaymentStatus", undefined);
         }

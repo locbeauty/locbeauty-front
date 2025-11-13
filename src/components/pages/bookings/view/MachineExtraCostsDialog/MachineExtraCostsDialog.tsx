@@ -67,7 +67,6 @@ export function MachineExtraCostsDialog({
             extraMachineCosts: parseStringToCents(extraMachineCosts),
             extraMachineCostsDescription
         }, bookingId: selectedBookingId! });
-        // console.log("fora");
 
         if(response.statusCode !== 201) {
             queryClient.invalidateQueries({

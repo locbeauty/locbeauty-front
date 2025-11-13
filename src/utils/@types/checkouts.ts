@@ -1,4 +1,4 @@
-import { CheckoutStatuses, PaymentStatuses } from "../constants";
+import { CheckoutStatuses, PaymentModes, PaymentStatuses } from "../constants";
 import { Address } from "./address";
 
 export type Checkout = {
@@ -53,13 +53,13 @@ export type Checkout = {
 
 export interface CheckoutPayment {
   paymentStatus: PaymentStatuses;
-  paymentMode: string;
-  firstPaymentDate: string;
+  paymentMode: PaymentModes;
+  firstPaymentDate: string | null;
   firstPaymentAmount: number;
-  firstPaymentMethod: string;
+  firstPaymentMethod: string | null;
   firstPaymentStatus: "Pendente" | "Pago";
   secondPaymentDate: string | null;
   secondPaymentAmount: number;
-  secondPaymentMethod: string;
+  secondPaymentMethod: string | null;
   secondPaymentStatus: "Pendente" | "Pago";
 }

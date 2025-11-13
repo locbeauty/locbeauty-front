@@ -165,11 +165,6 @@ export function CreateBookingForm() {
         formState: { errors },
         control,
     } = createBookingFormMethods;
-    const v = watch();
-
-    useEffect(() => {
-        console.log("v: ", v);
-    }, [ v ]);
 
     const startHour = watch("startHourInMinutes");
     const watchTotalDurationInMinutes = watch("totalDurationInMinutes");
@@ -277,11 +272,12 @@ export function CreateBookingForm() {
                 individualPrice: parseStringToCents(item.individualPrice || "0"),
             })),
         };
+
         const response = await CreateCheckout(parsed);
 
         if (response.statusCode === 201) {
             toast.success(response.message);
-            // handleResetValues();
+            handleResetValues();
             queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
             window.scrollTo({ top: 0 });
         } else {

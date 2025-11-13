@@ -1,21 +1,39 @@
 import { GetDayCheckoutsResponse } from "@/components/pages/bookings/create/CreateBookingForm";
+import { UpdateCheckoutPayload } from "@/components/pages/bookings/view/CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 import { apiRequest, ApiResponse } from "@/lib/api";
-import { CreateCheckoutFormSchemaType, CreateCheckoutValidationWithMoneyInCents } from "@/lib/zod/CreateBookingValidation";
+import {
+    CreateCheckoutFormSchemaType,
+    CreateCheckoutValidationWithMoneyInCents,
+} from "@/lib/zod/CreateBookingValidation";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
 import { Checkout } from "@/utils/@types/checkouts";
 import { Customer } from "@/utils/@types/customer";
 import { Employee } from "@/utils/@types/employee";
 import { ROLES } from "@/utils/@types/roles";
+import { CheckoutStatuses } from "@/utils/constants";
 
-export async function CreateCheckout(body: CreateCheckoutValidationWithMoneyInCents) {
-    const response = await apiRequest({ endpoint: "bookings/create", method: "POST", body });
+export async function CreateCheckout(
+    body: CreateCheckoutValidationWithMoneyInCents
+) {
+    const response = await apiRequest({
+        endpoint: "bookings/create",
+        method: "POST",
+        body,
+    });
 
     return response;
 }
 
-export async function GetAllCheckouts({ queryParams }: { queryParams?: Record<string, string> }) {
-    const response = await apiRequest<Checkout[]>({ endpoint: "checkouts", queryParams });
+export async function GetAllCheckouts({
+    queryParams,
+}: {
+  queryParams?: Record<string, string>;
+}) {
+    const response = await apiRequest<Checkout[]>({
+        endpoint: "checkouts",
+        queryParams,
+    });
 
     if (!response?.data) return response;
 
@@ -41,12 +59,45 @@ export async function GetAllCheckouts({ queryParams }: { queryParams?: Record<st
     return { ...response, data: parsedData };
 }
 
-export async function getDayCheckouts(
-    { body }: { body: Record<string, unknown> }
-) {
-    const response = await apiRequest<GetDayCheckoutsResponse[]>({ endpoint: "bookings/available", body, method: "POST" });
+export async function getDayCheckouts({
+    body,
+}: {
+  body: Record<string, unknown>;
+}) {
+    const response = await apiRequest<GetDayCheckoutsResponse[]>({
+        endpoint: "bookings/available",
+        body,
+        method: "POST",
+    });
     return response;
 }
+
+// export async function UpdateCheckout({
+//     body,
+//     checkoutId,
+// }: {
+//   body: {
+//     distanceInKm?: number;
+//     foodCost?: number;
+//     fuelCost?: number;
+//     lodgingCost?: number;
+//     additionalTransportCost?: number;
+//     observations?: string;
+//     checkoutStatus?: CheckoutStatuses,
+//     CheckoutPayment?: UpdateCheckoutPayload;
+//   };
+//   checkoutId: string;
+// }) {
+//     const response = await apiRequest({
+//         endpoint: "checkout/update",
+//         method: "POST",
+//         body,
+//         queryParams: { checkoutId },
+//     });
+//     return response;
+// }
+
+// Importe o tipo CheckoutStatus do seu componente ou de onde ele estiver
 
 export async function UpdateCheckout({
     body,
@@ -55,10 +106,11 @@ export async function UpdateCheckout({
   body: {
     distanceInKm?: number;
     foodCost?: number;
-    fuelCost?: number;
     lodgingCost?: number;
     additionalTransportCost?: number;
     observations?: string;
+    checkoutStatus?: CheckoutStatuses;
+    CheckoutPayment?: UpdateCheckoutPayload["CheckoutPayment"];
   };
   checkoutId: string;
 }) {
@@ -68,5 +120,22 @@ export async function UpdateCheckout({
         body,
         queryParams: { checkoutId },
     });
+
+    return response;
+}
+
+export async function MarkCheckoutAsConcluded({
+    checkoutId,
+    date,
+}: {
+  date: string;
+  checkoutId: string;
+}) {
+
+    const response = await apiRequest({
+        endpoint: "bookings/config/concluded",
+        queryParams: { checkoutId, date },
+    });
+
     return response;
 }

@@ -55,10 +55,6 @@ export default function Treinamentos() {
     const trainings = trainingsData.data?.data;
     const gears = gearsData.data?.data;
 
-    useEffect(() => {
-        console.log("gears: ",gears);
-    },[ gears ]);
-
     return (
         <div className="container mx-auto py-6">
             <div className="mb-6">

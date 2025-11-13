@@ -59,9 +59,6 @@ export function UpdateEmployeeDialog({
             );
         }
     }, [ reset, selectedEmployee ]);
-    useEffect(() => {
-        console.log("errors: ", errors);
-    }, [ errors ]);
 
     async function handleUpdateEmployee(
         updatedEmployeeData: UpdateEmployeeFormSchemaType

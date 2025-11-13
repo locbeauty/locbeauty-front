@@ -42,7 +42,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Checkout } from "@/utils/@types/checkouts";
 import { AdditionalCostsDialog } from "../AdditionalCostsDialog/AdditionalCostsDialog";
 import { Textarea } from "@/components/ui/textarea";
-import { UpdateCheckout } from "@/services/checkouts.service";
+import { MarkCheckoutAsConcluded, UpdateCheckout } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { CheckoutPaymentMethodDialog } from "../CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 
@@ -96,16 +96,31 @@ export function BookingDetailsDialog({
         queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
     }
 
-    async function handleMarkAsConcluded(bookingId: string) {
-        const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/config/concluded?bookingId=${bookingId}&date=${selectedCheckout?.date.toString()}`, { credentials: "include" });
+    async function handleMarkAsConcluded(checkoutId: string) {
+        const response = await MarkCheckoutAsConcluded({
+            checkoutId,
+            date: selectedCheckout!.date.toString()
+        });
 
-        if(!response.ok) {
-            toast.warning("Erro ao marcar agendamento como concluído.", { style: { fontSize: "1rem" } });
+        if (response.statusCode !== 200) {
+            toast.warning(response.message, { style: { fontSize: "1rem" } });
+            // setBookingDetailsDialogOpen(false);
         } else {
-            toast.success("Agendamento marcado como concluído!", { style: { fontSize: "1rem" } });
-            setBookingDetailsDialogOpen(false);
+
+            toast.success(response.message, { style: { fontSize: "1rem" } });
+
+            setSelectedCheckout(prev => {
+                if(!prev) return prev;
+                return {
+                    ...prev,
+                    checkoutStatus: "Concluido"
+                };
+            });
+
+            queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
         }
     }
+
     if(!selectedCheckout) return null;
 
     const startDate = new Date(selectedCheckout.date);
@@ -365,9 +380,6 @@ export function BookingDetailsDialog({
                                             {selectedCheckout.additionalTransportCost > 0 && (
                                                 <div><span className="font-bold">Valores adicionais de transporte:</span> {centsToStringWithCurrencyMark(selectedCheckout.additionalTransportCost)}</div>
                                             )}
-                                            {selectedCheckout.CheckoutPayment.paymentMode && (
-                                                <div><span className="font-bold">Modo de pagamento:</span> {selectedCheckout.CheckoutPayment.paymentMode}</div>
-                                            )}
                                             <div className="flex items-center justify-end col-span-2">
                                                 <Tooltip defaultOpen={ false }>
                                                     <TooltipTrigger defaultChecked={ false } asChild>
@@ -463,8 +475,8 @@ export function BookingDetailsDialog({
                             <Button
                                 variant="default"
                                 className="flex items-center justify-center cursor-pointer"
-                                // onClick={ () => handleMarkAsConcluded() }
-                                disabled={ selectedCheckout.checkoutStatus === "Concluido" }
+                                onClick={ () => handleMarkAsConcluded(selectedCheckout.checkoutId) }
+                                disabled={ selectedCheckout.checkoutStatus === "Concluido" || selectedCheckout.CheckoutPayment.paymentStatus !== "Pago" }
                             >
                                 <Check className="" />
                                 <span className="md:block hidden">Marcar como concluído</span>
@@ -483,6 +495,7 @@ export function BookingDetailsDialog({
 
                 <CheckoutPaymentMethodDialog
                     selectedCheckout={ selectedCheckout }
+                    setSelectedCheckout={ setSelectedCheckout }
                     isCheckoutPaymentMethodDialogOpen={ isCheckoutPaymentMethodDialogOpen }
                     setIsCheckoutPaymentMethodDialogOpen={ setIsCheckoutPaymentMethodDialogOpen }
                 />

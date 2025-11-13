@@ -92,8 +92,6 @@ export function UpdateFilialDialog({
         });
         const data = await response.json();
 
-        console.log("data: ", data);
-
         if(!response.ok) {
             toast.warning(data.message, { style: { fontSize: "1rem" } });
         } else {

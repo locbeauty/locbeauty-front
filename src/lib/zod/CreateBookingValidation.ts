@@ -149,3 +149,67 @@ export type CreateCheckoutFormSchemaType = z.infer<typeof createCheckoutFormSche
 export type CustomCheckoutFormSchemaType = Omit<CreateCheckoutFormSchemaType, "price"> & {
   price: number;
 };
+
+// export type CreateCheckoutValidationWithMoneyInCents = Omit<
+//   CreateCheckoutFormSchemaType,
+//   | "totalPrice"
+//   | "partialPayment"
+//   | "basePrice"
+//   | "extraMachineCosts"
+//   | "lodgingCost"
+//   | "foodCost"
+//   | "fuelCost"
+//   | "additionalTransportCost"
+//   | "gears"
+// > & {
+//   basePrice: number;
+//   extraMachineCosts: number;
+//   lodgingCost: number;
+//   foodCost: number;
+//   fuelCost: number;
+//   additionalTransportCost: number;
+//   totalPrice: number;
+//   partialPayment?: number;
+//   gears: {
+//             gearId: string,
+//             gearName: string,
+//             individualPrice: number
+//         }[],
+// };
+
+export type CreateCheckoutValidationWithMoneyInCents = Omit<
+  CreateCheckoutFormSchemaType,
+  | "totalPrice"
+  | "basePrice"
+  | "extraMachineCosts"
+  | "lodgingCost"
+  | "foodCost"
+  | "fuelCost"
+  | "additionalTransportCost"
+  | "gears"
+  | "paymentInfo"
+> & {
+  basePrice: number;
+  extraMachineCosts: number;
+  lodgingCost: number;
+  foodCost: number;
+  fuelCost: number;
+  additionalTransportCost: number;
+  totalPrice: number;
+  gears: {
+    gearId: string;
+    gearName: string;
+    individualPrice: number;
+  }[];
+  paymentInfo: {
+    paymentStatus: (typeof paymentStatuses)[number] | undefined;
+    firstPaymentDate: Date | null;
+    firstPaymentAmount: number | null;
+    firstPaymentMethod?: (typeof PaymentMethods)[number];
+    firstPaymentStatus: "Pendente" | "Pago" | undefined;
+    secondPaymentDate: Date | null;
+    secondPaymentAmount: number | null;
+    secondPaymentMethod?: (typeof PaymentMethods)[number];
+    secondPaymentStatus: "Pendente" | "Pago" | undefined;
+  };
+};
