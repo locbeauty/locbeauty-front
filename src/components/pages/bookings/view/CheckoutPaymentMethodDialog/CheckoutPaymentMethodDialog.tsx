@@ -130,6 +130,18 @@ export function CheckoutPaymentMethodDialog({
 
         const payment = selectedCheckout.CheckoutPayment;
 
+        // --- Início da Lógica Replicada ---
+        // Recrie a lógica EXATA do seu useEffect para os valores de "original"
+
+        // 1. Lógica do secondPaymentAmount
+        const originalPendingValue = selectedCheckout.totalPrice - (payment.firstPaymentAmount || 0);
+        const originalSecondPaymentAmountValue = payment.paymentMode === "Parcelado" ? originalPendingValue : 0;
+        const originalSecondPaymentAmountString = centsToString(originalSecondPaymentAmountValue);
+
+        // 2. Lógica do secondPaymentStatus
+        const originalSecondPaymentStatus = payment.secondPaymentStatus ? payment.secondPaymentStatus : "Pendente";
+        // --- Fim da Lógica Replicada ---
+
         // Compara cada campo do estado atual com o valor original
         const isSame =
         checkoutStatus === selectedCheckout.checkoutStatus &&
@@ -139,10 +151,15 @@ export function CheckoutPaymentMethodDialog({
         firstPaymentDate === formatDateForInput(payment.firstPaymentDate) &&
         firstPaymentMethod === payment.firstPaymentMethod &&
         firstPaymentStatus === payment.firstPaymentStatus &&
-        secondPaymentAmount === centsToString(payment.secondPaymentAmount || 0) &&
+
+        // Use os valores originais calculados na comparação
+        secondPaymentAmount === originalSecondPaymentAmountString && // <--- CORRIGIDO
+
         secondPaymentDate === formatDateForInput(payment.secondPaymentDate) &&
         secondPaymentMethod === payment.secondPaymentMethod &&
-        secondPaymentStatus === (payment.secondPaymentStatus ? payment.secondPaymentStatus : undefined);
+
+        // Use o valor original com o default correto
+        secondPaymentStatus === originalSecondPaymentStatus; // <--- CORRIGIDO
 
         // Retorna 'true' se for DIFERENTE (ou seja, se mudou)
         return !isSame;
@@ -179,69 +196,11 @@ export function CheckoutPaymentMethodDialog({
         setErrors({} as LocalErrorsType);
     }, [ selectedCheckout, isCheckoutPaymentMethodDialogOpen ]);
 
-    function validateForm(): boolean {
-        const newErrors: LocalErrorsType = { ...initialErrors };
-        let isValid = true;
-
-        if ([ "Pago", "Parcial" ].includes(paymentStatus) ) {
-            if (parseStringToCents(firstPaymentAmount) === 0) {
-                newErrors.paymentInfo.firstPaymentAmount = "O valor da 1ª parcela é obrigatório.";
-                isValid = false;
-            }
-            if (parseStringToCents(firstPaymentAmount) > selectedCheckout!.totalPrice) {
-                newErrors.paymentInfo.firstPaymentAmount = "O valor precisa ser menor do que o valor total.";
-                isValid = false;
-            }
-            if (!firstPaymentDate) {
-                newErrors.paymentInfo.firstPaymentDate = "A data da 1ª parcela é obrigatória.";
-                isValid = false;
-            }
-            if (!firstPaymentMethod) {
-                newErrors.paymentInfo.firstPaymentMethod = "A forma da 1ª parcela é obrigatória.";
-                isValid = false;
-            }
-        }
-
-        if (selectedCheckout?.CheckoutPayment.paymentMode === "Parcelado") {
-            const pendingValue = selectedCheckout.totalPrice - selectedCheckout?.CheckoutPayment.firstPaymentAmount;
-            if (parseStringToCents(secondPaymentAmount) === 0 || parseStringToCents(secondPaymentAmount) !== pendingValue) {
-                newErrors.paymentInfo.secondPaymentAmount = "A 2ª parcela precisa corresponder ao valor restante do pagamento.";
-                isValid = false;
-            }
-            if (!secondPaymentDate || secondPaymentDate === "") {
-                newErrors.paymentInfo.secondPaymentDate = "A data da 2ª parcela é obrigatória.";
-                isValid = false;
-            }
-            if (!secondPaymentMethod) {
-                newErrors.paymentInfo.secondPaymentMethod = "A forma da 2ª parcela é obrigatória.";
-                isValid = false;
-            }
-        }
-
-        if (paymentMode === "Parcelado" && secondPaymentStatus === "Pago") {
-            if (parseStringToCents(secondPaymentAmount) === 0) {
-                newErrors.paymentInfo.secondPaymentAmount = "O valor da 2ª parcela é obrigatório.";
-                isValid = false;
-            }
-            if (!secondPaymentDate) {
-                newErrors.paymentInfo.secondPaymentDate = "A data da 2ª parcela é obrigatória.";
-                isValid = false;
-            }
-            if (!secondPaymentMethod) {
-                newErrors.paymentInfo.secondPaymentMethod = "A forma da 2ª parcela é obrigatória.";
-                isValid = false;
-            }
-        }
-
-        setErrors(newErrors);
-        return isValid;
-    }
-
     useEffect(() => {
-        if(paymentStatus === "Pago" && selectedCheckout) {
+        if (paymentStatus === "Pago" && selectedCheckout && paymentMode === "AVista") {
             setFirstPaymentAmount(centsToString(selectedCheckout.totalPrice));
         }
-    }, [ setFirstPaymentAmount, selectedCheckout, paymentStatus ]);
+    }, [ setFirstPaymentAmount, selectedCheckout, paymentStatus, paymentMode ]);
 
     async function handleSave() {
         const isValid = validateCheckoutForm({
@@ -310,8 +269,6 @@ export function CheckoutPaymentMethodDialog({
                         paymentStatus: (secondPaymentMethod && secondPaymentDate) ? "Pago" : paymentStatus,
                     },
                 };
-
-                ("updatedCheckout: ", updatedCheckout);
 
                 // Atualiza o estado local
                 setSelectedCheckout(updatedCheckout);
