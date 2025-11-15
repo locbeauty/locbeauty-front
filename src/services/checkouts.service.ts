@@ -72,33 +72,6 @@ export async function getDayCheckouts({
     return response;
 }
 
-// export async function UpdateCheckout({
-//     body,
-//     checkoutId,
-// }: {
-//   body: {
-//     distanceInKm?: number;
-//     foodCost?: number;
-//     fuelCost?: number;
-//     lodgingCost?: number;
-//     additionalTransportCost?: number;
-//     observations?: string;
-//     checkoutStatus?: CheckoutStatuses,
-//     CheckoutPayment?: UpdateCheckoutPayload;
-//   };
-//   checkoutId: string;
-// }) {
-//     const response = await apiRequest({
-//         endpoint: "checkout/update",
-//         method: "POST",
-//         body,
-//         queryParams: { checkoutId },
-//     });
-//     return response;
-// }
-
-// Importe o tipo CheckoutStatus do seu componente ou de onde ele estiver
-
 export async function UpdateCheckout({
     body,
     checkoutId,

@@ -1,15 +1,7 @@
-import { apiRequest, ApiResponse } from "@/lib/api";
-import { CreateCheckoutValidationWithMoneyInCents } from "@/lib/zod/CreateBookingValidation";
-import { CreateGoalDataType, CreateGoalDataWithMoneyInCents } from "@/lib/zod/CreateGoalValidation";
-import { CreateTrainingDataType } from "@/lib/zod/CreateTrainingValidation";
-import { Gear } from "@/utils/@types/gears";
+import { apiRequest } from "@/lib/api";
+import { CreateGoalDataWithMoneyInCents } from "@/lib/zod/CreateGoalValidation";
 import { Goal } from "@/utils/@types/goals";
-import { Training } from "@/utils/@types/training";
 
-// export async function GetAllGoals({ filialId }: {filialId?: string | undefined}) {
-//     const response = await apiRequest<Goal[]>({ endpoint: "goals", queryParams: filialId ? { filialId } : {}  });
-//     return response.data;
-// }
 export async function GetAllGoals({ filialId }: { filialId?: string }): Promise<Goal[]> {
     const response = await apiRequest<Goal[]>({
         endpoint: "goals",
@@ -27,9 +19,4 @@ export async function CreateGoal(body: CreateGoalDataWithMoneyInCents) {
     return response;
 }
 
-// export async function UpdateCustomer({ body, queryParams }: {body: UpdateCustomerFormSchemaType, queryParams?: Record<string, string>}) {
-//     const response = await apiRequest<Customer[]>({ endpoint: "customers/update", method: "POST", body, queryParams });
-
-//     return response;
-// }
 
