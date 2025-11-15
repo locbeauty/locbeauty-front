@@ -150,33 +150,6 @@ export type CustomCheckoutFormSchemaType = Omit<CreateCheckoutFormSchemaType, "p
   price: number;
 };
 
-// export type CreateCheckoutValidationWithMoneyInCents = Omit<
-//   CreateCheckoutFormSchemaType,
-//   | "totalPrice"
-//   | "partialPayment"
-//   | "basePrice"
-//   | "extraMachineCosts"
-//   | "lodgingCost"
-//   | "foodCost"
-//   | "fuelCost"
-//   | "additionalTransportCost"
-//   | "gears"
-// > & {
-//   basePrice: number;
-//   extraMachineCosts: number;
-//   lodgingCost: number;
-//   foodCost: number;
-//   fuelCost: number;
-//   additionalTransportCost: number;
-//   totalPrice: number;
-//   partialPayment?: number;
-//   gears: {
-//             gearId: string,
-//             gearName: string,
-//             individualPrice: number
-//         }[],
-// };
-
 export type CreateCheckoutValidationWithMoneyInCents = Omit<
   CreateCheckoutFormSchemaType,
   | "totalPrice"

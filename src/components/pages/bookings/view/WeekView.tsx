@@ -98,6 +98,7 @@ export function WeekView({ currentDate, checkouts, openCheckoutDetails }: WeekVi
                         // Agrupa bookings por dia
                         const bookingsByDay: Record<number, Checkout[]> = {};
                         checkouts.forEach((checkout) => {
+
                             if (!isAgendamentoInWeek(checkout, weekDays)) return;
                             const dayIndex = getDayIndex(checkout.date, weekDays);
                             if (dayIndex === -1) return;

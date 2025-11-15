@@ -6,3 +6,12 @@ export const checkoutStatuses = [ "Pendente", "Concluido", "Cancelado" ] as cons
 export type CheckoutStatuses = (typeof checkoutStatuses)[number];
 export type PaymentStatuses = (typeof paymentStatuses)[number];
 export type PaymentModes = (typeof paymentModes)[number];
+
+export const goalStatuses = [
+    "EM_ANDAMENTO",
+    "Concluida",
+    "NAO_ATINGIDA",
+    "PARCIALMENTE_CONCLUIDA",
+] as const;
+
+export type GoalStatuses = (typeof goalStatuses)[number];

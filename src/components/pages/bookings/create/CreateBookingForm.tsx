@@ -249,7 +249,7 @@ export function CreateBookingForm() {
             fuelCost: parseStringToCents(newCheckoutData.fuelCost || "0"),
             additionalTransportCost: parseStringToCents(newCheckoutData.additionalTransportCost || "0"),
             totalPrice: parseStringToCents(newCheckoutData.totalPrice || "0"),
-
+            
             paymentInfo: {
                 paymentStatus: newCheckoutData.paymentInfo.paymentStatus,
                 firstPaymentDate: newCheckoutData.paymentInfo.firstPaymentDate ?? null,
@@ -277,7 +277,7 @@ export function CreateBookingForm() {
 
         if (response.statusCode === 201) {
             toast.success(response.message);
-            handleResetValues();
+            // handleResetValues();
             queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
             window.scrollTo({ top: 0 });
         } else {

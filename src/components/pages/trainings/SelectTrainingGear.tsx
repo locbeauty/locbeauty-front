@@ -31,19 +31,21 @@ import { GetAllGears } from "@/services/gears.service";
 interface SelectTrainingGearProps {
     disabled?: boolean;
     selectedGear: string | undefined;
+    filialId?: string | undefined
     onGearChange: (gearName: string) => void;
 }
 
 export function SelectTrainingGear({
     disabled = false,
     selectedGear,
-    onGearChange
+    onGearChange,
+    filialId
 }: SelectTrainingGearProps) {
     const isMounted = useMounted();
     const isDesktop = useMediaQuery("(min-width: 768px)");
 
     const gearsData = useQuery<ApiResponse<Gear[]>, Error>({
-        queryKey: [ "get-all-gears" ],
+        queryKey: [ "get-all-gears", filialId ],
         queryFn: () => GetAllGears({}),
         staleTime: 1000 * 60,
     });
@@ -147,7 +149,7 @@ interface GearsListProps {
 
 function GearsList({ setOpen, onGearChange, allGears }: GearsListProps) {
     const handleSelect = (gear: Gear) => {
-        onGearChange(gear.gearName);
+        onGearChange(gear.gearId);
         setOpen(false);
     };
 
@@ -160,7 +162,7 @@ function GearsList({ setOpen, onGearChange, allGears }: GearsListProps) {
                     {allGears?.map((gear) => (
                         <CommandItem
                             key={ gear.gearId }
-                            value={ gear.gearName }
+                            value={ gear.gearId }
                             onSelect={ () => handleSelect(gear) }
                             className="cursor-pointer"
                         >

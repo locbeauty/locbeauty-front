@@ -1,19 +1,23 @@
-
-import { MetaMensal } from "@/app/(main)/goals/page";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { StatusMeta } from "@/lib/zod/Goals";
+import { Goal } from "@/utils/@types/goals";
+import { GoalStatuses } from "@/utils/constants";
 import { getMonthName } from "@/utils/getMonthName";
-import {
-    Building2,
-    Calendar,
-    DollarSign, Clock
-} from "lucide-react";
+import { Building2, Calendar, DollarSign, Clock, Plus } from "lucide-react";
 
-export function GoalCard({ goal }: { goal: MetaMensal }) {
+export function GoalCard({ goal }: { goal: Goal }) {
+    const isMoney = goal.targetCents !== null;
+    const target = isMoney ? goal.targetCents! : goal.targetQuantity!;
+    const current = isMoney ? goal.currentCents ?? 0 : goal.currentQuantity ?? 0;
+    const estimated = isMoney ? goal.estimatedCents ?? 0 : goal.estimatedQuantity ?? 0;
 
-    const getStatusColor = (status: StatusMeta): string => {
+    const formatValue = (v: number) =>
+        isMoney
+            ? (v / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+            : v.toLocaleString("pt-BR");
+
+    const statusColor = (status: GoalStatuses) => {
         switch (status) {
         case "Concluida":
             return "bg-green-200 text-green-900 hover:bg-green-300";
@@ -23,23 +27,15 @@ export function GoalCard({ goal }: { goal: MetaMensal }) {
             return "bg-blue-200 text-blue-900 hover:bg-blue-300";
         case "NAO_ATINGIDA":
             return "bg-red-200 text-red-900 hover:bg-red-300";
-        default:
-            return "bg-gray-200 text-gray-900 hover:bg-gray-300";
         }
     };
 
-    const centsToReal = (valorInCents: number): number => {
-        return valorInCents / 100;
-    };
+    const confirmedPct = target > 0 ? (current / target) * 100 : 0;
+    const estimatedPct = target > 0 ? (estimated / target) * 100 : 0;
 
-    // Função para formatar valor
-    const formatarValor = (valor: number): string => {
-        return centsToReal(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    };
+    console.log("goal: ", goal);
 
-    const confirmedPercentage = (goal.currentValue / goal.targetValue) * 100;
-    const estimatedPercentage = (goal.estimatedValue / goal.targetValue) * 100;
-    const pendingValue = goal.estimatedValue;
+    // console.log("estimatedPct - confirmedPct: ", estimatedPct - confirmedPct, estimatedPct, confirmedPct);
 
     return (
         <Card key={ goal.goalId } className="overflow-hidden">
@@ -49,20 +45,24 @@ export function GoalCard({ goal }: { goal: MetaMensal }) {
                         <div className="p-2 rounded-lg bg-primary/10 text-primary">
                             <DollarSign className="h-5 w-5" />
                         </div>
+
                         <div>
                             <h3 className="font-semibold text-lg">
                                 {getMonthName(goal.monthIndex)}/{goal.year}
                             </h3>
+
                             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-1">
                                     <Building2 className="h-3 w-3" />
-                  Filial Recife
+                                    Filial {goal.filialId}
                                 </div>
+
                                 <div className="flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
-                  Meta Mensal
+                                    Meta Mensal
                                 </div>
-                                {goal.status === "EM_ANDAMENTO" && (
+
+                                {goal.status === "EM_ANDAMENTO" && goal.remainingDays !== null && (
                                     <div className="flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
                                         {goal.remainingDays} dias restantes
@@ -71,46 +71,51 @@ export function GoalCard({ goal }: { goal: MetaMensal }) {
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={ getStatusColor(goal.status) }>
-                            {goal.status}
-                        </Badge>
-                    </div>
+
+                    <Badge variant="outline" className={ statusColor(goal.status) }>
+                        {goal.status}
+                    </Badge>
                 </div>
 
                 <div className="space-y-4">
-                    {/* Progress Section */}
                     <div className="space-y-3">
                         <div className="flex justify-between items-center">
                             <span className="text-sm font-medium">Progresso Total</span>
                             <span className="text-sm text-muted-foreground">
-                                {formatarValor(goal.currentValue)} / {formatarValor(goal.targetValue)}
+                                {formatValue(current)} / {formatValue(target)}
                             </span>
                         </div>
 
-                        {/* Main Progress Bar - Estimated Value */}
-                        <div className="relative">
-                            <Progress value={ estimatedPercentage } className="h-3" />
-                            {/* Overlay for Confirmed Value */}
-                            <div className="absolute inset-0 flex">
-                                <div
-                                    className="bg-primary rounded-full h-3 transition-all duration-300"
-                                    style={ { width: `${Math.min(confirmedPercentage, 100)}%` } }
-                                />
-                            </div>
+                        {/* === PROGRESSO TOTAL === */}
+                        <div className="relative h-3 w-full rounded-full overflow-hidden bg-gray-200">
+                            {/* CONFIRMADO */}
+                            <div
+                                className={ `absolute left-0 top-0 h-3 bg-primary transition-all duration-300 ${estimatedPct > 0 ? "rounded-l-full" : "rounded-full"}` }
+                                style={ { width: `${confirmedPct}%` } }
+                            />
+
+                            {/* PENDENTE */}
+                            <div
+                                className="absolute top-0 h-3 bg-green-500 rounded-r-full transition-all duration-300"
+                                style={ {
+                                    left: `${confirmedPct}%`,
+                                    width: `${estimatedPct}%`,
+                                } }
+                            />
                         </div>
 
                         <div className="flex justify-between items-center text-sm">
-                            <span>
-                                {estimatedPercentage.toFixed(1)}% estimado / {confirmedPercentage.toFixed(1)}% confirmado
-                            </span>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-primary rounded-full flex items-center" />
+                                {confirmedPct.toFixed(1)}% confirmado +
+                                <div className="w-3 h-3 bg-green-500 rounded-full" /> {estimatedPct.toFixed(1)}% estimado
+                            </div>
                             <span className="text-muted-foreground">
-                Faltam: {formatarValor(Math.max(goal.targetValue - goal.currentValue, 0))}
+                                Faltam: {formatValue(Math.max(target - current, 0))}
                             </span>
                         </div>
                     </div>
 
-                    {/* Revenue Breakdown */}
                     <div className="grid grid-cols-1 gap-3 pt-3 border-t">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -118,21 +123,23 @@ export function GoalCard({ goal }: { goal: MetaMensal }) {
                                 <span className="text-sm font-medium">Confirmado</span>
                             </div>
                             <div className="text-right">
-                                <div className="text-sm font-semibold">{formatarValor(goal.currentValue)}</div>
-                                <div className="text-xs text-muted-foreground">{confirmedPercentage.toFixed(1)}% da meta</div>
+                                <div className="text-sm font-semibold">{formatValue(current)}</div>
+                                <div className="text-xs text-muted-foreground">
+                                    {confirmedPct.toFixed(1)}% da meta
+                                </div>
                             </div>
                         </div>
 
-                        {pendingValue > 0 && (
+                        {estimated > 0 && (
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                                     <span className="text-sm font-medium">Pendente</span>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-sm font-semibold">{formatarValor(pendingValue)}</div>
+                                    <div className="text-sm font-semibold">{formatValue(estimated)}</div>
                                     <div className="text-xs text-muted-foreground">
-                                        {((pendingValue / goal.targetValue) * 100).toFixed(1)}% da meta
+                                        {((estimated / target) * 100).toFixed(1)}% da meta
                                     </div>
                                 </div>
                             </div>
@@ -144,7 +151,7 @@ export function GoalCard({ goal }: { goal: MetaMensal }) {
                                 <span className="text-sm font-medium">Meta Total</span>
                             </div>
                             <div className="text-right">
-                                <div className="text-sm font-semibold">{formatarValor(goal.targetValue)}</div>
+                                <div className="text-sm font-semibold">{formatValue(target)}</div>
                             </div>
                         </div>
                     </div>

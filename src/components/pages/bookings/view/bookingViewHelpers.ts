@@ -130,7 +130,6 @@ export function getWeekDays(date: Date): Date[] {
         nextDay.setDate(monday.getDate() + i);
         weekDays.push(nextDay);
     }
-
     return weekDays;
 }
 
@@ -139,19 +138,13 @@ export function getDayIndex(bookingDate: Date, weekDays: Date[]): number {
     return weekDays.findIndex((day) => day.toDateString() === bookingDay);
 }
 
-// export function isAgendamentoInWeek(checkout: Checkout, weekDays: Date[]): boolean {
-//     console.log("checkout: ", checkout);
-//     const bookingDate = checkout.date;
-//     const startOfWeek = weekDays[0];
-//     const endOfWeek = new Date(weekDays[6]);
-//     endOfWeek.setHours(23, 59, 59, 999);
-
-//     return bookingDate >= startOfWeek && bookingDate <= endOfWeek;
-// }
-
 export function isAgendamentoInWeek(booking: Checkout, weekDays: Date[]): boolean {
     const bookingDate = new Date(booking.date);
+    bookingDate.setHours(0, 0, 0, 0);
+
     const startOfWeek = new Date(weekDays[0]);
+    startOfWeek.setHours(0, 0, 0, 0);
+
     const endOfWeek = new Date(weekDays[6]);
     endOfWeek.setHours(23, 59, 59, 999);
 
