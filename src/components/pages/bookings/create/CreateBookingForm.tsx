@@ -277,8 +277,9 @@ export function CreateBookingForm() {
 
         if (response.statusCode === 201) {
             toast.success(response.message);
-            // handleResetValues();
+            handleResetValues();
             queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+            queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
             window.scrollTo({ top: 0 });
         } else {
             toast.warning(response.message);

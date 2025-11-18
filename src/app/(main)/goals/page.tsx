@@ -1,149 +1,130 @@
 "use client";
 
-import { useState, useMemo , ForwardRefExoticComponent, RefAttributes } from "react";
+import { useMemo, ForwardRefExoticComponent, RefAttributes } from "react";
 import { useAuth } from "@/contexts/auth-provider";
-// import { useQuery } from "@tanstack/react-query";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 
-import { FilterGoalsSchema, filterGoalsType, StatusMeta } from "@/lib/zod/Goals";
-import { ApiResponse } from "@/lib/api";
 import { Goal } from "@/utils/@types/goals";
 import { GetAllGoals } from "@/services/goals.service";
-import { getMonthName } from "@/utils/getMonthName";
 
 import {
     Target,
     TrendingUp,
     Clock,
-    ChevronUp,
-    ChevronDown,
-    History,
-    Play,
     AlertTriangle,
     CheckCircle,
     LoaderCircle,
-    LucideProps
+    LucideProps,
 } from "lucide-react";
 
 import { CreateGoalDialog } from "@/components/pages/goals/CreateGoalDialog";
 import { GoalCard } from "@/components/pages/goals/GoalCard";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SelectFilial } from "@/components/shared/SelectFilial";
-import { useQuery } from "@tanstack/react-query";
 
-export type MetaMensal = {
-  filialId: string;
-  goalId?: number;
-  year: number;
-  remainingDays: number;
-  monthIndex: number;
-  targetValue: number;
-  currentValue: number;
-  estimatedValue: number;
-  status: StatusMeta;
-  createdAt: Date;
-  updatedAt: Date;
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+
+import { useForm, Controller, FormProvider } from "react-hook-form";
+import { SelectGear } from "@/components/pages/bookings/create/SelectGear";
+import { Gear } from "@/utils/@types/gears";
+
+type FiltersForm = {
+  filialId?: string;
+  status?: string;
+  gear?: string;
+  tab?: "money" | "gear";
 };
 
 export default function MetasMensaisPage() {
     const { user } = useAuth();
 
-    const {
-        control,
-        reset,
-        watch,
-        trigger,
-        formState: { errors },
-    } = useForm<filterGoalsType>({
-        resolver: zodResolver(FilterGoalsSchema),
+    const filterMethods = useForm<FiltersForm>({
         defaultValues: {
-            filterEndMonth: undefined,
-            filterEndYear: undefined,
-            filterStartMonth: undefined,
-            filterStartYear: undefined,
+            filialId: undefined,
+            status: undefined,
+            gear: undefined,
+            tab: "money",
         },
     });
 
-    const watchStartYear = watch("filterStartYear");
-    const watchStartMonth = watch("filterStartMonth");
-    const watchEndYear = watch("filterEndYear");
-    const watchEndMonth = watch("filterEndMonth");
-    const watchFilial = watch("filterFilial");
-    const watchStatus = watch("filterStatus");
+    const { control, watch, reset, setValue } = filterMethods;
 
-    // Busca metas via React Query
-    // const { data: goals = [], isLoading } = useQuery<Goal[], Error>({
-    //     queryKey: [ "get-all-goals", user?.role, watchFilial ],
-    //     queryFn: () =>
-    //         GetAllGoals({
-    //             filialId: user?.role === "Gerente" ? undefined : user?.sourceFilial.filialId,
-    //         }),
-    //     staleTime: 1000 * 60,
-    // });
+    const filterFilial = watch("filialId");
+    const filterStatus = watch("status");
+    const filterMachine = watch("gear");
+    const activeTab = watch("tab");
 
-    const { data, isLoading } = useQuery<Goal[], Error>({
+    const { data, isLoading } = useQuery<Goal[]>({
         queryKey: [ "get-all-goals" ],
         queryFn: () =>
             GetAllGoals({
-                filialId: user?.role === "Gerente" ? undefined : user?.sourceFilial.filialId,
+                filialId:
+          user?.role === "Gerente"
+              ? undefined
+              : user?.sourceFilial.filialId,
             }),
-        staleTime: 1000 * 60, // 1 minuto de cache
-        // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
+        staleTime: 1000 * 60,
     });
 
     const goals = data;
 
-    // Aplica filtros
     const filteredGoals = useMemo(() => {
-        if(goals) {
-            let filtered = [ ...goals ];
+        if (!goals) return [];
 
-            if (watchFilial) filtered = filtered.filter((g) => g.filialId === watchFilial);
-            if (watchStatus) filtered = filtered.filter((g) => g.status === watchStatus);
+        let filtered = [ ...goals ];
 
-            if (watchStartYear && watchStartMonth && watchEndYear && watchEndMonth) {
-                const start = new Date(+watchStartYear, +watchStartMonth - 1);
-                const end = new Date(+watchEndYear, +watchEndMonth - 1);
-                filtered = filtered.filter((g) => {
-                    const d = new Date(g.year, g.monthIndex);
-                    return d >= start && d <= end;
-                });
-            }
+        if (filterFilial)
+            filtered = filtered.filter((g) => g.filial.filialId === filterFilial);
+        if (filterStatus) filtered = filtered.filter((g) => g.status === filterStatus);
 
-            return filtered;
-        }
-    }, [ goals, watchFilial, watchStatus, watchStartMonth, watchStartYear, watchEndMonth, watchEndYear ]);
+        return filtered;
+    }, [ goals, filterFilial, filterStatus ]);
 
-    // Separação das metas por período
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+    const moneyGoals = filteredGoals.filter((g) => g.goalType === "MONEY");
 
-    const currentMonthGoals = filteredGoals?.filter(
-        (g) => g.year === currentYear && g.monthIndex === currentMonth
-    );
-    const pastMonthsGoals = filteredGoals?.filter(
-        (g) => g.year < currentYear || (g.year === currentYear && g.monthIndex < currentMonth)
+    const equipmentGoals = filteredGoals
+        .filter((g) => g.goalType === "GEAR")
+        .filter((g) =>
+            filterMachine ? g.Gear?.gearId === filterMachine : true
+        );
+
+    // supondo que você já tenha "goals" carregado
+    const gears = Array.from(
+        new Map(
+            filteredGoals
+                .filter((g) => g.Gear) // só goals com engrenagem
+                .map((g) => [ g.Gear!.gearId, g.Gear ]) // chave = gearId
+        ).values()
     );
 
-    // Estatísticas
-    const estatisticas = useMemo(() => ({
-        total: filteredGoals?.length,
-        emAndamento: filteredGoals?.filter((m) => m.status === "EM_ANDAMENTO").length,
-        atingidas: filteredGoals?.filter((m) => m.status === "Concluida").length,
-        naoAtingidas: filteredGoals?.filter((m) => m.status === "NAO_ATINGIDA").length,
-        mediaPercentual:
-      filteredGoals?.length && filteredGoals?.length > 0
-          ? (filteredGoals?.filter((m) => m.status === "Concluida").length / filteredGoals?.length) * 100
-          : 0,
-    }), [ filteredGoals ]);
+    const filiaisList = Array.from(new Set(goals?.map((g) => g.filial.filialName) ?? []));
+
+    const estatisticas = useMemo(
+        () => ({
+            total: filteredGoals.length,
+            emAndamento: filteredGoals.filter((m) => m.status === "EM_ANDAMENTO").length,
+            atingidas: filteredGoals.filter((m) => m.status === "Concluida").length,
+            naoAtingidas: filteredGoals.filter((m) => m.status === "NAO_ATINGIDA").length,
+            mediaPercentual:
+        filteredGoals.length > 0
+            ? (filteredGoals.filter((m) => m.status === "Concluida").length /
+              filteredGoals.length) *
+            100
+            : 0,
+        }),
+        [ filteredGoals ]
+    );
 
     const StatCard = ({
         title,
@@ -154,7 +135,9 @@ export default function MetasMensaisPage() {
     }: {
     title: string;
     value: number | string | undefined;
-    icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
+    icon: ForwardRefExoticComponent<
+      Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+    >;
     textColor?: string;
     iconColor?: string;
   }) => (
@@ -175,116 +158,213 @@ export default function MetasMensaisPage() {
         </Card>
     );
 
-    const [ openCurrentGoalsCollapsible, setOpenCurrentGoalsCollapsible ] = useState(true);
-    const [ openPreviousGoalsCollapsible, setOpenPreviousGoalsCollapsible ] = useState(false);
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Metas Mensais de Vendas</h1>
-                    <p className="text-muted-foreground">Acompanhe as metas da sua filial por aqui</p>
+                    <p className="text-muted-foreground">
+            Acompanhe metas financeiras e de equipamentos
+                    </p>
                 </div>
-                <div className="flex gap-2">
-                    <CreateGoalDialog />
-                </div>
+                <CreateGoalDialog />
             </div>
 
-            {/* Cards de Estatísticas */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                 <StatCard title="Total de Metas" value={ estatisticas.total } icon={ Target } />
-                <StatCard title="Em Andamento" value={ estatisticas.emAndamento } icon={ Clock } textColor="text-blue-600" iconColor="text-blue-600" />
-                <StatCard title="Atingidas" value={ estatisticas.atingidas } icon={ CheckCircle } textColor="text-green-600" iconColor="text-green-600" />
-                <StatCard title="Não Atingidas" value={ estatisticas.naoAtingidas } icon={ AlertTriangle } textColor="text-red-600" iconColor="text-red-600" />
-                <StatCard title="Média de Atingimento" value={ `${estatisticas.mediaPercentual.toFixed(1)}%` } icon={ TrendingUp } textColor="text-primary" iconColor="text-primary" />
+                <StatCard
+                    title="Em Andamento"
+                    value={ estatisticas.emAndamento }
+                    icon={ Clock }
+                    textColor="text-blue-600"
+                    iconColor="text-blue-600"
+                />
+                <StatCard
+                    title="Atingidas"
+                    value={ estatisticas.atingidas }
+                    icon={ CheckCircle }
+                    textColor="text-green-600"
+                    iconColor="text-green-600"
+                />
+                <StatCard
+                    title="Não Atingidas"
+                    value={ estatisticas.naoAtingidas }
+                    icon={ AlertTriangle }
+                    textColor="text-red-600"
+                    iconColor="text-red-600"
+                />
+                <StatCard
+                    title="Média de Atingimento"
+                    value={ `${estatisticas.mediaPercentual.toFixed(1)}%` }
+                    icon={ TrendingUp }
+                    textColor="text-primary"
+                    iconColor="text-primary"
+                />
             </div>
 
-            {/* Metas do Mês Atual */}
-            <div className="space-y-4">
-                <div className="grid gap-4">
-                    {isLoading ? (
-                        <Card>
-                            <CardContent className="flex flex-col items-center justify-center py-12">
-                                <LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
-                                <p className="text-muted-foreground">Carregando metas...</p>
-                            </CardContent>
-                        </Card>
-                    ) : currentMonthGoals?.length === 0 ? (
-                        <Card>
-                            <CardContent className="flex flex-col items-center justify-center py-12">
-                                <Target className="h-12 w-12 text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-medium mb-2">Nenhuma meta do mês atual</h3>
-                                <p className="text-muted-foreground text-center">
-                  Não há metas definidas para {getMonthName(new Date().getMonth())}/{currentYear}.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <Card>
-                            <Collapsible open={ openCurrentGoalsCollapsible } onOpenChange={ setOpenCurrentGoalsCollapsible }>
-                                <CollapsibleTrigger asChild>
-                                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Play className="h-5 w-5 text-muted-foreground" />
-                                                <CardTitle className="text-lg">Metas do mês atual</CardTitle>
-                                                <Badge variant="secondary">{currentMonthGoals?.length}</Badge>
-                                            </div>
-                                            {openCurrentGoalsCollapsible ? (
-                                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                            ) : (
-                                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                            )}
-                                        </div>
-                                    </CardHeader>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <CardContent className="pt-0">
-                                        <div className="grid gap-4">
-                                            {currentMonthGoals?.map((meta) => (
-                                                <GoalCard key={ meta.goalId } goal={ meta } />
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </CollapsibleContent>
-                            </Collapsible>
-                        </Card>
+            <Card className="p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="flex flex-col gap-2">
+                        <Label>Filial</Label>
+                        <Controller
+                            control={ control }
+                            name="filialId"
+                            render={ ({ field }) => (
+                                <Select onValueChange={ field.onChange } value={ field.value }>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {filiaisList.map((f) => (
+                                            <SelectItem key={ f } value={ f }>
+                                                {f}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            ) }
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <Label>Status</Label>
+                        <Controller
+                            control={ control }
+                            name="status"
+                            render={ ({ field }) => (
+                                <Select onValueChange={ field.onChange } value={ field.value }>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="EM_ANDAMENTO">Em andamento</SelectItem>
+                                        <SelectItem value="Concluida">Atingida</SelectItem>
+                                        <SelectItem value="NAO_ATINGIDA">Não atingida</SelectItem>
+                                        <SelectItem value="PARCIALMENTE_CONCLUIDA">
+                      Parcialmente atingida
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            ) }
+                        />
+                    </div>
+
+                    {activeTab === "gear" && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="flex flex-col gap-2">
+                                <Label>Equipamento</Label>
+                                <Controller
+                                    control={ control }
+                                    name="gear"
+                                    render={ ({ field }) => (
+                                        <Select
+                                            value={ field.value ?? "" }
+                                            onValueChange={ field.onChange }
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione o produto" />
+                                            </SelectTrigger>
+
+                                            <SelectContent>
+                                                {gears.map((g) => (
+                                                    <SelectItem key={ g.gearId } value={ g.gearId }>
+                                                        {g.gearName}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        // <Select onValueChange={ field.onChange } value={ field.value }>
+                                        //     <SelectTrigger>
+                                        //         <SelectValue placeholder="Selecione" />
+                                        //     </SelectTrigger>
+                                        //     <SelectContent>
+                                        //         {machinesList.map((m) => (
+                                        //             <SelectItem key={ m } value={ m ?? "" }>
+                                        //                 {m}
+                                        //             </SelectItem>
+                                        //         ))}
+                                        //     </SelectContent>
+                                        // </Select>
+                                    ) }
+                                />
+                            </div>
+                        </div>
                     )}
                 </div>
-            </div>
 
-            {/* Metas Anteriores */}
-            {!isLoading && pastMonthsGoals && pastMonthsGoals.length > 0 && (
-                <Collapsible open={ openPreviousGoalsCollapsible } onOpenChange={ setOpenPreviousGoalsCollapsible }>
+                <Button
+                    variant="outline"
+                    onClick={ () =>
+                        reset({
+                            filialId: undefined,
+                            status: undefined,
+                            gear: "",
+                            tab: activeTab,
+                        })
+                    }
+                >
+          Limpar filtros
+                </Button>
+            </Card>
+
+            <Tabs
+                defaultValue="money"
+                className="w-full"
+                onValueChange={ (v) => setValue("tab", v as "money" | "gear") }
+            >
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="money">Metas Financeiras</TabsTrigger>
+                    <TabsTrigger value="gear">Metas de Equipamentos</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="money">
                     <Card>
-                        <CollapsibleTrigger asChild>
-                            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <History className="h-5 w-5 text-muted-foreground" />
-                                        <CardTitle className="text-lg">Metas Anteriores</CardTitle>
-                                        <Badge variant="secondary">{pastMonthsGoals.length}</Badge>
-                                    </div>
-                                    {openPreviousGoalsCollapsible ? (
-                                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                    ) : (
-                                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                    )}
-                                </div>
-                            </CardHeader>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                            <CardContent className="pt-0">
-                                <div className="grid gap-4">
-                                    {pastMonthsGoals.map((meta) => (
-                                        <GoalCard key={ meta.goalId } goal={ meta } />
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </CollapsibleContent>
+                        <CardHeader>
+                            <CardTitle className="text-xl flex gap-2 items-center">
+                                <Target className="h-5 w-5" />
+                Metas Financeiras
+                                <Badge variant="secondary">{moneyGoals.length}</Badge>
+                            </CardTitle>
+                        </CardHeader>
+
+                        <CardContent className="space-y-4">
+                            {moneyGoals.length === 0 ? (
+                                <p className="text-muted-foreground">Nenhuma meta encontrada.</p>
+                            ) : (
+                                moneyGoals.map((meta) => (
+                                    <GoalCard key={ meta.goalId } goal={ meta } />
+                                ))
+                            )}
+                        </CardContent>
                     </Card>
-                </Collapsible>
-            )}
+                </TabsContent>
+
+                <TabsContent value="gear">
+                    {/* <Card className="p-4 mb-4">
+
+                    </Card> */}
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-xl flex gap-2 items-center">
+                                <Target className="h-5 w-5" />
+                Metas de Equipamentos
+                                <Badge variant="secondary">{equipmentGoals.length}</Badge>
+                            </CardTitle>
+                        </CardHeader>
+
+                        <CardContent className="space-y-4">
+                            {equipmentGoals.length === 0 ? (
+                                <p className="text-muted-foreground">Nenhuma meta encontrada.</p>
+                            ) : (
+                                equipmentGoals.map((meta) => (
+                                    <GoalCard key={ meta.goalId } goal={ meta } />
+                                ))
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }

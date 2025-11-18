@@ -119,6 +119,7 @@ export function BookingDetailsDialog({
                 };
             });
 
+            queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
             queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
         }
     }

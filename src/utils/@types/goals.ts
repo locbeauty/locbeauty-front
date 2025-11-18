@@ -8,6 +8,11 @@ export interface Goal {
   currentCents: number | null;
   estimatedCents: number | null;
 
+  Gear?: {
+    gearName: string,
+    gearId: string,
+  },
+
   targetQuantity: number | null;
   currentQuantity: number | null;
   estimatedQuantity: number | null;
@@ -16,7 +21,10 @@ export interface Goal {
 
   remainingDays: number | null;
 
-  filialId: string;
+  filial: {
+    filialId: string;
+    filialName: string;
+  }
 
   createdAt: Date;
   updatedAt: Date;

@@ -273,6 +273,7 @@ export function CheckoutPaymentMethodDialog({
                 // Atualiza o estado local
                 setSelectedCheckout(updatedCheckout);
                 queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+                queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
 
                 toast.success("Pagamento atualizado com sucesso!");
                 queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });

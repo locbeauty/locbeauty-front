@@ -28,6 +28,7 @@ import { getMonthName } from "@/utils/getMonthName";
 import { SelectGear } from "../bookings/create/SelectGear";
 import { Gear } from "@/utils/@types/gears";
 import { SelectTrainingGear } from "../trainings/SelectTrainingGear";
+import { queryClient } from "@/app/(main)/layout";
 
 export function CreateGoalDialog() {
     const [ dialogNovaMeta, setDialogNovaMeta ] = useState(false);
@@ -89,6 +90,7 @@ export function CreateGoalDialog() {
                 toast.success("Meta criada com sucesso!", {
                     style: { fontSize: "1rem" },
                 });
+                queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
                 setDialogNovaMeta(false); // Fecha o diálogo
                 reset(); // Reseta o formulário
             }

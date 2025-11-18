@@ -83,6 +83,16 @@ export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleE
                 <DollarSign className="h-3 w-3" />
                 {centsToString(checkout.totalPrice)}
             </div>
+            <div
+                className={ cn(
+                    "absolute bottom-0 left-0 h-1 w-full",
+                    checkout.CheckoutPayment.paymentStatus === "Pago"
+                        ? "bg-green-500"
+                        : checkout.date < new Date()
+                            ? "bg-red-500"
+                            : "bg-yellow-500"
+                ) }
+            />
         </div>
     );
 }

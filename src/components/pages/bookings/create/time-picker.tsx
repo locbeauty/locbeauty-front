@@ -142,7 +142,7 @@ export default function TimePicker({ selectedDate, checkoutSchedule }: TimePicke
                                                     onClick={ () => handleDurationButtonClick(option.durationInMinutes, option.maxGearAmount) }
                                                     className="text-xs"
                                                 >
-                                                    {option.durationInMinutes / 60} horas
+                                                    {option.durationInMinutes / 60} hora{option.durationInMinutes / 60 > 1 ? "s" : ""}
                                                 </Button>
                                             );
                                         })}

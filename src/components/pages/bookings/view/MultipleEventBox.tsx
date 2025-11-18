@@ -7,6 +7,7 @@ import { formatCurrency, formatTime, getDistanceFromTop, getEventBoxHeigh } from
 import { cn } from "@/lib/utils";
 import type { FlattenedBooking } from "./WeekView";
 import { Checkout } from "@/utils/@types/checkouts";
+import { centsToString } from "@/utils/centsToString";
 
 interface MultipleEventBoxProps {
   group: Checkout[]
@@ -27,8 +28,8 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
     // Calculate width for each booking in the group
     const eventWidth = `calc((${columnWidth} - 2px) / ${group.length})`;
 
-    return group.map((booking, bookingIndex) => {
-        const durationInHours = booking.totalDurationInMinutes / 60;
+    return group.map((checkout, bookingIndex) => {
+        const durationInHours = checkout.totalDurationInMinutes / 60;
 
         // Calculate booking height
         const height = getEventBoxHeigh(durationInHours);
@@ -39,8 +40,8 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
 
         // Calculate initial position
         // const top = getDistanceFromTop(booking.startDate.getHours(), booking.startDate.getMinutes());
-        const startHour = Math.floor(booking.startHourInMinutes / 60);
-        const startMinute = booking.startHourInMinutes % 60;
+        const startHour = Math.floor(checkout.startHourInMinutes / 60);
+        const startMinute = checkout.startHourInMinutes % 60;
 
         const top = getDistanceFromTop(startHour, startMinute);
 
@@ -48,7 +49,7 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
 
         return (
             <div
-                key={ booking.checkoutId }
+                key={ checkout.checkoutId }
                 className={ cn(
                     "overflow-y-auto absolute rounded-md border-l-4 p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow",
                     // Default colors for bookings with durations different than 4, 6 and 8-12 hours
@@ -69,35 +70,42 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
                     width: eventWidth,
                     overflowX: "hidden",
                 } }
-                onClick={ () => openCheckoutDetails(booking) }
+                onClick={ () => openCheckoutDetails(checkout) }
             >
-                <div className="font-medium text-sm truncate">{booking.Bookings.map(item => item.gear.gearName).join(", ")}</div>
+                <div className="font-medium text-sm truncate">{checkout.Bookings.map(item => item.gear.gearName).join(", ")}</div>
 
                 <div className="flex items-center text-xs gap-1 truncate">
                     <User className="h-3 w-3" />
-                    {booking.customer.fullname}
+                    {checkout.customer.fullname}
                 </div>
 
                 <div className="flex items-center text-xs gap-1 truncate">
                     <MapPin className="h-3 w-3" />
-                    {booking.sourceFilial.filialName}
+                    {checkout.sourceFilial.filialName}
                 </div>
 
                 <div className="flex items-center text-xs gap-1 truncate">
                     <Clock className="h-3 w-3" />
-                    {formatTime(booking.date)}
+                    {formatTime(checkout.date)}
                 </div>
 
                 <div className="flex items-center text-xs gap-1 truncate">
                     <DollarSign className="h-3 w-3" />
-                    {formatCurrency(booking.totalPrice)}
+                    {centsToString(checkout.totalPrice)}
                 </div>
 
-                <div className="flex flex-col gap-1 mt-2">
-                    <BookingStatusBadge status={ booking.checkoutStatus } shrink={ true } />
-                    <BookingPaymentStatusBadge shrink={ true } status={ booking.paymentStatus } />
-                </div>
+                <div
+                    className={ cn(
+                        "absolute bottom-0 left-0 h-1 w-full",
+                        checkout.CheckoutPayment.paymentStatus === "Pago"
+                            ? "bg-green-500"
+                            : checkout.date < new Date()
+                                ? "bg-red-500"
+                                : "bg-yellow-500"
+                    ) }
+                />
             </div>
+
         );
     });
 }
