@@ -46,6 +46,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UpdateCheckout, UpdateCheckoutStatus } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { CheckoutPaymentMethodDialog } from "../CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
+import { AddGearToCheckoutDialog } from "./AddGearToCheckoutDialog";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -65,6 +66,7 @@ export function BookingDetailsDialog({
     const [ selectedBookingIdForExtraCosts, setSelectedBookingIdForExtraCosts ] = useState<string | null>(null);
     const [ isAdditionalCostsDialogOpen, setAdditionalCostsDialogOpen ] = useState(false);
     const [ isCheckoutPaymentMethodDialogOpen, setIsCheckoutPaymentMethodDialogOpen ] = useState(false);
+    const [ isAddGearDialogOpen, setIsAddGearDialogOpen ] = useState(false);
     const [ isCancelBookingConfirmationDialogOpen, setCancelBookingConfirmationDialogOpen ] = useState(false);
 
     useEffect(() => {
@@ -297,9 +299,36 @@ export function BookingDetailsDialog({
 
                             { /* Informações financeiras */ }
                             <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">
+                                <div className="flex items-center">
+
+                                    <h4 className="font-medium text-sm text-muted-foreground text-nowrap">
         INFORMAÇÕES FINANCEIRAS
-                                </h4>
+                                    </h4>
+                                    <div className="flex w-full justify-end mb-4">
+                                        {
+                                            selectedCheckout.date > new Date() && (
+
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    onClick={ () => setIsAddGearDialogOpen(true) }
+                                                    className="flex items-center gap-2"
+                                                >
+                                                    <Package className="h-4 w-4" />
+    Adicionar equipamento
+                                                </Button>
+                                            )
+                                        }
+                                    </div>
+
+                                    <AddGearToCheckoutDialog
+                                        selectedCheckout={ selectedCheckout }
+                                        setSelectedCheckout={ setSelectedCheckout }
+                                        isOpen={ isAddGearDialogOpen }
+                                        setIsOpen={ setIsAddGearDialogOpen }
+
+                                    />
+                                </div>
                                 <Card>
                                     <CardContent>
                                         { /* Informações individuais de cada booking */ }
