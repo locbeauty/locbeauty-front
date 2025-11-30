@@ -78,6 +78,7 @@ export async function UpdateCheckout({
 }: {
   body: {
     distanceInKm?: number;
+    fuelCost?: number;
     foodCost?: number;
     lodgingCost?: number;
     additionalTransportCost?: number;
@@ -109,7 +110,48 @@ export async function UpdateCheckoutStatus({
 
     const response = await apiRequest({
         endpoint: "bookings/config/status",
+        method: "POST",
         queryParams: { checkoutId, date, checkoutStatus },
+    });
+
+    return response;
+}
+
+interface AddGearInCheckoutResponse {
+  statusCode: number;
+  message?: string;
+  data?: {
+    bookingId: string;
+  };
+}
+
+export async function AddGearInCheckout({
+    checkoutId,
+    extraMachineCosts,
+    extraMachineCostsDescription,
+    gear,
+    individualPrice
+}: {
+    checkoutId: string;
+    gear: {
+        gearId: string,
+        gearName: string,
+    };
+    individualPrice: number;
+    extraMachineCosts: number;
+    extraMachineCostsDescription?: string;
+}): Promise<AddGearInCheckoutResponse> {
+
+    const response = await apiRequest<{bookingId: string}>({
+        endpoint: "booking/update/add-gear",
+        method: "POST",
+        body: {
+            checkoutId,
+            extraMachineCosts,
+            extraMachineCostsDescription,
+            gear,
+            individualPrice
+        },
     });
 
     return response;

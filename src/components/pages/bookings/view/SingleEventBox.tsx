@@ -8,12 +8,14 @@ import { centsToString } from "@/utils/centsToString";
 import { Checkout } from "@/utils/@types/checkouts";
 
 interface SingleEventBoxProps {
-  group: Checkout[]
-  dayIndex: number
-  openCheckoutDetails: (_checkout: Checkout) => void
+    eventType: "training" | "checkout"
+    group: Checkout[]
+    dayIndex: number
+    openCheckoutDetails: (_checkout: Checkout) => void
 }
 
 export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleEventBoxProps) {
+    console.log("group: ",group);
     // If the group has only one event, use full width
     const hourColumnWidth = 100;
     const checkout = group[0];
@@ -60,7 +62,7 @@ export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleE
             onClick={ () => openCheckoutDetails(checkout) }
         >
             <div className="font-medium text-sm truncate">
-                {checkout.Bookings.sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName)).map(item => item.gear.gearName).join(", ")}
+                {checkout.Bookings.filter(booking => booking.status === "ACTIVE").sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName)).map(item => item.gear.gearName).join(", ")}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">

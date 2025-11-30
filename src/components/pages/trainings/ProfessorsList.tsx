@@ -18,7 +18,7 @@ export function ProfessorsList({ professors }: ProfessorsListProps) {
                     <CardContent className="p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-2 rounded-lg bg-primary/10">
-                                <GraduationCap className="h-6 w-6 text-primary" />
+                                <User className="h-6 w-6 text-primary" />
                             </div>
                             <div>
                                 <h3 className="font-semibold">{professor.name}</h3>

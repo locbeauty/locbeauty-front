@@ -11,7 +11,6 @@ import { Professor } from "@/utils/@types/professor";
 import { CreateTrainingDialog } from "@/components/pages/trainings/CreateTrainingDialog";
 import { Training } from "@/utils/@types/training";
 import { GetAllTrainings } from "@/services/trainings.service";
-import { CreateProfessorDialog } from "@/components/pages/trainings/CreateProfessorDialog";
 import { CreateStudentDialog } from "@/components/pages/trainings/CreateStudentDialog";
 import { TrainingsList } from "@/components/pages/trainings/TrainingsList";
 import { StudentsList } from "@/components/pages/trainings/StudentsList";
@@ -19,10 +18,12 @@ import { ProfessorsList } from "@/components/pages/trainings/ProfessorsList";
 import { SummarySection } from "@/components/pages/trainings/SummarySection";
 import { GetAllGears } from "@/services/gears.service";
 import { Gear } from "@/utils/@types/gears";
+import { CreatePacienteModeloDialog } from "@/components/pages/trainings/CreatePacienteModeloDialog";
+import { StudentDetailsDialog } from "@/components/pages/trainings/StudentDetailsDialog";
 
 export default function Treinamentos() {
     const [ activeTab, setActiveTab ] = useState("treinamentos");
-    const [ dialogNovoProfessor, setDialogNovoProfessor ] = useState(false);
+    const [ dialogNovoPacienteModelo, setDialogNovoPacienteModelo ] = useState(false);
     const [ dialogNovoAluno, setDialogNovoAluno ] = useState(false);
     const [ dialogNovoTreinamento, setDialogNovoTreinamento ] = useState(false);
 
@@ -55,6 +56,15 @@ export default function Treinamentos() {
     const trainings = trainingsData.data?.data;
     const gears = gearsData.data?.data;
 
+    const [ selectedStudent, setSelectedStudent ] = useState<Student | null>(null);
+    const [ isDialogOpen, setIsDialogOpen ] = useState(false);
+
+    // Função passada para a lista apenas selecionar
+    const handleSelectStudent = (student: Student) => {
+        setSelectedStudent(student);
+        setIsDialogOpen(true);
+    };
+
     return (
         <div className="container mx-auto py-6">
             <div className="mb-6">
@@ -73,8 +83,8 @@ export default function Treinamentos() {
             <Tabs value={ activeTab } onValueChange={ setActiveTab }>
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="treinamentos">Treinamentos</TabsTrigger>
-                    <TabsTrigger value="professores">Professores</TabsTrigger>
                     <TabsTrigger value="alunos">Alunos</TabsTrigger>
+                    <TabsTrigger value="professores">Pacientes modelo</TabsTrigger>
                 </TabsList>
 
                 {/* Tab Treinamentos */}
@@ -93,16 +103,6 @@ export default function Treinamentos() {
                     <TrainingsList trainings={ trainings } />
                 </TabsContent>
 
-                {/* Tab Professores */}
-                <TabsContent value="professores" className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-semibold">Professores</h2>
-                        <CreateProfessorDialog dialogNovoProfessor={ dialogNovoProfessor } setDialogNovoProfessor={ setDialogNovoProfessor } />
-                    </div>
-
-                    <ProfessorsList professors={ professors } />
-                </TabsContent>
-
                 {/* Tab Alunos */}
                 <TabsContent value="alunos" className="space-y-4">
                     <div className="flex justify-between items-center">
@@ -110,9 +110,28 @@ export default function Treinamentos() {
                         <CreateStudentDialog dialogNovoAluno={ dialogNovoAluno } setDialogNovoAluno={ setDialogNovoAluno }  />
                     </div>
 
-                    <StudentsList students={ students } />
+                    {/* <StudentsList students={ students } /> */}
+                    <StudentsList
+                        students={ students }
+                        onViewDetails={ handleSelectStudent }
+                    />
+                </TabsContent>
+
+                {/* Tab Professores */}
+                <TabsContent value="professores" className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-semibold">Pacientes modelo</h2>
+                        <CreatePacienteModeloDialog dialogNovoPacienteModelo={ dialogNovoPacienteModelo } setDialogNovoPacienteModelo={ setDialogNovoPacienteModelo } />
+                    </div>
+
+                    <ProfessorsList professors={ professors } />
                 </TabsContent>
             </Tabs>
+            <StudentDetailsDialog
+                isOpen={ isDialogOpen }
+                setIsOpen={ setIsDialogOpen }
+                student={ selectedStudent }
+            />
         </div>
     );
 }

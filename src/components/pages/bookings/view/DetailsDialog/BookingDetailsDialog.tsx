@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { differenceInDays , differenceInCalendarDays } from "date-fns";
+import { differenceInCalendarDays } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,17 +16,14 @@ import {
     MapPin,
     DollarSign,
     User,
-    Calendar,
-    ClipboardList,
-    Package,
+    Calendar, Package,
     Building,
     Phone,
     Mail, Trash2,
     CircleEllipsis, Text, FileText,
     Pencil,
-    Copy,
-    Scroll,
-    Check
+    Copy, Check,
+    X
 } from "lucide-react";
 import {
     formatDate,
@@ -35,18 +32,18 @@ import {
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../../common/BookingPaymentStatusBadge";
 import { toast } from "sonner";
-import { fetchWithToken } from "@/utils/fetchWithToken";
 import { MachineExtraCostsDialog } from "../MachineExtraCostsDialog/MachineExtraCostsDialog";
-import { centsToString, centsToStringWithCurrencyMark } from "@/utils/centsToString";
+import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkout } from "@/utils/@types/checkouts";
-import { AdditionalCostsDialog } from "../AdditionalCostsDialog/AdditionalCostsDialog";
+import { UpdateAdditionalCostsDialog } from "../AdditionalCostsDialog/UpdateAdditionalCostsDialog";
 import { Textarea } from "@/components/ui/textarea";
 import { UpdateCheckout, UpdateCheckoutStatus } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { CheckoutPaymentMethodDialog } from "../CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 import { AddGearToCheckoutDialog } from "./AddGearToCheckoutDialog";
+import { RemoveBookingFromCheckout } from "@/services/bookings.service";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -68,9 +65,20 @@ export function BookingDetailsDialog({
     const [ isCheckoutPaymentMethodDialogOpen, setIsCheckoutPaymentMethodDialogOpen ] = useState(false);
     const [ isAddGearDialogOpen, setIsAddGearDialogOpen ] = useState(false);
     const [ isCancelBookingConfirmationDialogOpen, setCancelBookingConfirmationDialogOpen ] = useState(false);
+    const [ checkoutCanBeUpdated, setCheckoutCanBeUpdated ] = useState(true);
 
     useEffect(() => {
         setCheckoutObservations(selectedCheckout?.observations || "");
+    }, [ selectedCheckout ]);
+
+    useEffect(() => {
+        if (!selectedCheckout) return;
+
+        const isPaid = selectedCheckout.CheckoutPayment.paymentStatus === "Pago";
+        const isPast = selectedCheckout.date <= new Date();
+        const isNotPending = selectedCheckout.checkoutStatus !== "Pendente";
+
+        setCheckoutCanBeUpdated(!(isPaid || isPast || isNotPending));
     }, [ selectedCheckout ]);
 
     async function handleUpdateCheckoutObservations() {
@@ -100,6 +108,41 @@ export function BookingDetailsDialog({
         queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
     }
 
+    async function handleRemoveGearFromCheckout(booking: Checkout["Bookings"][number]) {
+
+        if (!selectedCheckout) return;
+        if (selectedCheckout.Bookings.length < 2) return;
+
+        const bookingId = booking.bookingId;
+
+        const response = await RemoveBookingFromCheckout({
+            checkoutId: selectedCheckout!.checkoutId,
+            bookingId
+        });
+
+        if (response.statusCode !== 200) {
+            toast.warning(response.message, { style: { fontSize: "1rem" } });
+            window.scroll({ top: 0 });
+            return;
+        }
+
+        toast.success(response.message, { style: { fontSize: "1rem" } });
+
+        setSelectedCheckout(prev => {
+            if (!prev) return prev;
+            console.log("dados: ", selectedCheckout.basePrice, booking.individualPrice, booking.extraMachineCosts);
+            return {
+                ...prev,
+                observations: checkoutObservations,
+                Bookings: prev.Bookings?.filter(b => b.bookingId !== bookingId) ?? [],
+                basePrice: selectedCheckout.basePrice - booking.individualPrice,
+                totalPrice: selectedCheckout.totalPrice - booking.individualPrice - booking.extraMachineCosts,
+            };
+        });
+
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+    }
+
     async function handleChangeCheckoutStatus(checkoutId: string, checkoutStatus: "Concluido" | "Cancelado") {
         const response = await UpdateCheckoutStatus({
             checkoutId,
@@ -117,7 +160,7 @@ export function BookingDetailsDialog({
                 if(!prev) return prev;
                 return {
                     ...prev,
-                    checkoutStatus
+                    checkoutStatus,
                 };
             });
 
@@ -158,7 +201,7 @@ export function BookingDetailsDialog({
                                 <div className="flex items-center gap-2">
                                     <Package className="h-5 w-5 text-primary" />
                                     <h3 className="text-lg font-semibold">
-                                        {selectedCheckout.Bookings.sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName)).map(item => item.gear.gearName).join(", ")}
+                                        {selectedCheckout.Bookings.filter(booking => booking.status === "ACTIVE").sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName)).map(item => item.gear.gearName).join(", ")}
                                     </h3>
                                 </div>
                                 <div className="flex gap-2">
@@ -306,28 +349,29 @@ export function BookingDetailsDialog({
                                     </h4>
                                     <div className="flex w-full justify-end mb-4">
                                         {
-                                            selectedCheckout.date > new Date() && (
-
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    onClick={ () => setIsAddGearDialogOpen(true) }
-                                                    className="flex items-center gap-2"
-                                                >
-                                                    <Package className="h-4 w-4" />
+                                            (selectedCheckout.Bookings.filter(booking => booking.status === "ACTIVE").length < 3 && checkoutCanBeUpdated) &&
+                                            (
+                                                <>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={ () => setIsAddGearDialogOpen(true) }
+                                                        className="flex items-center gap-2"
+                                                    >
+                                                        <Package className="h-4 w-4" />
     Adicionar equipamento
-                                                </Button>
+                                                    </Button>
+                                                    <AddGearToCheckoutDialog
+                                                        selectedCheckout={ selectedCheckout }
+                                                        setSelectedCheckout={ setSelectedCheckout }
+                                                        isOpen={ isAddGearDialogOpen }
+                                                        setIsOpen={ setIsAddGearDialogOpen }
+                                                    />
+                                                </>
                                             )
                                         }
                                     </div>
 
-                                    <AddGearToCheckoutDialog
-                                        selectedCheckout={ selectedCheckout }
-                                        setSelectedCheckout={ setSelectedCheckout }
-                                        isOpen={ isAddGearDialogOpen }
-                                        setIsOpen={ setIsAddGearDialogOpen }
-
-                                    />
                                 </div>
                                 <Card>
                                     <CardContent>
@@ -335,7 +379,9 @@ export function BookingDetailsDialog({
                                         {selectedCheckout.Bookings
                                             .sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName))
                                             .map((booking, index, arr) => {
+                                                if(booking.status === "INACTIVE") return;
                                                 const isLast = index === arr.length - 1;
+
                                                 return (
                                                     <div
                                                         key={ booking.bookingId }
@@ -363,26 +409,40 @@ export function BookingDetailsDialog({
                                                             )}
                                                         </div>
 
-                                                        <div className="flex items-center justify-end col-span-2">
-                                                            <Tooltip defaultOpen={ false }>
-                                                                <TooltipTrigger defaultChecked={ false } asChild>
-                                                                    <Button variant="outline" size="xs" className="size-8" onClick={ () => setSelectedBookingIdForExtraCosts(booking.bookingId) }>
-                                                                        <Pencil />
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>Adicionar ou editar custos extras</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
+                                                        {
+                                                            checkoutCanBeUpdated && (
+                                                                <div className="flex items-center justify-end col-span-2 gap-4">
+                                                                    <Tooltip defaultOpen={ false }>
+                                                                        <TooltipTrigger defaultChecked={ false } asChild>
+                                                                            <Button variant="outline" size="xs" className="size-8" onClick={ () => setSelectedBookingIdForExtraCosts(booking.bookingId) }>
+                                                                                <Pencil />
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>Adicionar ou editar custos extras</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                    <Tooltip defaultOpen={ false }>
+                                                                        <TooltipTrigger defaultChecked={ false } asChild>
+                                                                            <Button disabled={ selectedCheckout.Bookings.filter(item => item.status === "ACTIVE").length < 2 } variant="destructive" size="xs" className="size-8" onClick={ () => handleRemoveGearFromCheckout(booking) }>
+                                                                                <X/>
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>Remover equipamento do agendamento.</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
 
-                                                            <MachineExtraCostsDialog
-                                                                setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
-                                                                setSelectedCheckout={ setSelectedCheckout }
-                                                                selectedBookingId={ selectedBookingIdForExtraCosts }
-                                                                isMachineExtraCostsDialogOpen={ !!selectedBookingIdForExtraCosts }
-                                                                setMachineExtraCostsDialogOpen={ () => setSelectedBookingIdForExtraCosts(null) }
-                                                            />
-                                                        </div>
+                                                                    <MachineExtraCostsDialog
+                                                                        setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
+                                                                        setSelectedCheckout={ setSelectedCheckout }
+                                                                        selectedBookingId={ selectedBookingIdForExtraCosts }
+                                                                        isMachineExtraCostsDialogOpen={ !!selectedBookingIdForExtraCosts }
+                                                                        setMachineExtraCostsDialogOpen={ () => setSelectedBookingIdForExtraCosts(null) }
+                                                                    />
+                                                                </div>
+                                                            )
+                                                        }
                                                     </div>
                                                 );
                                             })}
@@ -393,6 +453,9 @@ export function BookingDetailsDialog({
                                         <div className="flex flex-col gap-4 text-sm text-muted-foreground mb-4">
                                             {selectedCheckout.basePrice > 0 && (
                                                 <div><span className="font-bold">Preço base:</span> {centsToStringWithCurrencyMark(selectedCheckout.basePrice)}</div>
+                                            )}
+                                            {selectedCheckout.basePrice > 0 && (
+                                                <div><span className="font-bold">Extras:</span> {centsToStringWithCurrencyMark(selectedCheckout.Bookings.filter(a => a.status === "ACTIVE").reduce((acc, current) => acc + current.extraMachineCosts, 0))}</div>
                                             )}
                                             {selectedCheckout.distanceInKm > 0 && (
                                                 <div><span className="font-bold">Distância (km):</span> {selectedCheckout.distanceInKm}</div>
@@ -406,31 +469,32 @@ export function BookingDetailsDialog({
                                             {selectedCheckout.lodgingCost > 0 && (
                                                 <div><span className="font-bold">Hospedagem:</span> {centsToStringWithCurrencyMark(selectedCheckout.lodgingCost)}</div>
                                             )}
-                                            {selectedCheckout.totalPrice - selectedCheckout.CheckoutPayment.firstPaymentAmount && selectedCheckout.CheckoutPayment.paymentMode === "Parcelado" && (
-                                                <div><span className="font-bold">Valor pendente:</span> {centsToStringWithCurrencyMark(selectedCheckout.totalPrice - selectedCheckout.CheckoutPayment.firstPaymentAmount)}</div>
-                                            )}
                                             {selectedCheckout.additionalTransportCost > 0 && (
                                                 <div><span className="font-bold">Valores adicionais de transporte:</span> {centsToStringWithCurrencyMark(selectedCheckout.additionalTransportCost)}</div>
                                             )}
-                                            <div className="flex items-center justify-end col-span-2">
-                                                <Tooltip defaultOpen={ false }>
-                                                    <TooltipTrigger defaultChecked={ false } asChild>
-                                                        <Button variant="outline" size="xs" className="size-8" onClick={ () => setAdditionalCostsDialogOpen(true) }>
-                                                            <Pencil />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>Adicionar ou editar custos extras</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
+                                            {
+                                                checkoutCanBeUpdated && (
+                                                    <div className="flex items-center justify-end col-span-2">
+                                                        <Tooltip defaultOpen={ false }>
+                                                            <TooltipTrigger defaultChecked={ false } asChild>
+                                                                <Button variant="outline" size="xs" className="size-8" onClick={ () => setAdditionalCostsDialogOpen(true) }>
+                                                                    <Pencil />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>Adicionar ou editar custos extras</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
 
-                                                <AdditionalCostsDialog
-                                                    selectedCheckout={ selectedCheckout }
-                                                    setAdditionalCostsDialogOpen={ setAdditionalCostsDialogOpen }
-                                                    isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
-                                                    setSelectedCheckout={ setSelectedCheckout }
-                                                />
-                                            </div>
+                                                        <UpdateAdditionalCostsDialog
+                                                            selectedCheckout={ selectedCheckout }
+                                                            setAdditionalCostsDialogOpen={ setAdditionalCostsDialogOpen }
+                                                            isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
+                                                            setSelectedCheckout={ setSelectedCheckout }
+                                                        />
+                                                    </div>
+                                                )
+                                            }
                                         </div>
                                         <Separator className="my-6" />
 
@@ -488,7 +552,7 @@ export function BookingDetailsDialog({
                                 </CardHeader>
                                 <CardContent>
                                     <div className="flex flex-col items-end gap-3">
-                                        <Textarea placeholder="Adicione uma observação" value={ checkoutObservations } onChange={ (e) => setCheckoutObservations(e.target.value) } className="max-h-[150px]" maxLength={ 100 } />
+                                        <Textarea disabled={ !checkoutCanBeUpdated } placeholder="Adicione uma observação" value={ checkoutObservations } onChange={ (e) => setCheckoutObservations(e.target.value) } className="max-h-[150px]" maxLength={ 100 } />
                                         <Button onClick={ () => handleUpdateCheckoutObservations() } disabled={ checkoutObservations === selectedCheckout.observations }>Salvar observação</Button>
                                     </div>
                                 </CardContent>

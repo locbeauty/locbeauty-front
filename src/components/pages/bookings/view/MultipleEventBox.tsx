@@ -72,7 +72,7 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
                 } }
                 onClick={ () => openCheckoutDetails(checkout) }
             >
-                <div className="font-medium text-sm truncate">{checkout.Bookings.map(item => item.gear.gearName).join(", ")}</div>
+                <div className="font-medium text-sm truncate">{checkout.Bookings.filter(booking => booking.status === "ACTIVE").map(item => item.gear.gearName).join(", ")}</div>
 
                 <div className="flex items-center text-xs gap-1 truncate">
                     <User className="h-3 w-3" />

@@ -222,19 +222,19 @@ import { UpdateCheckout } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { Separator } from "@/components/ui/separator";
 
-interface AdditionalCostsDialogProps {
+interface UpdateAdditionalCostsDialogProps {
     setAdditionalCostsDialogOpen: Dispatch<SetStateAction<boolean>>;
     isAdditionalCostsDialogOpen: boolean;
     setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>;
     selectedCheckout: Checkout;
 }
 
-export function AdditionalCostsDialog({
+export function UpdateAdditionalCostsDialog({
     isAdditionalCostsDialogOpen,
     setAdditionalCostsDialogOpen,
     selectedCheckout,
     setSelectedCheckout,
-}: AdditionalCostsDialogProps) {
+}: UpdateAdditionalCostsDialogProps) {
     const [ distanceInKm, setDistanceInKm ] = useState(0);
     const [ foodCost, setFoodCost ] = useState("0");
     const [ fuelCost, setFuelCost ] = useState("0");
@@ -262,8 +262,9 @@ export function AdditionalCostsDialog({
         const newFoodCost = foodCost ? parseStringToCents(foodCost) : selectedCheckout.foodCost;
 
         const basePrice = selectedCheckout.basePrice || 0;
+        const extraPrice = selectedCheckout.Bookings.filter(booking => booking.status === "ACTIVE").reduce((acc, current) => acc + current.extraMachineCosts, 0) || 0;
         const total =
-            basePrice +
+            basePrice + extraPrice +
             newDistanceInKm * newFuelCost +
             newLodgingCost +
             newAdditionalTransportCost +

@@ -6,11 +6,7 @@ import {
     DialogContent,
     DialogDescription, DialogHeader,
     DialogTitle,
-    DialogTrigger
 } from "@/components/ui/dialog";
-import {
-    Plus
-} from "lucide-react";
 import PriceInput from "@/components/shared/PriceInput";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,18 +14,15 @@ import { GetBookingById, UpdateBooking } from "@/services/bookings.service";
 import { toast } from "sonner";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { useQuery } from "@tanstack/react-query";
-import { ApiResponse } from "@/lib/api";
 import { Booking } from "@/utils/@types/bookings";
 import { centsToString } from "@/utils/centsToString";
 import { queryClient } from "@/app/(main)/layout";
-import { FlattenedBooking } from "../WeekView";
 import { Checkout } from "@/utils/@types/checkouts";
 
 interface MachineExtraCostsDialogProps {
     setMachineExtraCostsDialogOpen: Dispatch<SetStateAction<boolean>>;
     isMachineExtraCostsDialogOpen: boolean;
     selectedBookingId: string | null
-    // selectedCheckout: Checkout | null
     setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>
     setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
 
@@ -40,8 +33,6 @@ export function MachineExtraCostsDialog({
     setMachineExtraCostsDialogOpen,
     selectedBookingId,
     setSelectedCheckout,
-    // selectedCheckout,
-    // setBookingDetailsDialogOpen
 }: MachineExtraCostsDialogProps) {
 
     const [ individualPrice, setIndividualPrice ] = useState("0");
@@ -51,15 +42,17 @@ export function MachineExtraCostsDialog({
     const { data } = useQuery<Booking | undefined, Error>({
         queryKey: [ "get-booking-by-id", selectedBookingId ],
         queryFn: () => GetBookingById({ bookingId: selectedBookingId! }),
-        enabled: !!selectedBookingId, // só roda quando selectedBookingId existe
+        enabled: !!selectedBookingId,
         staleTime: 1000 * 60,
     });
 
     useEffect(() => {
+        if (!isMachineExtraCostsDialogOpen) return;
+
         setExtraMachineCosts(centsToString(data?.extraMachineCosts ?? 0));
         setExtraMachineCostsDescription(data?.extraMachineCostsDescription || "");
         setIndividualPrice(centsToString(data?.individualPrice ?? 0));
-    }, [ data ]);
+    }, [ isMachineExtraCostsDialogOpen, data ]);
 
     async function handleUpdateMachineExtraCosts() {
         const response = await UpdateBooking({ body: {
@@ -68,9 +61,12 @@ export function MachineExtraCostsDialog({
             extraMachineCostsDescription
         }, bookingId: selectedBookingId! });
 
-        if(response.statusCode !== 201) {
+        if(response.statusCode === 200) {
             queryClient.invalidateQueries({
                 queryKey: [ "get-all-checkouts" ],
+            });
+            queryClient.invalidateQueries({
+                queryKey: [ "get-booking-by-id", selectedBookingId ],
             });
 
             if (selectedBookingId) {

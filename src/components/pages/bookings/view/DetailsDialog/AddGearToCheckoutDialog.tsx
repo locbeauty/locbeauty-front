@@ -1,7 +1,7 @@
 "use client";
 
 import { FormProvider, useForm } from "react-hook-form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkout } from "@/utils/@types/checkouts";
@@ -12,13 +12,20 @@ import PriceInput from "@/components/shared/PriceInput";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
+import { AddGearInCheckout } from "@/services/checkouts.service";
+import { parseStringToCents } from "@/utils/parseStringToCents";
+import { queryClient } from "@/app/(main)/layout";
+import { toast } from "sonner";
 
 export const AdditionalGearSchema = z
     .object({
-        gearId: z.string().min(1, "Selecione um equipamento"),
         individualPrice: z.string().min(1, "Informe o preço unitário"),
         extraCost: z.string().min(0), // permite vazio
         extraCostDescription: z.string().optional(),
+        gear: z.object({
+            gearId: z.string().min(1, "Selecione um equipamento"),
+            gearName: z.string().min(1, "Selecione um equipamento"),
+        })
     })
     .refine(
         (data) =>
@@ -40,6 +47,7 @@ interface AddGearToCheckoutDialogProps {
 
 export function AddGearToCheckoutDialog({
     selectedCheckout,
+    setSelectedCheckout,
     isOpen,
     setIsOpen,
 }: AddGearToCheckoutDialogProps) {
@@ -47,7 +55,10 @@ export function AddGearToCheckoutDialog({
         resolver: zodResolver(AdditionalGearSchema),
         mode: "onChange",
         defaultValues: {
-            gearId: "",
+            gear: {
+                gearId: "",
+                gearName: ""
+            },
             individualPrice: "",
             extraCost: "",
             extraCostDescription: "",
@@ -64,22 +75,63 @@ export function AddGearToCheckoutDialog({
     } = AddGearMethods;
 
     function handleSelectGear(gear: Gear) {
-        setValue("gearId", gear.gearId);
+        setValue("gear", { gearId: gear.gearId, gearName: gear.gearName });
     }
 
     useEffect(() => {
         if(!isOpen) {
-            setValue("gearId", "");
+            setValue("gear", { gearId: "", gearName: "" });
             setValue("individualPrice", "");
             setValue("extraCost", "");
             setValue("extraCostDescription", "");
         }
     }, [ setValue, isOpen ]);
 
-    function handleAddGearInCheckout(newGearData: AdditionalGearData) {
-        console.log("Enviar para backend:", newGearData);
-        // setIsOpen(false);
-        // reset();
+    async function handleAddGearInCheckout(newGearData: AdditionalGearData) {
+        if(!selectedCheckout) return null;
+        const newData = {
+            checkoutId: selectedCheckout?.checkoutId,
+            extraMachineCosts: parseStringToCents(newGearData.extraCost),
+            extraMachineCostsDescription: newGearData.extraCostDescription,
+            gear: {
+                gearId: newGearData.gear.gearId,
+                gearName: newGearData.gear.gearName
+            },
+            individualPrice: parseStringToCents(newGearData.individualPrice),
+        };
+
+        const response = await AddGearInCheckout(newData);
+
+        if(response.statusCode !== 201) {
+            toast.error("Erro ao adicionar equipamento ao agendamento.", { style: { fontSize: "1rem" } });
+        } else {
+            if(response.data && response.data.bookingId) {
+                setSelectedCheckout({
+                    ...selectedCheckout,
+                    basePrice: selectedCheckout.basePrice + newData.individualPrice,
+                    totalPrice: selectedCheckout.totalPrice + newData.individualPrice + newData.extraMachineCosts,
+                    Bookings: [
+                        ...(selectedCheckout.Bookings || []),
+                        {
+                            bookingId: response.data.bookingId,
+                            extraMachineCosts: newData.extraMachineCosts,
+                            extraMachineCostsDescription: newData.extraMachineCostsDescription,
+                            status: "ACTIVE",
+                            gear: {
+                                gearId: newData.gear.gearId,
+                                gearName: newData.gear.gearName
+                            },
+                            individualPrice: newData.individualPrice
+                        }
+                    ]
+                });
+                toast.success(response.message, { style: { fontSize: "1rem" } });
+                queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+                setIsOpen(false);
+                reset();
+            }
+
+        }
     }
 
     return (
@@ -89,23 +141,23 @@ export function AddGearToCheckoutDialog({
                     <DialogTitle>Adicionar equipamento</DialogTitle>
                 </DialogHeader>
 
+                <DialogDescription>Adicione um novo equipamento ao agendamento.</DialogDescription>
+
                 <form onSubmit={ handleSubmit(handleAddGearInCheckout) } className="space-y-4 mt-2">
                     {/* EQUIPAMENTO */}
                     <div className="flex flex-col gap-2">
                         <Label>Equipamento</Label>
 
-                        <div className="border rounded-md p-2">
-                            <FormProvider { ...AddGearMethods }>
-                                <SelectAdditionalGear
-                                    onSelect={ handleSelectGear }
-                                    selectedCheckout={ selectedCheckout! }
-                                />
-                            </FormProvider>
-                        </div>
+                        <FormProvider { ...AddGearMethods }>
+                            <SelectAdditionalGear
+                                onSelect={ handleSelectGear }
+                                selectedCheckout={ selectedCheckout! }
+                            />
+                        </FormProvider>
 
                         <div className="h-4">
-                            {errors.gearId && (
-                                <span className="text-sm text-red-500">{errors.gearId.message}</span>
+                            {errors.gear?.gearId && (
+                                <span className="text-sm text-red-500">{errors.gear.gearId.message}</span>
                             )}
                         </div>
                     </div>

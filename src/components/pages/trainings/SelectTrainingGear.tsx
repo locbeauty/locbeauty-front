@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Gear } from "@/utils/@types/gears";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
@@ -49,6 +49,10 @@ export function SelectTrainingGear({
         queryFn: () => GetAllGears({}),
         staleTime: 1000 * 60,
     });
+
+    useEffect(() => {
+        console.log("selectedGear: ", selectedGear);
+    }, [ selectedGear ]);
 
     const gears = gearsData.data?.data;
 
@@ -175,15 +179,8 @@ function GearsList({ setOpen, onGearChange, allGears }: GearsListProps) {
     );
 }
 
-function getDisplayValue(gearName: string | undefined, allGears: Gear[] | undefined): { gearName: string } | null {
-    if (!gearName || !allGears) return null;
-
-    const gear = allGears.find(g => g.gearName === gearName);
-    if (gear) {
-        return {
-            gearName: gear.gearName
-        };
-    }
-
-    return null;
+function getDisplayValue(gearId: string | undefined, allGears: Gear[] | undefined) {
+    if (!gearId || !allGears) return null;
+    const gear = allGears.find(g => g.gearId === gearId);
+    return gear ? { gearName: gear.gearName } : null;
 }

@@ -25,12 +25,12 @@ import { CreateProfessor } from "@/services/professors.service";
 import DocumentInput from "@/components/shared/DocumentInput";
 import PhoneInput from "@/components/shared/PhoneInput";
 
-interface CreateProfessorDialogProps {
-    dialogNovoProfessor: boolean,
-    setDialogNovoProfessor: (openStatus: boolean) => void
+interface CreatePacienteModeloDialogProps {
+    dialogNovoPacienteModelo: boolean,
+    setDialogNovoPacienteModelo: (openStatus: boolean) => void
 }
 
-export function CreateProfessorDialog({ dialogNovoProfessor, setDialogNovoProfessor }: CreateProfessorDialogProps) {
+export function CreatePacienteModeloDialog({ dialogNovoPacienteModelo, setDialogNovoPacienteModelo }: CreatePacienteModeloDialogProps) {
 
     const professorForm = useForm<CreateProfessorFormDataType>({
         resolver: zodResolver(CreateProfessorSchema),
@@ -50,28 +50,28 @@ export function CreateProfessorDialog({ dialogNovoProfessor, setDialogNovoProfes
             toast.success(response.message, { style: { fontSize: "1rem" } });
             window.scroll({ top: 0 });
             reset();
-            setDialogNovoProfessor(false);
+            setDialogNovoPacienteModelo(false);
         }
     };
 
     return (
 
         <Dialog
-            open={ dialogNovoProfessor }
-            onOpenChange={ setDialogNovoProfessor }
+            open={ dialogNovoPacienteModelo }
+            onOpenChange={ setDialogNovoPacienteModelo }
         >
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                  Novo Professor
+                  Novo paciente modelo
                 </Button>
             </DialogTrigger>
             <DialogContent className="w-[80%]">
                 <form onSubmit={ professorForm.handleSubmit(onSubmitProfessor) }>
                     <DialogHeader>
-                        <DialogTitle>Cadastrar Novo Professor</DialogTitle>
+                        <DialogTitle>Cadastrar Novo paciente modelo</DialogTitle>
                         <DialogDescription>
-                      Preencha as informações do professor
+                      Preencha as informações do paciente modelo
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -121,13 +121,13 @@ export function CreateProfessorDialog({ dialogNovoProfessor, setDialogNovoProfes
                         <Button
                             variant="outline"
                             type="button"
-                            onClick={ () => setDialogNovoProfessor(false) }
+                            onClick={ () => setDialogNovoPacienteModelo(false) }
                         >
                       Cancelar
                         </Button>
                         <Button disabled={ isSubmitting } className="cursor-pointer" type="submit">
                             {
-                                isSubmitting ? <Loader2 className="animate-spin" /> : "Cadastrar Professor"
+                                isSubmitting ? <Loader2 className="animate-spin" /> : "Cadastrar paciente modelo"
                             }
                         </Button>
                     </DialogFooter>

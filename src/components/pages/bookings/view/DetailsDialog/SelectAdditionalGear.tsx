@@ -51,7 +51,7 @@ export function SelectAdditionalGear({ onSelect, selectedCheckout }: { onSelect:
 
     useEffect(() => {
         const updated = originalGears?.filter(
-            gear => !selectedCheckout.Bookings.some(item => item.gear.gearId === gear.gearId)
+            gear => !selectedCheckout.Bookings.some(item => (item.gear.gearId === gear.gearId && item.status === "ACTIVE"))
         );
         setFilteredGears(updated);
     }, [ selectedCheckout, originalGears ]);

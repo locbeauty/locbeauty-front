@@ -43,7 +43,14 @@ export function validateCheckoutForm({
             newErrors.paymentInfo.firstPaymentAmount = "";
         }
 
-        if (parseStringToCents(firstPaymentAmount) > selectedCheckout!.totalPrice) {
+        const amount = parseStringToCents(firstPaymentAmount);
+        const total = selectedCheckout!.totalPrice;
+
+        const invalid =
+  (paymentStatus === "Parcial" && amount >= total) ||
+  (paymentStatus === "Pago" && amount > total);
+
+        if (invalid) {
             newErrors.paymentInfo.firstPaymentAmount = "O valor precisa ser menor do que o valor total.";
             isValid = false;
         }

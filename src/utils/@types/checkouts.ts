@@ -25,8 +25,9 @@ export type Checkout = {
     Bookings: {
         bookingId: string;
         extraMachineCosts: number,
-        extraMachineCostsDescription: string,
+        extraMachineCostsDescription?: string,
         individualPrice: number,
+        status: "ACTIVE" | "INACTIVE"
         gear: {
             gearId: string;
             gearName: string;

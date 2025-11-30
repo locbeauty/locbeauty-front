@@ -154,6 +154,7 @@ export function CreateBookingForm() {
 
     const [ isAdditionalCostsDialogOpen, setAdditionalCostsDialogOpen ] = useState(false);
     const [ addressString, setAddressString ] = useState("");
+    const [ consumptionKmPerLiter, setConsumptionKmPerLiter ] = useState(10);
     const [ driverString, setDriverString ] = useState("");
 
     const {
@@ -190,16 +191,21 @@ export function CreateBookingForm() {
         const lodging = parseStringToCents(watchLodgingCost || "0");
         const food = parseStringToCents(watchFoodCost || "0");
         const addTransport = parseStringToCents(watchAdditionalTransportCost || "0");
-        const fuelCents = parseStringToCents(watchFuelCost || "0");
+
+        const fuelCents = parseStringToCents(watchFuelCost || "0"); // custo por litro
         const distance = watchDistanceInKm || 0;
-        const totalFuel = fuelCents * distance;
+        const consumption = consumptionKmPerLiter || 1;
+
+        const litersNeeded = distance / consumption;
+        const totalFuel = Math.round(litersNeeded * fuelCents);
 
         const total = base + extraMachine + lodging + food + totalFuel + addTransport;
+
         setValue("totalPrice", centsToString(total));
     }, [
         watchBasePrice, watchExtraMachineCosts, watchLodgingCost,
         watchFoodCost, watchFuelCost, watchDistanceInKm,
-        watchAdditionalTransportCost, setValue
+        watchAdditionalTransportCost, consumptionKmPerLiter, setValue
     ]);
 
     const params = { filialId: watchFilialId, gears: watchSelectedGears, date: selectedDate };
@@ -336,6 +342,8 @@ export function CreateBookingForm() {
                                 <GearsSection />
 
                                 <AdditionalCostsDialog
+                                    consumptionKmPerLiter={ consumptionKmPerLiter }
+                                    setConsumptionKmPerLiter={ setConsumptionKmPerLiter }
                                     setAdditionalCostsDialogOpen={ setAdditionalCostsDialogOpen }
                                     isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
                                 />
