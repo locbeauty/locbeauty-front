@@ -41,15 +41,15 @@ export async function GetAllCheckouts({
         ...checkout,
         date: new Date(checkout.date),
         customer: {
-            ...checkout.customer,
-            lastBooking: checkout.customer.lastBooking
-                ? new Date(checkout.customer.lastBooking)
+            ...checkout.Customer,
+            lastBooking: checkout.Customer.lastBooking
+                ? new Date(checkout.Customer.lastBooking)
                 : null,
         },
         address: {
-            ...checkout.address,
-            createdAt: new Date(checkout.address.createdAt),
-            updatedAt: new Date(checkout.address.updatedAt),
+            ...checkout.Address,
+            createdAt: new Date(checkout.Address.createdAt),
+            updatedAt: new Date(checkout.Address.updatedAt),
         },
         Bookings: checkout.Bookings.map((b) => ({
             ...b,

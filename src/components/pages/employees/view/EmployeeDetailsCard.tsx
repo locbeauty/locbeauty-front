@@ -35,16 +35,16 @@ export function EmployeeDetailsCard({
         (new Date().getFullYear() - new Date(selectedEmployee.birthdate).getFullYear()) : null;
 
     // Endereço formatado
-    const fullAddress = selectedEmployee.address
-        ? `${selectedEmployee.address.street.streetName}, ${
-            selectedEmployee.address.buildingNumber
+    const fullAddress = selectedEmployee.Address
+        ? `${selectedEmployee.Address.Street.streetName}, ${
+            selectedEmployee.Address.buildingNumber
         }${
-            selectedEmployee.address.addressComplement
-                ? ` - ${selectedEmployee.address.addressComplement}`
+            selectedEmployee.Address.addressComplement
+                ? ` - ${selectedEmployee.Address.addressComplement}`
                 : ""
-        }, ${selectedEmployee.address.neighborhood.neighborhoodName}, ${
-            selectedEmployee.address.city.cityName
-        }/${selectedEmployee.address.state.UF}`
+        }, ${selectedEmployee.Address.Neighborhood.neighborhoodName}, ${
+            selectedEmployee.Address.City.cityName
+        }/${selectedEmployee.Address.State.UF}`
         : "Endereço não informado";
 
     // Função para definir cor do badge do cargo
@@ -135,7 +135,7 @@ export function EmployeeDetailsCard({
                         <div className="flex items-center gap-2">
                             <Label className="text-sm font-medium">Filial de Origem: </Label>
                             <span className="text-sm font-semibold">
-                                {selectedEmployee.sourceFilial.filialName}/{selectedEmployee.sourceFilial.address.state.UF}
+                                {selectedEmployee.SourceFilial.filialName}/{selectedEmployee.SourceFilial.Address.State.UF}
                             </span>
                         </div>
                     </div>

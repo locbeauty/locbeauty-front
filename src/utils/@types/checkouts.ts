@@ -28,12 +28,12 @@ export type Checkout = {
         extraMachineCostsDescription?: string,
         individualPrice: number,
         status: "ACTIVE" | "INACTIVE"
-        gear: {
+        Gear: {
             gearId: string;
             gearName: string;
         };
     }[];
-    customer: {
+    Customer: {
         customerId: string;
         fullname: string;
         documentNumber: string;
@@ -45,11 +45,11 @@ export type Checkout = {
         customerStatus: string,
         lastBooking: Date | null,
     };
-    sourceFilial: {
+    SourceFilial: {
         filialId: string;
         filialName: string;
     };
-    address: Address;
+    Address: Address;
 }
 
 export interface CheckoutPayment {

@@ -9,9 +9,9 @@ import {
 import { CalendarWeekHeader } from "./CalendarWeekHeader";
 import { MultipleEventBox } from "./MultipleEventBox";
 import { SingleEventBox } from "./SingleEventBox";
-import { CheckoutStatuses, PaymentStatuses } from "@/utils/@types/bookings";
 import { MobileWeekView } from "./MobileWeekView";
 import { Address } from "@/utils/@types/address";
+import { CheckoutStatuses, PaymentStatuses } from "@/utils/constants";
 
 export type FlattenedBooking = {
     checkoutId: string;
@@ -116,6 +116,7 @@ export function WeekView({ currentDate, checkouts, openCheckoutDetails }: WeekVi
                                 return (
                                     group.length === 1 ? (
                                         <SingleEventBox
+                                            eventType="checkout"
                                             key={ group[0].checkoutId }
                                             dayIndex={ dayIndex }
                                             group={ group }

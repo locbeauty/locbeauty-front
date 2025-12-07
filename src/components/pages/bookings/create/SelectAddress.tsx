@@ -54,7 +54,7 @@ export function SelectAddress({ disabled = false, setAddressString }: SelectAddr
                             field.onChange(value);
                             const selectedAddress = customerAddresses?.find(addr => addr.addressId === value);
                             if (selectedAddress) {
-                                const addressString = `${selectedAddress.street.streetName}, ${selectedAddress.neighborhood.neighborhoodName}, ${selectedAddress.buildingNumber} - ${selectedAddress.city.cityName}/${selectedAddress.state.UF}${selectedAddress.addressComplement ? `, ${selectedAddress.addressComplement}` : ""}`;
+                                const addressString = `${selectedAddress.Street.streetName}, ${selectedAddress.Neighborhood.neighborhoodName}, ${selectedAddress.buildingNumber} - ${selectedAddress.City.cityName}/${selectedAddress.State.UF}${selectedAddress.addressComplement ? `, ${selectedAddress.addressComplement}` : ""}`;
                                 setAddressString(addressString);
                             }
                         } }
@@ -70,7 +70,7 @@ export function SelectAddress({ disabled = false, setAddressString }: SelectAddr
                                 if(!addr.isActive) return null;
                                 return (
                                     <SelectItem key={ addr.addressId } value={ addr.addressId }>
-                                        { addr.street.streetName }, { addr.neighborhood.neighborhoodName }, {addr.addressComplement} - { addr.city.cityName }/{ addr.state.UF }
+                                        { addr.Street.streetName }, { addr.Neighborhood.neighborhoodName }, {addr.addressComplement} - { addr.City.cityName }/{ addr.State.UF }
                                     </SelectItem>
                                 );
 

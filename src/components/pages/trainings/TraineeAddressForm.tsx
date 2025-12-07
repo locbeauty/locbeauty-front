@@ -12,9 +12,9 @@ import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
-import { CreateStudentFormDataType } from "@/lib/zod/CreateStudentValidation";
+import { CreateTraineeFormDataType } from "@/lib/zod/CreateTraineeValidation";
 
-export function StudentAddressForm() {
+export function TraineeAddressForm() {
     const {
         register,
         trigger,
@@ -23,7 +23,7 @@ export function StudentAddressForm() {
         setError,
         setValue,
         formState: { errors },
-    } = useFormContext<CreateStudentFormDataType>();
+    } = useFormContext<CreateTraineeFormDataType>();
 
     return (
         <Card>

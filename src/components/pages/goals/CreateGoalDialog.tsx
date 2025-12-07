@@ -81,7 +81,6 @@ export function CreateGoalDialog() {
         }
 
         try {
-            console.log("payload: ", payload);
             const response = await CreateGoal(payload);
 
             if (response.statusCode !== 201) {

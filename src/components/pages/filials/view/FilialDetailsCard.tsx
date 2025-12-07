@@ -34,15 +34,15 @@ export function FilialDetailsCard({
     }
 
     // Endereço completo formatado
-    const fullAddress = `${selectedFilial.address.street.streetName}, ${
-        selectedFilial.address.buildingNumber
+    const fullAddress = `${selectedFilial.Address.Street.streetName}, ${
+        selectedFilial.Address.buildingNumber
     }${
-        selectedFilial.address.addressComplement
-            ? ` - ${selectedFilial.address.addressComplement}`
+        selectedFilial.Address.addressComplement
+            ? ` - ${selectedFilial.Address.addressComplement}`
             : ""
-    }, ${selectedFilial.address.neighborhood.neighborhoodName}, ${
-        selectedFilial.address.city.cityName
-    }/${selectedFilial.address.state.UF}`;
+    }, ${selectedFilial.Address.Neighborhood.neighborhoodName}, ${
+        selectedFilial.Address.City.cityName
+    }/${selectedFilial.Address.State.UF}`;
 
     return (
         <Card>
@@ -79,20 +79,20 @@ export function FilialDetailsCard({
                                     variant="outline"
                                     className="text-blue-600 border-blue-200"
                                 >
-                                    {selectedFilial.address.state.UF} -{" "}
-                                    {selectedFilial.address.state.stateName}
+                                    {selectedFilial.Address.State.UF} -{" "}
+                                    {selectedFilial.Address.State.stateName}
                                 </Badge>
                             </div>
                         </div>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Cidade:</Label>
-                                <span className="text-sm">{selectedFilial.address.city.cityName}</span>
+                                <span className="text-sm">{selectedFilial.Address.City.cityName}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <Label className="text-sm font-medium">Bairro:</Label>
                                 <span className="text-sm">
-                                    {selectedFilial.address.neighborhood.neighborhoodName}
+                                    {selectedFilial.Address.Neighborhood.neighborhoodName}
                                 </span>
                             </div>
                         </div>

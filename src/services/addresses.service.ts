@@ -7,8 +7,8 @@ export async function GetAllCustomerAddresses({ customerId }: {customerId: strin
     return response;
 }
 
-export async function GetAllStudentAddresses({ studentId }: {studentId: string}) {
-    const response = await apiRequest<Address[]>({ endpoint: "student/addresses", queryParams: { studentId } });
+export async function GetAllTraineeAddresses({ traineeId }: {traineeId: string}) {
+    const response = await apiRequest<Address[]>({ endpoint: "trainee/addresses", queryParams: { traineeId } });
 
     return response;
 }

@@ -39,20 +39,20 @@ export interface Address {
     createdAt: Date;
     updatedAt: Date;
     isActive: boolean;
-    state: {
+    State: {
       stateId: string;
       stateName: StateName;
       UF: UF
     };
-    city: {
+    City: {
       cityId: string;
       cityName: string;
     };
-    neighborhood: {
+    Neighborhood: {
       neighborhoodId: string;
       neighborhoodName: string;
     };
-    street: {
+    Street: {
       streetId: string;
       streetName: string;
     };

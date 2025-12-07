@@ -50,10 +50,6 @@ export function SelectTrainingGear({
         staleTime: 1000 * 60,
     });
 
-    useEffect(() => {
-        console.log("selectedGear: ", selectedGear);
-    }, [ selectedGear ]);
-
     const gears = gearsData.data?.data;
 
     if (!isMounted) {

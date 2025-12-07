@@ -1,5 +1,6 @@
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { Checkout } from "../@types/checkouts";
+import { Training } from "../@types/training"; // Importar o tipo Training
 import { LocalErrorsType } from "@/components/pages/bookings/view/CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 
 interface ValidateFormParams {
@@ -12,7 +13,11 @@ interface ValidateFormParams {
   secondPaymentDate: string | null;
   secondPaymentMethod: string | null;
   secondPaymentStatus: string;
-  selectedCheckout: Checkout | null;
+
+  // Agora aceita um ou outro (opcionais, mas pelo menos um deve existir na lógica)
+  selectedCheckout?: Checkout | null;
+  selectedTraining?: Training | null;
+
   initialErrors: LocalErrorsType;
   setErrors: (errors: LocalErrorsType) => void;
 }
@@ -28,27 +33,49 @@ export function validateCheckoutForm({
     secondPaymentMethod,
     secondPaymentStatus,
     selectedCheckout,
+    selectedTraining,
     initialErrors,
     setErrors,
 }: ValidateFormParams): boolean {
     const newErrors: LocalErrorsType = { ...initialErrors };
     let isValid = true;
 
+    // 1. Normalização dos dados (Abstração)
+    // Determina qual entidade está sendo editada para pegar o preço total e o objeto de pagamento salvo
+    const entity = selectedCheckout || selectedTraining;
+
+    if (!entity) {
+        // Se nenhuma entidade for passada, não há como validar
+        return false;
+    }
+
+    // Checkout usa 'totalPrice' e 'CheckoutPayment'
+    // Training usa 'price' e 'TrainingPayment'
+    const totalValue = selectedCheckout
+        ? selectedCheckout.totalPrice
+        : (selectedTraining ? selectedTraining.price : 0);
+
+    const savedPaymentInfo = selectedCheckout
+        ? selectedCheckout.CheckoutPayment
+        : (selectedTraining ? selectedTraining.TrainingPayment : null);
+
+    if (!savedPaymentInfo) return false;
+
     // --- Primeira parcela ---
     if ([ "Pago", "Parcial" ].includes(paymentStatus)) {
-        if (parseStringToCents(firstPaymentAmount) === 0) {
+        const amount = parseStringToCents(firstPaymentAmount);
+
+        if (amount === 0) {
             newErrors.paymentInfo.firstPaymentAmount = "O valor da 1ª parcela é obrigatório.";
             isValid = false;
         } else {
             newErrors.paymentInfo.firstPaymentAmount = "";
         }
 
-        const amount = parseStringToCents(firstPaymentAmount);
-        const total = selectedCheckout!.totalPrice;
-
+        // Validação baseada no total normalizado
         const invalid =
-  (paymentStatus === "Parcial" && amount >= total) ||
-  (paymentStatus === "Pago" && amount > total);
+            (paymentStatus === "Parcial" && amount >= totalValue) ||
+            (paymentStatus === "Pago" && amount > totalValue);
 
         if (invalid) {
             newErrors.paymentInfo.firstPaymentAmount = "O valor precisa ser menor do que o valor total.";
@@ -74,18 +101,16 @@ export function validateCheckoutForm({
         newErrors.paymentInfo.firstPaymentMethod = "";
     }
 
-    // --- Segunda parcela (modo parcelado) ---
-    if (selectedCheckout?.CheckoutPayment.paymentMode === "Parcelado") {
-        const pendingValue =
-      selectedCheckout.totalPrice -
-      selectedCheckout.CheckoutPayment.firstPaymentAmount;
+    // --- Segunda parcela (modo parcelado - baseado no estado salvo no banco) ---
+    if (savedPaymentInfo.paymentMode === "Parcelado") {
+        const pendingValue = totalValue - savedPaymentInfo.firstPaymentAmount;
 
         if (
             parseStringToCents(secondPaymentAmount) === 0 ||
-      parseStringToCents(secondPaymentAmount) !== pendingValue
+            parseStringToCents(secondPaymentAmount) !== pendingValue
         ) {
             newErrors.paymentInfo.secondPaymentAmount =
-        "A 2ª parcela precisa corresponder ao valor restante do pagamento.";
+                "A 2ª parcela precisa corresponder ao valor restante do pagamento.";
             isValid = false;
         } else {
             newErrors.paymentInfo.secondPaymentAmount = "";
@@ -110,7 +135,7 @@ export function validateCheckoutForm({
         newErrors.paymentInfo.secondPaymentMethod = "";
     }
 
-    // --- Segunda parcela paga (caso específico) ---
+    // --- Segunda parcela paga (caso específico de atualização de form) ---
     if (paymentMode === "Parcelado" && secondPaymentStatus === "Pago") {
         if (parseStringToCents(secondPaymentAmount) === 0) {
             newErrors.paymentInfo.secondPaymentAmount = "O valor da 2ª parcela é obrigatório.";

@@ -12,66 +12,70 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-    Loader2,
-    Plus
-} from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { queryClient } from "@/app/(main)/layout";
-import { CreateProfessorFormDataType, CreateProfessorSchema } from "@/lib/zod/CreateProfessorValidation";
-import { CreateProfessor } from "@/services/professors.service";
+import {
+    CreateVolunteerFormDataType,
+    CreateVolunteerSchema,
+} from "@/lib/zod/CreateVolunteerValidation";
+import { CreateVolunteer } from "@/services/volunteers.service";
 import DocumentInput from "@/components/shared/DocumentInput";
 import PhoneInput from "@/components/shared/PhoneInput";
 
-interface CreatePacienteModeloDialogProps {
-    dialogNovoPacienteModelo: boolean,
-    setDialogNovoPacienteModelo: (openStatus: boolean) => void
+interface CreateVolunteerDialogProps {
+  dialogNewVolunteer: boolean;
+  setDialogNewVolunteer: (openStatus: boolean) => void;
 }
 
-export function CreatePacienteModeloDialog({ dialogNovoPacienteModelo, setDialogNovoPacienteModelo }: CreatePacienteModeloDialogProps) {
-
-    const professorForm = useForm<CreateProfessorFormDataType>({
-        resolver: zodResolver(CreateProfessorSchema),
+export function CreateVolunteerDialog({
+    dialogNewVolunteer,
+    setDialogNewVolunteer,
+}: CreateVolunteerDialogProps) {
+    const volunteerForm = useForm<CreateVolunteerFormDataType>({
+        resolver: zodResolver(CreateVolunteerSchema),
     });
 
-    const { reset, formState: { errors, isSubmitting } } = professorForm;
+    const {
+        reset,
+        formState: { errors, isSubmitting },
+    } = volunteerForm;
 
-    const onSubmitProfessor = async (data: CreateProfessorFormDataType) => {
-        const response = await CreateProfessor(data);
+    const onSubmitVolunteer = async (data: CreateVolunteerFormDataType) => {
+        const response = await CreateVolunteer(data);
 
         if (response.statusCode !== 201) {
             toast.warning(response.message, { style: { fontSize: "1rem" } });
             window.scroll({ top: 0 });
         } else {
-            queryClient.invalidateQueries({ queryKey: [ "get-all-professors" ] });
+            queryClient.invalidateQueries({ queryKey: [ "get-all-volunteers" ] });
 
             toast.success(response.message, { style: { fontSize: "1rem" } });
             window.scroll({ top: 0 });
             reset();
-            setDialogNovoPacienteModelo(false);
+            setDialogNewVolunteer(false);
         }
     };
 
     return (
-
         <Dialog
-            open={ dialogNovoPacienteModelo }
-            onOpenChange={ setDialogNovoPacienteModelo }
+            open={ dialogNewVolunteer }
+            onOpenChange={ setDialogNewVolunteer }
         >
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                  Novo paciente modelo
+          Novo paciente modelo
                 </Button>
             </DialogTrigger>
             <DialogContent className="w-[80%]">
-                <form onSubmit={ professorForm.handleSubmit(onSubmitProfessor) }>
+                <form onSubmit={ volunteerForm.handleSubmit(onSubmitVolunteer) }>
                     <DialogHeader>
                         <DialogTitle>Cadastrar Novo paciente modelo</DialogTitle>
                         <DialogDescription>
-                      Preencha as informações do paciente modelo
+              Preencha as informações do paciente modelo
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -79,12 +83,12 @@ export function CreatePacienteModeloDialog({ dialogNovoPacienteModelo, setDialog
                             <Label htmlFor="name">Nome Completo *</Label>
                             <Input
                                 id="name"
-                                { ...professorForm.register("name") }
+                                { ...volunteerForm.register("name") }
                                 placeholder="Ex: Dr. Carlos Silva"
                             />
-                            {professorForm.formState.errors.name && (
+                            {volunteerForm.formState.errors.name && (
                                 <p className="text-sm text-red-600">
-                                    {professorForm.formState.errors.name.message}
+                                    {volunteerForm.formState.errors.name.message}
                                 </p>
                             )}
                         </div>
@@ -93,26 +97,21 @@ export function CreatePacienteModeloDialog({ dialogNovoPacienteModelo, setDialog
                             <DocumentInput
                                 isCPF={ true }
                                 placeholder="Digite o CPF"
-                                register={ professorForm.register("documentNumber") }
+                                register={ volunteerForm.register("documentNumber") }
                             />
-                            {professorForm.formState.errors.documentNumber && (
+                            {volunteerForm.formState.errors.documentNumber && (
                                 <p className="text-sm text-red-600">
-                                    {
-                                        professorForm.formState.errors.documentNumber
-                                            .message
-                                    }
+                                    {volunteerForm.formState.errors.documentNumber.message}
                                 </p>
                             )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="cellphone">Telefone *</Label>
-                            <PhoneInput
-                                register={ professorForm.register("cellphone") }
-                            />
+                            <PhoneInput register={ volunteerForm.register("cellphone") } />
 
-                            {professorForm.formState.errors.cellphone && (
+                            {volunteerForm.formState.errors.cellphone && (
                                 <p className="text-sm text-red-600">
-                                    {professorForm.formState.errors.cellphone.message}
+                                    {volunteerForm.formState.errors.cellphone.message}
                                 </p>
                             )}
                         </div>
@@ -121,14 +120,20 @@ export function CreatePacienteModeloDialog({ dialogNovoPacienteModelo, setDialog
                         <Button
                             variant="outline"
                             type="button"
-                            onClick={ () => setDialogNovoPacienteModelo(false) }
+                            onClick={ () => setDialogNewVolunteer(false) }
                         >
-                      Cancelar
+              Cancelar
                         </Button>
-                        <Button disabled={ isSubmitting } className="cursor-pointer" type="submit">
-                            {
-                                isSubmitting ? <Loader2 className="animate-spin" /> : "Cadastrar paciente modelo"
-                            }
+                        <Button
+                            disabled={ isSubmitting }
+                            className="cursor-pointer"
+                            type="submit"
+                        >
+                            {isSubmitting ? (
+                                <Loader2 className="animate-spin" />
+                            ) : (
+                                "Cadastrar paciente modelo"
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>

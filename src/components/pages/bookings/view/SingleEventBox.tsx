@@ -15,7 +15,6 @@ interface SingleEventBoxProps {
 }
 
 export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleEventBoxProps) {
-    console.log("group: ",group);
     // If the group has only one event, use full width
     const hourColumnWidth = 100;
     const checkout = group[0];
@@ -62,17 +61,17 @@ export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleE
             onClick={ () => openCheckoutDetails(checkout) }
         >
             <div className="font-medium text-sm truncate">
-                {checkout.Bookings.filter(booking => booking.status === "ACTIVE").sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName)).map(item => item.gear.gearName).join(", ")}
+                {checkout.Bookings.filter(booking => booking.status === "ACTIVE").sort((a, b) => a.Gear.gearName.localeCompare(b.Gear.gearName)).map(item => item.Gear.gearName).join(", ")}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <User className="h-3 w-3" />
-                {checkout.customer.fullname}
+                {checkout.Customer.fullname}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <MapPin className="h-3 w-3" />
-                {checkout.address.city.cityName}
+                {checkout.Address.City.cityName}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">

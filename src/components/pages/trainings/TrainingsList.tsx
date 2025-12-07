@@ -12,53 +12,54 @@ import {
     MapPin,
     User,
     Filter,
-    X
+    X,
 } from "lucide-react";
 import { Training } from "@/utils/@types/training";
-import { useState, useMemo } from "react";
-import { SelectStudent } from "./SelectStudent";
+import { useState, useMemo, useEffect } from "react";
+import { SelectTrainee } from "./SelectTrainee";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
-import { Student } from "@/utils/@types/student";
-import { GetAllStudents } from "@/services/students.service";
-import { SelectProfessor } from "./SelectProfessor";
-import { GetAllProfessors } from "@/services/professors.service";
-import { Professor } from "@/utils/@types/professor";
+import { Trainee } from "@/utils/@types/trainee";
+import { GetAllTrainees } from "@/services/trainees.service";
+import { SelectVolunteer } from "./SelectVolunteer";
+import { GetAllVolunteers } from "@/services/volunteers.service";
+import { Volunteer } from "@/utils/@types/volunteer";
 import { Address } from "@/utils/@types/address";
 import { GetAllCustomerAddresses } from "@/services/addresses.service";
+import { TrainingCard } from "./TrainingCard";
 
 export interface FilterState {
-    studentName?: string;
-    professorName?: string;
-    date?: string;
+  traineeName?: string;
+  volunteerName?: string;
+  date?: string;
 }
 
 interface TrainingsListProps {
-    trainings: Training[] | undefined;
+  trainings: Training[] | undefined;
 }
 
 export function TrainingsList({ trainings }: TrainingsListProps) {
     const [ showFilters, setShowFilters ] = useState(true);
     const [ filters, setFilters ] = useState<FilterState>({
-        studentName: undefined,
-        professorName: undefined,
+        traineeName: undefined,
+        volunteerName: undefined,
         date: undefined,
     });
 
-    const studentsData = useQuery<ApiResponse<Student[]>, Error>({
-        queryKey: [ "get-all-students" ],
-        queryFn: GetAllStudents,
+    const traineesData = useQuery<ApiResponse<Trainee[]>, Error>({
+        queryKey: [ "get-all-trainees" ],
+        queryFn: GetAllTrainees,
         staleTime: 1000 * 60,
     });
-    const allStudents = studentsData.data?.data;
+    const allTrainees = traineesData.data?.data;
 
-    const professorsData = useQuery<ApiResponse<Professor[]>, Error>({
-        queryKey: [ "get-all-professors" ],
-        queryFn: GetAllProfessors,
+    const volunteersData = useQuery<ApiResponse<Volunteer[]>, Error>({
+        queryKey: [ "get-all-volunteers" ],
+        queryFn: GetAllVolunteers,
         staleTime: 1000 * 60, // 1 minuto de cache
     });
 
-    const allProfessors = professorsData.data?.data;
+    const allVolunteers = volunteersData.data?.data;
 
     // Aplicar filtros aos treinamentos
     const filteredTrainings = useMemo(() => {
@@ -66,19 +67,19 @@ export function TrainingsList({ trainings }: TrainingsListProps) {
 
         return trainings.filter((training) => {
             // Filtro por nome do aluno
-            if (filters.studentName && filters.studentName.trim() !== "") {
-                const studentMatch = training.Student.name
+            if (filters.traineeName && filters.traineeName.trim() !== "") {
+                const traineeMatch = training.Trainee.name
                     .toLowerCase()
-                    .includes(filters.studentName.toLowerCase());
-                if (!studentMatch) return false;
+                    .includes(filters.traineeName.toLowerCase());
+                if (!traineeMatch) return false;
             }
 
-            // Filtro por nome do professor
-            if (filters.professorName && filters.professorName.trim() !== "") {
-                const professorMatch = training.Professor.name
+            // Filtro por nome do volunteer
+            if (filters.volunteerName && filters.volunteerName.trim() !== "") {
+                const volunteerMatch = training.Volunteer.name
                     .toLowerCase()
-                    .includes(filters.professorName.toLowerCase());
-                if (!professorMatch) return false;
+                    .includes(filters.volunteerName.toLowerCase());
+                if (!volunteerMatch) return false;
             }
 
             // Filtro por data inicial
@@ -94,16 +95,16 @@ export function TrainingsList({ trainings }: TrainingsListProps) {
 
     const hasActiveFilters = useMemo(() => {
         return (
-            (filters.studentName && filters.studentName.trim() !== "") ||
-            (filters.professorName && filters.professorName.trim() !== "") ||
-            (filters.date && filters.date.trim() !== "")
+            (filters.traineeName && filters.traineeName.trim() !== "") ||
+      (filters.volunteerName && filters.volunteerName.trim() !== "") ||
+      (filters.date && filters.date.trim() !== "")
         );
     }, [ filters ]);
 
     const handleClearFilters = () => {
         setFilters({
-            studentName: undefined,
-            professorName: undefined,
+            traineeName: undefined,
+            volunteerName: undefined,
             date: undefined,
         });
     };
@@ -137,31 +138,32 @@ export function TrainingsList({ trainings }: TrainingsListProps) {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Filtro por Aluno */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="studentName">Nome do Aluno</Label>
-                                    <SelectStudent
-                                        students={ allStudents }
-                                        selectedStudent={ filters.studentName }
-                                        onStudentChange={ (studentName) => {
-                                            setFilters(prev => ({
+                                    <Label htmlFor="traineeName">Nome do Aluno</Label>
+                                    <SelectTrainee
+                                        trainees={ allTrainees }
+                                        selectedTrainee={ filters.traineeName }
+                                        onTraineeChange={ (traineeName) => {
+                                            setFilters((prev) => ({
                                                 ...prev,
-                                                studentName
+                                                traineeName,
                                             }));
                                         } }
                                     />
                                 </div>
 
-                                {/* Filtro por Professor */}
+                                {/* Filtro por Volunteer */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="professorName">Nome do Professor</Label>
-                                    <SelectProfessor
-                                        professors={ allProfessors }
-                                        selectedProfessor={ filters.professorName }
-                                        onProfessorChange={ (professorName) => {
-                                            setFilters(prev => ({
+                                    <Label htmlFor="volunteerName">Nome do Volunteer</Label>
+                                    <SelectVolunteer
+                                        volunteers={ allVolunteers }
+                                        selectedVolunteer={ filters.volunteerName }
+                                        onVolunteerChange={ (volunteerName) => {
+                                            setFilters((prev) => ({
                                                 ...prev,
-                                                professorName
+                                                volunteerName,
                                             }));
-                                        } } />
+                                        } }
+                                    />
                                 </div>
 
                                 {/* Filtro por Data Inicial */}
@@ -172,9 +174,9 @@ export function TrainingsList({ trainings }: TrainingsListProps) {
                                         type="date"
                                         value={ filters.date || "" }
                                         onChange={ (e) =>
-                                            setFilters(prev => ({
+                                            setFilters((prev) => ({
                                                 ...prev,
-                                                startDate: e.target.value
+                                                startDate: e.target.value,
                                             }))
                                         }
                                     />
@@ -190,7 +192,7 @@ export function TrainingsList({ trainings }: TrainingsListProps) {
                                         onClick={ handleClearFilters }
                                     >
                                         <X className="h-4 w-4 mr-2" />
-                                        Limpar Filtros
+                    Limpar Filtros
                                     </Button>
                                 </div>
                             )}
@@ -204,62 +206,12 @@ export function TrainingsList({ trainings }: TrainingsListProps) {
                 {filteredTrainings.length === 0 ? (
                     <Card>
                         <CardContent className="p-6 text-center text-muted-foreground">
-                            Nenhum treinamento encontrado com os filtros aplicados.
+              Nenhum treinamento encontrado com os filtros aplicados.
                         </CardContent>
                     </Card>
                 ) : (
                     filteredTrainings.map((training) => (
-                        <Card key={ training.trainingId }>
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <h3 className="font-semibold text-lg">
-                                                {training.Gear.gearName}
-                                            </h3>
-                                            <Badge className="bg-blue-100 text-blue-800">
-                                                Agendado
-                                            </Badge>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                                                <span>{training.Professor.name}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <User className="h-4 w-4 text-muted-foreground" />
-                                                <span>{training.Student.name}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="h-4 w-4 text-muted-foreground" />
-                                                <span>
-                                                    {new Date(
-                                                        training.dueDate
-                                                    ).toLocaleDateString("pt-BR")}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                                <span>
-                                                    {String(training.hour).padStart(2, "0")}:
-                                                    {String(training.minute).padStart(2, "0")}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="h-4 w-4 text-muted-foreground" />
-                                                <span>
-                                                    {training.Address.street.streetName},{" "}
-                                                    {training.Address.neighborhood.neighborhoodName}
-                                                    , {training.Address.addressComplement} -{" "}
-                                                    {training.Address.city.cityName}/
-                                                    {training.Address.state.UF}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <TrainingCard key={ training.trainingId } training={ training } />
                     ))
                 )}
             </div>

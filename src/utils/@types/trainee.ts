@@ -1,7 +1,7 @@
 import { Address } from "./address";
 
-export interface Student {
-    studentId: string,
+export interface Trainee {
+    traineeId: string,
     name: string,
     documentNumber: string,
     cellphone: string,

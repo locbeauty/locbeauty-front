@@ -9,31 +9,23 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area"; // Opcional, mas bom para listas longas
-import {
-    User,
-    Mail,
-    Phone,
-    MapPin,
-    FileText,
-    Hash,
-    Home
-} from "lucide-react";
-import { Student } from "@/utils/@types/student";
+import { User, Mail, Phone, MapPin, FileText, Hash, Home } from "lucide-react";
+import { Trainee } from "@/utils/@types/trainee";
 import { Dispatch, SetStateAction } from "react";
 import { Badge } from "@/components/ui/badge"; // Se você tiver o componente Badge, fica legal
 
-interface StudentDetailsDialogProps {
-    isOpen: boolean;
-    setIsOpen: Dispatch<SetStateAction<boolean>>;
-    student: Student | null;
+interface TraineeDetailsDialogProps {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  trainee: Trainee | null;
 }
 
-export function StudentDetailsDialog({
+export function TraineeDetailsDialog({
     isOpen,
     setIsOpen,
-    student
-}: StudentDetailsDialogProps) {
-    if (!student) return null;
+    trainee,
+}: TraineeDetailsDialogProps) {
+    if (!trainee) return null;
 
     return (
         <Dialog open={ isOpen } onOpenChange={ setIsOpen }>
@@ -41,23 +33,24 @@ export function StudentDetailsDialog({
                 <DialogHeader className="px-1">
                     <DialogTitle className="text-xl">Detalhes do Aluno</DialogTitle>
                     <DialogDescription>
-                        Informações completas do cadastro
+            Informações completas do cadastro
                     </DialogDescription>
                 </DialogHeader>
 
                 {/* Área rolável para o conteúdo */}
                 <div className="flex-1 overflow-y-auto pr-2 -mr-2 py-4">
                     <div className="space-y-6">
-
                         {/* Cabeçalho com Nome Principal */}
                         <div className="flex items-center gap-3">
                             <div className="p-3 rounded-full bg-primary/10">
                                 <User className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold">{student.name}</h3>
+                                <h3 className="text-lg font-bold">{trainee.name}</h3>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground">Estudante Ativo</span>
+                                    <span className="text-sm text-muted-foreground">
+                    Aluno Ativo
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -71,8 +64,10 @@ export function StudentDetailsDialog({
                             </h4>
                             <div className="grid grid-cols-1 gap-4">
                                 <div className="flex items-center gap-2 text-sm">
-                                    <span className="font-medium text-muted-foreground">CPF:</span>
-                                    <span>{student.documentNumber || "Não informado"}</span>
+                                    <span className="font-medium text-muted-foreground">
+                    CPF:
+                                    </span>
+                                    <span>{trainee.documentNumber || "Não informado"}</span>
                                 </div>
                             </div>
                         </div>
@@ -87,11 +82,13 @@ export function StudentDetailsDialog({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg border">
                                 <div className="flex items-center gap-2 text-sm">
                                     <Mail className="h-4 w-4 text-primary/70 shrink-0" />
-                                    <span className="truncate" title={ student.email }>{student.email}</span>
+                                    <span className="truncate" title={ trainee.email }>
+                                        {trainee.email}
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm">
                                     <Phone className="h-4 w-4 text-primary/70 shrink-0" />
-                                    <span>{student.cellphone}</span>
+                                    <span>{trainee.cellphone}</span>
                                 </div>
                             </div>
                         </div>
@@ -105,13 +102,13 @@ export function StudentDetailsDialog({
                                     <MapPin className="h-3 w-3" /> Endereços Cadastrados
                                 </h4>
                                 <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                                    {student.Addresses?.length || 0}
+                                    {trainee.Addresses?.length || 0}
                                 </span>
                             </div>
 
                             <div className="grid grid-cols-1 gap-3">
-                                {student.Addresses && student.Addresses.length > 0 ? (
-                                    student.Addresses.map((addr, index) => (
+                                {trainee.Addresses && trainee.Addresses.length > 0 ? (
+                                    trainee.Addresses.map((addr, index) => (
                                         <div
                                             key={ index } // Idealmente use addr.id se existir
                                             className="relative flex flex-col gap-1 p-4 rounded-lg border bg-card text-card-foreground shadow-sm"
@@ -126,20 +123,20 @@ export function StudentDetailsDialog({
                                                 </div>
                                                 <div className="text-sm">
                                                     <p className="font-medium leading-none mb-1">
-                                                        {addr.street.streetName}, {addr.buildingNumber}
+                                                        {addr.Street.streetName}, {addr.buildingNumber}
                                                     </p>
 
                                                     {addr.addressComplement && (
                                                         <p className="text-muted-foreground text-xs mb-1">
-                                                            Comp: {addr.addressComplement}
+                              Comp: {addr.addressComplement}
                                                         </p>
                                                     )}
 
                                                     <p className="text-muted-foreground">
-                                                        {addr.neighborhood.neighborhoodName}
+                                                        {addr.Neighborhood.neighborhoodName}
                                                     </p>
                                                     <p className="text-muted-foreground">
-                                                        {addr.city.cityName} - {addr.state.stateName}
+                                                        {addr.City.cityName} - {addr.State.stateName}
                                                     </p>
 
                                                     {addr.zipCode && (
@@ -155,7 +152,9 @@ export function StudentDetailsDialog({
                                 ) : (
                                     <div className="flex flex-col items-center justify-center py-6 text-center border-2 border-dashed rounded-lg">
                                         <MapPin className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                                        <p className="text-sm text-muted-foreground">Nenhum endereço vinculado.</p>
+                                        <p className="text-sm text-muted-foreground">
+                      Nenhum endereço vinculado.
+                                        </p>
                                     </div>
                                 )}
                             </div>

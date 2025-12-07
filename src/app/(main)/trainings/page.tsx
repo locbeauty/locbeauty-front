@@ -2,40 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GetAllStudents } from "@/services/students.service";
+import { GetAllTrainees } from "@/services/trainees.service";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
-import { Student } from "@/utils/@types/student";
-import { GetAllProfessors } from "@/services/professors.service";
-import { Professor } from "@/utils/@types/professor";
+import { Trainee } from "@/utils/@types/trainee";
+import { GetAllVolunteers } from "@/services/volunteers.service";
+import { Volunteer } from "@/utils/@types/volunteer";
 import { CreateTrainingDialog } from "@/components/pages/trainings/CreateTrainingDialog";
 import { Training } from "@/utils/@types/training";
 import { GetAllTrainings } from "@/services/trainings.service";
-import { CreateStudentDialog } from "@/components/pages/trainings/CreateStudentDialog";
+import { CreateTraineeDialog } from "@/components/pages/trainings/CreateTraineeDialog";
 import { TrainingsList } from "@/components/pages/trainings/TrainingsList";
-import { StudentsList } from "@/components/pages/trainings/StudentsList";
-import { ProfessorsList } from "@/components/pages/trainings/ProfessorsList";
+import { TraineesList } from "@/components/pages/trainings/TraineeList";
+import { VolunteersList } from "@/components/pages/trainings/VolunteersList";
 import { SummarySection } from "@/components/pages/trainings/SummarySection";
 import { GetAllGears } from "@/services/gears.service";
 import { Gear } from "@/utils/@types/gears";
-import { CreatePacienteModeloDialog } from "@/components/pages/trainings/CreatePacienteModeloDialog";
-import { StudentDetailsDialog } from "@/components/pages/trainings/StudentDetailsDialog";
+import { CreateVolunteerDialog } from "@/components/pages/trainings/CreateVolunteerDialog";
+import { TraineeDetailsDialog } from "@/components/pages/trainings/TraineeDetailsDialog";
 
 export default function Treinamentos() {
     const [ activeTab, setActiveTab ] = useState("treinamentos");
-    const [ dialogNovoPacienteModelo, setDialogNovoPacienteModelo ] = useState(false);
+    const [ dialogNewVolunteer, setDialogNewVolunteer ] =
+    useState(false);
     const [ dialogNovoAluno, setDialogNovoAluno ] = useState(false);
     const [ dialogNovoTreinamento, setDialogNovoTreinamento ] = useState(false);
 
-    const studentsData = useQuery<ApiResponse<Student[]>, Error>({
-        queryKey: [ "get-all-students" ],
-        queryFn: GetAllStudents,
+    const traineesData = useQuery<ApiResponse<Trainee[]>, Error>({
+        queryKey: [ "get-all-trainees" ],
+        queryFn: GetAllTrainees,
         staleTime: 1000 * 60, // 1 minuto de cache
     });
 
-    const professorsData = useQuery<ApiResponse<Professor[]>, Error>({
-        queryKey: [ "get-all-professors" ],
-        queryFn: GetAllProfessors,
+    const volunteersData = useQuery<ApiResponse<Volunteer[]>, Error>({
+        queryKey: [ "get-all-volunteers" ],
+        queryFn: GetAllVolunteers,
         staleTime: 1000 * 60, // 1 minuto de cache
     });
 
@@ -51,17 +52,17 @@ export default function Treinamentos() {
         staleTime: 1000 * 60, // 1 minuto de cache
     });
 
-    const professors = professorsData.data?.data;
-    const students = studentsData.data?.data;
+    const volunteers = volunteersData.data?.data;
+    const trainees = traineesData.data?.data;
     const trainings = trainingsData.data?.data;
     const gears = gearsData.data?.data;
 
-    const [ selectedStudent, setSelectedStudent ] = useState<Student | null>(null);
+    const [ selectedTrainee, setSelectedTrainee ] = useState<Trainee | null>(null);
     const [ isDialogOpen, setIsDialogOpen ] = useState(false);
 
     // Função passada para a lista apenas selecionar
-    const handleSelectStudent = (student: Student) => {
-        setSelectedStudent(student);
+    const handleSelectTrainee = (trainee: Trainee) => {
+        setSelectedTrainee(trainee);
         setIsDialogOpen(true);
     };
 
@@ -72,19 +73,23 @@ export default function Treinamentos() {
           Sistema de Treinamentos
                 </h1>
                 <p className="text-gray-600">
-          Gerencie treinamentos, professores e alunos
+          Gerencie treinamentos, alunos e pacientes modelos
                 </p>
             </div>
 
             {/* Estatísticas */}
-            <SummarySection professors={ professors } students={ students } trainings={ trainings } />
+            <SummarySection
+                volunteers={ volunteers }
+                trainees={ trainees }
+                trainings={ trainings }
+            />
 
             {/* Tabs */}
             <Tabs value={ activeTab } onValueChange={ setActiveTab }>
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="treinamentos">Treinamentos</TabsTrigger>
                     <TabsTrigger value="alunos">Alunos</TabsTrigger>
-                    <TabsTrigger value="professores">Pacientes modelo</TabsTrigger>
+                    <TabsTrigger value="Volunteeres">Pacientes modelo</TabsTrigger>
                 </TabsList>
 
                 {/* Tab Treinamentos */}
@@ -94,8 +99,8 @@ export default function Treinamentos() {
                         <CreateTrainingDialog
                             dialogNovoTreinamento={ dialogNovoTreinamento }
                             setDialogNovoTreinamento={ setDialogNovoTreinamento }
-                            professors={ professors }
-                            students={ students }
+                            volunteers={ volunteers }
+                            trainees={ trainees }
                             gears={ gears }
                         />
                     </div>
@@ -107,30 +112,35 @@ export default function Treinamentos() {
                 <TabsContent value="alunos" className="space-y-4">
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold">Alunos</h2>
-                        <CreateStudentDialog dialogNovoAluno={ dialogNovoAluno } setDialogNovoAluno={ setDialogNovoAluno }  />
+                        <CreateTraineeDialog
+                            dialogNovoAluno={ dialogNovoAluno }
+                            setDialogNovoAluno={ setDialogNovoAluno }
+                        />
                     </div>
 
-                    {/* <StudentsList students={ students } /> */}
-                    <StudentsList
-                        students={ students }
-                        onViewDetails={ handleSelectStudent }
+                    <TraineesList
+                        trainees={ trainees }
+                        onViewDetails={ handleSelectTrainee }
                     />
                 </TabsContent>
 
-                {/* Tab Professores */}
-                <TabsContent value="professores" className="space-y-4">
+                {/* Tab Volunteeres */}
+                <TabsContent value="Volunteeres" className="space-y-4">
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-semibold">Pacientes modelo</h2>
-                        <CreatePacienteModeloDialog dialogNovoPacienteModelo={ dialogNovoPacienteModelo } setDialogNovoPacienteModelo={ setDialogNovoPacienteModelo } />
+                        <CreateVolunteerDialog
+                            dialogNewVolunteer={ dialogNewVolunteer }
+                            setDialogNewVolunteer={ setDialogNewVolunteer }
+                        />
                     </div>
 
-                    <ProfessorsList professors={ professors } />
+                    <VolunteersList volunteers={ volunteers } />
                 </TabsContent>
             </Tabs>
-            <StudentDetailsDialog
+            <TraineeDetailsDialog
                 isOpen={ isDialogOpen }
                 setIsOpen={ setIsDialogOpen }
-                student={ selectedStudent }
+                trainee={ selectedTrainee }
             />
         </div>
     );

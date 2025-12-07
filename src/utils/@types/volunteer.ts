@@ -1,5 +1,5 @@
-export interface Professor {
-    professorId: string,
+export interface Volunteer {
+    volunteerId: string,
     name: string,
     documentNumber: string,
     cellphone: string,

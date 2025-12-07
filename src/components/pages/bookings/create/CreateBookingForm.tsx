@@ -285,6 +285,7 @@ export function CreateBookingForm() {
             toast.success(response.message);
             handleResetValues();
             queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+            queryClient.invalidateQueries({ queryKey: [ "get-day-checkouts" ] });
             queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
             window.scrollTo({ top: 0 });
         } else {

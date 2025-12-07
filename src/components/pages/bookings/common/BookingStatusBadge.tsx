@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Badge } from "../../../ui/badge";
-import { CheckoutStatuses } from "@/utils/@types/bookings";
+import { CheckoutStatuses } from "@/utils/constants";
 
 interface BookingStatusBadgeProps {
   status: CheckoutStatuses;
@@ -30,6 +30,7 @@ export function BookingStatusBadge({
             ) }
             variant="secondary"
         >
+            <span className="hidden md:inline">Pagamento </span>
             {status.charAt(0).toUpperCase() + status.slice(1)}
         </Badge>
     );

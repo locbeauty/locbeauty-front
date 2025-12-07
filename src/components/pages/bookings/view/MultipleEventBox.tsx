@@ -72,16 +72,16 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
                 } }
                 onClick={ () => openCheckoutDetails(checkout) }
             >
-                <div className="font-medium text-sm truncate">{checkout.Bookings.filter(booking => booking.status === "ACTIVE").map(item => item.gear.gearName).join(", ")}</div>
+                <div className="font-medium text-sm truncate">{checkout.Bookings.filter(booking => booking.status === "ACTIVE").map(item => item.Gear.gearName).join(", ")}</div>
 
                 <div className="flex items-center text-xs gap-1 truncate">
                     <User className="h-3 w-3" />
-                    {checkout.customer.fullname}
+                    {checkout.Customer.fullname}
                 </div>
 
                 <div className="flex items-center text-xs gap-1 truncate">
                     <MapPin className="h-3 w-3" />
-                    {checkout.sourceFilial.filialName}
+                    {checkout.SourceFilial.filialName}
                 </div>
 
                 <div className="flex items-center text-xs gap-1 truncate">
@@ -94,7 +94,7 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
                     {centsToString(checkout.totalPrice)}
                 </div>
 
-                <div
+                {/* <div
                     className={ cn(
                         "absolute bottom-0 left-0 h-1 w-full",
                         checkout.CheckoutPayment.paymentStatus === "Pago"
@@ -103,7 +103,7 @@ export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: Multi
                                 ? "bg-red-500"
                                 : "bg-yellow-500"
                     ) }
-                />
+                /> */}
             </div>
 
         );

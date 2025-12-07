@@ -1,415 +1,18 @@
-// "use client";
-
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import {
-//     Select,
-//     SelectContent,
-//     SelectItem,
-//     SelectTrigger,
-//     SelectValue,
-// } from "@/components/ui/select";
-// import {
-//     Dialog,
-//     DialogContent,
-//     DialogDescription,
-//     DialogFooter,
-//     DialogHeader,
-//     DialogTitle,
-//     DialogTrigger,
-// } from "@/components/ui/dialog";
-// import {
-//     CalendarIcon,
-//     Clock,
-//     DollarSign,
-//     FileText,
-//     Loader2,
-//     Plus
-// } from "lucide-react";
-// import { Controller, FormProvider, useForm } from "react-hook-form";
-// import { SelectTrainingGear } from "@/components/pages/trainings/SelectTrainingGear";
-// import { CreateTrainingDataType, CreateTrainingSchema } from "@/lib/zod/CreateTrainingValidation";
-// import { Professor } from "@/utils/@types/professor";
-// import { Student } from "@/utils/@types/student";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import { useEffect, useMemo, useState } from "react";
-// import { CreateTraining } from "@/services/trainings.service";
-// import { toast } from "sonner";
-// import { queryClient } from "@/app/(main)/layout";
-// import PriceInput from "@/components/shared/PriceInput";
-// import { SelectStudent } from "./SelectStudent";
-// import { SelectProfessor } from "./SelectProfessor";
-// import { Gear } from "@/utils/@types/gears";
-// import { SelectTrainingAddress } from "./SelectTrainingAddress";
-// import { useQuery } from "@tanstack/react-query";
-// import { ApiResponse } from "@/lib/api";
-// import { Address } from "@/utils/@types/address";
-// import { GetAllCustomerAddresses, GetAllStudentAddresses } from "@/services/addresses.service";
-// import { Textarea } from "@/components/ui/textarea";
-// import { Separator } from "@/components/ui/separator";
-// import { cn } from "@/lib/utils";
-// import { parseStringToCents } from "@/utils/parseStringToCents";
-
-// interface CreateTrainingDialogProps {
-//     dialogNovoTreinamento: boolean,
-//     setDialogNovoTreinamento: (openStatus: boolean) => void
-//     professors: Professor[] | undefined,
-//     students: Student[] | undefined
-//     gears: Gear[] | undefined
-// }
-
-// export function CreateTrainingDialog({ dialogNovoTreinamento, setDialogNovoTreinamento, professors, students, gears }: CreateTrainingDialogProps) {
-
-//     const createTrainingMethods = useForm<CreateTrainingDataType>({
-//         resolver: zodResolver(CreateTrainingSchema),
-//         defaultValues: {
-//             professorId: "",
-//             studentId: "",
-//             hour: undefined,
-//             minute: undefined,
-//             dueDate: undefined,
-//             addressId: "",
-//             price: "",
-//             gearId: "",
-//             paymentInfo: {
-//                 paymentStatus: "Pendente",
-//                 firstPaymentDate: null,
-//                 secondPaymentDate: null,
-//                 firstPaymentAmount: "0,00",
-//                 firstPaymentStatus: "Pendente",
-//                 secondPaymentAmount: "0,00",
-//                 secondPaymentStatus: "Pendente"
-//             },
-//         }
-//     });
-
-//     const { handleSubmit, formState: { errors, isSubmitting }, watch, setValue, control, reset } = createTrainingMethods;
-
-//     const watchPrice = watch("price");
-
-//     const [ selectedStudent, setSelectedStudent ] = useState<Student | undefined>(undefined);
-//     const [ selectedProfessorName, setSelectedProfessorName ] = useState<string | undefined>(undefined);
-//     const [ selectedStudentName, setSelectedStudentName ] = useState<string | undefined>(undefined);
-//     const [ selectedGearId, setSelectedGearId ] = useState<string | undefined>(undefined);
-
-//     const watchSelectedStudentId = watch("studentId");
-//     const watchSelectedProfessorId = watch("professorId");
-//     const watchSelectedAddress = watch("addressId");
-
-//     const addressesData = useQuery<ApiResponse<Address[]>, Error>({
-//         queryKey: [ "get-all-student-addresses", watchSelectedStudentId ],
-//         queryFn: () => GetAllStudentAddresses({ studentId: watchSelectedStudentId }),
-//         enabled: !!watchSelectedStudentId,
-//         staleTime: 1000 * 60,
-//     });
-//     const allCustomerAddresses = addressesData.data?.data;
-
-//     useEffect(() => {
-//         const student = students?.find((student) => student.studentId === watchSelectedStudentId);
-//         setSelectedStudent(student);
-//         setSelectedStudentName(student?.name);
-//     }, [ watchSelectedStudentId, students ]);
-
-//     useEffect(() => {
-//         const professor = professors?.find((professor) => professor.professorId === watchSelectedProfessorId);
-//         setSelectedProfessorName(professor?.name);
-//     }, [ watchSelectedProfessorId, professors ]);
-
-//     const onSubmitTraining = async (data: CreateTrainingDataType) => {
-//         const parsed = {
-//             ...data,
-
-//             price: data.price,
-//             additionalCost: data.additionalCost,
-
-//             paymentInfo: {
-//                 paymentStatus: data.paymentInfo.paymentStatus,
-//                 firstPaymentDate: data.paymentInfo.firstPaymentDate ?? null,
-//                 firstPaymentAmount: data.paymentInfo.firstPaymentAmount
-//                     ? parseStringToCents(data.paymentInfo.firstPaymentAmount)
-//                     : null,
-//                 firstPaymentMethod: data.paymentInfo.firstPaymentMethod ?? undefined,
-//                 firstPaymentStatus: data.paymentInfo.firstPaymentStatus,
-
-//                 secondPaymentDate: data.paymentInfo.secondPaymentDate ?? null,
-//                 secondPaymentAmount: data.paymentInfo.secondPaymentAmount
-//                     ? parseStringToCents(data.paymentInfo.secondPaymentAmount)
-//                     : null,
-//                 secondPaymentMethod: data.paymentInfo.secondPaymentMethod ?? undefined,
-//                 secondPaymentStatus: data.paymentInfo.secondPaymentStatus ?? undefined,
-//             },
-//         };
-//         const response = await CreateTraining(parsed);
-
-//         console.log("DATA: ", data);
-//         console.log("parsed: ", parsed);
-
-//         if (response.statusCode !== 201) {
-//             toast.warning(response.message, { style: { fontSize: "1rem" } });
-//             window.scroll({ top: 0 });
-//         } else {
-//             queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
-
-//             toast.success(response.message, { style: { fontSize: "1rem" } });
-//             window.scroll({ top: 0 });
-//             reset();
-//             setSelectedProfessorName(undefined);
-//             setSelectedStudentName(undefined);
-//             setDialogNovoTreinamento(false);
-//         }
-//     };
-//     const watchHour = watch("hour");
-//     const watchMinute = watch("minute");
-
-//     // Gera os slots de tempo (08:00 até 17:00, passo de 30min)
-//     const timeSlots = useMemo(() => {
-//         const slots = [];
-//         for (let h = 8; h <= 17; h++) {
-//             slots.push({ h, m: 0, label: `${h.toString().padStart(2, "0")}:00` });
-//             // Se quiser ir até 17:30, remova o if. Se o limite for terminar as 17h, mantenha o if.
-//             if (h !== 18) {
-//                 slots.push({ h, m: 30, label: `${h.toString().padStart(2, "0")}:30` });
-//             }
-//         }
-//         return slots;
-//     }, []);
-
-//     return (
-//         <Dialog
-//             open={ dialogNovoTreinamento }
-//             onOpenChange={ setDialogNovoTreinamento }
-//         >
-//             <DialogTrigger asChild>
-//                 <Button>
-//                     <Plus className="mr-2 h-4 w-4" />
-//                     Novo Treinamento
-//                 </Button>
-//             </DialogTrigger>
-//             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-//                 <form onSubmit={ handleSubmit(onSubmitTraining) }>
-//                     <DialogHeader>
-//                         <DialogTitle>Criar Nova Sessão</DialogTitle>
-//                         <DialogDescription>
-//                             Configure os detalhes do agendamento e valores.
-//                         </DialogDescription>
-//                     </DialogHeader>
-
-//                     <div className="grid gap-6 py-4">
-
-//                         {/* SEÇÃO 1: DADOS GERAIS */}
-//                         <div className="grid gap-4">
-//                             <div className="space-y-2">
-//                                 <Label htmlFor="gearId">Equipamento *</Label>
-//                                 <SelectTrainingGear
-//                                     selectedGear={ selectedGearId }
-//                                     onGearChange={ (gearId) => {
-//                                         setValue("gearId", gearId);
-//                                         setSelectedGearId(gearId);
-//                                     } }
-//                                 />
-//                                 {errors.gearId && <p className="text-sm text-red-600">{errors.gearId.message}</p>}
-//                             </div>
-
-//                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                                 <div className="space-y-2">
-//                                     <Label>Aluno *</Label>
-//                                     <SelectStudent
-//                                         students={ students }
-//                                         selectedStudent={ selectedStudentName }
-//                                         onStudentChange={ (studentName) => {
-//                                             const student = students?.find(s => s.name === studentName);
-//                                             if (student) {
-//                                                 setValue("studentId", student.studentId);
-//                                                 setSelectedStudentName(studentName);
-//                                             }
-//                                         } }
-//                                     />
-//                                     {errors.studentId && <p className="text-sm text-red-600">{errors.studentId.message}</p>}
-//                                 </div>
-//                                 <div className="space-y-2">
-//                                     <Label>Paciente modelo *</Label>
-//                                     <SelectProfessor
-//                                         professors={ professors }
-//                                         selectedProfessor={ selectedProfessorName }
-//                                         onProfessorChange={ (professorName) => {
-//                                             const professor = professors?.find(p => p.name === professorName);
-//                                             if (professor) {
-//                                                 setValue("professorId", professor.professorId);
-//                                                 setSelectedProfessorName(professorName);
-//                                             }
-//                                         } }
-//                                     />
-//                                     {errors.professorId && <p className="text-sm text-red-600">{errors.professorId.message}</p>}
-//                                 </div>
-//                             </div>
-
-//                             <div className="space-y-2">
-//                                 <Label>Endereço de Realização *</Label>
-//                                 <SelectTrainingAddress
-//                                     studentId={ watchSelectedStudentId }
-//                                     addresses={ allCustomerAddresses }
-//                                     selectedAddress={ watchSelectedAddress }
-//                                     onAddressChange={ (addressId) => setValue("addressId", addressId) }
-//                                 />
-//                                 {errors.addressId && <p className="text-sm text-red-600">{errors.addressId.message}</p>}
-//                             </div>
-//                         </div>
-
-//                         <Separator />
-
-//                         {/* SEÇÃO 2: DATA E HORA (USABILIDADE MELHORADA) */}
-//                         <div className="space-y-4">
-//                             <h4 className="flex items-center gap-2 font-medium text-muted-foreground">
-//                                 <CalendarIcon className="h-4 w-4" /> Data e Horário
-//                             </h4>
-
-//                             <div className="space-y-2">
-//                                 <Label>Data do Treinamento *</Label>
-//                                 <Controller
-//                                     control={ control }
-//                                     name="dueDate"
-//                                     render={ ({ field }) => (
-//                                         <Input
-//                                             type="date"
-//                                             className="w-full md:w-1/2"
-//                                             value={ field.value ? new Date(field.value).toISOString().split("T")[0] : "" }
-//                                             onChange={ (e) => {
-//                                                 const dateValue = e.target.value;
-//                                                 field.onChange(dateValue ? new Date(dateValue) : null);
-//                                             } }
-//                                         />
-//                                     ) }
-//                                 />
-//                                 {errors.dueDate && <p className="text-sm text-red-600">{errors.dueDate.message}</p>}
-//                             </div>
-
-//                             <div className="space-y-2">
-//                                 <Label className="flex items-center gap-2">
-//                                     <Clock className="h-4 w-4" /> Selecione o Horário de Início *
-//                                 </Label>
-//                                 <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 mt-2">
-//                                     {timeSlots.map((slot) => {
-//                                         const isSelected = watchHour === slot.h && watchMinute === slot.m;
-//                                         return (
-//                                             <Button
-//                                                 key={ slot.label }
-//                                                 type="button"
-//                                                 variant={ isSelected ? "default" : "outline" }
-//                                                 className={ cn(
-//                                                     "h-9 text-xs sm:text-sm",
-//                                                     isSelected && "ring-2 ring-offset-1 ring-primary"
-//                                                 ) }
-//                                                 onClick={ () => {
-//                                                     setValue("hour", slot.h);
-//                                                     setValue("minute", slot.m);
-//                                                 } }
-//                                             >
-//                                                 {slot.label}
-//                                             </Button>
-//                                         );
-//                                     })}
-//                                 </div>
-//                                 {(errors.hour || errors.minute) && (
-//                                     <p className="text-sm text-red-600">Selecione um horário válido.</p>
-//                                 )}
-//                             </div>
-//                         </div>
-
-//                         <Separator />
-
-//                         {/* SEÇÃO 3: FINANCEIRO */}
-//                         <div className="space-y-4">
-//                             <h4 className="flex items-center gap-2 font-medium text-muted-foreground">
-//                                 <DollarSign className="h-4 w-4" /> Financeiro
-//                             </h4>
-
-//                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                                 <div className="space-y-2">
-//                                     <Label>Preço Base (Opcional)</Label>
-//                                     <Controller
-//                                         control={ control }
-//                                         name="price"
-//                                         render={ ({ field }) => (
-//                                             <PriceInput
-//                                                 withLabel={ false }
-//                                                 register={ createTrainingMethods.register("price") }
-//                                                 value={ field.value }
-//                                                 setValue={ setValue }
-//                                                 name="price"
-//                                                 placeholder="R$ 0,00"
-//                                             />
-//                                         ) }
-//                                     />
-//                                     {errors.price && <p className="text-sm text-red-600">{errors.price.message}</p>}
-//                                 </div>
-
-//                                 <div className="space-y-2">
-//                                     <Label>Custo Adicional (Opcional)</Label>
-//                                     <Controller
-//                                         control={ control }
-//                                         name="additionalCost"
-//                                         render={ ({ field }) => (
-//                                             <PriceInput
-//                                                 withLabel={ false }
-//                                                 register={ createTrainingMethods.register("additionalCost") }
-//                                                 value={ field.value }
-//                                                 setValue={ setValue }
-//                                                 name="additionalCost"
-//                                                 placeholder="R$ 0,00"
-//                                             />
-//                                         ) }
-//                                     />
-//                                 </div>
-//                             </div>
-
-//                             <div className="space-y-2">
-//                                 <Label className="flex items-center gap-2">
-//                                     <FileText className="h-4 w-4" /> Descrição do Custo Adicional
-//                                 </Label>
-//                                 <Textarea
-//                                     { ...createTrainingMethods.register("additionalCostDescription") }
-//                                     placeholder="Ex: Taxa de deslocamento, material extra..."
-//                                     className="resize-none"
-//                                     rows={ 2 }
-//                                 />
-//                             </div>
-//                         </div>
-//                     </div>
-
-//                     <DialogFooter className="mt-4">
-//                         <Button
-//                             variant="outline"
-//                             type="button"
-//                             onClick={ () => setDialogNovoTreinamento(false) }
-//                         >
-//                             Cancelar
-//                         </Button>
-//                         <Button disabled={ isSubmitting } type="submit">
-//                             {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-//                             Criar Treinamento
-//                         </Button>
-//                     </DialogFooter>
-//                 </form>
-//             </DialogContent>
-//         </Dialog>
-//     );
-// }
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
     CalendarIcon,
+    CheckCircle2,
     Clock,
     DollarSign,
     FileText,
     Loader2,
-    Plus
+    Plus,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -431,49 +34,60 @@ import { cn } from "@/lib/utils";
 // Components
 import PriceInput from "@/components/shared/PriceInput";
 import { SelectTrainingGear } from "@/components/pages/trainings/SelectTrainingGear";
-import { SelectStudent } from "./SelectStudent";
-import { SelectProfessor } from "./SelectProfessor";
+import { SelectTrainee } from "./SelectTrainee";
+import { SelectVolunteer } from "./SelectVolunteer";
 import { SelectTrainingAddress } from "./SelectTrainingAddress";
 
 // Services & Utils
 import { CreateTraining } from "@/services/trainings.service";
-import { GetAllStudentAddresses } from "@/services/addresses.service";
+import { GetAllTraineeAddresses } from "@/services/addresses.service";
 import { queryClient } from "@/app/(main)/layout";
 import { parseStringToCents } from "@/utils/parseStringToCents"; // Certifique-se que esta função converte "R$ 10,00" para 1000
 
 // Types & Schemas
-import { CreateTrainingBackendPayload, CreateTrainingDataType, CreateTrainingSchema } from "@/lib/zod/CreateTrainingValidation";
-import { Professor } from "@/utils/@types/professor";
-import { Student } from "@/utils/@types/student";
+import {
+    CreateTrainingBackendPayload,
+    CreateTrainingDataType,
+    CreateTrainingSchema,
+} from "@/lib/zod/CreateTrainingValidation";
+import { Volunteer } from "@/utils/@types/volunteer";
+import { Trainee } from "@/utils/@types/trainee";
 import { Gear } from "@/utils/@types/gears";
 import { ApiResponse } from "@/lib/api";
 import { Address } from "@/utils/@types/address";
+import { useAuth } from "@/contexts/auth-provider";
+import { GetDayCheckoutsResponse } from "../bookings/create/CreateBookingForm";
+import { getDayCheckouts } from "@/services/checkouts.service";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { TrainingPaymentSection } from "./TrainingPaymentSection";
 
 interface CreateTrainingDialogProps {
-    dialogNovoTreinamento: boolean,
-    setDialogNovoTreinamento: (openStatus: boolean) => void
-    professors: Professor[] | undefined,
-    students: Student[] | undefined
-    gears: Gear[] | undefined
+  dialogNovoTreinamento: boolean;
+  setDialogNovoTreinamento: (openStatus: boolean) => void;
+  volunteers: Volunteer[] | undefined;
+  trainees: Trainee[] | undefined;
+  gears: Gear[] | undefined;
 }
 
 export function CreateTrainingDialog({
     dialogNovoTreinamento,
     setDialogNovoTreinamento,
-    professors,
-    students
+    volunteers,
+    trainees,
 }: CreateTrainingDialogProps) {
+    const { user } = useAuth();
 
     const createTrainingMethods = useForm<CreateTrainingDataType>({
-        resolver: zodResolver(CreateTrainingSchema), // Use o Schema importado, não o Tipo
+        resolver: zodResolver(CreateTrainingSchema),
         defaultValues: {
-            professorId: "",
-            studentId: "",
+            volunteerId: "",
+            traineeId: "",
             gearId: "",
             addressId: "",
-            price: "", // Agora isso é válido porque CreateTrainingDataType aceita string | number
+            price: "",
             additionalCost: "",
             additionalCostDescription: "",
+            filialId: user?.sourceFilial.filialId,
             paymentInfo: {
                 paymentStatus: "Pendente",
                 firstPaymentDate: null,
@@ -481,9 +95,9 @@ export function CreateTrainingDialog({
                 firstPaymentAmount: "0",
                 firstPaymentStatus: "Pendente",
                 secondPaymentAmount: "0",
-                secondPaymentStatus: "Pendente"
+                secondPaymentStatus: "Pendente",
             },
-        }
+        },
     });
 
     const {
@@ -492,66 +106,57 @@ export function CreateTrainingDialog({
         watch,
         setValue,
         control,
-        reset
+        reset,
     } = createTrainingMethods;
 
     // --- States Auxiliares para UI ---
-    const [ selectedStudentName, setSelectedStudentName ] = useState<string | undefined>(undefined);
-    const [ selectedProfessorName, setSelectedProfessorName ] = useState<string | undefined>(undefined);
-    const [ selectedGearId, setSelectedGearId ] = useState<string | undefined>(undefined);
+    const [ selectedTraineeName, setSelectedTraineeName ] = useState<
+    string | undefined
+  >(undefined);
+    const [ selectedVolunteerName, setSelectedVolunteerName ] = useState<
+    string | undefined
+  >(undefined);
+    const [ selectedGearId, setSelectedGearId ] = useState<string | undefined>(
+        undefined
+    );
 
     // --- Watchers ---
-    const watchSelectedStudentId = watch("studentId");
-    const watchSelectedProfessorId = watch("professorId");
+    const watchSelectedTraineeId = watch("traineeId");
+    const watchSelectedVolunteerId = watch("volunteerId");
     const watchSelectedAddress = watch("addressId");
-    const watchHour = watch("hour");
-    const watchMinute = watch("minute");
-
-    // --- Query de Endereços ---
-    const addressesData = useQuery<ApiResponse<Address[]>, Error>({
-        queryKey: [ "get-all-student-addresses", watchSelectedStudentId ],
-        queryFn: () => GetAllStudentAddresses({ studentId: watchSelectedStudentId }),
-        enabled: !!watchSelectedStudentId,
-        staleTime: 1000 * 60,
-    });
-    const allCustomerAddresses = addressesData.data?.data;
+    const watchSelectedGear = watch("gearId");
+    const watchDueDate = watch("dueDate");
+    const watchHour = watch("hourInMinutes");
 
     // --- Effects para Sincronizar UI ---
     useEffect(() => {
-        const student = students?.find((student) => student.studentId === watchSelectedStudentId);
-        setSelectedStudentName(student?.name);
-    }, [ watchSelectedStudentId, students ]);
+        const trainee = trainees?.find(
+            (trainee) => trainee.traineeId === watchSelectedTraineeId
+        );
+        setSelectedTraineeName(trainee?.name);
+    }, [ watchSelectedTraineeId, trainees ]);
 
     useEffect(() => {
-        const professor = professors?.find((professor) => professor.professorId === watchSelectedProfessorId);
-        setSelectedProfessorName(professor?.name);
-    }, [ watchSelectedProfessorId, professors ]);
+        const volunteer = volunteers?.find(
+            (volunteer) => volunteer.volunteerId === watchSelectedVolunteerId
+        );
+        setSelectedVolunteerName(volunteer?.name);
+    }, [ watchSelectedVolunteerId, volunteers ]);
 
     // --- Submit Handler ---
     const onSubmitTraining = async (data: CreateTrainingDataType) => {
         try {
-            // Função auxiliar para garantir número (input string -> centavos)
-            const toCents = (val: string | number | null | undefined) => {
-                if (!val) return 0;
-                if (typeof val === "number") return Math.round(val * 100); // se já for número (ex: 100.00)
-                return parseStringToCents(val); // se for string (ex: "R$ 100,00")
-            };
-
-            // 1. Preparar Payload Estritamente Tipado
             const payload: CreateTrainingBackendPayload = {
                 ...data,
-
-                // Conversão explícita para o Backend
-                price: toCents(data.price),
-                additionalCost: toCents(data.additionalCost),
+                price: parseStringToCents(data.price),
+                additionalCost: parseStringToCents(data.additionalCost),
 
                 paymentInfo: {
                     paymentStatus: data.paymentInfo.paymentStatus,
                     firstPaymentDate: data.paymentInfo.firstPaymentDate ?? null,
 
-                    // Converte amount do pagamento
                     firstPaymentAmount: data.paymentInfo.firstPaymentAmount
-                        ? toCents(data.paymentInfo.firstPaymentAmount)
+                        ? parseStringToCents(data.paymentInfo.firstPaymentAmount)
                         : null,
 
                     firstPaymentMethod: data.paymentInfo.firstPaymentMethod,
@@ -559,9 +164,8 @@ export function CreateTrainingDialog({
 
                     secondPaymentDate: data.paymentInfo.secondPaymentDate ?? null,
 
-                    // Converte amount do pagamento
                     secondPaymentAmount: data.paymentInfo.secondPaymentAmount
-                        ? toCents(data.paymentInfo.secondPaymentAmount)
+                        ? parseStringToCents(data.paymentInfo.secondPaymentAmount)
                         : null,
 
                     secondPaymentMethod: data.paymentInfo.secondPaymentMethod,
@@ -569,15 +173,6 @@ export function CreateTrainingDialog({
                 },
             };
 
-            // A lógica de cálculo automático do Pendente (se necessário)
-            if (payload.paymentInfo.paymentStatus === "Pendente" && !payload.paymentInfo.firstPaymentAmount) {
-                payload.paymentInfo.firstPaymentAmount = payload.price + payload.additionalCost;
-                payload.paymentInfo.firstPaymentDate = data.dueDate;
-            }
-
-            console.log("Payload enviado:", payload);
-
-            // Agora o payload bate com o tipo esperado pelo service
             const response = await CreateTraining(payload);
 
             if (response.statusCode !== 201) {
@@ -589,29 +184,44 @@ export function CreateTrainingDialog({
                 toast.success(response.message, { style: { fontSize: "1rem" } });
                 window.scroll({ top: 0 });
                 reset();
-                setSelectedProfessorName(undefined);
-                setSelectedStudentName(undefined);
+                setSelectedVolunteerName(undefined);
+                setSelectedTraineeName(undefined);
 
                 setDialogNovoTreinamento(false);
             }
-
         } catch (error) {
             console.error(error);
             toast.error("Erro ao processar dados");
         }
     };
 
-    // --- Slots de Tempo ---
-    const timeSlots = useMemo(() => {
-        const slots = [];
-        for (let h = 8; h <= 17; h++) {
-            slots.push({ h, m: 0, label: `${h.toString().padStart(2, "0")}:00` });
-            if (h !== 17) { // Termina 17:00
-                slots.push({ h, m: 30, label: `${h.toString().padStart(2, "0")}:30` });
-            }
-        }
-        return slots;
-    }, []);
+    // --- Query de Endereços ---
+    const addressesData = useQuery<ApiResponse<Address[]>, Error>({
+        queryKey: [ "get-all-trainee-addresses", watchSelectedTraineeId ],
+        queryFn: () =>
+            GetAllTraineeAddresses({ traineeId: watchSelectedTraineeId }),
+        enabled: !!watchSelectedTraineeId,
+        staleTime: 1000 * 60,
+    });
+    const allCustomerAddresses = addressesData.data?.data;
+
+    const params = {
+        filialId: user?.sourceFilial.filialId,
+        gears: [ { gearId: watchSelectedGear, gearName: "" } ],
+        date: watchDueDate,
+    };
+    const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
+        queryKey: [ "get-day-checkouts", params ],
+        queryFn: () => getDayCheckouts({ body: params }),
+        enabled:
+      !!user?.sourceFilial.filialId && !!watchDueDate && !!watchSelectedGear,
+        staleTime: 0,
+    });
+    const checkoutSchedule = data?.data;
+
+    useEffect(() => {
+        setValue("hourInMinutes", 0);
+    }, [ setValue, watchSelectedGear ]);
 
     const handleOpenChange = (open: boolean) => {
         setDialogNovoTreinamento(open);
@@ -626,7 +236,7 @@ export function CreateTrainingDialog({
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Novo Treinamento
+          Novo Treinamento
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -634,12 +244,11 @@ export function CreateTrainingDialog({
                     <DialogHeader>
                         <DialogTitle>Criar Nova Sessão</DialogTitle>
                         <DialogDescription>
-                            Configure os detalhes do agendamento e valores.
+              Configure os detalhes do agendamento e valores.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="grid gap-6 py-4">
-
                         {/* --- DADOS GERAIS --- */}
                         <div className="grid gap-4">
                             <div className="space-y-2">
@@ -651,51 +260,72 @@ export function CreateTrainingDialog({
                                         setSelectedGearId(gearId);
                                     } }
                                 />
-                                {errors.gearId && <p className="text-sm text-red-600">{errors.gearId.message}</p>}
+                                {errors.gearId && (
+                                    <p className="text-sm text-red-600">
+                                        {errors.gearId.message}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Aluno *</Label>
-                                    <SelectStudent
-                                        students={ students }
-                                        selectedStudent={ selectedStudentName }
-                                        onStudentChange={ (studentName) => {
-                                            const student = students?.find(s => s.name === studentName);
-                                            if (student) {
-                                                setValue("studentId", student.studentId);
-                                                setSelectedStudentName(studentName);
+                                    <SelectTrainee
+                                        trainees={ trainees }
+                                        selectedTrainee={ selectedTraineeName }
+                                        onTraineeChange={ (traineeName) => {
+                                            const trainee = trainees?.find(
+                                                (s) => s.name === traineeName
+                                            );
+                                            if (trainee) {
+                                                setValue("traineeId", trainee.traineeId);
+                                                setSelectedTraineeName(traineeName);
                                             }
                                         } }
                                     />
-                                    {errors.studentId && <p className="text-sm text-red-600">{errors.studentId.message}</p>}
+                                    {errors.traineeId && (
+                                        <p className="text-sm text-red-600">
+                                            {errors.traineeId.message}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Paciente modelo *</Label>
-                                    <SelectProfessor
-                                        professors={ professors }
-                                        selectedProfessor={ selectedProfessorName }
-                                        onProfessorChange={ (professorName) => {
-                                            const professor = professors?.find(p => p.name === professorName);
-                                            if (professor) {
-                                                setValue("professorId", professor.professorId);
-                                                setSelectedProfessorName(professorName);
+                                    <SelectVolunteer
+                                        volunteers={ volunteers }
+                                        selectedVolunteer={ selectedVolunteerName }
+                                        onVolunteerChange={ (volunteerName) => {
+                                            const volunteer = volunteers?.find(
+                                                (p) => p.name === volunteerName
+                                            );
+                                            if (volunteer) {
+                                                setValue("volunteerId", volunteer.volunteerId);
+                                                setSelectedVolunteerName(volunteerName);
                                             }
                                         } }
                                     />
-                                    {errors.professorId && <p className="text-sm text-red-600">{errors.professorId.message}</p>}
+                                    {errors.volunteerId && (
+                                        <p className="text-sm text-red-600">
+                                            {errors.volunteerId.message}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="space-y-2">
                                 <Label>Endereço de Realização *</Label>
                                 <SelectTrainingAddress
-                                    studentId={ watchSelectedStudentId }
                                     addresses={ allCustomerAddresses }
                                     selectedAddress={ watchSelectedAddress }
-                                    onAddressChange={ (addressId) => setValue("addressId", addressId) }
+                                    onAddressChange={ (addressId) =>
+                                        setValue("addressId", addressId)
+                                    }
                                 />
-                                {errors.addressId && <p className="text-sm text-red-600">{errors.addressId.message}</p>}
+                                {errors.addressId && (
+                                    <p className="text-sm text-red-600">
+                                        {errors.addressId.message}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -713,50 +343,82 @@ export function CreateTrainingDialog({
                                     control={ control }
                                     name="dueDate"
                                     render={ ({ field }) => (
-                                        <Input
-                                            type="date"
-                                            className="w-full md:w-1/2"
-                                            // Converte Date object para string YYYY-MM-DD para o input
-                                            value={ field.value ? new Date(field.value).toISOString().split("T")[0] : "" }
+                                        <DatePicker
+                                            modal={ true }
+                                            value={ field.value! }
                                             onChange={ (e) => {
-                                                const dateValue = e.target.value;
-                                                // Salva Date object no form state para o Zod validar corretamente
-                                                field.onChange(dateValue ? new Date(dateValue) : null);
+                                                field.onChange(e);
+                                                if (e) {
+                                                    setValue("dueDate", e);
+                                                }
                                             } }
+                                            placeholder="Selecione a data do treinamento"
+                                            clearable
                                         />
                                     ) }
                                 />
-                                {errors.dueDate && <p className="text-sm text-red-600">{errors.dueDate.message}</p>}
+                                {errors.dueDate && (
+                                    <p className="text-sm text-red-600">
+                                        {errors.dueDate.message}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
                                 <Label className="flex items-center gap-2">
                                     <Clock className="h-4 w-4" /> Selecione o Horário de Início *
                                 </Label>
-                                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 mt-2">
-                                    {timeSlots.map((slot) => {
-                                        const isSelected = watchHour === slot.h && watchMinute === slot.m;
-                                        return (
-                                            <Button
-                                                key={ slot.label }
-                                                type="button"
-                                                variant={ isSelected ? "default" : "outline" }
-                                                className={ cn(
-                                                    "h-9 text-xs sm:text-sm",
-                                                    isSelected && "ring-2 ring-offset-1 ring-primary"
-                                                ) }
-                                                onClick={ () => {
-                                                    setValue("hour", slot.h, { shouldValidate: true });
-                                                    setValue("minute", slot.m, { shouldValidate: true });
-                                                } }
-                                            >
-                                                {slot.label}
-                                            </Button>
-                                        );
-                                    })}
+                                <div className="space-y-6">
+                                    <Label className="text-sm font-medium">
+                    Horário de início
+                                    </Label>
+                                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                                        {checkoutSchedule?.map((hour) => {
+                                            const hasSomeAvailableGapTime = hour.availability.some(
+                                                (item) => item.available
+                                            );
+                                            return (
+                                                <Button
+                                                    type="button"
+                                                    key={ hour.hourInMinutes }
+                                                    variant={
+                                                        watchHour === hour.hourInMinutes
+                                                            ? "default"
+                                                            : "outline"
+                                                    }
+                                                    size="sm"
+                                                    disabled={ !hasSomeAvailableGapTime }
+                                                    onClick={ () =>
+                                                        setValue("hourInMinutes", hour.hourInMinutes)
+                                                    }
+                                                    className={ `
+                                                    relative text-xs h-9 transition-all duration-200
+                                                    ${
+                                                watchHour ===
+                                                      hour.hourInMinutes
+                                                    ? "ring-2 ring-primary ring-offset-2"
+                                                    : ""
+                                                }
+                                                    ${
+                                                !hasSomeAvailableGapTime
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : "hover:scale-105"
+                                                }
+                                                ` }
+                                                >
+                                                    {hour.formattedTime}
+                                                    {watchHour === hour.hourInMinutes && (
+                                                        <CheckCircle2 className="h-3 w-3 absolute -top-1 -right-1 text-primary bg-background rounded-full" />
+                                                    )}
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                                {(errors.hour || errors.minute) && (
-                                    <p className="text-sm text-red-600">Selecione um horário válido.</p>
+                                {errors.hourInMinutes && (
+                                    <p className="text-sm text-red-600">
+                    Selecione um horário válido.
+                                    </p>
                                 )}
                             </div>
                         </div>
@@ -779,20 +441,18 @@ export function CreateTrainingDialog({
                                             <PriceInput
                                                 withLabel={ false }
                                                 register={ createTrainingMethods.register("price") }
-
-                                                // --- CORREÇÃO AQUI ---
-                                                // 1. ?.toString() converte number para string (ex: 100 -> "100")
-                                                // 2. ?? "" converte null/undefined para string vazia
                                                 value={ field.value?.toString() ?? "" }
-                                                // ---------------------
-
                                                 setValue={ setValue }
                                                 name="price"
                                                 placeholder="R$ 0,00"
                                             />
                                         ) }
                                     />
-                                    {errors.price && <p className="text-sm text-red-600">{errors.price.message}</p>}
+                                    {errors.price && (
+                                        <p className="text-sm text-red-600">
+                                            {errors.price.message}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -803,14 +463,10 @@ export function CreateTrainingDialog({
                                         render={ ({ field }) => (
                                             <PriceInput
                                                 withLabel={ false }
-                                                register={ createTrainingMethods.register("additionalCost") }
-
-                                                // --- CORREÇÃO AQUI ---
-                                                // 1. ?.toString() converte number para string (ex: 100 -> "100")
-                                                // 2. ?? "" converte null/undefined para string vazia
+                                                register={ createTrainingMethods.register(
+                                                    "additionalCost"
+                                                ) }
                                                 value={ field.value?.toString() ?? "" }
-                                                // ---------------------
-
                                                 setValue={ setValue }
                                                 name="additionalCost"
                                                 placeholder="R$ 0,00"
@@ -825,12 +481,20 @@ export function CreateTrainingDialog({
                                     <FileText className="h-4 w-4" /> Descrição do Custo Adicional
                                 </Label>
                                 <Textarea
-                                    { ...createTrainingMethods.register("additionalCostDescription") }
+                                    { ...createTrainingMethods.register(
+                                        "additionalCostDescription"
+                                    ) }
                                     placeholder="Ex: Taxa de deslocamento, material extra..."
                                     className="resize-none"
                                     rows={ 2 }
                                 />
                             </div>
+
+                            <Separator />
+
+                            <FormProvider { ...createTrainingMethods }>
+                                <TrainingPaymentSection />
+                            </FormProvider>
                         </div>
                     </div>
 
@@ -840,11 +504,13 @@ export function CreateTrainingDialog({
                             type="button"
                             onClick={ () => setDialogNovoTreinamento(false) }
                         >
-                            Cancelar
+              Cancelar
                         </Button>
                         <Button disabled={ isSubmitting } type="submit">
-                            {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                            Criar Treinamento
+                            {isSubmitting ? (
+                                <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                            ) : null}
+              Criar Treinamento
                         </Button>
                     </DialogFooter>
                 </form>

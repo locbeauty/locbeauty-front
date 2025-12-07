@@ -130,7 +130,6 @@ export function BookingDetailsDialog({
 
         setSelectedCheckout(prev => {
             if (!prev) return prev;
-            console.log("dados: ", selectedCheckout.basePrice, booking.individualPrice, booking.extraMachineCosts);
             return {
                 ...prev,
                 observations: checkoutObservations,
