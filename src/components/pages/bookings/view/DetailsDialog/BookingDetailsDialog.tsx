@@ -200,7 +200,7 @@ export function BookingDetailsDialog({
                                 <div className="flex items-center gap-2">
                                     <Package className="h-5 w-5 text-primary" />
                                     <h3 className="text-lg font-semibold">
-                                        {selectedCheckout.Bookings.filter(booking => booking.status === "ACTIVE").sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName)).map(item => item.gear.gearName).join(", ")}
+                                        {selectedCheckout.Bookings.filter(booking => booking.status === "ACTIVE").sort((a, b) => a.Gear.gearName.localeCompare(b.Gear.gearName)).map(item => item.Gear.gearName).join(", ")}
                                     </h3>
                                 </div>
                                 <div className="flex gap-2">
@@ -223,12 +223,12 @@ export function BookingDetailsDialog({
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="flex items-center gap-2">
                                         <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                                        <span>{ selectedCheckout.accountableEmployee.fullname }</span>
+                                        <span>{ selectedCheckout.AccountableEmployee.fullname }</span>
                                     </div>
-                                    { selectedCheckout.customer.email && (
+                                    { selectedCheckout.Customer.email && (
                                         <div className="flex items-center gap-2">
                                             <FileText className="h-4 w-4 text-muted-foreground" />
-                                            <span>{ selectedCheckout.accountableEmployee.documentNumber }</span>
+                                            <span>{ selectedCheckout.AccountableEmployee.documentNumber }</span>
                                         </div>
                                     ) }
                                 </div>
@@ -243,24 +243,24 @@ export function BookingDetailsDialog({
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="flex items-center gap-2">
                                         <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                                        <span>{ selectedCheckout.customer.fullname }</span>
+                                        <span>{ selectedCheckout.Customer.fullname }</span>
                                     </div>
-                                    { selectedCheckout.customer.email && (
+                                    { selectedCheckout.Customer.email && (
                                         <div className="flex items-center gap-2">
                                             <Mail className="h-4 w-4 text-muted-foreground" />
-                                            <span>{ selectedCheckout.customer.email }</span>
+                                            <span>{ selectedCheckout.Customer.email }</span>
                                         </div>
                                     ) }
-                                    { selectedCheckout.customer.documentNumber && (
+                                    { selectedCheckout.Customer.documentNumber && (
                                         <div className="flex items-center gap-2">
                                             <FileText className="h-4 w-4 text-muted-foreground" />
-                                            <span>{ selectedCheckout.customer.documentNumber }</span>
+                                            <span>{ selectedCheckout.Customer.documentNumber }</span>
                                         </div>
                                     ) }
-                                    { selectedCheckout.customer.cellphone && (
+                                    { selectedCheckout.Customer.cellphone && (
                                         <div className="flex items-center gap-2">
                                             <Phone className="h-4 w-4 text-muted-foreground" />
-                                            <span>{ selectedCheckout.customer.cellphone }</span>
+                                            <span>{ selectedCheckout.Customer.cellphone }</span>
                                         </div>
                                     ) }
                                 </div>
@@ -276,21 +276,21 @@ export function BookingDetailsDialog({
                                 <div className="grid grid-cols-1 gap-3">
                                     <div className="flex items-center gap-2">
                                         <Building className="h-4 w-4 text-muted-foreground" />
-                                        <span>{ selectedCheckout.address.city.cityName }</span>
+                                        <span>{ selectedCheckout.Address.City.cityName }</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <MapPin className="h-4 w-4 text-muted-foreground" />
                                         <span>
-                                            {selectedCheckout.address.neighborhood.neighborhoodName},{" "}
-                                            {selectedCheckout.address.street.streetName},{" "}
-                                            {selectedCheckout.address.buildingNumber}
+                                            {selectedCheckout.Address.Neighborhood.neighborhoodName},{" "}
+                                            {selectedCheckout.Address.Street.streetName},{" "}
+                                            {selectedCheckout.Address.buildingNumber}
                                         </span>
                                     </div>
                                     {
-                                        selectedCheckout.address.addressComplement && (
+                                        selectedCheckout.Address.addressComplement && (
                                             <div className="flex items-center gap-2">
                                                 <CircleEllipsis className="h-4 w-4 text-muted-foreground" />
-                                                <span>{ selectedCheckout.address.addressComplement }</span>
+                                                <span>{ selectedCheckout.Address.addressComplement }</span>
                                             </div>
                                         )
                                     }
@@ -376,7 +376,7 @@ export function BookingDetailsDialog({
                                     <CardContent>
                                         { /* Informações individuais de cada booking */ }
                                         {selectedCheckout.Bookings
-                                            .sort((a, b) => a.gear.gearName.localeCompare(b.gear.gearName))
+                                            .sort((a, b) => a.Gear.gearName.localeCompare(b.Gear.gearName))
                                             .map((booking, index, arr) => {
                                                 if(booking.status === "INACTIVE") return;
                                                 const isLast = index === arr.length - 1;
@@ -388,7 +388,7 @@ export function BookingDetailsDialog({
                                                     >
                                                         <div className="flex items-center gap-2 col-span-3">
                                                             <Package className="h-4 w-4 text-muted-foreground" />
-                                                            <span>{booking.gear.gearName}</span>
+                                                            <span>{booking.Gear.gearName}</span>
                                                         </div>
 
                                                         <div className="flex flex-col gap-2 col-span-7">
@@ -511,14 +511,14 @@ export function BookingDetailsDialog({
                                                     if (!selectedCheckout) return;
 
                                                     const lines = [
-                                                        `Equipamento${selectedCheckout.Bookings.length > 1 ? "s" : ""}: ${selectedCheckout.Bookings.map(item => item.gear.gearName).join(", ")}`,
+                                                        `Equipamento${selectedCheckout.Bookings.length > 1 ? "s" : ""}: ${selectedCheckout.Bookings.map(item => item.Gear.gearName).join(", ")}`,
                                                         `Data: ${new Date(selectedCheckout.date).toLocaleDateString("pt-BR")}`,
                                                         `Horário: ${formatTime(startDate)} - ${formatTime(endDate)}`,
                                                         `Duração: ${selectedCheckout.totalDurationInMinutes / 60}h`,
                                                         `Preço total: ${centsToStringWithCurrencyMark(selectedCheckout.totalPrice)}`,
-                                                        `Cliente: ${selectedCheckout.customer.fullname} - ${selectedCheckout.customer.documentNumber || "Sem documento"}`,
-                                                        `Contato: ${selectedCheckout.customer.cellphone || "Sem telefone"}`,
-                                                        `Endereço: ${selectedCheckout.address.street.streetName}, ${selectedCheckout.address.buildingNumber} - ${selectedCheckout.address.neighborhood.neighborhoodName}, ${selectedCheckout.address.city.cityName}`,
+                                                        `Cliente: ${selectedCheckout.Customer.fullname} - ${selectedCheckout.Customer.documentNumber || "Sem documento"}`,
+                                                        `Contato: ${selectedCheckout.Customer.cellphone || "Sem telefone"}`,
+                                                        `Endereço: ${selectedCheckout.Address.Street.streetName}, ${selectedCheckout.Address.buildingNumber} - ${selectedCheckout.Address.Neighborhood.neighborhoodName}, ${selectedCheckout.Address.City.cityName}`,
                                                         `Motorista: ${selectedCheckout.driverId || "A definir"}`,
                                                         selectedCheckout.foodCost > 0 && `Alimentação: ${centsToStringWithCurrencyMark(selectedCheckout.foodCost)}`,
                                                         selectedCheckout.fuelCost > 0 && `Combustível: ${centsToStringWithCurrencyMark(selectedCheckout.fuelCost)}`,
@@ -666,14 +666,14 @@ export function CancelBookingConfirmationDialog({
 
                 <CardContent className="mt-6 flex flex-col items-center justify-center space-y-2">
                     <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                        {(selectedCheckout.customer?.fullname ||
-                            selectedCheckout.customer?.companyName) && (
+                        {(selectedCheckout.Customer?.fullname ||
+                            selectedCheckout.Customer?.companyName) && (
                             <p>
                                 <span className="font-medium text-gray-700 dark:text-gray-200">
                                     Cliente:
                                 </span>{" "}
-                                {selectedCheckout.customer.fullname ||
-                                    selectedCheckout.customer.companyName}
+                                {selectedCheckout.Customer.fullname ||
+                                    selectedCheckout.Customer.companyName}
                             </p>
                         )}
                         {selectedCheckout.date && (

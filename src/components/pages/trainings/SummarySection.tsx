@@ -70,14 +70,12 @@ export function SummarySection({
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">volunteers</CardTitle>
-                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Alunos</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    {estatisticas.volunteers ? (
-                        <div className="text-2xl font-bold">
-                            {estatisticas.volunteers}
-                        </div>
+                    {estatisticas.totalAlunos ? (
+                        <div className="text-2xl font-bold">{estatisticas.totalAlunos}</div>
                     ) : (
                         <div className="text-2xl font-bold">
                             <Loader2 className="animate-spin" />
@@ -87,12 +85,14 @@ export function SummarySection({
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Alunos</CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Pacientes modelos</CardTitle>
+                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    {estatisticas.totalAlunos ? (
-                        <div className="text-2xl font-bold">{estatisticas.totalAlunos}</div>
+                    {estatisticas.volunteers ? (
+                        <div className="text-2xl font-bold">
+                            {estatisticas.volunteers}
+                        </div>
                     ) : (
                         <div className="text-2xl font-bold">
                             <Loader2 className="animate-spin" />

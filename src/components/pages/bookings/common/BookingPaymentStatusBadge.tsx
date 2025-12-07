@@ -28,7 +28,7 @@ export function BookingPaymentStatusBadge({
             ) }
             variant="secondary"
         >
-            <span className="hidden md:inline">Pagamento </span>
+            {parsedStatus !== "Pago" && <span className="hidden md:inline">Pagamento </span>}
             {parsedStatus}
         </Badge>
 

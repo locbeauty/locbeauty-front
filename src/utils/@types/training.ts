@@ -1,15 +1,15 @@
 import { Address } from "./address";
 import { CheckoutStatuses } from "../constants";
 import { CheckoutPayment } from "./checkouts";
+import { Trainee } from "./trainee";
 
 export interface Training {
   trainingId: string;
   hourInMinutes: number;
-  price: number;
   trainingStatus: CheckoutStatuses;
   additionalCost: number;
   additionalCostDescription: string;
-  TrainingPayment: CheckoutPayment
+  TrainingPayment: CheckoutPayment[]
   Gear: {
     gearId: string;
     gearName: string
@@ -19,12 +19,7 @@ export interface Training {
     name: string;
     documentNumber: string;
   }
-  Trainee: {
-    traineeId: string;
-    name: string;
-    documentNumber: string;
-    cellphone: string;
-  }
+  Trainee: Trainee
   dueDate: Date;
   Address: Address
   createdAt: string;

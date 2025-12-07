@@ -107,11 +107,10 @@ export async function UpdateCheckoutStatus({
   checkoutId: string;
   checkoutStatus: CheckoutStatuses;
 }) {
-
     const response = await apiRequest({
         endpoint: "bookings/config/status",
         method: "POST",
-        queryParams: { checkoutId, date, checkoutStatus },
+        body: { checkoutId, date, checkoutStatus },
     });
 
     return response;

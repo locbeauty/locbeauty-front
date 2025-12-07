@@ -1,3 +1,4 @@
+import { PayerType } from "@/components/pages/trainings/TrainingPaymentMethodDialog";
 import { CheckoutStatuses, PaymentModes, PaymentStatuses } from "../constants";
 import { Address } from "./address";
 
@@ -17,7 +18,7 @@ export type Checkout = {
     additionalTransportCost: number,
     CheckoutPayment: CheckoutPayment;
     driverId: string,
-    accountableEmployee: {
+    AccountableEmployee: {
         employeeId: string,
         fullname: string,
         documentNumber: string
@@ -55,6 +56,7 @@ export type Checkout = {
 export interface CheckoutPayment {
   paymentStatus: PaymentStatuses;
   paymentMode: PaymentModes;
+  payerType: PayerType;
   firstPaymentDate: string | null;
   firstPaymentAmount: number;
   firstPaymentMethod: string | null;

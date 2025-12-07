@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import {
     Dialog,
@@ -18,16 +18,18 @@ import {
     Phone, GraduationCap,
     DollarSign,
     Check,
-    Trash2
+    Trash2,
+    Wallet
 } from "lucide-react";
 
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
-import { Training } from "@/utils/@types/training";
-import { TrainingPaymentMethodDialog } from "./TrainingPaymentMethodDialog";
+import { Training, TrainingPaymentMethodDialog } from "./TrainingPaymentMethodDialog";
 import { centsToString } from "@/utils/centsToString";
 import { toast } from "sonner";
 import { parseStringToCents } from "@/utils/parseStringToCents";
+import { Training } from "@/utils/@types/training";
+import { Training } from "@/utils/@types/trainee";
 
 interface TrainingDetailsDialogProps {
   open: boolean;
@@ -36,96 +38,50 @@ interface TrainingDetailsDialogProps {
   setSelectedTraining: Training
 }
 
+export type PayerType = "TRAINEE" | "VOLUNTEER";
+
 export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, setSelectedTraining }: TrainingDetailsDialogProps) {
     const [ isTrainingPaymentMethodDialogOpen, setIsTrainingPaymentMethodDialogOpen ] = useState(false);
+    const [ selectedPayerType, setSelectedPayerType ] = useState<PayerType | null>(null);
 
-    // Estados para edição de preço
-    const [ isEditingPrice, setIsEditingPrice ] = useState(false);
-    const [ priceInputValue, setPriceInputValue ] = useState("0,00");
-    const [ isSavingPrice, setIsSavingPrice ] = useState(false);
+    // --- Extrair os pagamentos do Array ---
+    const { traineePayment, volunteerPayment } = useMemo(() => {
+        const payments = Array.isArray(selectedTraining.TrainingPayment)
+            ? selectedTraining.TrainingPayment
+            : [];
 
-    useEffect(() => {
-        // Log para debug (opcional)
-        // console.log("selectedTraining: ", selectedTraining);
+        return {
+            traineePayment: payments.find((p: any) => p.payerType === "TRAINEE"),
+            volunteerPayment: payments.find((p: any) => p.payerType === "VOLUNTEER")
+        };
     }, [ selectedTraining ]);
 
-    const defaultPaymentValues = {
-        price: selectedTraining.price || 0,
-        additionalCost: selectedTraining.additionalCost || 0,
-        TrainingPayment: {
-            paymentStatus: selectedTraining.TrainingPayment.paymentStatus || "Pendente",
-            firstPaymentAmount: selectedTraining.TrainingPayment.firstPaymentAmount || null,
-            firstPaymentDate: selectedTraining.TrainingPayment.firstPaymentDate ? new Date(selectedTraining.TrainingPayment.firstPaymentDate) : null,
-            firstPaymentMethod: selectedTraining.TrainingPayment.firstPaymentMethod || "",
-        }
-    };
-
     const form = useForm({
-        defaultValues: defaultPaymentValues,
+        defaultValues: {
+            price: selectedTraining.price || 0, // Apenas placeholder, não usado diretamente aqui
+        },
         mode: "onChange"
     });
 
-    // Função para iniciar a edição
-    const handleStartEditingPrice = () => {
-        setPriceInputValue(centsToString(selectedTraining.price));
-        setIsEditingPrice(true);
+    const handleOpenPaymentDialog = (type: PayerType) => {
+        setSelectedPayerType(type);
+        setIsTrainingPaymentMethodDialogOpen(true);
     };
 
-    // Função para cancelar a edição
-    const handleCancelEditingPrice = () => {
-        setIsEditingPrice(false);
-        setPriceInputValue("0,00");
-    };
+    // Helper para formatar moeda
+    const formatCurrency = (val: number) => `R$ ${centsToString(val)}`;
 
-    // Função para salvar o novo preço
-    const handleSavePrice = async () => {
-        if (!selectedTraining) return;
+    // Valores para exibição
+    const traineePrice = traineePayment?.price || 0;
+    // const volunteerPrice = volunteerPayment?.price || 0; // Opcional, caso voluntário pague algo
+    const additionalCost = selectedTraining.additionalCost || 0;
 
-        setIsSavingPrice(true);
-        const newPriceInCents = parseStringToCents(priceInputValue);
-
-        try {
-            // Chamada ao backend
-            // const response = await UpdateTraining({
-            //     trainingId: selectedTraining.trainingId,
-            //     body: {
-            //         price: newPriceInCents,
-            //         // É necessário enviar o status atual ou o backend lida com partial updates?
-            //         // Assumindo partial ou enviando o status atual para garantir integridade:
-            //         trainingStatus: selectedTraining.trainingStatus
-            //     } as any // Cast se o tipo do payload exigir campos obrigatórios que não estamos mudando
-            // });
-
-            // if (response.statusCode === 200) {
-            //     toast.success("Valor do treino atualizado!");
-
-            //     // Atualiza o estado local para refletir na UI imediatamente
-            //     setSelectedTraining((prev) => prev ? ({
-            //         ...prev,
-            //         price: newPriceInCents
-            //     }) : null);
-
-            //     // Invalida queries para garantir sincronia
-            //     queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
-
-            //     setIsEditingPrice(false);
-            // } else {
-            //     toast.error("Erro ao atualizar valor.");
-            // }
-        } catch (error) {
-            console.error(error);
-            toast.error("Erro inesperado ao salvar.");
-        } finally {
-            setIsSavingPrice(false);
-        }
-    };
-
-    const payment = selectedTraining.TrainingPayment;
-    const hasSecondPayment = payment.paymentMode === "Parcelado" || payment.secondPaymentAmount > 0;
+    // Cálculo simples de total (se aplicável ao seu negócio)
+    const totalTrainingValue = traineePrice + additionalCost;
 
     return (
         <Dialog open={ open } onOpenChange={ onOpenChange }>
-            <DialogContent className="max-h-[90vh] w-[90vw] md:w-[700px] overflow-hidden flex flex-col dark:bg-gray-900">
+            <DialogContent className="max-h-[90vh] w-[90vw] md:w-[900px] overflow-hidden flex flex-col dark:bg-gray-900">
                 <DialogHeader className="px-1">
                     <DialogTitle className="text-xl">Detalhes do Agendamento</DialogTitle>
                     <DialogDescription>
@@ -133,12 +89,11 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* Wrapper do FormProvider */}
                 <FormProvider { ...form }>
-                    <div className="flex-1 overflow-y-auto pr-2 -mr-2 py-4">
+                    <div className="flex-1 overflow-y-auto pr-2 -mr-2 py-4 custom-scrollbar">
                         <div className="space-y-6">
 
-                            {/* 1. CABEÇALHO DO TREINAMENTO (Resumo) */}
+                            {/* 1. CABEÇALHO (Mantido) */}
                             <div className="flex items-center gap-3">
                                 <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
                                     <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -155,24 +110,22 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                                     </div>
                                 </div>
                                 <div className="flex gap-2 ml-auto">
-                                    <BookingStatusBadge
-                                        status={ selectedTraining.trainingStatus }
-                                    />
-                                    <BookingPaymentStatusBadge
-                                        status={ selectedTraining.TrainingPayment.paymentStatus }
-                                    />
+                                    <BookingStatusBadge status={ selectedTraining.trainingStatus } />
+                                    <BookingPaymentStatusBadge status={ traineePayment?.paymentStatus || "Pendente" } />
                                 </div>
                             </div>
 
                             <Separator />
 
-                            {/* 2. PARTICIPANTES */}
+                            {/* 2. PARTICIPANTES (Mantido) */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Paciente Modelo */}
+                                {/* Aluno */}
                                 <div className="space-y-2">
-                                    <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                        <GraduationCap className="h-3 w-3" /> Aluno
-                                    </h4>
+                                    <div className="flex justify-between items-center">
+                                        <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                            <GraduationCap className="h-3 w-3" /> Aluno
+                                        </h4>
+                                    </div>
                                     <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
                                         <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
                                             <span className="font-bold text-xs text-orange-600">{selectedTraining.Trainee.name.charAt(0)}</span>
@@ -186,11 +139,13 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                                     </div>
                                 </div>
 
-                                {/* Aluno */}
+                                {/* Paciente Modelo */}
                                 <div className="space-y-2">
-                                    <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                        <User className="h-3 w-3" /> Paciente Modelo
-                                    </h4>
+                                    <div className="flex justify-between items-center">
+                                        <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                            <User className="h-3 w-3" /> Paciente Modelo
+                                        </h4>
+                                    </div>
                                     <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
                                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                                             <span className="font-bold text-xs text-primary">{selectedTraining.Volunteer.name.charAt(0)}</span>
@@ -201,12 +156,11 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
 
                             <Separator />
 
-                            {/* 3. LOCALIZAÇÃO */}
+                            {/* 3. LOCALIZAÇÃO (Mantido) */}
                             <div className="space-y-3">
                                 <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                                     <MapPin className="h-3 w-3" /> Localização
@@ -215,9 +169,6 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                                     <p className="font-medium">
                                         {selectedTraining.Address.Street.streetName}, {selectedTraining.Address.buildingNumber}
                                     </p>
-                                    {selectedTraining.Address.addressComplement && (
-                                        <p className="text-muted-foreground text-xs mt-1">Comp: {selectedTraining.Address.addressComplement}</p>
-                                    )}
                                     <p className="text-muted-foreground mt-1">
                                         {selectedTraining.Address.Neighborhood.neighborhoodName} - {selectedTraining.Address.City.cityName}/{selectedTraining.Address.State.UF}
                                     </p>
@@ -227,44 +178,102 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                     </div>
                 </FormProvider>
 
-                <DialogFooter className="flex flex-row gap-3 justify-center sm:justify-center items-center w-full">
-                    <Button
-                        className="flex items-center justify-center cursor-pointer gap-2"
-                        variant={ "outline" }
-                        onClick={ () => setIsTrainingPaymentMethodDialogOpen(true) }
-                    >
-                        <DollarSign className="w-4 h-4" />
-                        <span className="md:block hidden">Gerenciar pagamento</span>
-                    </Button>
-                    <Button
-                        variant="default"
-                        className="flex items-center justify-center cursor-pointer"
-                        // onClick={ () => handleChangeCheckoutStatus(selectedCheckout.checkoutId, "Concluido") }
-                        disabled={
-                            selectedTraining.trainingStatus === "Concluido" ||
-                                    selectedTraining.trainingStatus === "Cancelado" ||
-                                    selectedTraining.TrainingPayment.paymentStatus !== "Pago"
-                        }
-                    >
-                        <Check className="" />
-                        <span className="md:block hidden">Marcar como concluído</span>
-                    </Button>
-                    <Button
-                        disabled={ selectedTraining.trainingStatus !== "Pendente" }
-                        variant="destructive"
-                        // onClick={ () => setCancelBookingConfirmationDialogOpen(true) }
-                        className="flex items-center justify-center cursor-pointer"
-                    >
-                        <Trash2 className="" />
-                        <span className="md:block hidden">Cancelar treinamento</span>
-                    </Button>
+                {/* --- FOOTER ATUALIZADO --- */}
+                <DialogFooter className="sm:justify-between w-full">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+
+                        {/* COLUNA 1: RESUMO FINANCEIRO (NOVA SEÇÃO) */}
+                        <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10 h-full justify-between">
+                            <div>
+                                <h4 className="font-semibold text-sm flex items-center gap-2 mb-3 text-muted-foreground">
+                                    <Wallet className="w-4 h-4" /> Resumo Financeiro
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between items-center">
+                                        <span>Valor (Aluno)</span>
+                                        <span className="font-medium">{formatCurrency(traineePrice)}</span>
+                                    </div>
+                                    {additionalCost > 0 && (
+                                        <div className="flex justify-between items-center text-muted-foreground">
+                                            <span>Custos Adicionais</span>
+                                            <span>+ {formatCurrency(additionalCost)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Totalizador visual */}
+                            <div>
+                                <Separator className="my-2" />
+                                <div className="flex justify-between items-center font-bold text-base">
+                                    <span>Total Estimado</span>
+                                    <span className="text-primary">{formatCurrency(totalTrainingValue)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* COLUNA 2: BOTÕES DE AÇÃO (VERTICAL) */}
+                        <div className="flex flex-col gap-2 justify-center">
+                            {/* BOTÃO 1: ALUNO */}
+                            <Button
+                                className="flex items-center justify-start gap-2 h-10 w-full"
+                                variant="outline"
+                                onClick={ () => handleOpenPaymentDialog("TRAINEE") }
+                            >
+                                <DollarSign className="w-4 h-4 text-orange-600" />
+                                <span>Gerenciar pgto. do Aluno</span>
+                            </Button>
+
+                            {/* BOTÃO 2: MODELO */}
+                            <Button
+                                className="flex items-center justify-start gap-2 h-10 w-full"
+                                variant="outline"
+                                onClick={ () => handleOpenPaymentDialog("VOLUNTEER") }
+                            >
+                                <DollarSign className="w-4 h-4 text-blue-600" />
+                                <span>Gerenciar pgto. do Modelo</span>
+                            </Button>
+
+                            <div className="h-px bg-border my-1" />
+
+                            {/* AÇÕES FINAIS */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <Button
+                                    disabled={ selectedTraining.trainingStatus !== "Pendente" }
+                                    variant="destructive"
+                                    className="flex items-center justify-center gap-2 w-full"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    <span className="sr-only md:not-sr-only">Cancelar</span>
+                                </Button>
+
+                                <Button
+                                    variant="default"
+                                    className="flex items-center justify-center gap-2 w-full"
+                                    disabled={
+                                        selectedTraining.trainingStatus === "Concluido" ||
+                                        selectedTraining.trainingStatus === "Cancelado" ||
+                                        traineePayment?.paymentStatus !== "Pago"
+                                    }
+                                >
+                                    <Check className="w-4 h-4" />
+                                    <span className="sr-only md:not-sr-only">Concluir</span>
+                                </Button>
+                            </div>
+                        </div>
+
+                    </div>
                 </DialogFooter>
             </DialogContent>
-            <TrainingPaymentMethodDialog
-                isTrainingPaymentMethodDialogOpen={ isTrainingPaymentMethodDialogOpen }
-                selectedTraining={ selectedTraining }
-                setIsTrainingPaymentMethodDialogOpen={ setIsTrainingPaymentMethodDialogOpen }
-            />
+
+            {selectedPayerType && (
+                <TrainingPaymentMethodDialog
+                    payerType={ selectedPayerType }
+                    isTrainingPaymentMethodDialogOpen={ isTrainingPaymentMethodDialogOpen }
+                    selectedTraining={ selectedTraining }
+                    setIsTrainingPaymentMethodDialogOpen={ setIsTrainingPaymentMethodDialogOpen }
+                />
+            )}
         </Dialog>
     );
 }

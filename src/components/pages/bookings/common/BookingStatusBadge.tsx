@@ -30,7 +30,6 @@ export function BookingStatusBadge({
             ) }
             variant="secondary"
         >
-            <span className="hidden md:inline">Pagamento </span>
             {status.charAt(0).toUpperCase() + status.slice(1)}
         </Badge>
     );
