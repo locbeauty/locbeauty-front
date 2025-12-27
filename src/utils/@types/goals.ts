@@ -21,7 +21,7 @@ export interface Goal {
 
   remainingDays: number | null;
 
-  filial: {
+  Filial: {
     filialId: string;
     filialName: string;
   }

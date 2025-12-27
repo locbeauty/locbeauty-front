@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, ForwardRefExoticComponent, RefAttributes } from "react";
+import { useMemo, ForwardRefExoticComponent, RefAttributes, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQuery } from "@tanstack/react-query";
 
@@ -78,6 +78,9 @@ export default function MetasMensaisPage() {
     });
 
     const goals = data;
+    useEffect(() => {
+        console.log(goals)
+    }, [goals])
 
     const filteredGoals = useMemo(() => {
         if (!goals) return [];
@@ -85,7 +88,7 @@ export default function MetasMensaisPage() {
         let filtered = [ ...goals ];
 
         if (filterFilial)
-            filtered = filtered.filter((g) => g.filial.filialId === filterFilial);
+            filtered = filtered.filter((g) => g.Filial.filialId === filterFilial);
         if (filterStatus) filtered = filtered.filter((g) => g.status === filterStatus);
 
         return filtered;
@@ -104,11 +107,11 @@ export default function MetasMensaisPage() {
         new Map(
             filteredGoals
                 .filter((g) => g.Gear) // só goals com engrenagem
-                .map((g) => [ g.Gear!.gearId, g.Gear ]) // chave = gearId
+                .map((g) => [ g.Gear!.gearId, g.Gear! ]) // chave = gearId
         ).values()
     );
 
-    const filiaisList = Array.from(new Set(goals?.map((g) => g.filial.filialName) ?? []));
+    const filiaisList = Array.from(new Set(goals?.map((g) => g.Filial.filialName) ?? []));
 
     const estatisticas = useMemo(
         () => ({
@@ -273,18 +276,6 @@ export default function MetasMensaisPage() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        // <Select onValueChange={ field.onChange } value={ field.value }>
-                                        //     <SelectTrigger>
-                                        //         <SelectValue placeholder="Selecione" />
-                                        //     </SelectTrigger>
-                                        //     <SelectContent>
-                                        //         {machinesList.map((m) => (
-                                        //             <SelectItem key={ m } value={ m ?? "" }>
-                                        //                 {m}
-                                        //             </SelectItem>
-                                        //         ))}
-                                        //     </SelectContent>
-                                        // </Select>
                                     ) }
                                 />
                             </div>

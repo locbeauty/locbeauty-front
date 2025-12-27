@@ -55,7 +55,7 @@ export function GoalCard({ goal }: { goal: Goal }) {
 
                                 <div className="flex items-center gap-1">
                                     <Building2 className="h-3 w-3" />
-                                    Filial {goal.filial.filialName}
+                                    Filial {goal.Filial.filialName}
                                 </div>
 
                                 <div className="flex items-center gap-1">
