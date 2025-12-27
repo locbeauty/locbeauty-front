@@ -1,6 +1,6 @@
-import { PayerType } from "@/components/pages/trainings/TrainingPaymentMethodDialog";
-import { CheckoutStatuses, PaymentModes, PaymentStatuses } from "../constants";
+import { CheckoutStatuses } from "../constants";
 import { Address } from "./address";
+import { CheckoutPayment } from "./payments";
 
 export type Checkout = {
     checkoutId: string;
@@ -51,18 +51,4 @@ export type Checkout = {
         filialName: string;
     };
     Address: Address;
-}
-
-export interface CheckoutPayment {
-  paymentStatus: PaymentStatuses;
-  paymentMode: PaymentModes;
-  payerType: PayerType;
-  firstPaymentDate: string | null;
-  firstPaymentAmount: number;
-  firstPaymentMethod: string | null;
-  firstPaymentStatus: "Pendente" | "Pago";
-  secondPaymentDate: string | null;
-  secondPaymentAmount: number;
-  secondPaymentMethod: string | null;
-  secondPaymentStatus: "Pendente" | "Pago";
 }

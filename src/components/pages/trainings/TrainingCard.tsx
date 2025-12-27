@@ -42,10 +42,10 @@ export function TrainingCard({ training }: TrainingCardProps) {
                                     </h3>
                                     {/* Badge dinâmica baseada no status (exemplo) */}
                                     <Badge
-                                        variant={ training.TrainingPayment.paymentStatus === "Pago" ? "default" : "secondary" }
-                                        className={ training.TrainingPayment.paymentStatus === "Pago" ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-blue-100 text-blue-800 hover:bg-blue-100" }
+                                        // variant="secondary"
+                                        className={ training.trainingStatus === "Concluido" ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-blue-100 text-blue-800 hover:bg-blue-100" }
                                     >
-                                        {training.TrainingPayment.paymentStatus || "Agendado"}
+                                        {training.trainingStatus || "Agendado"}
                                     </Badge>
                                 </div>
 

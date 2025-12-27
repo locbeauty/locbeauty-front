@@ -24,12 +24,11 @@ import {
 
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
-import { Training, TrainingPaymentMethodDialog } from "./TrainingPaymentMethodDialog";
+import { TrainingPaymentMethodDialog } from "./TrainingPaymentMethodDialog";
 import { centsToString } from "@/utils/centsToString";
 import { toast } from "sonner";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { Training } from "@/utils/@types/training";
-import { Training } from "@/utils/@types/trainee";
 
 interface TrainingDetailsDialogProps {
   open: boolean;
@@ -56,13 +55,6 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
         };
     }, [ selectedTraining ]);
 
-    const form = useForm({
-        defaultValues: {
-            price: selectedTraining.price || 0, // Apenas placeholder, não usado diretamente aqui
-        },
-        mode: "onChange"
-    });
-
     const handleOpenPaymentDialog = (type: PayerType) => {
         setSelectedPayerType(type);
         setIsTrainingPaymentMethodDialogOpen(true);
@@ -72,12 +64,12 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
     const formatCurrency = (val: number) => `R$ ${centsToString(val)}`;
 
     // Valores para exibição
-    const traineePrice = traineePayment?.price || 0;
-    // const volunteerPrice = volunteerPayment?.price || 0; // Opcional, caso voluntário pague algo
-    const additionalCost = selectedTraining.additionalCost || 0;
+    const traineeBasePrice = traineePayment?.basePrice || 0;
+    const traineeAdditionalCost = traineePayment?.additionalCost || 0;
+    const traineeAdditionalCostDescription = traineePayment?.additionalCostDescription || "";
+    const traineeTotalPrice = traineePayment?.totalPrice || 0;
 
-    // Cálculo simples de total (se aplicável ao seu negócio)
-    const totalTrainingValue = traineePrice + additionalCost;
+    const volunteerTotalPrice = volunteerPayment?.totalPrice || 0;
 
     return (
         <Dialog open={ open } onOpenChange={ onOpenChange }>
@@ -89,7 +81,6 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                     </DialogDescription>
                 </DialogHeader>
 
-                <FormProvider { ...form }>
                     <div className="flex-1 overflow-y-auto pr-2 -mr-2 py-4 custom-scrollbar">
                         <div className="space-y-6">
 
@@ -176,41 +167,65 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                             </div>
                         </div>
                     </div>
-                </FormProvider>
 
                 {/* --- FOOTER ATUALIZADO --- */}
                 <DialogFooter className="sm:justify-between w-full">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
 
-                        {/* COLUNA 1: RESUMO FINANCEIRO (NOVA SEÇÃO) */}
-                        <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10 h-full justify-between">
-                            <div>
-                                <h4 className="font-semibold text-sm flex items-center gap-2 mb-3 text-muted-foreground">
-                                    <Wallet className="w-4 h-4" /> Resumo Financeiro
-                                </h4>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between items-center">
-                                        <span>Valor (Aluno)</span>
-                                        <span className="font-medium">{formatCurrency(traineePrice)}</span>
-                                    </div>
-                                    {additionalCost > 0 && (
+                        {/* COLUNA 1: RESUMO FINANCEIRO (DUAS CARTAS) */}
+                        <div className="flex flex-col gap-4 h-full">
+
+                            {/* Card 1: Financeiro - Aluno */}
+                            <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10">
+                                <div>
+                                    <h4 className="font-semibold text-sm flex items-center gap-2 mb-3 text-muted-foreground">
+                                        <Wallet className="w-4 h-4" /> Financeiro - Aluno
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
                                         <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>Custos Adicionais</span>
-                                            <span>+ {formatCurrency(additionalCost)}</span>
+                                            <span>Valor Base</span>
+                                            <span>{formatCurrency(traineeBasePrice)}</span>
                                         </div>
-                                    )}
+                                        {traineeAdditionalCost > 0 && (
+                                            <>
+                                            <div className="flex justify-between items-center text-muted-foreground">
+                                                <span>Custos Adicionais</span>
+                                                <span>+ {formatCurrency(traineeAdditionalCost)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-muted-foreground">
+                                                <span>Descrição</span>
+                                                <span>{traineeAdditionalCostDescription     }</span>
+                                            </div>
+                                            </>
+                                        )}
+                                        <Separator className="my-2" />
+                                        <div className="flex justify-between items-center font-bold">
+                                            <span>Total (Aluno)</span>
+                                            <span className="text-primary">{formatCurrency(traineeTotalPrice)}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Totalizador visual */}
-                            <div>
-                                <Separator className="my-2" />
-                                <div className="flex justify-between items-center font-bold text-base">
-                                    <span>Total Estimado</span>
-                                    <span className="text-primary">{formatCurrency(totalTrainingValue)}</span>
+                            {/* Card 2: Financeiro - Modelo */}
+                            {(volunteerTotalPrice > 0 || selectedTraining.Volunteer) && (
+                                <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10">
+                                    <div>
+                                        <h4 className="font-semibold text-sm flex items-center gap-2 mb-3 text-muted-foreground">
+                                            <Wallet className="w-4 h-4" /> Financeiro - Modelo
+                                        </h4>
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between items-center font-bold">
+                                                <span>Total (Modelo)</span>
+                                                <span className="text-primary">{formatCurrency(volunteerTotalPrice)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
                         </div>
+
 
                         {/* COLUNA 2: BOTÕES DE AÇÃO (VERTICAL) */}
                         <div className="flex flex-col gap-2 justify-center">

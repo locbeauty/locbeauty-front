@@ -57,6 +57,10 @@ export default function Treinamentos() {
     const trainings = trainingsData.data?.data;
     const gears = gearsData.data?.data;
 
+    // useEffect(() => {
+    //     console.log(trainings);
+    // }, [ trainings ]);
+
     const [ selectedTrainee, setSelectedTrainee ] = useState<Trainee | null>(null);
     const [ isDialogOpen, setIsDialogOpen ] = useState(false);
 

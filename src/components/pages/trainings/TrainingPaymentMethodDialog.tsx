@@ -19,6 +19,7 @@ import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStat
 import { UpdateTraining } from "@/services/trainings.service";
 import { Trainee } from "@/utils/@types/trainee";
 import { Address } from "@/utils/@types/address";
+import { Training } from "@/utils/@types/training";
 
 // --- TIPOS ---
 
@@ -44,28 +45,28 @@ export interface CheckoutPayment {
 }
 
 // Interface do Treinamento completa (SEM PRICE NA RAIZ)
-export interface Training {
-    trainingId: string;
-    hourInMinutes: number;
-    trainingStatus: string;
-    additionalCost: number;
-    additionalCostDescription: string;
-    TrainingPayment: CheckoutPayment[];
-    Gear: {
-        gearId: string;
-        gearName: string
-    };
-    Volunteer: {
-        volunteerId: string;
-        name: string;
-        documentNumber: string;
-    };
-    Trainee: Trainee;
-    dueDate: Date;
-    Address: Address;
-    createdAt: string;
-    updatedAt: string;
-}
+// export interface Training {
+//     trainingId: string;
+//     hourInMinutes: number;
+//     trainingStatus: string;
+//     additionalCost: number;
+//     additionalCostDescription: string;
+//     TrainingPayment: CheckoutPayment[];
+//     Gear: {
+//         gearId: string;
+//         gearName: string
+//     };
+//     Volunteer: {
+//         volunteerId: string;
+//         name: string;
+//         documentNumber: string;
+//     };
+//     Trainee: Trainee;
+//     dueDate: Date;
+//     Address: Address;
+//     createdAt: string;
+//     updatedAt: string;
+// }
 
 export type LocalErrorsType = {
     paymentStatus: string | null;
@@ -246,7 +247,7 @@ export function TrainingPaymentMethodDialog({
                 setPaymentMode("AVista");
 
                 // Tenta pegar o preço do pagamento atual se existir, senão 0
-                const suggestedAmount = currentPaymentData?.price || 0;
+                const suggestedAmount = 0;
 
                 setFirstPaymentAmount(centsToString(suggestedAmount));
                 setFirstPaymentDate("");
@@ -269,7 +270,7 @@ export function TrainingPaymentMethodDialog({
             // Se o campo estiver zerado e tivermos os dados do pagamento atual
             if (firstPaymentAmount === "0,00" && currentPaymentData) {
                 // Pegamos o preço diretamente do objeto de pagamento correspondente
-                const amountToFill = currentPaymentData.price;
+                const amountToFill = currentPaymentData.totalPrice;
                 setFirstPaymentAmount(centsToString(amountToFill || 0));
             }
 
@@ -350,7 +351,7 @@ export function TrainingPaymentMethodDialog({
     const headerColorClass = isTrainee ? "text-orange-600 bg-orange-50" : "text-blue-600 bg-blue-50";
 
     // Pega o preço para exibir no label (agora vindo de currentPaymentData)
-    const displayPrice = currentPaymentData?.price || 0;
+    const displayPrice = currentPaymentData?.totalPrice || 0;
 
     return (
         <Dialog open={ isTrainingPaymentMethodDialogOpen } onOpenChange={ setIsTrainingPaymentMethodDialogOpen }>
