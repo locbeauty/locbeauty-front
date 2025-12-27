@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { TransferableCheckbox } from "../shared/canBeTransferredCheckbox";
 import { useAuth } from "@/contexts/auth-provider";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { queryClient } from "@/app/(main)/layout";
 
 export function CreateGearForm() {
     const { user } = useAuth();
@@ -60,6 +61,7 @@ export function CreateGearForm() {
                     style: { fontSize: "1rem" },
                 });
                 window.scroll({ top: 0 });
+                queryClient.invalidateQueries({ queryKey: ["get-all-gears"] });
                 reset();
             }
         } catch {

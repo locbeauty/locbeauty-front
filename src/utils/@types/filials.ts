@@ -8,7 +8,7 @@ export interface Filial {
   filialId: string;
   CNPJ: string;
   filialName: string;
-  address: Address;
+  Address: Address;
   cellphone: string;
   email: string;
 }

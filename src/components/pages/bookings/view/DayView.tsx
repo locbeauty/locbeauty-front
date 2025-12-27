@@ -21,10 +21,10 @@ import type { FlattenedBooking } from "./WeekView";
 interface DayViewProps {
     currentDate: Date;
     checkouts: Checkout[];
-    openBookingDetails: (_booking: FlattenedBooking) => void;
+    openCheckoutDetails: (_booking: FlattenedBooking) => void;
 }
 
-export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewProps) {
+export function DayView({ currentDate, checkouts, openCheckoutDetails }: DayViewProps) {
     const flattenedBookings: FlattenedBooking[] = checkouts.flatMap((checkout) =>
         checkout.Bookings.map((booking) => {
             const startDate = new Date(checkout.date);
@@ -62,7 +62,7 @@ export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewP
 
     return (
         <>
-            {/* <MobileDayView checkouts={ checkouts } currentDate={ currentDate } openBookingDetails={ openBookingDetails } /> */}
+            {/* <MobileDayView checkouts={ checkouts } currentDate={ currentDate } openCheckoutDetails={ openCheckoutDetails } /> */}
 
             <div className="hidden md:block min-w-full">
                 <CalendarDayHeader currentDate={ currentDate } />
@@ -112,7 +112,7 @@ export function DayView({ currentDate, checkouts, openBookingDetails }: DayViewP
                                         left,
                                         width,
                                     } }
-                                    onClick={ () => openBookingDetails(booking) }
+                                    onClick={ () => openCheckoutDetails(booking) }
                                 >
                                     <div className="font-medium text-sm truncate">{booking.gear.gearName}</div>
 

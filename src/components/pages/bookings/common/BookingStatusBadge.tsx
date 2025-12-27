@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Badge } from "../../../ui/badge";
-import { CheckoutStatuses } from "@/utils/@types/bookings";
+import { CheckoutStatuses } from "@/utils/constants";
 
 interface BookingStatusBadgeProps {
   status: CheckoutStatuses;

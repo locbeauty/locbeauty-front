@@ -1,631 +1,156 @@
-// "use client";
-
-// import { Badge } from "@/components/ui/badge";
-// import { Button } from "@/components/ui/button";
-// import { getMonthName } from "@/utils/getMonthName";
-// import { useEffect, useState } from "react";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Label } from "@/components/ui/label";
-// import { Separator } from "@/components/ui/separator";
-// import {
-//     Target, TrendingUp, Clock,
-//     ChevronUp,
-//     ChevronDown,
-//     History,
-//     Play,
-//     AlertTriangle,
-//     CheckCircle
-// } from "lucide-react";
-// import { CreateGoalDialog } from "@/components/pages/goals/CreateGoalDialog";
-// import { GoalCard } from "@/components/pages/goals/GoalCard";
-// import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// import { SelectFilial } from "@/components/shared/SelectFilial";
-// import { Controller, useForm } from "react-hook-form";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import { FilterGoalsSchema, filterGoalsType, StatusMeta } from "@/lib/zod/Goals";
-
-// export type MetaMensal = {
-//     filialId: string;
-//     goalId?: number;
-//     year: number;
-//     remainingDays: number,
-//     monthIndex: number;
-//     targetValue: number;
-//     currentValue: number;
-//     estimatedValue: number,
-//     status: StatusMeta
-//     createdAt: Date;
-//     updatedAt: Date;
-// }
-
-// export default function MetasMensaisPage() {
-
-//     const { control, reset, trigger, watch, formState: { errors } } = useForm<filterGoalsType>({
-//         resolver: zodResolver(FilterGoalsSchema),
-//         defaultValues: {
-//             filterEndMonth: undefined,
-//             filterEndYear: undefined,
-//             filterStartMonth: undefined,
-//             filterStartYear: undefined,
-//         }
-//     });
-
-//     const watchStartYear = watch("filterStartYear");
-//     const watchStartMonth = watch("filterStartMonth");
-
-//     const watchEndYear = watch("filterEndYear");
-//     const watchEndMonth = watch("filterEndMonth");
-
-//     const watchFilial = watch("filterFilial");
-//     const watchStatus = watch("filterStatus");
-
-//     useEffect(() => {
-//         async function GetAllGoals() {
-//             const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/goals`, { credentials: "include" });
-//             const { data }: { data: MetaMensal[] } = await response.json();
-
-//             const currentMonth = new Date().getMonth();
-//             const currentYear = new Date().getFullYear();
-
-//             const currentGoals = data.filter(goal => goal.year === currentYear && goal.monthIndex === currentMonth);
-//             const pastGoals = data.filter(goal => goal.year < currentYear || (goal.year === currentYear && goal.monthIndex < currentMonth));
-
-//             setCurrentMonthGoals(currentGoals);
-//             setPastMonthsGoals(pastGoals);
-//             setGoals(data);
-//         }
-
-//         GetAllGoals();
-//     }, []);
-
-//     const [ goals, setGoals ] = useState<MetaMensal[]>([]);
-//     const [ currentMonthGoals, setCurrentMonthGoals ] = useState<MetaMensal[]>([]);
-//     const [ pastMonthsGoals, setPastMonthsGoals ] = useState<MetaMensal[]>([]);
-//     const [ filteredGoals, setFilteredGoals ] = useState<MetaMensal[]>([]);
-
-//     const [ openPreviousGoalsCollapsible, setOpenPreviousGoalsCollapsible ] = useState(false);
-//     const [ openCurrentGoalsCollapsible, setOpenCurrentGoalsCollapsible ] = useState(true);
-
-//     useEffect(() => {
-//         const applyFilters = () => {
-//             let filtered = [ ...goals ];
-
-//             // Filtro por filial
-//             if (watchFilial) {
-//                 filtered = filtered.filter((goal) => goal.filialId === watchFilial);
-//             }
-
-//             // Filtro por status
-//             if (watchStatus) {
-//                 filtered = filtered.filter((goal) => goal.status === watchStatus);
-//             }
-
-//             // Filtro por intervalo de datas (ano/mês)
-//             if (watchStartYear && watchStartMonth && watchEndYear && watchEndMonth) {
-//                 const startDate = new Date(parseInt(watchStartYear), parseInt(watchStartMonth) - 1);
-//                 const endDate = new Date(parseInt(watchEndYear), parseInt(watchEndMonth) - 1);
-
-//                 filtered = filtered.filter((goal) => {
-//                     const goalDate = new Date(goal.year, goal.monthIndex);
-//                     return goalDate >= startDate && goalDate <= endDate;
-//                 });
-//             }
-
-//             setFilteredGoals(filtered);
-//         };
-
-//         const run = async () => {
-//             const isValid = await trigger();
-//             if (isValid && watchStartMonth && watchStartYear) {
-//                 applyFilters();
-//             }
-//         };
-
-//         run();
-//     }, [ goals, watchStartYear, watchStartMonth, watchEndYear, watchEndMonth, watchFilial, watchStatus, trigger ]);
-
-//     // Calcular estatísticas
-//     const estatisticas = {
-//         total: goals.length,
-//         emAndamento: goals.filter((m) => m.status === "EM_ANDAMENTO").length,
-//         atingidas: goals.filter((m) => m.status === "Concluida").length,
-//         naoAtingidas: goals.filter((m) => m.status === "NAO_ATINGIDA").length,
-//         mediaPercentual: goals.length > 0 ? (goals.filter((m) => m.status === "Concluida").length / goals.length) * 100 : 0
-//     };
-
-//     // Gerar opções de mês/ano para filtro
-//     const generateYearOptions = () => {
-//         const yearOptions: string[] = [];
-
-//         goals.forEach(goal => {
-//             if(!yearOptions.includes(String(goal.year))) {
-//                 yearOptions.push(String(goal.year));
-//             }
-//         });
-
-//         return yearOptions;
-//     };
-
-//     const generateMonthOptions = () => {
-//         const monthOptions: {monthLabel: string, monthIndex: string}[] = [];
-
-//         for(let i=0; i<12; i++) {
-//             monthOptions.push({
-//                 monthLabel: getMonthName(i),
-//                 monthIndex: String(i)
-//             });
-//         }
-
-//         return monthOptions;
-//     };
-
-//     return (
-//         <div className="space-y-6">
-//             <div className="flex items-center justify-between">
-//                 <div>
-//                     <h1 className="text-3xl font-bold tracking-tight">Metas Mensais de Vendas</h1>
-//                     <p className="text-muted-foreground">Acompanhe as metas da sua filial por aqui</p>
-//                 </div>
-//                 <div className="flex gap-2">
-//                     <CreateGoalDialog />
-//                 </div>
-//             </div>
-
-//             {/* Cards de Estatísticas */}
-//             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-//                 <Card>
-//                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-//                         <CardTitle className="text-sm font-medium">Total de Metas</CardTitle>
-//                         <Target className="h-4 w-4 text-muted-foreground" />
-//                     </CardHeader>
-//                     <CardContent>
-//                         <div className="text-2xl font-bold">{estatisticas.total}</div>
-//                     </CardContent>
-//                 </Card>
-
-//                 <Card>
-//                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-//                         <CardTitle className="text-sm font-medium">Em Andamento</CardTitle>
-//                         <Clock className="h-4 w-4 text-blue-600" />
-//                     </CardHeader>
-//                     <CardContent>
-//                         <div className="text-2xl font-bold text-blue-600">{estatisticas.emAndamento}</div>
-//                     </CardContent>
-//                 </Card>
-
-//                 <Card>
-//                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-//                         <CardTitle className="text-sm font-medium">Atingidas</CardTitle>
-//                         <CheckCircle className="h-4 w-4 text-green-600" />
-//                     </CardHeader>
-//                     <CardContent>
-//                         <div className="text-2xl font-bold text-green-600">{estatisticas.atingidas}</div>
-//                     </CardContent>
-//                 </Card>
-
-//                 <Card>
-//                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-//                         <CardTitle className="text-sm font-medium">Não Atingidas</CardTitle>
-//                         <AlertTriangle className="h-4 w-4 text-red-600" />
-//                     </CardHeader>
-//                     <CardContent>
-//                         <div className="text-2xl font-bold text-red-600">{estatisticas.naoAtingidas}</div>
-//                     </CardContent>
-//                 </Card>
-
-//                 <Card>
-//                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-//                         <CardTitle className="text-sm font-medium">Média de Atingimento</CardTitle>
-//                         <TrendingUp className="h-4 w-4 text-primary" />
-//                     </CardHeader>
-//                     <CardContent>
-//                         <div className="text-2xl font-bold text-primary">{estatisticas.mediaPercentual.toFixed(1)}%</div>
-//                     </CardContent>
-//                 </Card>
-//             </div>
-
-//             {/* Filtros */}
-//             <Card>
-//                 <CardHeader>
-//                     <CardTitle className="text-lg">Filtros</CardTitle>
-//                 </CardHeader>
-//                 <CardContent>
-//                     <div className="flex justify-between items-center">
-//                         <div className="">
-//                             <div className="space-y-2">
-//                                 <Label>Filial</Label>
-//                                 <SelectFilial control={ control } name="filterFilial" />
-//                             </div>
-//                             <div className="h-3" />
-//                         </div>
-
-//                         <div className="">
-//                             <div className="space-y-2">
-//                                 <Label>Status</Label>
-//                                 <Controller
-//                                     name="filterStatus"
-//                                     control={ control }
-//                                     render={ ({ field }) => (
-//                                         <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-//                                             <SelectTrigger className="w-full md:w-[90%] data-[placeholder]:text-placeholder">
-//                                                 <SelectValue placeholder="Selecione o status" />
-//                                             </SelectTrigger>
-//                                             <SelectContent>
-//                                                 {[ "EM_ANDAMENTO", "Concluida", "NAO_ATINGIDA" ].map((status) => (
-//                                                     <SelectItem key={ status } value={ status }>
-//                                                         {status}
-//                                                     </SelectItem>
-//                                                 ))}
-//                                             </SelectContent>
-//                                         </Select>
-//                                     ) }
-//                                 />
-//                             </div>
-//                             <div className="h-3" />
-//                         </div>
-
-//                         <div className="">
-//                             <div className="flex gap-4">
-//                                 <div className="space-y-2">
-//                                     <Label>Início</Label>
-//                                     <div className="flex gap-1 items-center">
-//                                         <Controller
-//                                             name="filterStartMonth"
-//                                             control={ control }
-//                                             render={ ({ field }) => (
-//                                                 <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-//                                                     <SelectTrigger>
-//                                                         <SelectValue placeholder="mês" />
-//                                                     </SelectTrigger>
-//                                                     <SelectContent>
-//                                                         <Separator />
-//                                                         {generateMonthOptions().map((month) => (
-//                                                             <SelectItem key={ month.monthIndex } value={ month.monthIndex }>
-//                                                                 {month.monthLabel}
-//                                                             </SelectItem>
-//                                                         ))}
-//                                                     </SelectContent>
-//                                                 </Select>
-//                                             ) }
-//                                         />
-//                                         <span>/</span>
-//                                         <Controller
-//                                             name="filterStartYear"
-//                                             control={ control }
-//                                             render={ ({ field }) => (
-//                                                 <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-//                                                     <SelectTrigger>
-//                                                         <SelectValue placeholder="ano" />
-//                                                     </SelectTrigger>
-//                                                     <SelectContent>
-//                                                         <Separator />
-//                                                         {generateYearOptions().map((year) => (
-//                                                             <SelectItem key={ year } value={ year }>
-//                                                                 {year}
-//                                                             </SelectItem>
-//                                                         ))}
-//                                                     </SelectContent>
-//                                                 </Select>
-//                                             ) }
-//                                         />
-//                                     </div>
-//                                 </div>
-
-//                                 <div className="space-y-2">
-//                                     <Label>Fim</Label>
-//                                     <div className="flex gap-1 items-center">
-//                                         <Controller
-//                                             name="filterEndMonth"
-//                                             control={ control }
-//                                             render={ ({ field }) => (
-//                                                 <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-//                                                     <SelectTrigger>
-//                                                         <SelectValue placeholder="mês" />
-//                                                     </SelectTrigger>
-//                                                     <SelectContent>
-//                                                         <Separator />
-//                                                         {generateMonthOptions().map((month) => (
-//                                                             <SelectItem key={ month.monthIndex } value={ month.monthIndex }>
-//                                                                 {month.monthLabel}
-//                                                             </SelectItem>
-//                                                         ))}
-//                                                     </SelectContent>
-//                                                 </Select>
-//                                             ) }
-//                                         />
-//                                         <span>/</span>
-//                                         <Controller
-//                                             name="filterEndYear"
-//                                             control={ control }
-//                                             render={ ({ field }) => (
-//                                                 <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-//                                                     <SelectTrigger>
-//                                                         <SelectValue placeholder="ano" />
-//                                                     </SelectTrigger>
-//                                                     <SelectContent>
-//                                                         <Separator />
-//                                                         {generateYearOptions().map((year) => (
-//                                                             <SelectItem key={ year } value={ year }>
-//                                                                 {year}
-//                                                             </SelectItem>
-//                                                         ))}
-//                                                     </SelectContent>
-//                                                 </Select>
-//                                             ) }
-//                                         />
-//                                     </div>
-//                                 </div>
-//                             </div>
-//                             <div className="h-3">
-//                                 {errors.filterStartYear && (
-//                                     <p className="text-xs font-medium text-destructive">
-//                                         {errors.filterStartYear.message}
-//                                     </p>
-//                                 )}
-//                             </div>
-//                         </div>
-
-//                         <div className="flex items-end">
-//                             <Button
-//                                 variant="outline"
-//                                 onClick={ () => reset() }
-//                                 className="w-full"
-//                             >
-//         Limpar Filtros
-//                             </Button>
-//                         </div>
-//                     </div>
-//                 </CardContent>
-
-//             </Card>
-
-//             {/* Metas do Mês Atual */}
-//             <div className="space-y-4">
-//                 <div className="grid gap-4">
-//                     {currentMonthGoals.length === 0 ? (
-//                         <Card>
-//                             <CardContent className="flex flex-col items-center justify-center py-12">
-//                                 <Target className="h-12 w-12 text-muted-foreground mb-4" />
-//                                 <h3 className="text-lg font-medium mb-2">Nenhuma meta do mês atual</h3>
-//                                 <p className="text-muted-foreground text-center">
-//                   Não há metas definidas para {getMonthName(new Date().getMonth())}/2025 com os filtros selecionados.
-//                                 </p>
-//                             </CardContent>
-//                         </Card>
-//                     ) : (
-//                         <Card>
-//                             <Collapsible open={ openCurrentGoalsCollapsible } onOpenChange={ setOpenCurrentGoalsCollapsible }>
-//                                 <CollapsibleTrigger asChild>
-//                                     <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-//                                         <div className="flex items-center justify-between">
-//                                             <div className="flex items-center gap-2">
-//                                                 <Play className="h-5 w-5 text-muted-foreground" />
-//                                                 <CardTitle className="text-lg">Metas do mês atual</CardTitle>
-//                                                 <Badge variant="secondary">{currentMonthGoals.length}</Badge>
-//                                             </div>
-//                                             {openCurrentGoalsCollapsible ? (
-//                                                 <ChevronUp className="h-4 w-4 text-muted-foreground" />
-//                                             ) : (
-//                                                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
-//                                             )}
-//                                         </div>
-//                                     </CardHeader>
-//                                 </CollapsibleTrigger>
-//                                 <CollapsibleContent>
-//                                     <CardContent className="pt-0">
-//                                         <div className="grid gap-4">
-//                                             {currentMonthGoals.slice(0, 1).map((meta) => <GoalCard key={ meta.goalId } goal={ meta } />)}
-//                                             {/* {(filteredGoals.length > 0 ? filteredGoals : currentMonthGoals).map((meta) => <GoalCard key={ meta.goalId } goal={ meta } />)} */}
-
-//                                         </div>
-//                                     </CardContent>
-//                                 </CollapsibleContent>
-//                             </Collapsible>
-//                         </Card>
-//                     )}
-//                 </div>
-//             </div>
-
-//             {/* Metas Anteriores - Collapsible */}
-//             {pastMonthsGoals.length > 0 && (
-//                 <Collapsible open={ openPreviousGoalsCollapsible } onOpenChange={ setOpenPreviousGoalsCollapsible }>
-//                     <Card>
-//                         <CollapsibleTrigger asChild>
-//                             <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-//                                 <div className="flex items-center justify-between">
-//                                     <div className="flex items-center gap-2">
-//                                         <History className="h-5 w-5 text-muted-foreground" />
-//                                         <CardTitle className="text-lg">Metas Anteriores</CardTitle>
-//                                         <Badge variant="secondary">{pastMonthsGoals.length}</Badge>
-//                                     </div>
-//                                     {openPreviousGoalsCollapsible ? (
-//                                         <ChevronUp className="h-4 w-4 text-muted-foreground" />
-//                                     ) : (
-//                                         <ChevronDown className="h-4 w-4 text-muted-foreground" />
-//                                     )}
-//                                 </div>
-//                             </CardHeader>
-//                         </CollapsibleTrigger>
-//                         <CollapsibleContent>
-//                             <CardContent className="pt-0">
-//                                 <div className="grid gap-4">
-//                                     {pastMonthsGoals.map((meta) => (
-//                                         <GoalCard key={ meta.goalId } goal={ meta } />
-//                                     ))}
-//                                 </div>
-//                             </CardContent>
-//                         </CollapsibleContent>
-//                     </Card>
-//                 </Collapsible>
-//             )}
-//         </div>
-//     );
-// }
-
 "use client";
 
+import { useMemo, ForwardRefExoticComponent, RefAttributes, useEffect } from "react";
+import { useAuth } from "@/contexts/auth-provider";
+import { useQuery } from "@tanstack/react-query";
+
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { getMonthName } from "@/utils/getMonthName";
-import { ForwardRefExoticComponent, RefAttributes, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+
+import { Goal } from "@/utils/@types/goals";
+import { GetAllGoals } from "@/services/goals.service";
+
 import {
-    Target, TrendingUp, Clock,
-    ChevronUp,
-    ChevronDown,
-    History,
-    Play,
+    Target,
+    TrendingUp,
+    Clock,
     AlertTriangle,
     CheckCircle,
     LoaderCircle,
-    LucideProps
+    LucideProps,
 } from "lucide-react";
+
 import { CreateGoalDialog } from "@/components/pages/goals/CreateGoalDialog";
 import { GoalCard } from "@/components/pages/goals/GoalCard";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SelectFilial } from "@/components/shared/SelectFilial";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { FilterGoalsSchema, filterGoalsType, StatusMeta } from "@/lib/zod/Goals";
-import { fetchWithToken } from "@/utils/fetchWithToken";
 
-export type MetaMensal = {
-    filialId: string;
-    goalId?: number;
-    year: number;
-    remainingDays: number,
-    monthIndex: number;
-    targetValue: number;
-    currentValue: number;
-    estimatedValue: number,
-    status: StatusMeta
-    createdAt: Date;
-    updatedAt: Date;
-}
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+
+import { useForm, Controller, FormProvider } from "react-hook-form";
+import { SelectGear } from "@/components/pages/bookings/create/SelectGear";
+import { Gear } from "@/utils/@types/gears";
+
+type FiltersForm = {
+  filialId?: string;
+  status?: string;
+  gear?: string;
+  tab?: "money" | "gear";
+};
 
 export default function MetasMensaisPage() {
+    const { user } = useAuth();
 
-    const { control, reset, trigger, watch, formState: { errors } } = useForm<filterGoalsType>({
-        resolver: zodResolver(FilterGoalsSchema),
+    const filterMethods = useForm<FiltersForm>({
         defaultValues: {
-            filterEndMonth: undefined,
-            filterEndYear: undefined,
-            filterStartMonth: undefined,
-            filterStartYear: undefined,
-        }
+            filialId: undefined,
+            status: undefined,
+            gear: undefined,
+            tab: "money",
+        },
     });
 
-    const watchStartYear = watch("filterStartYear");
-    const watchStartMonth = watch("filterStartMonth");
+    const { control, watch, reset, setValue } = filterMethods;
 
-    const watchEndYear = watch("filterEndYear");
-    const watchEndMonth = watch("filterEndMonth");
+    const filterFilial = watch("filialId");
+    const filterStatus = watch("status");
+    const filterMachine = watch("gear");
+    const activeTab = watch("tab");
 
-    const watchFilial = watch("filterFilial");
-    const watchStatus = watch("filterStatus");
+    const { data, isLoading } = useQuery<Goal[]>({
+        queryKey: [ "get-all-goals" ],
+        queryFn: () =>
+            GetAllGoals({
+                filialId:
+          user?.role === "Gerente"
+              ? undefined
+              : user?.sourceFilial.filialId,
+            }),
+        staleTime: 1000 * 60,
+    });
 
-    const [ loading, setLoading ] = useState(true);
-
+    const goals = data;
     useEffect(() => {
-        async function GetAllGoals() {
-            setLoading(true);
-            try {
-                const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/goals`, { credentials: "include" });
-                const { data }: { data: MetaMensal[] } = await response.json();
+        console.log(goals)
+    }, [goals])
 
-                const currentMonth = new Date().getMonth();
-                const currentYear = new Date().getFullYear();
+    const filteredGoals = useMemo(() => {
+        if (!goals) return [];
 
-                const currentGoals = data.filter(goal => goal.year === currentYear && goal.monthIndex === currentMonth);
-                const pastGoals = data.filter(goal => goal.year < currentYear || (goal.year === currentYear && goal.monthIndex < currentMonth));
+        let filtered = [ ...goals ];
 
-                setCurrentMonthGoals(currentGoals);
-                setPastMonthsGoals(pastGoals);
-                setGoals(data);
-            } catch (error) {
-                console.error("Erro ao carregar metas:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
+        if (filterFilial)
+            filtered = filtered.filter((g) => g.Filial.filialId === filterFilial);
+        if (filterStatus) filtered = filtered.filter((g) => g.status === filterStatus);
 
-        GetAllGoals();
-    }, []);
+        return filtered;
+    }, [ goals, filterFilial, filterStatus ]);
 
-    const [ goals, setGoals ] = useState<MetaMensal[]>([]);
-    const [ currentMonthGoals, setCurrentMonthGoals ] = useState<MetaMensal[]>([]);
-    const [ pastMonthsGoals, setPastMonthsGoals ] = useState<MetaMensal[]>([]);
-    const [ filteredGoals, setFilteredGoals ] = useState<MetaMensal[]>([]);
+    const moneyGoals = filteredGoals.filter((g) => g.goalType === "MONEY");
 
-    const [ openPreviousGoalsCollapsible, setOpenPreviousGoalsCollapsible ] = useState(false);
-    const [ openCurrentGoalsCollapsible, setOpenCurrentGoalsCollapsible ] = useState(true);
+    const equipmentGoals = filteredGoals
+        .filter((g) => g.goalType === "GEAR")
+        .filter((g) =>
+            filterMachine ? g.Gear?.gearId === filterMachine : true
+        );
 
-    useEffect(() => {
-        const applyFilters = () => {
-            let filtered = [ ...goals ];
+    // supondo que você já tenha "goals" carregado
+    const gears = Array.from(
+        new Map(
+            filteredGoals
+                .filter((g) => g.Gear) // só goals com engrenagem
+                .map((g) => [ g.Gear!.gearId, g.Gear! ]) // chave = gearId
+        ).values()
+    );
 
-            // Filtro por filial
-            if (watchFilial) {
-                filtered = filtered.filter((goal) => goal.filialId === watchFilial);
-            }
+    const filiaisList = Array.from(new Set(goals?.map((g) => g.Filial.filialName) ?? []));
 
-            // Filtro por status
-            if (watchStatus) {
-                filtered = filtered.filter((goal) => goal.status === watchStatus);
-            }
+    const estatisticas = useMemo(
+        () => ({
+            total: filteredGoals.length,
+            emAndamento: filteredGoals.filter((m) => m.status === "EM_ANDAMENTO").length,
+            atingidas: filteredGoals.filter((m) => m.status === "Concluida").length,
+            naoAtingidas: filteredGoals.filter((m) => m.status === "NAO_ATINGIDA").length,
+            mediaPercentual:
+        filteredGoals.length > 0
+            ? (filteredGoals.filter((m) => m.status === "Concluida").length /
+              filteredGoals.length) *
+            100
+            : 0,
+        }),
+        [ filteredGoals ]
+    );
 
-            // Filtro por intervalo de datas (ano/mês)
-            if (watchStartYear && watchStartMonth && watchEndYear && watchEndMonth) {
-                const startDate = new Date(parseInt(watchStartYear), parseInt(watchStartMonth) - 1);
-                const endDate = new Date(parseInt(watchEndYear), parseInt(watchEndMonth) - 1);
-
-                filtered = filtered.filter((goal) => {
-                    const goalDate = new Date(goal.year, goal.monthIndex);
-                    return goalDate >= startDate && goalDate <= endDate;
-                });
-            }
-
-            setFilteredGoals(filtered);
-        };
-
-        const run = async () => {
-            const isValid = await trigger();
-            if (isValid && watchStartMonth && watchStartYear) {
-                applyFilters();
-            }
-        };
-
-        run();
-    }, [ goals, watchStartYear, watchStartMonth, watchEndYear, watchEndMonth, watchFilial, watchStatus, trigger ]);
-
-    // Calcular estatísticas
-    const estatisticas = {
-        total: goals.length,
-        emAndamento: goals.filter((m) => m.status === "EM_ANDAMENTO").length,
-        atingidas: goals.filter((m) => m.status === "Concluida").length,
-        naoAtingidas: goals.filter((m) => m.status === "NAO_ATINGIDA").length,
-        mediaPercentual: goals.length > 0 ? (goals.filter((m) => m.status === "Concluida").length / goals.length) * 100 : 0
-    };
-
-    // Componente de Card de Estatística com Loading
-    const StatCard = ({ title, value, icon: Icon, textColor = "text-foreground", iconColor = "text-muted-foreground" }: {
-        title: string;
-        value: number | string;
-        icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
-        textColor?: string;
-        iconColor?: string;
-    }) => (
+    const StatCard = ({
+        title,
+        value,
+        icon: Icon,
+        textColor = "text-foreground",
+        iconColor = "text-muted-foreground",
+    }: {
+    title: string;
+    value: number | string | undefined;
+    icon: ForwardRefExoticComponent<
+      Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+    >;
+    textColor?: string;
+    iconColor?: string;
+  }) => (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{title}</CardTitle>
                 <Icon className={ `h-4 w-4 ${iconColor}` } />
             </CardHeader>
             <CardContent>
-                {loading ? (
+                {isLoading ? (
                     <div className="flex items-center justify-center h-8">
                         <LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" />
                     </div>
@@ -636,52 +161,20 @@ export default function MetasMensaisPage() {
         </Card>
     );
 
-    // Gerar opções de mês/ano para filtro
-    const generateYearOptions = () => {
-        const yearOptions: string[] = [];
-
-        goals.forEach(goal => {
-            if(!yearOptions.includes(String(goal.year))) {
-                yearOptions.push(String(goal.year));
-            }
-        });
-
-        return yearOptions;
-    };
-
-    const generateMonthOptions = () => {
-        const monthOptions: {monthLabel: string, monthIndex: string}[] = [];
-
-        for(let i=0; i<12; i++) {
-            monthOptions.push({
-                monthLabel: getMonthName(i),
-                monthIndex: String(i)
-            });
-        }
-
-        return monthOptions;
-    };
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Metas Mensais de Vendas</h1>
-                    <p className="text-muted-foreground">Acompanhe as metas da sua filial por aqui</p>
+                    <p className="text-muted-foreground">
+            Acompanhe metas financeiras e de equipamentos
+                    </p>
                 </div>
-                <div className="flex gap-2">
-                    <CreateGoalDialog />
-                </div>
+                <CreateGoalDialog />
             </div>
 
-            {/* Cards de Estatísticas */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                <StatCard
-                    title="Total de Metas"
-                    value={ estatisticas.total }
-                    icon={ Target }
-                />
-
+                <StatCard title="Total de Metas" value={ estatisticas.total } icon={ Target } />
                 <StatCard
                     title="Em Andamento"
                     value={ estatisticas.emAndamento }
@@ -689,7 +182,6 @@ export default function MetasMensaisPage() {
                     textColor="text-blue-600"
                     iconColor="text-blue-600"
                 />
-
                 <StatCard
                     title="Atingidas"
                     value={ estatisticas.atingidas }
@@ -697,7 +189,6 @@ export default function MetasMensaisPage() {
                     textColor="text-green-600"
                     iconColor="text-green-600"
                 />
-
                 <StatCard
                     title="Não Atingidas"
                     value={ estatisticas.naoAtingidas }
@@ -705,46 +196,82 @@ export default function MetasMensaisPage() {
                     textColor="text-red-600"
                     iconColor="text-red-600"
                 />
-
                 <StatCard
                     title="Média de Atingimento"
-                    value={ loading ? "0.0%" : `${estatisticas.mediaPercentual.toFixed(1)}%` }
+                    value={ `${estatisticas.mediaPercentual.toFixed(1)}%` }
                     icon={ TrendingUp }
                     textColor="text-primary"
                     iconColor="text-primary"
                 />
             </div>
 
-            {/* Filtros */}
-            {/* <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">Filtros</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex justify-between items-center">
-                        <div className="">
-                            <div className="space-y-2">
-                                <Label>Filial</Label>
-                                <SelectFilial control={ control } name="filterFilial" />
-                            </div>
-                            <div className="h-3" />
-                        </div>
+            <Card className="p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="flex flex-col gap-2">
+                        <Label>Filial</Label>
+                        <Controller
+                            control={ control }
+                            name="filialId"
+                            render={ ({ field }) => (
+                                <Select onValueChange={ field.onChange } value={ field.value }>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {filiaisList.map((f) => (
+                                            <SelectItem key={ f } value={ f }>
+                                                {f}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            ) }
+                        />
+                    </div>
 
-                        <div className="">
-                            <div className="space-y-2">
-                                <Label>Status</Label>
+                    <div className="flex flex-col gap-2">
+                        <Label>Status</Label>
+                        <Controller
+                            control={ control }
+                            name="status"
+                            render={ ({ field }) => (
+                                <Select onValueChange={ field.onChange } value={ field.value }>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="EM_ANDAMENTO">Em andamento</SelectItem>
+                                        <SelectItem value="Concluida">Atingida</SelectItem>
+                                        <SelectItem value="NAO_ATINGIDA">Não atingida</SelectItem>
+                                        <SelectItem value="PARCIALMENTE_CONCLUIDA">
+                      Parcialmente atingida
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            ) }
+                        />
+                    </div>
+
+                    {activeTab === "gear" && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="flex flex-col gap-2">
+                                <Label>Equipamento</Label>
                                 <Controller
-                                    name="filterStatus"
                                     control={ control }
+                                    name="gear"
                                     render={ ({ field }) => (
-                                        <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-                                            <SelectTrigger className="w-full md:w-[90%] data-[placeholder]:text-placeholder">
-                                                <SelectValue placeholder="Selecione o status" />
+                                        <Select
+                                            value={ field.value ?? "" }
+                                            onValueChange={ field.onChange }
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione o produto" />
                                             </SelectTrigger>
+
                                             <SelectContent>
-                                                {[ "EM_ANDAMENTO", "Concluida", "NAO_ATINGIDA" ].map((status) => (
-                                                    <SelectItem key={ status } value={ status }>
-                                                        {status}
+                                                {gears.map((g) => (
+                                                    <SelectItem key={ g.gearId } value={ g.gearId }>
+                                                        {g.gearName}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -752,209 +279,83 @@ export default function MetasMensaisPage() {
                                     ) }
                                 />
                             </div>
-                            <div className="h-3" />
                         </div>
-
-                        <div className="">
-                            <div className="flex gap-4">
-                                <div className="space-y-2">
-                                    <Label>Início</Label>
-                                    <div className="flex gap-1 items-center">
-                                        <Controller
-                                            name="filterStartMonth"
-                                            control={ control }
-                                            render={ ({ field }) => (
-                                                <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="mês" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <Separator />
-                                                        {generateMonthOptions().map((month) => (
-                                                            <SelectItem key={ month.monthIndex } value={ month.monthIndex }>
-                                                                {month.monthLabel}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            ) }
-                                        />
-                                        <span>/</span>
-                                        <Controller
-                                            name="filterStartYear"
-                                            control={ control }
-                                            render={ ({ field }) => (
-                                                <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="ano" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <Separator />
-                                                        {generateYearOptions().map((year) => (
-                                                            <SelectItem key={ year } value={ year }>
-                                                                {year}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            ) }
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Fim</Label>
-                                    <div className="flex gap-1 items-center">
-                                        <Controller
-                                            name="filterEndMonth"
-                                            control={ control }
-                                            render={ ({ field }) => (
-                                                <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="mês" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <Separator />
-                                                        {generateMonthOptions().map((month) => (
-                                                            <SelectItem key={ month.monthIndex } value={ month.monthIndex }>
-                                                                {month.monthLabel}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            ) }
-                                        />
-                                        <span>/</span>
-                                        <Controller
-                                            name="filterEndYear"
-                                            control={ control }
-                                            render={ ({ field }) => (
-                                                <Select value={ field.value ?? "" } onValueChange={ field.onChange }>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="ano" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <Separator />
-                                                        {generateYearOptions().map((year) => (
-                                                            <SelectItem key={ year } value={ year }>
-                                                                {year}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            ) }
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="h-3">
-                                {errors.filterStartYear && (
-                                    <p className="text-xs font-medium text-destructive">
-                                        {errors.filterStartYear.message}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex items-end">
-                            <Button
-                                variant="outline"
-                                onClick={ () => reset() }
-                                className="w-full"
-                            >
-        Limpar Filtros
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card> */}
-
-            {/* Metas do Mês Atual */}
-            <div className="space-y-4">
-                <div className="grid gap-4">
-                    {loading ? (
-                        <Card>
-                            <CardContent className="flex flex-col items-center justify-center py-12">
-                                <LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
-                                <p className="text-muted-foreground">Carregando metas...</p>
-                            </CardContent>
-                        </Card>
-                    ) : currentMonthGoals.length === 0 ? (
-                        <Card>
-                            <CardContent className="flex flex-col items-center justify-center py-12">
-                                <Target className="h-12 w-12 text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-medium mb-2">Nenhuma meta do mês atual</h3>
-                                <p className="text-muted-foreground text-center">
-                  Não há metas definidas para {getMonthName(new Date().getMonth())}/2025 com os filtros selecionados.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <Card>
-                            <Collapsible open={ openCurrentGoalsCollapsible } onOpenChange={ setOpenCurrentGoalsCollapsible }>
-                                <CollapsibleTrigger asChild>
-                                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Play className="h-5 w-5 text-muted-foreground" />
-                                                <CardTitle className="text-lg">Metas do mês atual</CardTitle>
-                                                <Badge variant="secondary">{currentMonthGoals.length}</Badge>
-                                            </div>
-                                            {openCurrentGoalsCollapsible ? (
-                                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                            ) : (
-                                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                            )}
-                                        </div>
-                                    </CardHeader>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <CardContent className="pt-0">
-                                        <div className="grid gap-4">
-                                            {currentMonthGoals.slice(0, 1).map((meta) => <GoalCard key={ meta.goalId } goal={ meta } />)}
-                                            {/* {(filteredGoals.length > 0 ? filteredGoals : currentMonthGoals).map((meta) => <GoalCard key={ meta.goalId } goal={ meta } />)} */}
-
-                                        </div>
-                                    </CardContent>
-                                </CollapsibleContent>
-                            </Collapsible>
-                        </Card>
                     )}
                 </div>
-            </div>
 
-            {/* Metas Anteriores - Collapsible */}
-            {!loading && pastMonthsGoals.length > 0 && (
-                <Collapsible open={ openPreviousGoalsCollapsible } onOpenChange={ setOpenPreviousGoalsCollapsible }>
+                <Button
+                    variant="outline"
+                    onClick={ () =>
+                        reset({
+                            filialId: undefined,
+                            status: undefined,
+                            gear: "",
+                            tab: activeTab,
+                        })
+                    }
+                >
+          Limpar filtros
+                </Button>
+            </Card>
+
+            <Tabs
+                defaultValue="money"
+                className="w-full"
+                onValueChange={ (v) => setValue("tab", v as "money" | "gear") }
+            >
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="money">Metas Financeiras</TabsTrigger>
+                    <TabsTrigger value="gear">Metas de Equipamentos</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="money">
                     <Card>
-                        <CollapsibleTrigger asChild>
-                            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <History className="h-5 w-5 text-muted-foreground" />
-                                        <CardTitle className="text-lg">Metas Anteriores</CardTitle>
-                                        <Badge variant="secondary">{pastMonthsGoals.length}</Badge>
-                                    </div>
-                                    {openPreviousGoalsCollapsible ? (
-                                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                    ) : (
-                                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                    )}
-                                </div>
-                            </CardHeader>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                            <CardContent className="pt-0">
-                                <div className="grid gap-4">
-                                    {pastMonthsGoals.map((meta) => (
-                                        <GoalCard key={ meta.goalId } goal={ meta } />
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </CollapsibleContent>
+                        <CardHeader>
+                            <CardTitle className="text-xl flex gap-2 items-center">
+                                <Target className="h-5 w-5" />
+                Metas Financeiras
+                                <Badge variant="secondary">{moneyGoals.length}</Badge>
+                            </CardTitle>
+                        </CardHeader>
+
+                        <CardContent className="space-y-4">
+                            {moneyGoals.length === 0 ? (
+                                <p className="text-muted-foreground">Nenhuma meta encontrada.</p>
+                            ) : (
+                                moneyGoals.map((meta) => (
+                                    <GoalCard key={ meta.goalId } goal={ meta } />
+                                ))
+                            )}
+                        </CardContent>
                     </Card>
-                </Collapsible>
-            )}
+                </TabsContent>
+
+                <TabsContent value="gear">
+                    {/* <Card className="p-4 mb-4">
+
+                    </Card> */}
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-xl flex gap-2 items-center">
+                                <Target className="h-5 w-5" />
+                Metas de Equipamentos
+                                <Badge variant="secondary">{equipmentGoals.length}</Badge>
+                            </CardTitle>
+                        </CardHeader>
+
+                        <CardContent className="space-y-4">
+                            {equipmentGoals.length === 0 ? (
+                                <p className="text-muted-foreground">Nenhuma meta encontrada.</p>
+                            ) : (
+                                equipmentGoals.map((meta) => (
+                                    <GoalCard key={ meta.goalId } goal={ meta } />
+                                ))
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }

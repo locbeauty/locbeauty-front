@@ -15,7 +15,6 @@ interface SelectTrainingAddressProps {
     addresses: Address[] | undefined;
     selectedAddress: string | undefined;
     onAddressChange: (addressId: string) => void;
-    studentId: string
 }
 
 export function SelectTrainingAddress({
@@ -23,7 +22,6 @@ export function SelectTrainingAddress({
     addresses,
     selectedAddress,
     onAddressChange,
-    studentId
 }: SelectTrainingAddressProps) {
     const isMounted = useMounted();
     const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -162,5 +160,5 @@ function getDisplayValue(addressId: string | undefined, allAddresses: Address[] 
 }
 
 function formatAddress(address: Address): string {
-    return `${address.street.streetName}, ${address.neighborhood.neighborhoodName}, ${address.addressComplement} - ${address.city.cityName}/${address.state.UF}`;
+    return `${address.Street.streetName}, ${address.Neighborhood.neighborhoodName}, ${address.addressComplement} - ${address.City.cityName}/${address.State.UF}`;
 }

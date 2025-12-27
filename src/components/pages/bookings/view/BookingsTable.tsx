@@ -8,9 +8,16 @@ import { minutesToHHMM } from "@/utils/minutesToHHMM";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
 import { GetAllCheckouts } from "@/services/checkouts.service";
+import { BookingDetailsDialog } from "./DetailsDialog/BookingDetailsDialog";
+import { useState } from "react";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FlattenedBooking } from "./WeekView";
 
 export function BookingsTable() {
     const { user } = useAuth();
+    const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] = useState(false);
+    const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(null);
 
     const queryParams: Record<string, string> =
   user
@@ -30,6 +37,23 @@ export function BookingsTable() {
 
     const isEmpty = !isLoading && (!checkouts || checkouts.length === 0);
 
+    const openCheckoutDetails = ({ checkoutId }: { checkoutId: string }) => {
+        if (!checkouts) return;
+
+        const checkout = checkouts.find(c => c.checkoutId === checkoutId);
+        if (!checkout) return;
+
+        const startDate = new Date(checkout.date);
+        startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
+        startDate.setMinutes(checkout.startHourInMinutes % 60);
+
+        const endDate = new Date(startDate);
+        endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
+
+        setSelectedCheckout(checkout);
+        setBookingDetailsDialogOpen(true);
+    };
+
     return (
         <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto">
             <table className="w-full">
@@ -42,6 +66,7 @@ export function BookingsTable() {
                         <th className="text-center p-3 font-medium text-sm">Horário final</th>
                         <th className="p-3 font-medium text-center">Status</th>
                         <th className="p-3 font-medium text-center">Pagamento</th>
+                        <th className="p-3 font-medium text-center">Detalhes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -71,6 +96,11 @@ export function BookingsTable() {
                                 <td className="p-3 text-center">
                                     <BookingPaymentStatusBadge status={ checkout?.paymentStatus } />
                                 </td>
+                                <td className="p-3 text-center">
+                                    <Button onClick={ () => openCheckoutDetails({ checkoutId: checkout.checkoutId }) }>
+                                        <Pencil />
+                                    </Button>
+                                </td>
                             </tr>
                         );
                     }) : (
@@ -80,6 +110,13 @@ export function BookingsTable() {
                             </td>
                         </tr>
                     )}
+
+                    <BookingDetailsDialog
+                        isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen }
+                        setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
+                        selectedCheckout={ selectedCheckout }
+                        setSelectedCheckout={ setSelectedCheckout }
+                    />
                 </tbody>
             </table>
         </div>

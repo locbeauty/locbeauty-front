@@ -8,13 +8,12 @@ import {
     SelectContent,
     SelectItem,
 } from "@/components/ui/select";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { Employee } from "@/utils/@types/employee";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
 import { GetAllEmployees } from "@/services/employees.service";
 import { ROLES } from "@/utils/@types/roles";
-import { hideDocumentNumber } from "@/utils/hideDocumentNumber";
 
 type SelectEmployeeProps<T extends FieldValues> = {
     control: Control<T>;
@@ -51,7 +50,7 @@ export function SelectEmployee<T extends FieldValues>({
                         field.onChange(value);
                         const driverStr = allEmployees?.find(emplyee => emplyee.employeeId === value);
                         if (driverStr && setDriverString) {
-                            const addressString = `${driverStr.fullname} - ${hideDocumentNumber(driverStr.documentNumber)}`;
+                            const addressString = `${driverStr.fullname} - ${driverStr.documentNumber}`;
                             setDriverString(addressString);
                         }
                     } }
@@ -71,7 +70,7 @@ export function SelectEmployee<T extends FieldValues>({
                                 key={ employee.employeeId }
                                 value={ employee.employeeId }
                             >
-                                {employee.fullname} - {hideDocumentNumber(employee.documentNumber)}
+                                {employee.fullname} - {employee.documentNumber}
                             </SelectItem>
                         ))}
                     </SelectContent>

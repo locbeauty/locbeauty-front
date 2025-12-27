@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
 import { FlattenedBooking } from "./WeekView";
+import { Checkout } from "@/utils/@types/checkouts";
 
 //
 // ─── NAVEGAÇÃO DE DATAS ──────────────────────────────────────────────────────────
@@ -129,7 +130,6 @@ export function getWeekDays(date: Date): Date[] {
         nextDay.setDate(monday.getDate() + i);
         weekDays.push(nextDay);
     }
-
     return weekDays;
 }
 
@@ -138,9 +138,13 @@ export function getDayIndex(bookingDate: Date, weekDays: Date[]): number {
     return weekDays.findIndex((day) => day.toDateString() === bookingDay);
 }
 
-export function isAgendamentoInWeek(booking: FlattenedBooking, weekDays: Date[]): boolean {
-    const bookingDate = booking.startDate;
-    const startOfWeek = weekDays[0];
+export function isAgendamentoInWeek(booking: Checkout, weekDays: Date[]): boolean {
+    const bookingDate = new Date(booking.date);
+    bookingDate.setHours(0, 0, 0, 0);
+
+    const startOfWeek = new Date(weekDays[0]);
+    startOfWeek.setHours(0, 0, 0, 0);
+
     const endOfWeek = new Date(weekDays[6]);
     endOfWeek.setHours(23, 59, 59, 999);
 
@@ -181,16 +185,49 @@ export function formatCurrency(value: number): string {
 // ─── EVENTOS ──────────────────────────────────────────────────────────────────────
 //
 
-function doEventsOverlap(event1: FlattenedBooking, event2: FlattenedBooking): boolean {
-    // Two events overlap if one starts before the other ends
-    return event1.startDate < event2.endDate && event2.startDate < event1.endDate;
+// function doEventsOverlap(event1: Checkout, event2: Checkout): boolean {
+//     // Two events overlap if one starts before the other ends
+//     return event1.startDate < event2.endDate && event2.startDate < event1.endDate;
+// }
+
+export function doEventsOverlap(event1: Checkout, event2: Checkout): boolean {
+    const start1 = new Date(event1.date);
+    start1.setHours(Math.floor(event1.startHourInMinutes / 60));
+    start1.setMinutes(event1.startHourInMinutes % 60);
+
+    const end1 = new Date(start1);
+    end1.setMinutes(end1.getMinutes() + event1.totalDurationInMinutes);
+
+    const start2 = new Date(event2.date);
+    start2.setHours(Math.floor(event2.startHourInMinutes / 60));
+    start2.setMinutes(event2.startHourInMinutes % 60);
+
+    const end2 = new Date(start2);
+    end2.setMinutes(end2.getMinutes() + event2.totalDurationInMinutes);
+
+    return start1 < end2 && start2 < end1;
 }
 
-export function groupOverlappingEvents(events: FlattenedBooking[]): FlattenedBooking[][] {
+export function groupOverlappingEvents(events: Checkout[]): Checkout[][] {
     if (events.length === 0) return [];
 
-    const sortedEvents = [ ...events ].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-    const groups: FlattenedBooking[][] = [];
+    // const sortedEvents = [ ...events ].sort((a, b) => a.date.getTime() - b.date.getTime());
+    const sortedEvents = [ ...events ].sort((a, b) => {
+        const aStart = new Date(a.date);
+        aStart.setHours(Math.floor(a.startHourInMinutes / 60));
+        aStart.setMinutes(a.startHourInMinutes % 60);
+
+        const bStart = new Date(b.date);
+        bStart.setHours(Math.floor(b.startHourInMinutes / 60));
+        bStart.setMinutes(b.startHourInMinutes % 60);
+
+        // return aStart.getTime() - bStart.getTime();
+        return (
+            aStart.getTime() - bStart.getTime() ||
+            a.totalDurationInMinutes - b.totalDurationInMinutes
+        );
+    });
+    const groups: Checkout[][] = [];
 
     sortedEvents.forEach((event) => {
         let foundGroup = false;

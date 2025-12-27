@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Gear } from "@/utils/@types/gears";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
@@ -31,19 +31,21 @@ import { GetAllGears } from "@/services/gears.service";
 interface SelectTrainingGearProps {
     disabled?: boolean;
     selectedGear: string | undefined;
+    filialId?: string | undefined
     onGearChange: (gearName: string) => void;
 }
 
 export function SelectTrainingGear({
     disabled = false,
     selectedGear,
-    onGearChange
+    onGearChange,
+    filialId
 }: SelectTrainingGearProps) {
     const isMounted = useMounted();
     const isDesktop = useMediaQuery("(min-width: 768px)");
 
     const gearsData = useQuery<ApiResponse<Gear[]>, Error>({
-        queryKey: [ "get-all-gears" ],
+        queryKey: [ "get-all-gears", filialId ],
         queryFn: () => GetAllGears({}),
         staleTime: 1000 * 60,
     });
@@ -147,7 +149,7 @@ interface GearsListProps {
 
 function GearsList({ setOpen, onGearChange, allGears }: GearsListProps) {
     const handleSelect = (gear: Gear) => {
-        onGearChange(gear.gearName);
+        onGearChange(gear.gearId);
         setOpen(false);
     };
 
@@ -160,7 +162,7 @@ function GearsList({ setOpen, onGearChange, allGears }: GearsListProps) {
                     {allGears?.map((gear) => (
                         <CommandItem
                             key={ gear.gearId }
-                            value={ gear.gearName }
+                            value={ gear.gearId }
                             onSelect={ () => handleSelect(gear) }
                             className="cursor-pointer"
                         >
@@ -173,15 +175,8 @@ function GearsList({ setOpen, onGearChange, allGears }: GearsListProps) {
     );
 }
 
-function getDisplayValue(gearName: string | undefined, allGears: Gear[] | undefined): { gearName: string } | null {
-    if (!gearName || !allGears) return null;
-
-    const gear = allGears.find(g => g.gearName === gearName);
-    if (gear) {
-        return {
-            gearName: gear.gearName
-        };
-    }
-
-    return null;
+function getDisplayValue(gearId: string | undefined, allGears: Gear[] | undefined) {
+    if (!gearId || !allGears) return null;
+    const gear = allGears.find(g => g.gearId === gearId);
+    return gear ? { gearName: gear.gearName } : null;
 }

@@ -1,23 +1,40 @@
+import { CheckoutStatuses } from "../constants";
 import { Address } from "./address";
-import { CheckoutStatuses, PaymentStatuses } from "./bookings";
+import { CheckoutPayment } from "./payments";
 
 export type Checkout = {
     checkoutId: string;
     checkoutStatus: CheckoutStatuses;
-    paymentStatus: PaymentStatuses;
     date: Date;
     startHourInMinutes: number;
     totalDurationInMinutes: number;
     totalPrice: number;
     observations: string | null;
+    basePrice: number,
+    distanceInKm: number,
+    foodCost: number,
+    fuelCost: number,
+    lodgingCost: number,
+    additionalTransportCost: number,
+    CheckoutPayment: CheckoutPayment;
+    driverId: string,
+    AccountableEmployee: {
+        employeeId: string,
+        fullname: string,
+        documentNumber: string
+    },
     Bookings: {
         bookingId: string;
-        gear: {
+        extraMachineCosts: number,
+        extraMachineCostsDescription?: string,
+        individualPrice: number,
+        status: "ACTIVE" | "INACTIVE"
+        Gear: {
             gearId: string;
             gearName: string;
         };
     }[];
-    customer: {
+    Customer: {
         customerId: string;
         fullname: string;
         documentNumber: string;
@@ -27,11 +44,11 @@ export type Checkout = {
         birthdate: string,
         companyName: string,
         customerStatus: string,
-        lastBooking: Date,
+        lastBooking: Date | null,
     };
-    sourceFilial: {
+    SourceFilial: {
         filialId: string;
-        description: string;
+        filialName: string;
     };
-    address: Address;
+    Address: Address;
 }

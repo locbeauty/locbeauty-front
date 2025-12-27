@@ -20,12 +20,9 @@ export default function CheckoutTimeSelector<T extends FieldValues>({ name, chec
     const { setValue, watch } = useFormContext<CreateCheckoutFormSchemaType>();
 
     const watchDate = watch("date");
+    const watchSelectedGears = watch("gears");
 
     const isDateInPast = watchDate && watchDate < new Date();
-
-    useEffect(() => {
-        console.log("checkoutSchedule: ", checkoutSchedule);
-    },[ checkoutSchedule ]);
 
     return (
         <div className="space-y-10">
@@ -38,43 +35,61 @@ export default function CheckoutTimeSelector<T extends FieldValues>({ name, chec
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="date" className="text-sm font-medium">
-              Selecione a data
-                        </Label>
-                        <Controller
-                            control={ control }
-                            name={ name }
-                            render={ ({ field }) => (
-                                <DatePicker
-                                    value={ field.value! }
-                                    onChange={ (e) => {
-                                        field.onChange(e);
-                                        if(e) {
-                                            setValue("date", e);
-                                        }
-                                    } }
-                                    placeholder="Selecione a data da reserva"
-                                    clearable
-                                />
-                            ) }
-                        />
-                    </div>
 
-                    {isDateInPast && (
-                        <div className="flex items-center gap-2 p-3 text-destructive bg-destructive/5 rounded-lg border border-destructive/20">
-                            <AlertCircle className="h-4 w-4 shrink-0" />
-                            <span className="text-sm font-medium">A data precisa ser no futuro</span>
-                        </div>
-                    )}
+                    {
+                        watchSelectedGears?.length > 0 ? (
+                            <>
+                                <div className="">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="date" className="text-sm font-medium">
+              Selecione a data
+                                        </Label>
+                                        <Controller
+                                            control={ control }
+                                            name={ name }
+                                            render={ ({ field }) => (
+                                                <DatePicker
+                                                    value={ field.value! }
+                                                    onChange={ (e) => {
+                                                        field.onChange(e);
+                                                        if(e) {
+                                                            setValue("date", e);
+                                                        }
+                                                    } }
+                                                    placeholder="Selecione a data da reserva"
+                                                    clearable
+                                                />
+                                            ) }
+                                        />
+                                    </div>
+
+                                    {isDateInPast && (
+                                        <div className="flex items-center gap-2 p-3 text-destructive bg-destructive/5 rounded-lg border border-destructive/20">
+                                            <AlertCircle className="h-4 w-4 shrink-0" />
+                                            <span className="text-sm font-medium">A data precisa ser no futuro</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-2 p-3 rounded-lg border border-destructive/20">
+                                <AlertCircle className="h-4 w-4 shrink-0" />
+                                <span className="text-sm font-medium">Selecione pelo menos uma máquina para continuar.</span>
+                            </div>
+
+                        )
+                    }
+
                 </CardContent>
             </Card>
 
             {/* Seleção de Horário */}
-            <TimePicker
-                checkoutSchedule={ checkoutSchedule }
-                selectedDate={ watchDate && !isDateInPast ? watchDate : undefined }
-            />
+            {
+                <TimePicker
+                    checkoutSchedule={ checkoutSchedule }
+                    selectedDate={ watchDate && !isDateInPast ? watchDate : undefined }
+                />
+            }
         </div>
     );
 }

@@ -4,20 +4,25 @@ import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { formatCurrency, formatTime, getDistanceFromTop, getEventBoxHeigh } from "./bookingViewHelpers";
 import { cn } from "@/lib/utils";
 import type { FlattenedBooking } from "./WeekView";
+import { centsToString } from "@/utils/centsToString";
+import { Checkout } from "@/utils/@types/checkouts";
 
 interface SingleEventBoxProps {
-  group: FlattenedBooking[]
-  dayIndex: number
-  openBookingDetails: (_booking: FlattenedBooking) => void
+    eventType: "training" | "checkout"
+    group: Checkout[]
+    dayIndex: number
+    openCheckoutDetails: (_checkout: Checkout) => void
 }
 
-export function SingleEventBox({ group, dayIndex, openBookingDetails }: SingleEventBoxProps) {
+export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleEventBoxProps) {
     // If the group has only one event, use full width
     const hourColumnWidth = 100;
-    const booking = group[0];
-    const startHour = booking.startDate.getHours();
-    const startMinute = booking.startDate.getMinutes();
-    const durationInHours = booking.totalDurationInMinutes / 60;
+    const checkout = group[0];
+    checkout.date.setHours(0, checkout.startHourInMinutes, 0, 0);
+
+    const startHour = Math.floor(checkout.startHourInMinutes / 60);
+    const startMinute = checkout.startHourInMinutes % 60;
+    const durationInHours = checkout.totalDurationInMinutes / 60;
 
     // Calculate position and height
     const top = getDistanceFromTop(startHour, startMinute);
@@ -33,7 +38,7 @@ export function SingleEventBox({ group, dayIndex, openBookingDetails }: SingleEv
     // Convert totalDuration from minutes to hours for styling logic
     return (
         <div
-            key={ booking.id }
+            key={ checkout.checkoutId }
             className={ cn(
                 "absolute rounded-md border-l-4 p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-y-auto",
                 // Default colors for bookings with durations different than 4, 6 and 8-12 hours
@@ -53,34 +58,42 @@ export function SingleEventBox({ group, dayIndex, openBookingDetails }: SingleEv
                 left,
                 width,
             } }
-            onClick={ () => openBookingDetails(booking) }
+            onClick={ () => openCheckoutDetails(checkout) }
         >
-            <div className="font-medium text-sm truncate">{booking.gear.gearName}</div>
+            <div className="font-medium text-sm truncate">
+                {checkout.Bookings.filter(booking => booking.status === "ACTIVE").sort((a, b) => a.Gear.gearName.localeCompare(b.Gear.gearName)).map(item => item.Gear.gearName).join(", ")}
+            </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <User className="h-3 w-3" />
-                {booking.customer.fullname}
+                {checkout.Customer.fullname}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <MapPin className="h-3 w-3" />
-                {booking.sourceFilial.description}
+                {checkout.Address.City.cityName}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <Clock className="h-3 w-3" />
-                {formatTime(booking.startDate)}
+                {checkout.date.getHours().toString().padStart(2, "0")}:
+                {checkout.date.getMinutes().toString().padStart(2, "0")}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
                 <DollarSign className="h-3 w-3" />
-                {formatCurrency(booking.price)}
+                {centsToString(checkout.totalPrice)}
             </div>
-
-            {/* <div className="flex flex-col gap-1 mt-2">
-                <BookingStatusBadge status={ booking.bookingStatus } />
-                <BookingPaymentStatusBadge status={ booking.paymentStatus } />
-            </div> */}
+            <div
+                className={ cn(
+                    "absolute bottom-0 left-0 h-1 w-full",
+                    checkout.CheckoutPayment.paymentStatus === "Pago"
+                        ? "bg-green-500"
+                        : checkout.date < new Date()
+                            ? "bg-red-500"
+                            : "bg-yellow-500"
+                ) }
+            />
         </div>
     );
 }

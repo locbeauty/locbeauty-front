@@ -6,8 +6,8 @@ import { Controller, FormProvider, useForm, useFormContext } from "react-hook-fo
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectCustomer } from "./SelectCustomer";
 import { SelectGear } from "./SelectGear";
-import { AlertCircle, User, MessageSquare, Check, DollarSign, Settings, Pin, Truck, X, Copy } from "lucide-react";
-import { useState } from "react";
+import { AlertCircle, User, MessageSquare, Check, Settings, Pin, Truck, X, Copy } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-provider";
@@ -19,15 +19,15 @@ import { Button } from "@/components/ui/button";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 import { SelectAddress } from "./SelectAddress";
 import { CheckoutPaymentMethod } from "./CheckoutPaymentMethod";
-import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { SelectEmployee } from "@/components/shared/SelectEmployee";
 import { Gear } from "@/utils/@types/gears";
 import { ApiResponse } from "@/lib/api";
 import { createCheckoutFormSchema, CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { CreateCheckout, getDayCheckouts } from "@/services/checkouts.service";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { hideDocumentNumber } from "@/utils/hideDocumentNumber";
 import { useQuery } from "@tanstack/react-query";
+import { AdditionalCostsDialog } from "./AdditionalCostsDialog";
+import { centsToString } from "@/utils/centsToString";
 import { queryClient } from "@/app/(main)/layout";
 
 export interface GetDayCheckoutsResponse {
@@ -45,71 +45,81 @@ export function GearsSection() {
         watch,
         setValue,
         formState: { errors },
-    } = useFormContext();
+    } = useFormContext<CreateCheckoutFormSchemaType>();
 
-    const watchSelectedGears = watch("gears") || [];
+    const watchedGears = watch("gears");
+    const watchSelectedGears = useMemo(() => watchedGears || [], [ watchedGears ]);
+
+    useEffect(() => {
+        const selectedGearsCost = watchSelectedGears.reduce(
+            (acc, item) => acc + parseStringToCents(item.individualPrice),
+            0
+        );
+        setValue("basePrice", centsToString(selectedGearsCost));
+    }, [ watchSelectedGears, setValue ]);
 
     function handleAddGear(gear: Gear) {
-        setValue("gears", [ ...watchSelectedGears, { gearId: gear.gearId, gearName: gear.gearName } ]);
+        setValue("gears", [
+            ...watchSelectedGears,
+            {
+                gearId: gear.gearId,
+                gearName: gear.gearName,
+                individualPrice: "0,00",
+            },
+        ]);
     }
 
     function handleRemoveGear(gearId: string) {
-        const updated = watchSelectedGears.filter((g: Gear) => g.gearId !== gearId);
-        setValue("gears", updated);
+        setValue(
+            "gears",
+            watchSelectedGears.filter((g) => g.gearId !== gearId)
+        );
+    }
+
+    function handlePriceChange(index: number, value: string) {
+        const updatedGears = [ ...watchSelectedGears ];
+        updatedGears[index].individualPrice = value;
+        setValue("gears", updatedGears);
     }
 
     return (
         <div className="space-y-2">
-            <Label
-                htmlFor="equipamento"
-                className="text-sm font-medium flex items-center gap-1"
-            >
+            <Label className="text-sm font-medium flex items-center gap-1">
                 <Settings className="w-4 h-4" />
-    Equipamento
+                Equipamentos
             </Label>
-
-            {/* Container horizontal */}
-            <div className="flex flex-wrap gap-2">
-                {/* Lista de máquinas selecionadas */}
-                {watchSelectedGears.map((gear: { gearName: string; gearId: string }) => (
-                    <div
-                        key={ gear.gearId }
-                        className="flex items-center space-x-2"
-                    >
-                        <Button
-                            variant="outline"
-                            className="justify-start text-black font-black"
-                            disabled
-                        >
+            <div className="flex flex-col gap-2">
+                {watchSelectedGears.map((gear, index) => (
+                    <div key={ gear.gearId } className="flex gap-2 items-center">
+                        <Button variant="outline" className="justify-start text-black font-black min-w-[200px]" disabled>
                             {gear.gearName}
                         </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            size="xs"
-                            onClick={ () => handleRemoveGear(gear.gearId) }
-                        >
-                            <X className="w-4 h-4" />
+                        <div className="flex flex-col w-[150px]">
+                            <PriceInput
+                                withLabel={ false }
+                                name={ `gears.${index}.individualPrice` }
+                                value={ gear.individualPrice }
+                                onChange={ (val: string) => handlePriceChange(index, val) }
+                            />
+                            {errors.gears?.[index]?.individualPrice && (
+                                <p className="text-xs text-destructive mt-1">{errors.gears[index].individualPrice.message}</p>
+                            )}
+                        </div>
+                        <Button type="button" variant="destructive" size="icon" className="h-9 w-9" onClick={ () => handleRemoveGear(gear.gearId) }>
+                            <X className="h-4 w-4" />
                         </Button>
                     </div>
                 ))}
-
-                {/* Select aparece ao lado das máquinas */}
                 {watchSelectedGears.length < 3 && (
-                    <div className="min-w-[200px]">
+                    <div className="w-[200px]">
                         <SelectGear onSelect={ handleAddGear } />
                     </div>
                 )}
             </div>
-
-            {errors.gears && (
-                <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {errors.gears.message?.toString()}
-                </p>
+            {typeof errors.gears?.message === "string" && (
+                <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.gears.message}</p>
             )}
         </div>
-
     );
 }
 
@@ -118,28 +128,43 @@ export function CreateBookingForm() {
     const createBookingFormMethods = useForm<CreateCheckoutFormSchemaType>({
         resolver: zodResolver(createCheckoutFormSchema),
         defaultValues: {
-            bookingStatus: "Pendente",
+            checkoutStatus: "Pendente",
             paymentStatus: "Pendente",
-            paymentMode: undefined,
-            totalPrice: "",
+            paymentInfo: {
+                paymentStatus: "Pendente",
+                firstPaymentDate: null,
+                secondPaymentDate: null,
+                firstPaymentAmount: "0,00",
+                firstPaymentStatus: "Pendente",
+                secondPaymentAmount: "0,00",
+                secondPaymentStatus: "Pendente"
+            },
+            basePrice: "0,00",
+            totalPrice: "0,00",
+            extraMachineCosts: "0,00",
+            lodgingCost: "0,00",
+            foodCost: "0,00",
+            fuelCost: "0,00",
+            additionalTransportCost: "0,00",
             addressId: "",
             filialId: user?.sourceFilial.filialId,
             accountableEmployeeId: user?.sub
         },
     });
 
-    const [ isQuickBookingPaymentModeDialogOpen, setQuickBookingPaymentModeDialogOpen ] = useState(false);
+    const [ isAdditionalCostsDialogOpen, setAdditionalCostsDialogOpen ] = useState(false);
     const [ addressString, setAddressString ] = useState("");
+    const [ consumptionKmPerLiter, setConsumptionKmPerLiter ] = useState(10);
     const [ driverString, setDriverString ] = useState("");
 
     const {
         handleSubmit,
         register,
         watch,
+        reset,
         setValue,
         formState: { errors },
         control,
-        reset
     } = createBookingFormMethods;
 
     const startHour = watch("startHourInMinutes");
@@ -147,207 +172,223 @@ export function CreateBookingForm() {
     const selectedDate = watch("date");
     const watchFilialId = watch("filialId");
     const watchSelectedGears = watch("gears");
-    const watchPrice = watch("totalPrice");
     const watchCustomer = watch("customer");
+    const watchTotalPrice = watch("totalPrice");
+    const watchBasePrice = watch("basePrice");
+
+    const watchExtraMachineCosts = watch("extraMachineCosts");
+    const watchLodgingCost = watch("lodgingCost");
+    const watchFoodCost = watch("foodCost");
+    const watchFuelCost = watch("fuelCost");
+    const watchDistanceInKm = watch("distanceInKm");
+    const watchAdditionalTransportCost = watch("additionalTransportCost");
+
     const isDateInPast = selectedDate && selectedDate < new Date();
 
-    const params = {
-        filialId: watchFilialId,
-        gears: watchSelectedGears,
-        date: selectedDate
-    };
+    useEffect(() => {
+        const base = parseStringToCents(watchBasePrice || "0");
+        const extraMachine = parseStringToCents(watchExtraMachineCosts || "0");
+        const lodging = parseStringToCents(watchLodgingCost || "0");
+        const food = parseStringToCents(watchFoodCost || "0");
+        const addTransport = parseStringToCents(watchAdditionalTransportCost || "0");
 
-    const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>,Error>({
+        const fuelCents = parseStringToCents(watchFuelCost || "0"); // custo por litro
+        const distance = watchDistanceInKm || 0;
+        const consumption = consumptionKmPerLiter || 1;
+
+        const litersNeeded = distance / consumption;
+        const totalFuel = Math.round(litersNeeded * fuelCents);
+
+        const total = base + extraMachine + lodging + food + totalFuel + addTransport;
+
+        setValue("totalPrice", centsToString(total));
+    }, [
+        watchBasePrice, watchExtraMachineCosts, watchLodgingCost,
+        watchFoodCost, watchFuelCost, watchDistanceInKm,
+        watchAdditionalTransportCost, consumptionKmPerLiter, setValue
+    ]);
+
+    const params = { filialId: watchFilialId, gears: watchSelectedGears, date: selectedDate };
+    const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
         queryKey: [ "get-day-checkouts", params ],
         queryFn: () => getDayCheckouts({ body: params }),
-        enabled: !!watchFilialId && !!selectedDate, // só executa se houver filial e data
+        enabled: !!watchFilialId && !!selectedDate,
         staleTime: 1000 * 60,
     });
     const checkoutSchedule = data?.data;
 
     function handleResetValues() {
-        reset({
-            bookingStatus: "Pendente",
-            paymentStatus: "Pendente",
-            paymentMode: undefined,
-            totalPrice: "",
-            addressId: "",
-            filialId: user?.sourceFilial.filialId,
-            accountableEmployeeId: user?.sub,
-            customer: undefined,
-            gears: [],
-            date: undefined,
-            startHourInMinutes: 0,
-            totalDurationInMinutes: 0,
-            observations: "",
-            driverId: "",
-            partialPayment: "",
-        });
+        reset(
+            {
+                checkoutStatus: "Pendente",
+                paymentStatus: "Pendente",
+                totalPrice: "0",
+                addressId: "",
+                filialId: user?.sourceFilial.filialId,
+                accountableEmployeeId: user?.sub,
+                customer: undefined,
+                gears: [],
+                date: undefined,
+                startHourInMinutes: 0,
+                totalDurationInMinutes: 0,
+                observations: "",
+                driverId: "",
+                additionalTransportCost: "0",
+                basePrice: "0",
+                distanceInKm: 0,
+                extraMachineCosts: "0",
+                foodCost: "0",
+                fuelCost: "0",
+                lodgingCost: "0",
+            }
+        );
     }
 
     async function handleCreateNewCheckout(newCheckoutData: CreateCheckoutFormSchemaType) {
-        const response = await CreateCheckout(
-            {
-                ...newCheckoutData,
-                totalPrice: parseStringToCents(newCheckoutData.totalPrice),
-                partialPayment: parseStringToCents(newCheckoutData.partialPayment || "0"),
-            });
+        const parsed = {
+            ...newCheckoutData,
 
-        if(response.statusCode !== 201) {
-            toast.warning(response.message, { style: { fontSize: "1rem" } });
-            window.scroll({ top: 0 });
+            basePrice: parseStringToCents(newCheckoutData.basePrice || "0"),
+            extraMachineCosts: parseStringToCents(newCheckoutData.extraMachineCosts || "0"),
+            lodgingCost: parseStringToCents(newCheckoutData.lodgingCost || "0"),
+            foodCost: parseStringToCents(newCheckoutData.foodCost || "0"),
+            fuelCost: parseStringToCents(newCheckoutData.fuelCost || "0"),
+            additionalTransportCost: parseStringToCents(newCheckoutData.additionalTransportCost || "0"),
+            totalPrice: parseStringToCents(newCheckoutData.totalPrice || "0"),
+
+            paymentInfo: {
+                paymentStatus: newCheckoutData.paymentInfo.paymentStatus,
+                firstPaymentDate: newCheckoutData.paymentInfo.firstPaymentDate ?? null,
+                firstPaymentAmount: newCheckoutData.paymentInfo.firstPaymentAmount
+                    ? parseStringToCents(newCheckoutData.paymentInfo.firstPaymentAmount)
+                    : null,
+                firstPaymentMethod: newCheckoutData.paymentInfo.firstPaymentMethod ?? undefined,
+                firstPaymentStatus: newCheckoutData.paymentInfo.firstPaymentStatus,
+
+                secondPaymentDate: newCheckoutData.paymentInfo.secondPaymentDate ?? null,
+                secondPaymentAmount: newCheckoutData.paymentInfo.secondPaymentAmount
+                    ? parseStringToCents(newCheckoutData.paymentInfo.secondPaymentAmount)
+                    : null,
+                secondPaymentMethod: newCheckoutData.paymentInfo.secondPaymentMethod ?? undefined,
+                secondPaymentStatus: newCheckoutData.paymentInfo.secondPaymentStatus ?? undefined,
+            },
+
+            gears: newCheckoutData.gears.map(item => ({
+                ...item,
+                individualPrice: parseStringToCents(item.individualPrice || "0"),
+            })),
+        };
+
+        const response = await CreateCheckout(parsed);
+
+        if (response.statusCode === 201) {
+            toast.success(response.message);
+            handleResetValues();
+            queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+            queryClient.invalidateQueries({ queryKey: [ "get-day-checkouts" ] });
+            queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+            window.scrollTo({ top: 0 });
         } else {
-            toast.success(response.message, { style: { fontSize: "1rem" } });
-            window.scroll({ top: 0 });
+            toast.warning(response.message);
         }
-
-        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
-        handleResetValues();
-    };
+    }
 
     return (
         <div className="">
             <div className="space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
                 <div className="ml-auto mr-auto w-[50%]">
-                    {
-                        user?.role === "Gerente" && (
-                            <Controller
-                                control={ control }
-                                name="filialId"
-                                render={ ({ field }) => (
-                                    <SelectFilial
-                                        control={ control }
-                                        name={ field.name }
-                                        defaultFilial={ user?.sourceFilial.filialId }
-                                    />
-                                ) }
-                            />
-                        )
-                    }
+                    {user?.role === "Gerente" && (
+                        <Controller
+                            control={ control }
+                            name="filialId"
+                            render={ ({ field }) => (
+                                <SelectFilial
+                                    control={ control }
+                                    name={ field.name }
+                                    defaultFilial={ user?.sourceFilial.filialId }
+                                />
+                            ) }
+                        />
+                    )}
                 </div>
             </div>
 
-            <form id="new-booking-form">
+            <form id="new-booking-form" onSubmit={ handleSubmit(handleCreateNewCheckout) }>
                 <FormProvider { ...createBookingFormMethods }>
                     <div className="flex flex-col gap-10">
-                        {/* Customer and Gear Selection */}
+                        {/* Card de Informações Básicas */}
                         <Card className="transition-all duration-200 hover:shadow-md">
                             <CardHeader className="pb-4">
                                 <CardTitle className="flex items-center gap-2 text-lg">
-                                    <User className="h-5 w-5 text-primary" />
-                  Informações básicas
+                                    <User className="h-5 w-5 text-primary" /> Informações básicas
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6 w-full">
                                 <div className="space-y-2 w-full">
-                                    <Label htmlFor="cliente" className="text-sm font-medium">
-                                        <User />
-                                        Cliente
-                                    </Label>
+                                    <Label className="text-sm font-medium flex items-center gap-1"><User className="w-4 h-4" /> Cliente</Label>
                                     <SelectCustomer />
-                                    {errors.customer && errors.customer.customerId && (
-                                        <p className="text-sm text-destructive flex items-center gap-1">
-                                            <AlertCircle className="h-3 w-3" />
-                                            {errors.customer.customerId.message}
-                                        </p>
+                                    {errors.customer?.customerId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.customer.customerId.message}</p>
                                     )}
                                 </div>
 
                                 <div className="space-y-2 w-full">
-                                    <Label htmlFor="cliente" className="text-sm font-medium">
-                                        <Pin />
-                                        Endereço
-                                    </Label>
+                                    <Label className="text-sm font-medium flex items-center gap-1"><Pin className="w-4 h-4" /> Endereço</Label>
                                     <SelectAddress setAddressString={ setAddressString } />
-                                    {errors.customer && errors.customer.customerId && (
-                                        <p className="text-sm text-destructive flex items-center gap-1">
-                                            <AlertCircle className="h-3 w-3" />
-                                            {errors.customer.customerId.message}
-                                        </p>
+                                    {errors.addressId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.addressId.message}</p>
                                     )}
                                 </div>
 
                                 <GearsSection />
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="equipamento" className="text-sm font-medium">
-                                        <DollarSign className="h-5 w-5 text-primary" />
-                                        Valor
-                                    </Label>
-                                    <div className="flex flex-col flex-1">
-                                        <PriceInput withLabel={ false } register={ register("totalPrice") } value={ watchPrice } setValue={ setValue } name="totalPrice" />
-                                        {errors.totalPrice && (
-                                            <p className="text-sm text-destructive flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                {errors.totalPrice.message}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="equipamento" className="text-sm font-medium">
-                                        <Truck className="h-5 w-5 text-primary" />
-                                        Motorista
-                                    </Label>
-                                    <div className="flex flex-col flex-1">
-                                        <SelectEmployee
-                                            control={ control }
-                                            name="driverId"
-                                            setDriverString={ setDriverString }
-                                            employeeRole="Motorista"
-                                            filialId={ user?.role === "Gerente" ? undefined : user?.sourceFilial.filialId }
-                                        />
+                                <AdditionalCostsDialog
+                                    consumptionKmPerLiter={ consumptionKmPerLiter }
+                                    setConsumptionKmPerLiter={ setConsumptionKmPerLiter }
+                                    setAdditionalCostsDialogOpen={ setAdditionalCostsDialogOpen }
+                                    isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
+                                />
 
-                                        {errors.driverId && (
-                                            <p className="text-sm text-destructive flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                {errors.driverId.message}
-                                            </p>
-                                        )}
-                                    </div>
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium flex items-center gap-1"><Truck className="h-5 w-5 text-primary" /> Motorista</Label>
+                                    <SelectEmployee
+                                        control={ control }
+                                        name="driverId"
+                                        setDriverString={ setDriverString }
+                                        employeeRole="Motorista"
+                                        filialId={ user?.role === "Gerente" ? undefined : user?.sourceFilial.filialId }
+                                    />
+                                    {errors.driverId && (
+                                        <p className="text-sm text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.driverId.message}</p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
 
-                        {/* Date and Time Selection */}
-                        <CheckoutTimeSelector
-                            name="date"
-                            control={ control }
-                            checkoutSchedule={ checkoutSchedule }
-                        />
-                        {/* Amount and Price */}
-                        <div className="pb-0 flex flex-col w-full justify-center gap-3">
+                        {/* Seletor de Data e Hora */}
+                        <CheckoutTimeSelector name="date" control={ control } checkoutSchedule={ checkoutSchedule } />
 
-                            {/* Observations */}
-                            <Card className="transition-all duration-200 hover:shadow-md">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center gap-2 text-lg">
-                                        <MessageSquare className="h-5 w-5 text-primary" />
-                                        Observações
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="observacoes" className="text-sm font-medium">
-                                        Detalhes adicionais (opcional)
-                                        </Label>
-                                        <Textarea
-                                            { ...register("observations") }
-                                            className="min-h-[120px] resize-none placeholder:text-muted-foreground/60 pb-0"
-                                            placeholder="Digite informações adicionais sobre o agendamento, requisitos especiais, ou outras observações relevantes..."
-                                        />
-
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                        </div>
-                        <Card>
-                            <CheckoutPaymentMethod />
+                        {/* Observações */}
+                        <Card className="transition-all duration-200 hover:shadow-md">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <MessageSquare className="h-5 w-5 text-primary" /> Observações
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea
+                                    { ...register("observations") }
+                                    className="min-h-[120px] resize-none"
+                                    placeholder="Digite informações adicionais..."
+                                />
+                            </CardContent>
                         </Card>
 
+                        {/* Novo Componente de Pagamento */}
+                        <CheckoutPaymentMethod />
+
                         {/* Resumo Final */}
-                        {selectedDate && startHour && watchTotalDurationInMinutes && watchPrice && !isDateInPast && (
+                        {selectedDate && startHour && watchTotalDurationInMinutes && watchTotalPrice && !isDateInPast && (
                             <Card className="bg-primary/5 border-primary/20 w-[80%] ml-auto mr-auto">
                                 <CardHeader>
                                     <CardTitle className="text-lg text-primary flex justify-between">
@@ -362,11 +403,11 @@ Equipamento${watchSelectedGears.length > 1 ? "s" : ""}: ${watchSelectedGears.map
 Data: ${selectedDate.toLocaleDateString("pt-BR")}
 Horário: ${minutesToHHMM(startHour)} - ${minutesToHHMM(startHour + watchTotalDurationInMinutes)}
 Duração: ${watchTotalDurationInMinutes / 60}h
-Preço: R$ ${watchPrice}
-Cliente: ${watchCustomer.fullname} - ${hideDocumentNumber(watchCustomer.documentNumber)}
+Preço: R$ ${watchTotalPrice}
+Cliente: ${watchCustomer.fullname} - ${watchCustomer.documentNumber}
 Contato: ${watchCustomer.cellphone}
 Endereço: ${addressString}
-Motorista: ${driverString}
+Motorista: ${driverString || "A definir"}
     `
                                                     .replace(/[ \t]+\n/g, "\n")
                                                     .trim();
@@ -399,11 +440,11 @@ Motorista: ${driverString}
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Preço:</span>
-                                        <span className="font-medium">R$ {watchPrice}</span>
+                                        <span className="font-medium">R$ {watchTotalPrice}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Cliente:</span>
-                                        <span className="font-medium">{watchCustomer.fullname} - {hideDocumentNumber(watchCustomer.documentNumber)}</span>
+                                        <span className="font-medium">{watchCustomer.fullname} - {watchCustomer.documentNumber}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Contato:</span>
@@ -415,32 +456,26 @@ Motorista: ${driverString}
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Motorista:</span>
-                                        <span className="font-medium text-right">{driverString}</span>
+                                        <span className="font-medium text-right">{driverString || "A definir"}</span>
                                     </div>
                                 </CardContent>
                             </Card>
                         )}
 
-                        {/* Action Buttons */}
-                        <div className="flex gap-3 pt-4">
-                            <Popover open={ isQuickBookingPaymentModeDialogOpen } onOpenChange={ setQuickBookingPaymentModeDialogOpen }>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        disabled={ !startHour || watchSelectedGears.length < 0 || !watchPrice }
-                                        type="button"
-                                        onClick={ handleSubmit((data) => handleCreateNewCheckout(data)) }
-                                        className="flex-1">
-
-                                        <Check className="h-4 w-4 mr-2" />
-                                        <span className="md:flex hidden md:items-center">Finalizar Reserva</span>
-                                    </Button>
-                                </PopoverTrigger>
-                            </Popover>
+                        {/* Botão de Envio */}
+                        <div className="pt-4">
+                            <Button
+                                type="submit"
+                                className="w-full md:w-auto md:min-w-[300px] md:ml-auto flex"
+                                size="lg"
+                                disabled={ !startHour || watchSelectedGears.length === 0 || watchTotalPrice === "0,00" }
+                            >
+                                <Check className="h-5 w-5 mr-2" /> Finalizar Reserva
+                            </Button>
                         </div>
                     </div>
                 </FormProvider>
             </form>
         </div>
     );
-
 }

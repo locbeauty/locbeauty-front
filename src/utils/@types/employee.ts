@@ -11,14 +11,14 @@ export interface Employee {
   createdAt: Date;
   updatedAt: Date;
   role: string
-  sourceFilial: {
+  SourceFilial: {
     filialId: string;
     filialName: string;
-    address: {
-      state: {
+    Address: {
+      State: {
         UF: string
       }
     }
   };
-  address: Address;
+  Address: Address;
 }

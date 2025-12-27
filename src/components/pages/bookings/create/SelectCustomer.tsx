@@ -13,6 +13,9 @@ import { Customer } from "@/utils/@types/customer";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { hideDocumentNumber } from "@/utils/hideDocumentNumber";
 import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse } from "@/lib/api";
+import { GetAllCustomers } from "@/services/customers.service";
 
 export function SelectCustomer({ disabled = false }: {disabled?: boolean}) {
     const isMounted = useMounted();
@@ -21,25 +24,15 @@ export function SelectCustomer({ disabled = false }: {disabled?: boolean}) {
     } = useFormContext<CreateCheckoutFormSchemaType>();
     const isDesktop = useMediaQuery("(min-width: 768px)");
 
-    const [ allCustomers, setAllCustomers ] = useState<Customer[]>([]);
+    const { data } = useQuery<ApiResponse<Customer[]>, Error>({
+        queryKey: [ "get-all-customers" ],
+        queryFn: GetAllCustomers,
+        staleTime: 1000 * 60, // 1 minuto de cache
+        // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
+    });
 
-    useEffect(() => {
-        console.log("allCustomers: ", allCustomers);
-    }, [ allCustomers ]);
-
-    useEffect(() => {
-        async function handleGetAllCustomers() {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customers`, {
-                credentials: "include",
-                next: {
-                    tags: [ "get-all-customers" ],
-                },
-            });
-            const { data }: { data: Customer[] } = await response.json();
-            setAllCustomers(data);
-        }
-        handleGetAllCustomers();
-    }, []);
+    const allCustomers = data?.data;
+    if(!allCustomers) return;
 
     if (!isMounted) {
         return <div className="h-10 w-full" />;
@@ -89,7 +82,7 @@ function MobileSelect({ field, allCustomers }: { field: ControllerRenderProps<Cr
             <DrawerTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
                     {selectedCustomer ? (
-                        <>{selectedCustomer.fullname} - {hideDocumentNumber(selectedCustomer.documentNumber)}</>
+                        <>{selectedCustomer.fullname} - {selectedCustomer.documentNumber}</>
                     ) : (
                         <span className="text-placeholder">Selecione o cliente</span>
                     )}
@@ -122,7 +115,7 @@ function CustomersList({
             <CommandList>
                 <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
                 <CommandGroup>
-                    {allCustomers.map((customer) => (
+                    {allCustomers?.map((customer) => (
                         <CommandItem
                             className="w-[700px]"
                             key={ customer.customerId }
@@ -132,7 +125,7 @@ function CustomersList({
                                     {
                                         customerId: customer.customerId,
                                         fullname: customer.fullname,
-                                        documentNumber: hideDocumentNumber(customer.documentNumber),
+                                        documentNumber: customer.documentNumber,
                                         cellphone: customer.cellphone ?? ""
                                     }
                                 );

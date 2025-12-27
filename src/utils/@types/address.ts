@@ -36,23 +36,23 @@ export interface Address {
     zipCode: string;
     buildingNumber: string;
     addressComplement: string | null;
-    createdAt: string;
-    updatedAt: string;
+    createdAt: Date;
+    updatedAt: Date;
     isActive: boolean;
-    state: {
+    State: {
       stateId: string;
       stateName: StateName;
       UF: UF
     };
-    city: {
+    City: {
       cityId: string;
       cityName: string;
     };
-    neighborhood: {
+    Neighborhood: {
       neighborhoodId: string;
       neighborhoodName: string;
     };
-    street: {
+    Street: {
       streetId: string;
       streetName: string;
     };

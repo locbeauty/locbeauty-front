@@ -32,10 +32,6 @@ export default function TimePicker({ selectedDate, checkoutSchedule }: TimePicke
 
     const { setValue, watch, getValues } = useFormContext<CreateCheckoutFormSchemaType>();
 
-    useEffect(() => {
-        console.log("bookingSchedule: ", checkoutSchedule);
-    },[ checkoutSchedule ]);
-
     const watchStartHourInMinutes = watch("startHourInMinutes");
     const watchGears = watch("gears");
     const watchTotalDuration = watch("totalDurationInMinutes");
@@ -59,7 +55,7 @@ export default function TimePicker({ selectedDate, checkoutSchedule }: TimePicke
         setDurationInMinutes(durationValue);
     };
 
-    if (!selectedDate || watchGears.length === 0) {
+    if (!selectedDate || watchGears?.length === 0) {
         return (
             <Card className="transition-all duration-200 hover:shadow-md">
                 <CardHeader className="pb-4">
@@ -146,7 +142,7 @@ export default function TimePicker({ selectedDate, checkoutSchedule }: TimePicke
                                                     onClick={ () => handleDurationButtonClick(option.durationInMinutes, option.maxGearAmount) }
                                                     className="text-xs"
                                                 >
-                                                    {option.durationInMinutes / 60} horas
+                                                    {option.durationInMinutes / 60} hora{option.durationInMinutes / 60 > 1 ? "s" : ""}
                                                 </Button>
                                             );
                                         })}

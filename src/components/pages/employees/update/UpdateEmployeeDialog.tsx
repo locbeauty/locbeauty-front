@@ -45,23 +45,20 @@ export function UpdateEmployeeDialog({
                 email: selectedEmployee.email,
                 fullname: selectedEmployee.fullname,
                 role: selectedEmployee.role,
-                sourceFilialId: selectedEmployee.sourceFilial.filialId,
+                sourceFilialId: selectedEmployee.SourceFilial.filialId,
                 address: {
-                    zipCode: selectedEmployee.address.zipCode,
-                    stateName: selectedEmployee.address.state.stateName,
-                    cityName: selectedEmployee.address.city.cityName,
-                    addressComplement: selectedEmployee.address.addressComplement,
-                    buildingNumber: selectedEmployee.address.buildingNumber,
-                    neighborhoodName: selectedEmployee.address.neighborhood.neighborhoodName,
-                    streetName: selectedEmployee.address.street.streetName
+                    zipCode: selectedEmployee.Address.zipCode,
+                    stateName: selectedEmployee.Address.State.stateName,
+                    cityName: selectedEmployee.Address.City.cityName,
+                    addressComplement: selectedEmployee.Address.addressComplement,
+                    buildingNumber: selectedEmployee.Address.buildingNumber,
+                    neighborhoodName: selectedEmployee.Address.Neighborhood.neighborhoodName,
+                    streetName: selectedEmployee.Address.Street.streetName
                 }
             }
             );
         }
     }, [ reset, selectedEmployee ]);
-    useEffect(() => {
-        console.log("errors: ", errors);
-    }, [ errors ]);
 
     async function handleUpdateEmployee(
         updatedEmployeeData: UpdateEmployeeFormSchemaType

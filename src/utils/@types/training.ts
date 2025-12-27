@@ -1,22 +1,29 @@
 import { Address } from "./address";
+import { Trainee } from "./trainee";
+import { Gear } from "./gears";
+import { Volunteer } from "./volunteer";
+import { Filial } from "./filials";
+import { TrainingPayment } from "./payments";
+import { CheckoutStatuses } from "../constants";
 
 export interface Training {
   trainingId: string;
-  hour: number;
-  minute: number;
-  Gear: {
-    gearId: string;
-    gearName: string
-  }
-  Professor: {
-    professorId: string;
-    name: string;
-  }
-  Student: {
-    studentId: string;
-    name: string;
-    documentNumber: string;
-  }
-  dueDate: Date;
-  Address: Address
+  trainingStatus: CheckoutStatuses;
+  hourInMinutes: number;
+  additionalCost: number;
+  additionalCostDescription: string;
+  gearId: string;
+  volunteerId: string;
+  traineeId: string;
+  dueDate: string;
+  sourceFilialId: string;
+  addressId: string;
+  createdAt: string;
+  updatedAt: string;
+  Gear: Gear;
+  Volunteer: Volunteer;
+  Trainee: Trainee;
+  TrainingPayment: TrainingPayment[];
+  SourceFilial: Filial;
+  Address: Address;
 }

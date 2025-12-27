@@ -12,11 +12,12 @@ import { CalendarControls } from "@/components/pages/bookings/view/CalendarContr
 // import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
 import { FlattenedBooking } from "@/components/pages/bookings/view/WeekView";
 import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
+import { Checkout } from "@/utils/@types/checkouts";
 
 export default function AgendamentosPage() {
     // Estado para controlar a semana atual
     const [ currentDate, setCurrentDate ] = useState(new Date());
-    const [ selectedBooking, setSelectedBooking ] = useState<FlattenedBooking | null>(null);
+    const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(null);
     const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] = useState(false);
     const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("semana");
     const [ isMobile, setIsMobile ] = useState(false);
@@ -43,8 +44,8 @@ export default function AgendamentosPage() {
 
     const router = useRouter();
 
-    const openBookingDetails = (booking: FlattenedBooking) => {
-        setSelectedBooking(booking);
+    const openCheckoutDetails = (booking: Checkout) => {
+        setSelectedCheckout(booking);
         setBookingDetailsDialogOpen(true);
     };
 
@@ -94,7 +95,7 @@ export default function AgendamentosPage() {
             />
             <CalendarContent
                 currentDate={ currentDate }
-                openBookingDetails={ openBookingDetails }
+                openCheckoutDetails={ openCheckoutDetails }
                 viewType={ viewType }
             />
             <CalendarFooter />
@@ -102,7 +103,8 @@ export default function AgendamentosPage() {
             <BookingDetailsDialog
                 isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen }
                 setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
-                selectedAgendamento={ selectedBooking }
+                selectedCheckout={ selectedCheckout }
+                setSelectedCheckout={ setSelectedCheckout }
             />
         </div>
     );

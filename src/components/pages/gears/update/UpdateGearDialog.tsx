@@ -67,10 +67,6 @@ export function UpdateGearDialog({
         }
     }, [ selectedGear, reset ]);
 
-    useEffect(() => {
-        console.log("ERRORS: ", errors);
-    }, [ errors ]);
-
     const handleSaveGear = async (targetGearData: UpdateGearFormSchemaType) => {
         try {
             const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears/update?gearId=${selectedGear?.gearId}`, {

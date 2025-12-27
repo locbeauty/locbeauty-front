@@ -10,10 +10,10 @@ import { MobileMonthView } from "./MobileMonthView";
 interface MonthViewProps {
     currentDate: Date;
     checkouts: Checkout[];
-    openBookingDetails: (_booking: FlattenedBooking) => void;
+    openCheckoutDetails: (_booking: FlattenedBooking) => void;
 }
 
-export function MonthView({ currentDate, checkouts, openBookingDetails }: MonthViewProps) {
+export function MonthView({ currentDate, checkouts, openCheckoutDetails }: MonthViewProps) {
     const flattenedBookings: FlattenedBooking[] = checkouts.flatMap((checkout) =>
         checkout.Bookings.map((booking) => {
             const startDate = new Date(checkout.date);
@@ -53,7 +53,7 @@ export function MonthView({ currentDate, checkouts, openBookingDetails }: MonthV
             {/* <MobileMonthView
                 bookings={ checkouts }
                 currentDate={ currentDate }
-                openBookingDetails={ openBookingDetails }
+                openCheckoutDetails={ openCheckoutDetails }
             /> */}
             <div className="hidden md:block min-w-full">
                 <CalendarMonthHeader />
@@ -105,7 +105,7 @@ export function MonthView({ currentDate, checkouts, openBookingDetails }: MonthV
                                                             durationInHours <= 12 &&
                                                             "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
                                                     ) }
-                                                    onClick={ () => openBookingDetails(booking) }
+                                                    onClick={ () => openCheckoutDetails(booking) }
                                                 >
                                                     {formatTime(booking.startDate)} - {booking.gear.gearName}
                                                 </div>
