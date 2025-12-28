@@ -12,9 +12,10 @@ interface SingleEventBoxProps {
     group: Checkout[]
     dayIndex: number
     openCheckoutDetails: (_checkout: Checkout) => void
+    totalColumns?: number
 }
 
-export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleEventBoxProps) {
+export function SingleEventBox({ group, dayIndex, openCheckoutDetails, totalColumns = 7 }: SingleEventBoxProps) {
     // If the group has only one event, use full width
     const hourColumnWidth = 100;
     const checkout = group[0];
@@ -29,10 +30,10 @@ export function SingleEventBox({ group, dayIndex, openCheckoutDetails }: SingleE
     const height = getEventBoxHeigh(durationInHours);
 
     // Calculate horizontal position considering hour column width
-    const columnWidth = hourColumnWidth ? `calc((100% - ${hourColumnWidth}px) / 7)` : "12.5%";
+    const columnWidth = hourColumnWidth ? `calc((100% - ${hourColumnWidth}px) / ${totalColumns})` : `${100 / totalColumns}%`;
     const left = hourColumnWidth
         ? `calc(${hourColumnWidth}px + (${dayIndex} * ${columnWidth}))`
-        : `calc(12.5% + (${dayIndex} * ${columnWidth}))`;
+        : `calc(${100 / totalColumns}% + (${dayIndex} * ${columnWidth}))`;
     const width = `calc(${columnWidth} - 2px)`;
 
     // Convert totalDuration from minutes to hours for styling logic

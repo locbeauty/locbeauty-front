@@ -4,48 +4,15 @@ import { cn } from "@/lib/utils";
 import { formatTime, getMonthDays, isSameDay, isToday } from "./bookingViewHelpers";
 import { CalendarMonthHeader } from "./CalendarMonthHeader";
 import type { Checkout } from "@/utils/@types/checkouts";
-import type { FlattenedBooking } from "./WeekView";
 import { MobileMonthView } from "./MobileMonthView";
 
 interface MonthViewProps {
     currentDate: Date;
     checkouts: Checkout[];
-    openCheckoutDetails: (_booking: FlattenedBooking) => void;
+    openCheckoutDetails: (_booking: Checkout) => void;
 }
 
 export function MonthView({ currentDate, checkouts, openCheckoutDetails }: MonthViewProps) {
-    const flattenedBookings: FlattenedBooking[] = checkouts.flatMap((checkout) =>
-        checkout.Bookings.map((booking) => {
-            const startDate = new Date(checkout.date);
-            startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
-            startDate.setMinutes(checkout.startHourInMinutes % 60);
-
-            const endDate = new Date(startDate);
-            endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
-
-            return {
-                id: booking.bookingId,
-                startDate,
-                endDate,
-                checkoutId: checkout.checkoutId,
-                bookingId: booking.bookingId,
-                date: checkout.date,
-                gearAmount: 1,
-                startHourInMinutes: checkout.startHourInMinutes,
-                totalDurationInMinutes: checkout.totalDurationInMinutes,
-                price: checkout.totalPrice / 100,
-                observations: checkout.observations,
-                gear: booking.gear,
-                customer: checkout.customer,
-                sourceFilial: checkout.sourceFilial,
-                bookingStatus: checkout.checkoutStatus,
-                paymentStatus: checkout.paymentStatus,
-                totalPrice: checkout.totalPrice / 100,
-                address: checkout.address,
-            };
-        })
-    );
-
     const daysInCurrentMonth = getMonthDays(currentDate);
 
     return (
@@ -60,8 +27,8 @@ export function MonthView({ currentDate, checkouts, openCheckoutDetails }: Month
 
                 <div className="grid grid-cols-7">
                     {daysInCurrentMonth.map((day, index) => {
-                        const dayBookings = flattenedBookings.filter((booking) =>
-                            isSameDay(booking.startDate, day)
+                        const dayBookings = checkouts.filter((checkout) =>
+                            isSameDay(new Date(checkout.date), day)
                         );
 
                         const isCurrentMonth = day.getMonth() === currentDate.getMonth();
@@ -87,13 +54,22 @@ export function MonthView({ currentDate, checkouts, openCheckoutDetails }: Month
 
                                 <div className="space-y-1 mt-1">
                                     {dayBookings
-                                        .sort((a, b) => a.startDate.getHours() - b.startDate.getHours())
-                                        .map((booking) => {
-                                            const durationInHours = booking.totalDurationInMinutes / 60;
+                                        .sort((a, b) => {
+                                            const aDate = new Date(a.date);
+                                            aDate.setHours(Math.floor(a.startHourInMinutes / 60));
+                                            const bDate = new Date(b.date);
+                                            bDate.setHours(Math.floor(b.startHourInMinutes / 60));
+                                            return aDate.getHours() - bDate.getHours();
+                                        })
+                                        .map((checkout) => {
+                                            const durationInHours = checkout.totalDurationInMinutes / 60;
+                                            const bookingDate = new Date(checkout.date);
+                                            bookingDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
+                                            bookingDate.setMinutes(checkout.startHourInMinutes % 60);
 
                                             return (
                                                 <div
-                                                    key={ booking.id }
+                                                    key={ checkout.checkoutId }
                                                     className={ cn(
                                                         "text-xs p-1 rounded border-l-2 cursor-pointer truncate",
                                                         "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
@@ -105,9 +81,9 @@ export function MonthView({ currentDate, checkouts, openCheckoutDetails }: Month
                                                             durationInHours <= 12 &&
                                                             "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
                                                     ) }
-                                                    onClick={ () => openCheckoutDetails(booking) }
+                                                    onClick={ () => openCheckoutDetails(checkout) }
                                                 >
-                                                    {formatTime(booking.startDate)} - {booking.gear.gearName}
+                                                    {formatTime(bookingDate)} - {checkout.Bookings.filter((b) => b.status === "ACTIVE").map((b) => b.Gear.gearName).join(", ")}
                                                 </div>
                                             );
                                         })}

@@ -13,17 +13,18 @@ interface MultipleEventBoxProps {
   group: Checkout[]
   dayIndex: number
   openCheckoutDetails: (_checkout: Checkout) => void
+  totalColumns?: number
 }
 
-export function MultipleEventBox({ group, dayIndex, openCheckoutDetails }: MultipleEventBoxProps) {
+export function MultipleEventBox({ group, dayIndex, openCheckoutDetails, totalColumns = 7 }: MultipleEventBoxProps) {
     // If the group has multiple events, divide the width
     const hourColumnWidth = 100;
 
     // Calculate horizontal position considering hour column width
-    const columnWidth = hourColumnWidth ? `calc((100% - ${hourColumnWidth}px) / 7)` : "12.5%";
+    const columnWidth = hourColumnWidth ? `calc((100% - ${hourColumnWidth}px) / ${totalColumns})` : `${100 / totalColumns}%`;
     const baseLeft = hourColumnWidth
         ? `calc(${hourColumnWidth}px + (${dayIndex} * ${columnWidth}))`
-        : `calc(12.5% + (${dayIndex} * ${columnWidth}))`;
+        : `calc(${100 / totalColumns}% + (${dayIndex} * ${columnWidth}))`;
 
     // Calculate width for each booking in the group
     const eventWidth = `calc((${columnWidth} - 2px) / ${group.length})`;
