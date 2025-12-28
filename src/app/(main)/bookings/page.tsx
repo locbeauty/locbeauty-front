@@ -9,8 +9,6 @@ import { useRouter } from "next/navigation";
 import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
 import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
 import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
-// import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
-import { FlattenedBooking } from "@/components/pages/bookings/view/WeekView";
 import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
 import { Checkout } from "@/utils/@types/checkouts";
 
@@ -19,7 +17,7 @@ export default function AgendamentosPage() {
     const [ currentDate, setCurrentDate ] = useState(new Date());
     const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(null);
     const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] = useState(false);
-    const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("semana");
+    const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("mes");
     const [ isMobile, setIsMobile ] = useState(false);
 
     useEffect(() => {
@@ -33,14 +31,6 @@ export default function AgendamentosPage() {
 
         return () => window.removeEventListener("resize", checkIfMobile);
     }, []);
-
-    useEffect(() => {
-        if (isMobile) {
-            setViewType("mes");
-        } else {
-            setViewType("semana");
-        }
-    }, [ isMobile ]);
 
     const router = useRouter();
 

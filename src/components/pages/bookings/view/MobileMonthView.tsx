@@ -170,38 +170,15 @@ import { cn } from "@/lib/utils";
 import { formatTime, getMonthDays, isSameDay, isToday } from "./bookingViewHelpers";
 import { CalendarMonthHeader } from "./CalendarMonthHeader";
 import type { Checkout } from "@/utils/@types/checkouts";
-import type { FlattenedBooking } from "./WeekView";
+
 
 interface MobileMonthViewProps {
   currentDate: Date;
   bookings: Checkout[];
-  openBookingDetails: (_booking: FlattenedBooking) => void;
+  openCheckoutDetails: (_booking: Checkout) => void;
 }
 
-export function MobileMonthView({ currentDate, bookings, openBookingDetails }: MobileMonthViewProps) {
-    const flattenedBookings: FlattenedBooking[] = bookings.flatMap((checkout) =>
-        checkout.Bookings.map((booking) => ({
-            id: booking.bookingId,
-            startDate: checkout.date,
-            endDate: new Date(new Date(checkout.date).getTime() + checkout.totalDurationInMinutes * 60000),
-            checkoutId: checkout.checkoutId,
-            bookingId: booking.bookingId,
-            date: checkout.date,
-            gearAmount: 1,
-            startHourInMinutes: checkout.startHourInMinutes,
-            totalDurationInMinutes: checkout.totalDurationInMinutes,
-            price: checkout.totalPrice,
-            observations: checkout.observations,
-            gear: booking.gear,
-            customer: checkout.customer,
-            sourceFilial: checkout.sourceFilial,
-            bookingStatus: checkout.checkoutStatus,
-            paymentStatus: checkout.paymentStatus,
-            totalPrice: checkout.totalPrice,
-            address: checkout.address,
-        })),
-    );
-
+export function MobileMonthView({ currentDate, bookings, openCheckoutDetails }: MobileMonthViewProps) {
     const daysInCurrentMonth = getMonthDays(currentDate);
 
     return (
@@ -210,7 +187,7 @@ export function MobileMonthView({ currentDate, bookings, openBookingDetails }: M
 
             <div className="grid grid-cols-7 gap-px bg-gray-200">
                 {daysInCurrentMonth.map((day, index) => {
-                    const dayBookings = flattenedBookings.filter((booking) => isSameDay(booking.startDate, day));
+                    const dayBookings = bookings.filter((checkout) => isSameDay(new Date(checkout.date), day));
                     const isCurrentMonth = day.getMonth() === currentDate.getMonth();
 
                     return (
@@ -235,11 +212,15 @@ export function MobileMonthView({ currentDate, bookings, openBookingDetails }: M
                             <div className="flex-1 space-y-0.5">
                                 {dayBookings.length > 0 && (
                                     <>
-                                        {dayBookings.slice(0, 2).map((booking) => {
-                                            const durationInHours = booking.totalDurationInMinutes / 60;
+                                        {dayBookings.slice(0, 2).map((checkout) => {
+                                            const durationInHours = checkout.totalDurationInMinutes / 60;
+                                            const bookingDate = new Date(checkout.date);
+                                            bookingDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
+                                            bookingDate.setMinutes(checkout.startHourInMinutes % 60);
+
                                             return (
                                                 <div
-                                                    key={ booking.id }
+                                                    key={ checkout.checkoutId }
                                                     className={ cn(
                                                         "h-1.5 rounded-full cursor-pointer transition-all hover:h-2",
                                                         "bg-gray-400",
@@ -247,8 +228,8 @@ export function MobileMonthView({ currentDate, bookings, openBookingDetails }: M
                                                         durationInHours === 6 && "bg-green-400",
                                                         durationInHours >= 8 && durationInHours <= 12 && "bg-purple-400",
                                                     ) }
-                                                    onClick={ () => openBookingDetails(booking) }
-                                                    title={ `${formatTime(booking.startDate)} - ${booking.gear.gearName}` }
+                                                    onClick={ () => openCheckoutDetails(checkout) }
+                                                    title={ `${formatTime(bookingDate)} - ${checkout.Bookings.filter(b => b.status === "ACTIVE").map(b => b.Gear.gearName).join(", ")}` }
                                                 />
                                             );
                                         })}

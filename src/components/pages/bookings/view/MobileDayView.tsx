@@ -143,47 +143,16 @@ import { Clock, DollarSign, MapPin, User } from "lucide-react";
 import { BookingStatusBadge } from "../common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../common/BookingPaymentStatusBadge";
 import type { Checkout } from "@/utils/@types/checkouts";
-import type { FlattenedBooking } from "./WeekView";
+import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 
 interface MobileDayViewProps {
   currentDate: Date;
   checkouts: Checkout[];
-  openBookingDetails: (_booking: FlattenedBooking) => void;
+  openCheckoutDetails: (_booking: Checkout) => void;
 }
 
-export function MobileDayView({ checkouts, currentDate, openBookingDetails }: MobileDayViewProps) {
-    const flattenedBookings: FlattenedBooking[] = checkouts.flatMap((checkout) =>
-        checkout.Bookings.map((booking) => {
-            const startDate = new Date(checkout.date);
-            startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
-            startDate.setMinutes(checkout.startHourInMinutes % 60);
-
-            const endDate = new Date(startDate);
-            endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
-
-            return {
-                id: booking.bookingId,
-                startDate,
-                endDate,
-                checkoutId: checkout.checkoutId,
-                bookingId: booking.bookingId,
-                date: checkout.date,
-                startHourInMinutes: checkout.startHourInMinutes,
-                totalDurationInMinutes: checkout.totalDurationInMinutes,
-                price: checkout.totalPrice,
-                observations: checkout.observations,
-                gear: booking.gear,
-                customer: checkout.customer,
-                sourceFilial: checkout.sourceFilial,
-                bookingStatus: checkout.checkoutStatus,
-                paymentStatus: checkout.paymentStatus,
-                totalPrice: checkout.totalPrice,
-                address: checkout.address,
-            };
-        })
-    );
-
-    const dayBookings = flattenedBookings.filter((booking) => isSameDay(booking.startDate, currentDate));
+export function MobileDayView({ checkouts, currentDate, openCheckoutDetails }: MobileDayViewProps) {
+    const dayBookings = checkouts.filter((checkout) => isSameDay(new Date(checkout.date), currentDate));
 
     const getBookingClassNames = (durationInHours: number) =>
         cn(
@@ -211,45 +180,53 @@ export function MobileDayView({ checkouts, currentDate, openBookingDetails }: Mo
                 {dayBookings.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">Nenhum agendamento para este dia</div>
                 ) : (
-                    dayBookings.map((booking) => {
-                        const durationInHours = booking.totalDurationInMinutes / 60;
+                    dayBookings.map((checkout) => {
+                        const durationInHours = checkout.totalDurationInMinutes / 60;
+                        const startDate = new Date(checkout.date);
+                        startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
+                        startDate.setMinutes(checkout.startHourInMinutes % 60);
+
+                        const endDate = new Date(startDate);
+                        endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
 
                         return (
                             <div
-                                key={ booking.id }
+                                key={ checkout.checkoutId }
                                 className={ getBookingClassNames(durationInHours) }
-                                onClick={ () => openBookingDetails(booking) }
+                                onClick={ () => openCheckoutDetails(checkout) }
                             >
-                                <div className="font-medium">{booking.gear.gearName}</div>
+                                <div className="font-medium">
+                                    {checkout.Bookings.filter((b) => b.status === "ACTIVE").map((b) => b.Gear.gearName).join(", ")}
+                                </div>
 
                                 <div className="text-sm text-muted-foreground mt-1 dark:text-muted">
                                     <div className="flex items-center gap-1">
                                         <Clock className="h-3.5 w-3.5" />
-                                        {formatTime(booking.startDate)} - {formatTime(booking.endDate)}
+                                        {formatTime(startDate)} - {formatTime(endDate)}
                                     </div>
 
                                     <div className="flex items-center gap-1 mt-1 max-w-[80vw]">
                                         <User className="h-3.5 w-3.5 shrink-0" />
                                         <span className="truncate whitespace-nowrap max-w-full overflow-hidden text-ellipsis">
-                                            {booking.customer.fullname}
+                                            {checkout.Customer.fullname}
                                         </span>
                                     </div>
 
                                     <div className="flex items-center gap-1 mt-1">
                                         <MapPin className="h-3.5 w-3.5" />
-                                        {booking.sourceFilial.description}
+                                        {checkout.SourceFilial.filialName}
                                     </div>
 
                                     <div className="flex items-center gap-1 mt-1">
                                         <DollarSign className="h-3.5 w-3.5" />
-                                        {formatCurrency(booking.price)}
+                                        {centsToStringWithCurrencyMark(checkout.totalPrice)}
                                     </div>
                                 </div>
 
                                 <div className="mt-2 flex justify-between items-center">
                                     <div className="flex gap-2">
-                                        <BookingStatusBadge status={ booking.bookingStatus } />
-                                        <BookingPaymentStatusBadge status={ booking.paymentStatus } />
+                                        <BookingStatusBadge status={ checkout.checkoutStatus } />
+                                        {/* <BookingPaymentStatusBadge status={ checkout.paymentStatus } /> */}
                                     </div>
                                     <span className="text-xs text-muted-foreground dark:text-muted">{durationInHours}h</span>
                                 </div>

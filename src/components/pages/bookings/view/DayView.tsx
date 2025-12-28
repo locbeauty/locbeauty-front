@@ -23,7 +23,7 @@ export function DayView({ currentDate, checkouts, openCheckoutDetails }: DayView
 
     return (
         <>
-            {/* <MobileDayView checkouts={ checkouts } currentDate={ currentDate } openCheckoutDetails={ openCheckoutDetails } /> */}
+            <MobileDayView checkouts={ checkouts } currentDate={ currentDate } openCheckoutDetails={ openCheckoutDetails } />
 
             <div className="hidden md:block min-w-full">
                 <CalendarDayHeader currentDate={ currentDate } />

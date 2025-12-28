@@ -238,47 +238,15 @@ import { cn } from "@/lib/utils";
 import { formatTime, formatDayName, getWeekDays, isSameDay, isToday, formatCurrency } from "./bookingViewHelpers";
 import { Clock, User, MapPin, DollarSign } from "lucide-react";
 import type { Checkout } from "@/utils/@types/checkouts";
-import type { FlattenedBooking } from "./WeekView";
+import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 
 interface MobileWeekViewProps {
   currentDate: Date;
   bookings: Checkout[];
-  openBookingDetails: (_booking: FlattenedBooking) => void;
+  openCheckoutDetails: (_booking: Checkout) => void;
 }
 
-export function MobileWeekView({ currentDate, bookings, openBookingDetails }: MobileWeekViewProps) {
-    const flattenedBookings: FlattenedBooking[] = bookings.flatMap((checkout) =>
-        checkout.Bookings.map((booking) => {
-            const startDate = new Date(checkout.date);
-            startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
-            startDate.setMinutes(checkout.startHourInMinutes % 60);
-
-            const endDate = new Date(startDate);
-            endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
-
-            return {
-                id: booking.bookingId,
-                startDate,
-                endDate,
-                checkoutId: checkout.checkoutId,
-                bookingId: booking.bookingId,
-                date: checkout.date,
-                gearAmount: 1, // default, já que não há esse campo
-                startHourInMinutes: checkout.startHourInMinutes,
-                totalDurationInMinutes: checkout.totalDurationInMinutes,
-                price: checkout.totalPrice,
-                observations: checkout.observations,
-                gear: booking.gear,
-                customer: checkout.customer,
-                sourceFilial: checkout.sourceFilial,
-                bookingStatus: checkout.checkoutStatus, // substitui bookingStatus inexistente
-                paymentStatus: checkout.paymentStatus,
-                totalPrice: checkout.totalPrice,
-                address: checkout.address,
-            };
-        })
-    );
-
+export function MobileWeekView({ currentDate, bookings, openCheckoutDetails }: MobileWeekViewProps) {
     const weekDays = getWeekDays(currentDate);
 
     return (
@@ -301,9 +269,9 @@ export function MobileWeekView({ currentDate, bookings, openBookingDetails }: Mo
             {/* Dias e agendamentos */}
             <div className="space-y-4">
                 {weekDays.map((day, dayIndex) => {
-                    const dayBookings = flattenedBookings
-                        .filter((booking) => isSameDay(booking.startDate, day))
-                        .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+                    const dayBookings = bookings
+                        .filter((booking) => isSameDay(new Date(booking.date), day))
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
                     return (
                         <div key={ dayIndex } className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -337,10 +305,16 @@ export function MobileWeekView({ currentDate, bookings, openBookingDetails }: Mo
                                 ) : (
                                     dayBookings.map((booking) => {
                                         const durationInHours = booking.totalDurationInMinutes / 60;
+                                        const startDate = new Date(booking.date);
+                                        startDate.setHours(Math.floor(booking.startHourInMinutes / 60));
+                                        startDate.setMinutes(booking.startHourInMinutes % 60);
+
+                                        const endDate = new Date(startDate);
+                                        endDate.setMinutes(endDate.getMinutes() + booking.totalDurationInMinutes);
 
                                         return (
                                             <div
-                                                key={ booking.id }
+                                                key={ booking.checkoutId }
                                                 className={ cn(
                                                     "p-4 cursor-pointer hover:bg-gray-50 transition-colors border-l-4",
                                                     "border-gray-400",
@@ -350,12 +324,12 @@ export function MobileWeekView({ currentDate, bookings, openBookingDetails }: Mo
                             durationInHours <= 12 &&
                             "border-purple-400 bg-purple-50/30"
                                                 ) }
-                                                onClick={ () => openBookingDetails(booking) }
+                                                onClick={ () => openCheckoutDetails(booking) }
                                             >
                                                 <div className="space-y-2">
                                                     <div className="flex items-start justify-between">
                                                         <div className="font-medium text-gray-900 flex-1">
-                                                            {booking.gear.gearName}
+                                                            {booking.Bookings.filter((b) => b.status === "ACTIVE").map((b) => b.Gear.gearName).join(", ")}
                                                         </div>
                                                         <div className="text-sm text-gray-500 ml-2">
                                                             {durationInHours}h
@@ -366,24 +340,24 @@ export function MobileWeekView({ currentDate, bookings, openBookingDetails }: Mo
                                                         <div className="flex items-center gap-2">
                                                             <Clock className="h-4 w-4 text-gray-400" />
                                                             <span>
-                                                                {formatTime(booking.startDate)} - {formatTime(booking.endDate)}
+                                                                {formatTime(startDate)} - {formatTime(endDate)}
                                                             </span>
                                                         </div>
 
                                                         <div className="flex items-center gap-2">
                                                             <User className="h-4 w-4 text-gray-400" />
-                                                            <span className="truncate">{booking.customer.fullname}</span>
+                                                            <span className="truncate">{booking.Customer.fullname}</span>
                                                         </div>
 
                                                         <div className="flex items-center gap-2">
                                                             <MapPin className="h-4 w-4 text-gray-400" />
-                                                            <span className="truncate">{booking.sourceFilial.description}</span>
+                                                            <span className="truncate">{booking.SourceFilial.filialName}</span>
                                                         </div>
 
                                                         <div className="flex items-center gap-2">
                                                             <DollarSign className="h-4 w-4 text-gray-400" />
                                                             <span className="font-medium text-gray-900">
-                                                                {formatCurrency(booking.price)}
+                                                                {centsToStringWithCurrencyMark(booking.totalPrice)}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -392,17 +366,17 @@ export function MobileWeekView({ currentDate, bookings, openBookingDetails }: Mo
                                                         <div
                                                             className={ cn(
                                                                 "px-2 py-1 rounded-full text-xs font-medium",
-                                                                booking.bookingStatus === "Concluido" &&
+                                                                booking.checkoutStatus === "Concluido" &&
                                   "bg-green-100 text-green-800",
-                                                                booking.bookingStatus === "Pendente" &&
+                                                                booking.checkoutStatus === "Pendente" &&
                                   "bg-yellow-100 text-yellow-800",
-                                                                booking.bookingStatus === "Cancelado" &&
+                                                                booking.checkoutStatus === "Cancelado" &&
                                   "bg-red-100 text-red-800"
                                                             ) }
                                                         >
-                                                            {booking.bookingStatus}
+                                                            {booking.checkoutStatus}
                                                         </div>
-                                                        <div
+                                                        {/* <div
                                                             className={ cn(
                                                                 "px-2 py-1 rounded-full text-xs font-medium",
                                                                 booking.paymentStatus === "Pago" &&
@@ -414,7 +388,7 @@ export function MobileWeekView({ currentDate, bookings, openBookingDetails }: Mo
                                                             ) }
                                                         >
                                                             {booking.paymentStatus}
-                                                        </div>
+                                                        </div> */}
                                                     </div>
                                                 </div>
                                             </div>
@@ -435,8 +409,8 @@ export function MobileWeekView({ currentDate, bookings, openBookingDetails }: Mo
                         <div className="text-gray-600">Total de Agendamentos</div>
                         <div className="font-semibold text-lg">
                             {
-                                flattenedBookings.filter((booking) =>
-                                    weekDays.some((day) => isSameDay(booking.startDate, day))
+                                bookings.filter((booking) =>
+                                    weekDays.some((day) => isSameDay(new Date(booking.date), day))
                                 ).length
                             }
                         </div>
@@ -445,9 +419,9 @@ export function MobileWeekView({ currentDate, bookings, openBookingDetails }: Mo
                         <div className="text-gray-600">Receita Estimada</div>
                         <div className="font-semibold text-lg">
                             {formatCurrency(
-                                flattenedBookings
-                                    .filter((booking) => weekDays.some((day) => isSameDay(booking.startDate, day)))
-                                    .reduce((total, booking) => total + booking.price, 0)
+                                bookings
+                                    .filter((booking) => weekDays.some((day) => isSameDay(new Date(booking.date), day)))
+                                    .reduce((total, booking) => total + booking.totalPrice, 0)
                             )}
                         </div>
                     </div>
