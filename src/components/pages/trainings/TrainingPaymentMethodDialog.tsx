@@ -296,9 +296,9 @@ export function TrainingPaymentMethodDialog({
         // if (secondPaymentStatus !== "Pendente") {
         //     setSecondPaymentStatus("Pendente");
         // }
-            if(currentPaymentData.paymentMode === "AVista") {
+            setPaymentMode("AVista");
+            if (firstPaymentAmount !== totalString) {
                 setFirstPaymentAmount(totalString);
-
             }
             // if (secondPaymentAmount !== "0,00") {
             //     setSecondPaymentAmount("0,00");
@@ -351,7 +351,7 @@ export function TrainingPaymentMethodDialog({
             }
 
             if (firstPaymentDate) {
-                setFirstPaymentDate(null);
+                setFirstPaymentDate("");
             }
 
             break;
@@ -546,15 +546,12 @@ export function TrainingPaymentMethodDialog({
                             <div>
                                 {/* Label atualizado para usar displayPrice derivado do item correto */}
                                 <Label>
-                  Valor total do curso:{" "}
+                  Valor total:{" "}
                                     <span className="font-bold">
                                         {centsToStringWithCurrencyMark(displayPrice)}
                                     </span>
                                 </Label>
-                                <p className="text-xs text-muted-foreground mt-1">
-                  Este valor é a base para o{" "}
-                                    {isTrainee ? "aluno" : "voluntário"}.
-                                </p>
+
                             </div>
                         )}
                     </div>
