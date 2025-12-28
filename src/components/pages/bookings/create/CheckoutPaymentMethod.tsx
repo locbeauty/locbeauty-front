@@ -32,29 +32,32 @@ export function CheckoutPaymentMethod() {
         const totalCents = parseStringToCents(watchedTotalPrice || "0");
 
         if (watchedPaymentStatus === "Pago") {
-            // setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
+            setValue("paymentInfo.paymentStatus", "Pago");
+            setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
             setValue("paymentInfo.firstPaymentStatus", "Pago");
             setValue("paymentInfo.secondPaymentAmount", "0,00");
             setValue("paymentInfo.secondPaymentStatus", undefined);
         }
 
         if (watchedPaymentStatus === "Parcial") {
+            setValue("paymentInfo.paymentStatus", "Parcial");
             setValue("paymentInfo.firstPaymentStatus", "Pago");
             setValue("paymentInfo.secondPaymentStatus", "Pendente");
 
             const firstCents = parseStringToCents(watchedFirstPaymentAmount || "0");
             const remainingCents = totalCents - firstCents;
 
-            // if (remainingCents > 0) {
-            //     setValue("paymentInfo.secondPaymentAmount", centsToString(remainingCents));
-            // } else {
-            //     setValue("paymentInfo.secondPaymentAmount", "0,00");
-            // }
+            if (remainingCents > 0) {
+                setValue("paymentInfo.secondPaymentAmount", centsToString(remainingCents));
+            } else {
+                setValue("paymentInfo.secondPaymentAmount", "0,00");
+            }
         }
 
         if (watchedPaymentStatus === "Pendente") {
+            setValue("paymentInfo.paymentStatus", "Pendente");
             setValue("paymentInfo.firstPaymentStatus", "Pendente");
-            // setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
+            setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
             setValue("paymentInfo.secondPaymentAmount", "0,00");
             setValue("paymentInfo.secondPaymentStatus", undefined);
         }
@@ -226,7 +229,7 @@ export function CheckoutPaymentMethod() {
                         </div>
                     </div>
 
-                    {/* {watchedPaymentStatus === "Parcial" && (
+                    {watchedPaymentStatus === "Parcial" && (
                         <>
                             <div className="h-px bg-border border-dashed" />
                             <div className="space-y-3 opacity-90">
@@ -293,7 +296,7 @@ export function CheckoutPaymentMethod() {
                                 </div>
                             </div>
                         </>
-                    )} */}
+                    )}
                 </div>
 
                 {errors.paymentInfo && !errors.paymentInfo.firstPaymentAmount && !errors.paymentInfo.firstPaymentMethod && (
