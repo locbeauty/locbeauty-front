@@ -81,92 +81,91 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                     </DialogDescription>
                 </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto pr-2 -mr-2 py-4 custom-scrollbar">
-                        <div className="space-y-6">
+                <div className="flex-1 overflow-y-auto pr-2 -mr-2 py-4 custom-scrollbar">
+                    <div className="space-y-6">
 
-                            {/* 1. CABEÇALHO (Mantido) */}
-                            <div className="flex items-center gap-3">
-                                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                                    <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold">{selectedTraining.Gear.gearName}</h3>
-                                    <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                                        <span className="flex items-center gap-1">
-                                            <Clock className="w-3 h-3" />
-                                            {String(Math.floor(selectedTraining.hourInMinutes / 60)).padStart(2, "0")}:{String(selectedTraining.hourInMinutes % 60).padStart(2, "0")}
-                                        </span>
-                                        <span>•</span>
-                                        <span>{new Date(selectedTraining.dueDate).toLocaleDateString("pt-BR", { dateStyle: "long" })}</span>
-                                    </div>
-                                </div>
-                                <div className="flex gap-2 ml-auto">
-                                    <BookingStatusBadge status={ selectedTraining.trainingStatus } />
-                                    <BookingPaymentStatusBadge status={ traineePayment?.paymentStatus || "Pendente" } />
+                        {/* 1. CABEÇALHO (Mantido) */}
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                                <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold">{selectedTraining.Gear.gearName}</h3>
+                                <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                                    <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {String(Math.floor(selectedTraining.hourInMinutes / 60)).padStart(2, "0")}:{String(selectedTraining.hourInMinutes % 60).padStart(2, "0")}
+                                    </span>
+                                    <span>•</span>
+                                    <span>{new Date(selectedTraining.dueDate).toLocaleDateString("pt-BR", { dateStyle: "long" })}</span>
                                 </div>
                             </div>
+                            <div className="flex gap-2 ml-auto">
+                                <BookingStatusBadge status={ selectedTraining.trainingStatus } />
+                            </div>
+                        </div>
 
-                            <Separator />
+                        <Separator />
 
-                            {/* 2. PARTICIPANTES (Mantido) */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Aluno */}
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                            <GraduationCap className="h-3 w-3" /> Aluno
-                                        </h4>
-                                    </div>
-                                    <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
-                                        <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
-                                            <span className="font-bold text-xs text-orange-600">{selectedTraining.Trainee.name.charAt(0)}</span>
-                                        </div>
-                                        <div className="text-sm">
-                                            <p className="font-medium">{selectedTraining.Trainee.name}</p>
-                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                <Phone className="h-3 w-3" /> {selectedTraining.Trainee.cellphone || "N/A"}
-                                            </div>
-                                        </div>
-                                    </div>
+                        {/* 2. PARTICIPANTES (Mantido) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Aluno */}
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                        <GraduationCap className="h-3 w-3" /> Aluno
+                                    </h4>
                                 </div>
-
-                                {/* Paciente Modelo */}
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                            <User className="h-3 w-3" /> Paciente Modelo
-                                        </h4>
+                                <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
+                                        <span className="font-bold text-xs text-orange-600">{selectedTraining.Trainee.name.charAt(0)}</span>
                                     </div>
-                                    <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
-                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <span className="font-bold text-xs text-primary">{selectedTraining.Volunteer.name.charAt(0)}</span>
-                                        </div>
-                                        <div className="text-sm">
-                                            <p className="font-medium">{selectedTraining.Volunteer.name}</p>
-                                            <p className="text-xs text-muted-foreground">{selectedTraining.Volunteer.documentNumber}</p>
+                                    <div className="text-sm">
+                                        <p className="font-medium">{selectedTraining.Trainee.name}</p>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            <Phone className="h-3 w-3" /> {selectedTraining.Trainee.cellphone || "N/A"}
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <Separator />
-
-                            {/* 3. LOCALIZAÇÃO (Mantido) */}
-                            <div className="space-y-3">
-                                <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                    <MapPin className="h-3 w-3" /> Localização
-                                </h4>
-                                <div className="p-4 rounded-lg border bg-muted/20 text-sm">
-                                    <p className="font-medium">
-                                        {selectedTraining.Address.Street.streetName}, {selectedTraining.Address.buildingNumber}
-                                    </p>
-                                    <p className="text-muted-foreground mt-1">
-                                        {selectedTraining.Address.Neighborhood.neighborhoodName} - {selectedTraining.Address.City.cityName}/{selectedTraining.Address.State.UF}
-                                    </p>
+                            {/* Paciente Modelo */}
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                        <User className="h-3 w-3" /> Paciente Modelo
+                                    </h4>
+                                </div>
+                                <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                        <span className="font-bold text-xs text-primary">{selectedTraining.Volunteer.name.charAt(0)}</span>
+                                    </div>
+                                    <div className="text-sm">
+                                        <p className="font-medium">{selectedTraining.Volunteer.name}</p>
+                                        <p className="text-xs text-muted-foreground">{selectedTraining.Volunteer.documentNumber}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <Separator />
+
+                        {/* 3. LOCALIZAÇÃO (Mantido) */}
+                        <div className="space-y-3">
+                            <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                <MapPin className="h-3 w-3" /> Localização
+                            </h4>
+                            <div className="p-4 rounded-lg border bg-muted/20 text-sm">
+                                <p className="font-medium">
+                                    {selectedTraining.Address.Street.streetName}, {selectedTraining.Address.buildingNumber}
+                                </p>
+                                <p className="text-muted-foreground mt-1">
+                                    {selectedTraining.Address.Neighborhood.neighborhoodName} - {selectedTraining.Address.City.cityName}/{selectedTraining.Address.State.UF}
+                                </p>
+                            </div>
+                        </div>
                     </div>
+                </div>
 
                 {/* --- FOOTER ATUALIZADO --- */}
                 <DialogFooter className="sm:justify-between w-full">
@@ -180,6 +179,8 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                                 <div>
                                     <h4 className="font-semibold text-sm flex items-center gap-2 mb-3 text-muted-foreground">
                                         <Wallet className="w-4 h-4" /> Financeiro - Aluno
+                                        <BookingPaymentStatusBadge status={ traineePayment?.paymentStatus || "Pendente" } />
+
                                     </h4>
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between items-center text-muted-foreground">
@@ -188,14 +189,14 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                                         </div>
                                         {traineeAdditionalCost > 0 && (
                                             <>
-                                            <div className="flex justify-between items-center text-muted-foreground">
-                                                <span>Custos Adicionais</span>
-                                                <span>+ {formatCurrency(traineeAdditionalCost)}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-muted-foreground">
-                                                <span>Descrição</span>
-                                                <span>{traineeAdditionalCostDescription     }</span>
-                                            </div>
+                                                <div className="flex justify-between items-center text-muted-foreground">
+                                                    <span>Custos Adicionais</span>
+                                                    <span>+ {formatCurrency(traineeAdditionalCost)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-muted-foreground">
+                                                    <span>Descrição</span>
+                                                    <span>{traineeAdditionalCostDescription     }</span>
+                                                </div>
                                             </>
                                         )}
                                         <Separator className="my-2" />
@@ -213,6 +214,8 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                                     <div>
                                         <h4 className="font-semibold text-sm flex items-center gap-2 mb-3 text-muted-foreground">
                                             <Wallet className="w-4 h-4" /> Financeiro - Modelo
+                                            <BookingPaymentStatusBadge status={ volunteerPayment?.paymentStatus || "Pendente" } />
+
                                         </h4>
                                         <div className="space-y-2 text-sm">
                                             <div className="flex justify-between items-center font-bold">
@@ -225,7 +228,6 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
                             )}
 
                         </div>
-
 
                         {/* COLUNA 2: BOTÕES DE AÇÃO (VERTICAL) */}
                         <div className="flex flex-col gap-2 justify-center">
