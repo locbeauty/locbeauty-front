@@ -50,16 +50,16 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
             </CardHeader>
             <CardContent>
                 {
-                    customerAddresses?.sort((a, b) => a.street.streetName.localeCompare(b.street.streetName)).map(addr => {
+                    customerAddresses?.sort((a, b) => a.Street.streetName.localeCompare(b.Street.streetName)).map(addr => {
                         return (
                             <div
                                 key={ addr.addressId }
                                 className="flex justify-between items-center"
                             >
                                 <p>
-                                    {addr.street.streetName}, {addr.neighborhood.neighborhoodName},{" "}
+                                    {addr.Street.streetName}, {addr.Neighborhood.neighborhoodName},{" "}
                                     {addr.buildingNumber}, {addr.addressComplement} -{" "}
-                                    {addr.city.cityName}/{addr.state.UF}
+                                    {addr.City.cityName}/{addr.State.UF}
                                 </p>
                                 <Tooltip>
                                     <TooltipTrigger asChild>

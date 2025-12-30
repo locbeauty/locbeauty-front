@@ -151,13 +151,13 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <MapPin className="h-4 w-4 text-muted-foreground" />
                                                     <span className="font-medium">Local:</span>
-                                                    <span>{booking.address.city.cityName}</span>
+                                                    <span>{booking.address.City.cityName}</span>
                                                 </div>
 
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                                                     <span className="font-medium">Valor:</span>
-                                                    <span className="font-semibold text-green-600">R$ {booking.price.toFixed(2)}</span>
+                                                    <span className="font-semibold text-green-600">R$ {booking.totalPrice.toFixed(2)}</span>
                                                 </div>
 
                                                 <div className="flex items-center gap-2 text-sm">
@@ -179,7 +179,7 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex gap-2">
                                                         <BookingPaymentStatusBadge status={ booking.paymentStatus } />
-                                                        <BookingStatusBadge status={ booking.bookingStatus } />
+                                                        <BookingStatusBadge status={ booking.checkoutStatus } />
                                                     </div>
                                                 </div>
                                             </div>
@@ -204,8 +204,8 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                                                 <div className="text-sm">
                                                     <span className="font-medium">Endereço:</span>
                                                     <p className="text-muted-foreground mt-1">
-                                                        {booking.address.street.streetName}, {booking.address.neighborhood.neighborhoodName} -{" "}
-                                                        {booking.address.city.cityName}/{booking.address.state.UF}
+                                                        {booking.address.Street.streetName}, {booking.address.Neighborhood.neighborhoodName} -{" "}
+                                                        {booking.address.City.cityName}/{booking.address.State.UF}
                                                     </p>
                                                 </div>
                                             </div>

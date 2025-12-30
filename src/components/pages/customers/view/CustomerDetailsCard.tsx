@@ -1,4 +1,4 @@
-import { Clock, FileText, Mail, Phone, User } from "lucide-react";
+import { Clock, Ellipsis, FileText, Instagram, Mail, Phone, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Separator } from "@/components/ui/separator";
@@ -59,9 +59,21 @@ export function CustomerDetailsCard({
                             <span className="font-medium">Telefone:</span>
                             <span>{selectedCustomer?.cellphone}</span>
                         </div>
+                        <div className="flex items-center gap-2">
+                            <Instagram className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">Instagram:</span>
+                            <span>
+                                {selectedCustomer?.instagram
+                                    ? (selectedCustomer.instagram.startsWith("@")
+                                        ? selectedCustomer.instagram
+                                        : `@${selectedCustomer.instagram}`)
+                                    : ""}
+                            </span>
+                        </div>
 
                         {selectedCustomer && (
                             <div className="flex items-center gap-2">
+                                <Ellipsis className="h-4 w-4 text-muted-foreground" />
                                 <span className="font-medium">Status:</span>
                                 <CustomerStatusBadge status={ selectedCustomer.customerStatus } />
                             </div>
