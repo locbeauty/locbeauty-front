@@ -33,16 +33,18 @@ interface TrainingDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedTraining: Training;
+  setSelectedTraining?: Dispatch<SetStateAction<Training | null>>;
 }
 
 export type PayerType = "TRAINEE" | "VOLUNTEER";
 
-export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining }: TrainingDetailsDialogProps) {
+export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, setSelectedTraining }: TrainingDetailsDialogProps) {
     const [ isTrainingPaymentMethodDialogOpen, setIsTrainingPaymentMethodDialogOpen ] = useState(false);
     const [ selectedPayerType, setSelectedPayerType ] = useState<PayerType | null>(null);
 
     // --- Extrair os pagamentos do Array ---
     const { traineePayment, volunteerPayment } = useMemo(() => {
+        console.log("EXECUTOU!!!!!");
         const payments = Array.isArray(selectedTraining.TrainingPayment)
             ? selectedTraining.TrainingPayment
             : [];
@@ -73,7 +75,7 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining }: 
         <Dialog open={ open } onOpenChange={ onOpenChange }>
             <DialogContent className="max-h-[90vh] w-[90vw] md:w-[900px] overflow-hidden flex flex-col dark:bg-gray-900">
                 <DialogHeader className="px-1">
-                    <DialogTitle className="text-xl">Detalhes do Agendamento</DialogTitle>
+                    <DialogTitle className="text-xl">Detalhes do Treinamento</DialogTitle>
                     <DialogDescription>
                         Informações do treinamento e gestão financeira.
                     </DialogDescription>
@@ -286,6 +288,7 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining }: 
                     payerType={ selectedPayerType }
                     isTrainingPaymentMethodDialogOpen={ isTrainingPaymentMethodDialogOpen }
                     selectedTraining={ selectedTraining }
+                    setSelectedTraining={ setSelectedTraining }
                     setIsTrainingPaymentMethodDialogOpen={ setIsTrainingPaymentMethodDialogOpen }
                 />
             )}

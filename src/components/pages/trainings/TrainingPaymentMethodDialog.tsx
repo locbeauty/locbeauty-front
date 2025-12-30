@@ -140,6 +140,7 @@ const formatDateForInput = (date: string | Date | null | undefined) => {
 
 interface TrainingPaymentMethodDialogProps {
   selectedTraining: Training | null;
+  setSelectedTraining?: Dispatch<SetStateAction<Training | null>>;
   isTrainingPaymentMethodDialogOpen: boolean;
   setIsTrainingPaymentMethodDialogOpen: Dispatch<SetStateAction<boolean>>;
   payerType: PayerType;
@@ -150,6 +151,7 @@ export function TrainingPaymentMethodDialog({
     isTrainingPaymentMethodDialogOpen,
     setIsTrainingPaymentMethodDialogOpen,
     payerType,
+    setSelectedTraining,
 }: TrainingPaymentMethodDialogProps) {
     const [ trainingStatus, setTrainingStatus ] = useState<string>("Pendente");
     const [ paymentStatus, setPaymentStatus ] =
@@ -423,8 +425,6 @@ export function TrainingPaymentMethodDialog({
             },
         };
 
-        console.log("payload: ", payload);
-
         try {
             const response = await UpdateTraining({
                 trainingId: selectedTraining.trainingId,
@@ -435,6 +435,43 @@ export function TrainingPaymentMethodDialog({
                 toast.warning(response.message || "Erro ao atualizar pagamento.");
             } else {
                 queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+                if (setSelectedTraining) {
+                    setSelectedTraining((prev) => {
+                        if (!prev) return prev;
+
+                        return {
+                            ...prev,
+                            TrainingPayment: prev.TrainingPayment.map((payment) =>
+                                payment.payerType === currentPaymentData?.payerType
+                                    ? {
+                                        ...payment,
+                                        paymentStatus:
+                        firstPaymentMethod && secondPaymentMethod
+                            ? "Pago"
+                            : paymentStatus,
+                                        paymentMode: paymentMode,
+                                        firstPaymentAmount:
+                        parseStringToCents(firstPaymentAmount),
+                                        firstPaymentDate: firstPaymentDate
+                                            ? new Date(firstPaymentDate).toISOString()
+                                            : null,
+                                        firstPaymentMethod,
+                                        firstPaymentStatus: "Pago",
+                                        secondPaymentAmount:
+                        parseStringToCents(secondPaymentAmount),
+                                        secondPaymentDate: secondPaymentDate
+                                            ? new Date(secondPaymentDate).toISOString()
+                                            : null,
+                                        secondPaymentMethod,
+                                        secondPaymentStatus: secondPaymentMethod
+                                            ? "Pago"
+                                            : "Pendente",
+                                    }
+                                    : payment
+                            ),
+                        };
+                    });
+                }
                 toast.success(
                     `Pagamento do ${
                         payerType === "TRAINEE" ? "Aluno" : "Modelo"
@@ -551,7 +588,6 @@ export function TrainingPaymentMethodDialog({
                                         {centsToStringWithCurrencyMark(displayPrice)}
                                     </span>
                                 </Label>
-
                             </div>
                         )}
                     </div>

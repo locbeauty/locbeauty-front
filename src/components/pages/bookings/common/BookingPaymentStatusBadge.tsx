@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "../../../ui/badge";
 
 interface BookingPaymentStatusBadgeProps {
-  status: "Pendente" | "Parcial" | "Pago" | null | undefined;
+  status: "Pendente" | "Parcial" | "Pago" | "Reembolsado" | "Cancelado" | null | undefined;
   shrink?: boolean;
 }
 
@@ -14,6 +14,10 @@ export function BookingPaymentStatusBadge({
     const parsedStatus = status ?? "Pendente";
     const variants = {
         Pendente:
+      "border-1 border-red-800 bg-red-100 text-red-800 hover:bg-red-200",
+        Cancelado:
+      "border-1 border-red-800 bg-red-100 text-red-800 hover:bg-red-200",
+        Reembolsado:
       "border-1 border-red-800 bg-red-100 text-red-800 hover:bg-red-200",
         Parcial:
       "border-1 border-yellow-800 bg-yellow-100 text-yellow-800 hover:bg-yellow-200",

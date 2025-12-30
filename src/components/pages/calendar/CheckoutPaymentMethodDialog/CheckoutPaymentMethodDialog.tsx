@@ -15,13 +15,13 @@ import { toast } from "sonner";
 import { queryClient } from "@/app/(main)/layout";
 import { centsToString, centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { checkoutStatuses, PaymentMethods, paymentStatuses } from "@/utils/constants";
+import { CheckoutStatuses, checkoutStatuses, PaymentMethods, PaymentModes, PaymentStatuses, paymentStatuses } from "@/utils/constants";
 import { validateCheckoutForm } from "@/utils/validators/update-payment-info";
 import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentStatusBadge";
 
-type CheckoutStatus = "Pendente" | "Concluido" | "Cancelado";
-type PaymentStatus = "Pendente" | "Pago" | "Parcial";
-type PaymentMode = "AVista" | "Parcelado";
+// type CheckoutStatus = "Pendente" | "Concluido" | "Cancelado";
+// type PaymentStatus = "Pendente" | "Pago" | "Parcial";
+// type PaymentMode = "AVista" | "Parcelado";
 type PaymentMethod = string;
 type InstallmentStatus = "Pendente" | "Pago";
 
@@ -41,10 +41,10 @@ export type LocalErrorsType = {
 }
 
 export type UpdateCheckoutPayload = {
-    checkoutStatus: CheckoutStatus;
+    checkoutStatus: CheckoutStatuses;
     CheckoutPayment: {
-        paymentStatus: PaymentStatus;
-        paymentMode: PaymentMode;
+        paymentStatus: PaymentStatuses;
+        paymentMode: PaymentModes;
         firstPaymentAmount: number;
         firstPaymentDate: Date | null;
         firstPaymentMethod: PaymentMethod | null;
@@ -108,9 +108,9 @@ export function CheckoutPaymentMethodDialog({
     setIsCheckoutPaymentMethodDialogOpen
 }: CheckoutPaymentMethodDialogProps) {
 
-    const [ checkoutStatus, setCheckoutStatus ] = useState<CheckoutStatus>("Pendente");
-    const [ paymentStatus, setPaymentStatus ] = useState<PaymentStatus>("Pendente");
-    const [ paymentMode, setPaymentMode ] = useState<PaymentMode>("AVista");
+    const [ checkoutStatus, setCheckoutStatus ] = useState<CheckoutStatuses>("Pendente");
+    const [ paymentStatus, setPaymentStatus ] = useState<PaymentStatuses>("Pendente");
+    const [ paymentMode, setPaymentMode ] = useState<PaymentModes>("AVista");
 
     const [ firstPaymentAmount, setFirstPaymentAmount ] = useState("0,00");
     const [ firstPaymentDate, setFirstPaymentDate ] = useState("");
@@ -295,7 +295,7 @@ export function CheckoutPaymentMethodDialog({
                 <DialogHeader>
                     <DialogTitle className="text-xl">Gerenciar Pagamento</DialogTitle>
                     <DialogDescription>
-                        Atualize o status do pagamento e da reserva.
+                        Atualize o status do pagamento e da reserva.asdasd
                     </DialogDescription>
                 </DialogHeader>
 
@@ -308,7 +308,7 @@ export function CheckoutPaymentMethodDialog({
                                 Status do Pagamento
                                 </Label>
                                 <Select
-                                    onValueChange={ (value: PaymentStatus) => setPaymentStatus(value) }
+                                    onValueChange={ (value: PaymentStatuses) => setPaymentStatus(value) }
                                     value={ paymentStatus }
                                 >
                                     <SelectTrigger disabled={ selectedCheckout.CheckoutPayment.paymentStatus === "Pago" } className={ errors.paymentStatus ? "border-red-500" : "" }>

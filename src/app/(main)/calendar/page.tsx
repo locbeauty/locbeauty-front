@@ -6,11 +6,15 @@ import { Plus, ArrowLeft, Table } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/utils/routes";
 import { useRouter } from "next/navigation";
-import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
-import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
-import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
-import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
+// import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
+// import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
+// import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
+// import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
 import { Checkout } from "@/utils/@types/checkouts";
+import { CalendarControls } from "@/components/pages/calendar/CalendarControls";
+import { CalendarContent } from "@/components/pages/calendar/CalendarContent";
+import { CalendarFooter } from "@/components/pages/calendar/CalendarFooter";
+import { BookingDetailsDialog } from "@/components/pages/calendar/DetailsDialog/BookingDetailsDialog";
 
 export default function AgendamentosPage() {
     // Estado para controlar a semana atual

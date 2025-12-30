@@ -163,6 +163,7 @@ export function CalendarContent({
                         open={ isTrainingDetailsDialogOpen }
                         onOpenChange={ setIsTrainingDetailsDialogOpen }
                         selectedTraining={ selectedTraining }
+                        setSelectedTraining={ setSelectedTraining }
                     />
                 )}
             </CardContent>
