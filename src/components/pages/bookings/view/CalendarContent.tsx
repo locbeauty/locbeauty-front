@@ -10,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { GetAllCheckouts } from "@/services/checkouts.service";
 import { useEffect } from "react";
 import { ApiResponse } from "@/lib/api";
+import { Training } from "@/utils/@types/training";
+import { GetAllTrainings } from "@/services/trainings.service";
 
 interface CalendarContentProps {
     viewType: "semana" | "dia" | "mes";
@@ -71,7 +73,7 @@ export function CalendarContent({ viewType, currentDate, openCheckoutDetails }: 
         }).filter(([ _, v ]) => v !== undefined)
     ) as Record<string, string>;
 
-    const { data, isLoading } =useQuery<ApiResponse<Checkout[]>, Error>({
+    const { data, isLoading } = useQuery<ApiResponse<Checkout[]>, Error>({
         queryKey: [ "get-all-checkouts", queryParams, startDate, endDate ],
         queryFn: () =>
             GetAllCheckouts({
@@ -81,7 +83,14 @@ export function CalendarContent({ viewType, currentDate, openCheckoutDetails }: 
         staleTime: 1000 * 60,
     });
 
+    const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
+        queryKey: [ "get-all-trainings" ],
+        queryFn: GetAllTrainings,
+        staleTime: 1000 * 60, // 1 minuto de cache
+    });
+
     const checkouts = data?.data;
+    const trainings = trainingsData.data?.data;
 
     return (
         <Card className="overflow-hidden py-0">

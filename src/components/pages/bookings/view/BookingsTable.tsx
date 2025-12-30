@@ -81,9 +81,9 @@ export function BookingsTable() {
 
                         return (
                             <tr key={ checkout?.checkoutId } className="border-t hover:bg-muted/50">
-                                <td className="p-3 text-sm">{checkout?.customer.fullname}</td>
+                                <td className="p-3 text-sm">{checkout?.Customer.fullname}</td>
                                 <td className="p-3 text-sm">
-                                    {checkout?.Bookings.map((b) => b.gear.gearName).join(", ")}
+                                    {checkout?.Bookings.map((b) => b.Gear.gearName).join(", ")}
                                 </td>
                                 <td className="p-3 text-center text-sm">
                                     {new Date(checkout.date).toLocaleDateString("pt-BR")}
@@ -94,7 +94,7 @@ export function BookingsTable() {
                                     <BookingStatusBadge status={ checkout?.checkoutStatus } />
                                 </td>
                                 <td className="p-3 text-center">
-                                    <BookingPaymentStatusBadge status={ checkout?.paymentStatus } />
+                                    <BookingPaymentStatusBadge status={ checkout?.CheckoutPayment.paymentStatus } />
                                 </td>
                                 <td className="p-3 text-center">
                                     <Button onClick={ () => openCheckoutDetails({ checkoutId: checkout.checkoutId }) }>

@@ -171,7 +171,6 @@ import { formatTime, getMonthDays, isSameDay, isToday } from "./bookingViewHelpe
 import { CalendarMonthHeader } from "./CalendarMonthHeader";
 import type { Checkout } from "@/utils/@types/checkouts";
 
-
 interface MobileMonthViewProps {
   currentDate: Date;
   bookings: Checkout[];

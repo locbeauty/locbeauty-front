@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/utils/routes";
-import { BicepsFlexed, Building2, Calendar, Home, Package, TargetIcon, UserRound, Users } from "lucide-react";
+import { BicepsFlexed, Building2, Calendar, Calendar1, Home, Package, TargetIcon, UserRound, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Label } from "../ui/label";
@@ -39,8 +39,13 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>
         },
         {
             name: "Agendamentos",
-            href: ROUTES.BOOKINGS_CALENDAR,
+            href: ROUTES.BOOKING_TABLE,
             icon: Calendar,
+        },
+        {
+            name: "Calendário",
+            href: ROUTES.CALENDAR,
+            icon: Calendar1,
         },
         {
             name: "Metas",
