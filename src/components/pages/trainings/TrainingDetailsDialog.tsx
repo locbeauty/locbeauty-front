@@ -26,20 +26,18 @@ import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
 import { TrainingPaymentMethodDialog } from "./TrainingPaymentMethodDialog";
 import { centsToString } from "@/utils/centsToString";
-import { toast } from "sonner";
-import { parseStringToCents } from "@/utils/parseStringToCents";
 import { Training } from "@/utils/@types/training";
+import { TrainingPayment } from "@/utils/@types/payments";
 
 interface TrainingDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedTraining: Training;
-  setSelectedTraining: Training
 }
 
 export type PayerType = "TRAINEE" | "VOLUNTEER";
 
-export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, setSelectedTraining }: TrainingDetailsDialogProps) {
+export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining }: TrainingDetailsDialogProps) {
     const [ isTrainingPaymentMethodDialogOpen, setIsTrainingPaymentMethodDialogOpen ] = useState(false);
     const [ selectedPayerType, setSelectedPayerType ] = useState<PayerType | null>(null);
 
@@ -50,8 +48,8 @@ export function TrainingDetailsDialog({ open, onOpenChange, selectedTraining, se
             : [];
 
         return {
-            traineePayment: payments.find((p: any) => p.payerType === "TRAINEE"),
-            volunteerPayment: payments.find((p: any) => p.payerType === "VOLUNTEER")
+            traineePayment: payments.find((p: TrainingPayment) => p.payerType === "TRAINEE"),
+            volunteerPayment: payments.find((p: TrainingPayment) => p.payerType === "VOLUNTEER")
         };
     }, [ selectedTraining ]);
 

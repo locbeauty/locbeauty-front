@@ -13,7 +13,7 @@ import { ApiResponse } from "@/lib/api";
 import { Training } from "@/utils/@types/training";
 import { GetAllTrainings } from "@/services/trainings.service";
 import { CalendarEvent } from "./bookingViewHelpers";
-import { TrainingDetailsDialog } from "../../trainings/TrainingDetailsDialog";
+import { TrainingDetailsDialog } from "../trainings/TrainingDetailsDialog";
 
 interface CalendarContentProps {
   viewType: "semana" | "dia" | "mes";

@@ -113,7 +113,6 @@ export function TrainingCard({ training }: TrainingCardProps) {
                 open={ isDetailsOpen }
                 onOpenChange={ setIsDetailsOpen }
                 selectedTraining={ training }
-                setSelectedTraining={ training }
             />
         </>
     );

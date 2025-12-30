@@ -1,49 +1,69 @@
 import { Dispatch, SetStateAction } from "react";
-import { FlattenedBooking } from "./WeekView";
 import { Checkout } from "@/utils/@types/checkouts";
+import { Training } from "@/utils/@types/training";
+
+export type CalendarEvent = Checkout | Training;
 
 //
 // ─── NAVEGAÇÃO DE DATAS ──────────────────────────────────────────────────────────
 //
 
-export const nextDay = (currentDate: Date, setCurrentDate: Dispatch<SetStateAction<Date>>) => {
-    const nextDate = new Date(currentDate);
-    nextDate.setDate(currentDate.getDate() + 1);
-    setCurrentDate(nextDate);
+export const nextDay = (
+  currentDate: Date,
+  setCurrentDate: Dispatch<SetStateAction<Date>>
+) => {
+  const nextDate = new Date(currentDate);
+  nextDate.setDate(currentDate.getDate() + 1);
+  setCurrentDate(nextDate);
 };
 
-export const prevDay = (currentDate: Date, setCurrentDate: Dispatch<SetStateAction<Date>>) => {
-    const prevDate = new Date(currentDate);
-    prevDate.setDate(currentDate.getDate() - 1);
-    setCurrentDate(prevDate);
+export const prevDay = (
+  currentDate: Date,
+  setCurrentDate: Dispatch<SetStateAction<Date>>
+) => {
+  const prevDate = new Date(currentDate);
+  prevDate.setDate(currentDate.getDate() - 1);
+  setCurrentDate(prevDate);
 };
 
-export const nextWeek = (currentDate: Date, setCurrentDate: Dispatch<SetStateAction<Date>>) => {
-    const nextDate = new Date(currentDate);
-    nextDate.setDate(currentDate.getDate() + 7);
-    setCurrentDate(nextDate);
+export const nextWeek = (
+  currentDate: Date,
+  setCurrentDate: Dispatch<SetStateAction<Date>>
+) => {
+  const nextDate = new Date(currentDate);
+  nextDate.setDate(currentDate.getDate() + 7);
+  setCurrentDate(nextDate);
 };
 
-export const prevWeek = (currentDate: Date, setCurrentDate: Dispatch<SetStateAction<Date>>) => {
-    const prevDate = new Date(currentDate);
-    prevDate.setDate(currentDate.getDate() - 7);
-    setCurrentDate(prevDate);
+export const prevWeek = (
+  currentDate: Date,
+  setCurrentDate: Dispatch<SetStateAction<Date>>
+) => {
+  const prevDate = new Date(currentDate);
+  prevDate.setDate(currentDate.getDate() - 7);
+  setCurrentDate(prevDate);
 };
 
-export const nextMonth = (currentDate: Date, setCurrentDate: Dispatch<SetStateAction<Date>>) => {
-    const nextDate = new Date(currentDate);
-    nextDate.setMonth(nextDate.getMonth() + 1);
-    setCurrentDate(nextDate);
+export const nextMonth = (
+  currentDate: Date,
+  setCurrentDate: Dispatch<SetStateAction<Date>>
+) => {
+  const nextDate = new Date(currentDate);
+  nextDate.setMonth(nextDate.getMonth() + 1);
+  setCurrentDate(nextDate);
 };
 
-export const prevMonth = (currentDate: Date, setCurrentDate: Dispatch<SetStateAction<Date>>) => {
-    const prevDate = new Date(currentDate);
-    prevDate.setMonth(prevDate.getMonth() - 1);
-    setCurrentDate(prevDate);
+export const prevMonth = (
+  currentDate: Date,
+  setCurrentDate: Dispatch<SetStateAction<Date>>
+) => {
+  const prevDate = new Date(currentDate);
+  prevDate.setMonth(prevDate.getMonth() - 1);
+  setCurrentDate(prevDate);
 };
 
 export const goToToday = (setCurrentDate: Dispatch<SetStateAction<Date>>) => {
-    setCurrentDate(new Date());
+  setCurrentDate(new Date());
 };
 
 //
@@ -51,104 +71,83 @@ export const goToToday = (setCurrentDate: Dispatch<SetStateAction<Date>>) => {
 //
 
 export function isSameDay(date1: Date, date2: Date): boolean {
-    return (
-        date1.getDate() === date2.getDate() &&
-        date1.getMonth() === date2.getMonth() &&
-        date1.getFullYear() === date2.getFullYear()
-    );
+  return (
+    date1.getDate() === date2.getDate() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getFullYear() === date2.getFullYear()
+  );
 }
 
 export function isToday(date: Date): boolean {
-    const today = new Date();
-    return isSameDay(date, today);
+  const today = new Date();
+  return isSameDay(date, today);
 }
 
-// export function getMonthDays(date: Date): Date[] {
-//     const year = date.getFullYear();
-//     const month = date.getMonth();
-
-//     const firstDayOfMonth = new Date(year, month, 1);
-//     const lastDayOfMonth = new Date(year, month + 1, 0);
-
-//     const start = new Date(firstDayOfMonth);
-//     const startDay = start.getDay();
-//     start.setDate(start.getDate() - startDay);
-
-//     const end = new Date(lastDayOfMonth);
-//     const endDay = end.getDay() === 0 ? 7 : end.getDay();
-//     end.setDate(end.getDate() + (7 - endDay));
-
-//     const days: Date[] = [];
-//     const current = new Date(start);
-
-//     while (current <= end) {
-//         days.push(new Date(current));
-//         current.setDate(current.getDate() + 1);
-//     }
-
-//     return days;
-// }
 export function getMonthDays(date: Date): Date[] {
-    const year = date.getFullYear();
-    const month = date.getMonth();
+  const year = date.getFullYear();
+  const month = date.getMonth();
 
-    // Get first day of the month
-    const firstDayOfMonth = new Date(year, month, 1);
+  // Get first day of the month
+  const firstDayOfMonth = new Date(year, month, 1);
 
-    // Get the day of the week for the first day (0 = Sunday, 1 = Monday, etc.)
-    const firstDayOfWeek = firstDayOfMonth.getDay();
+  // Get the day of the week for the first day (0 = Sunday, 1 = Monday, etc.)
+  const firstDayOfWeek = firstDayOfMonth.getDay();
 
-    // Calculate how many days from previous month to show
-    // Adjust for Monday start (0 = Sunday becomes 6, 1 = Monday becomes 0, etc.)
-    const daysFromPrevMonth = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+  // Calculate how many days from previous month to show
+  // Adjust for Monday start (0 = Sunday becomes 6, 1 = Monday becomes 0, etc.)
+  const daysFromPrevMonth = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
 
-    // Calculate start date (first day to show in the calendar)
-    const startDate = new Date(firstDayOfMonth);
-    startDate.setDate(firstDayOfMonth.getDate() - daysFromPrevMonth);
+  // Calculate start date (first day to show in the calendar)
+  const startDate = new Date(firstDayOfMonth);
+  startDate.setDate(firstDayOfMonth.getDate() - daysFromPrevMonth);
 
-    const days: Date[] = [];
-    const current = new Date(startDate);
+  const days: Date[] = [];
+  const current = new Date(startDate);
 
-    // Always generate exactly 6 weeks (42 days) for consistent layout
-    for (let i = 0; i < 42; i++) {
-        days.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-    }
+  // Always generate exactly 6 weeks (42 days) for consistent layout
+  for (let i = 0; i < 42; i++) {
+    days.push(new Date(current));
+    current.setDate(current.getDate() + 1);
+  }
 
-    return days;
+  return days;
 }
 
 export function getWeekDays(date: Date): Date[] {
-    const day = date.getDay();
-    const diff = date.getDate() - day;
-    const monday = new Date(date);
-    monday.setDate(diff);
+  const day = date.getDay();
+  const diff = date.getDate() - day;
+  const monday = new Date(date);
+  monday.setDate(diff);
 
-    const weekDays = [];
-    for (let i = 0; i < 7; i++) {
-        const nextDay = new Date(monday);
-        nextDay.setDate(monday.getDate() + i);
-        weekDays.push(nextDay);
-    }
-    return weekDays;
+  const weekDays = [];
+  for (let i = 0; i < 7; i++) {
+    const nextDay = new Date(monday);
+    nextDay.setDate(monday.getDate() + i);
+    weekDays.push(nextDay);
+  }
+  return weekDays;
 }
 
 export function getDayIndex(bookingDate: Date, weekDays: Date[]): number {
-    const bookingDay = bookingDate.toDateString();
-    return weekDays.findIndex((day) => day.toDateString() === bookingDay);
+  const bookingDay = bookingDate.toDateString();
+  return weekDays.findIndex((day) => day.toDateString() === bookingDay);
 }
 
-export function isAgendamentoInWeek(booking: Checkout, weekDays: Date[]): boolean {
-    const bookingDate = new Date(booking.date);
-    bookingDate.setHours(0, 0, 0, 0);
+export function isAgendamentoInWeek(
+  booking: CalendarEvent,
+  weekDays: Date[]
+): boolean {
+  const date = "date" in booking ? booking.date : new Date(booking.dueDate);
+  const bookingDate = new Date(date);
+  bookingDate.setHours(0, 0, 0, 0);
 
-    const startOfWeek = new Date(weekDays[0]);
-    startOfWeek.setHours(0, 0, 0, 0);
+  const startOfWeek = new Date(weekDays[0]);
+  startOfWeek.setHours(0, 0, 0, 0);
 
-    const endOfWeek = new Date(weekDays[6]);
-    endOfWeek.setHours(23, 59, 59, 999);
+  const endOfWeek = new Date(weekDays[6]);
+  endOfWeek.setHours(23, 59, 59, 999);
 
-    return bookingDate >= startOfWeek && bookingDate <= endOfWeek;
+  return bookingDate >= startOfWeek && bookingDate <= endOfWeek;
 }
 
 //
@@ -156,98 +155,157 @@ export function isAgendamentoInWeek(booking: Checkout, weekDays: Date[]): boolea
 //
 
 export function formatDayName(date: Date): string {
-    return (
-        date.toLocaleDateString("pt-BR", { weekday: "short" }).charAt(0).toUpperCase() +
-        date.toLocaleDateString("pt-BR", { weekday: "short" }).slice(1, 3)
-    );
+  return (
+    date
+      .toLocaleDateString("pt-BR", { weekday: "short" })
+      .charAt(0)
+      .toUpperCase() +
+    date.toLocaleDateString("pt-BR", { weekday: "short" }).slice(1, 3)
+  );
 }
 
 export function formatMonthYear(date: Date): string {
-    return (
-        date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }).charAt(0).toUpperCase() +
-        date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }).slice(1)
-    );
+  return (
+    date
+      .toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+      .charAt(0)
+      .toUpperCase() +
+    date
+      .toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+      .slice(1)
+  );
 }
 
 export function formatTime(date: Date): string {
-    return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function formatDate(date: Date): string {
-    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 export function formatCurrency(value: number): string {
-    return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 //
 // ─── EVENTOS ──────────────────────────────────────────────────────────────────────
 //
 
-// function doEventsOverlap(event1: Checkout, event2: Checkout): boolean {
-//     // Two events overlap if one starts before the other ends
-//     return event1.startDate < event2.endDate && event2.startDate < event1.endDate;
-// }
+export function doEventsOverlap(
+  event1: CalendarEvent,
+  event2: CalendarEvent
+): boolean {
+  const isTraining1 = "trainingId" in event1;
+  const isTraining2 = "trainingId" in event2;
 
-export function doEventsOverlap(event1: Checkout, event2: Checkout): boolean {
-    const start1 = new Date(event1.date);
-    start1.setHours(Math.floor(event1.startHourInMinutes / 60));
-    start1.setMinutes(event1.startHourInMinutes % 60);
+  const date1 = isTraining1
+    ? new Date((event1 as Training).dueDate)
+    : new Date((event1 as Checkout).date);
+  const startHour1 = isTraining1
+    ? (event1 as Training).hourInMinutes
+    : (event1 as Checkout).startHourInMinutes;
+  const duration1 = isTraining1
+    ? 120
+    : (event1 as Checkout).totalDurationInMinutes; // Assume 2h for training
 
-    const end1 = new Date(start1);
-    end1.setMinutes(end1.getMinutes() + event1.totalDurationInMinutes);
+  const date2 = isTraining2
+    ? new Date((event2 as Training).dueDate)
+    : new Date((event2 as Checkout).date);
+  const startHour2 = isTraining2
+    ? (event2 as Training).hourInMinutes
+    : (event2 as Checkout).startHourInMinutes;
+  const duration2 = isTraining2
+    ? 120
+    : (event2 as Checkout).totalDurationInMinutes; // Assume 2h for training
 
-    const start2 = new Date(event2.date);
-    start2.setHours(Math.floor(event2.startHourInMinutes / 60));
-    start2.setMinutes(event2.startHourInMinutes % 60);
+  const start1 = new Date(date1);
+  start1.setHours(Math.floor(startHour1 / 60));
+  start1.setMinutes(startHour1 % 60);
 
-    const end2 = new Date(start2);
-    end2.setMinutes(end2.getMinutes() + event2.totalDurationInMinutes);
+  const end1 = new Date(start1);
+  end1.setMinutes(end1.getMinutes() + duration1);
 
-    return start1 < end2 && start2 < end1;
+  const start2 = new Date(date2);
+  start2.setHours(Math.floor(startHour2 / 60));
+  start2.setMinutes(startHour2 % 60);
+
+  const end2 = new Date(start2);
+  end2.setMinutes(end2.getMinutes() + duration2);
+
+  return start1 < end2 && start2 < end1;
 }
 
-export function groupOverlappingEvents(events: Checkout[]): Checkout[][] {
-    if (events.length === 0) return [];
+export function groupOverlappingEvents(
+  events: CalendarEvent[]
+): CalendarEvent[][] {
+  if (events.length === 0) return [];
 
-    // const sortedEvents = [ ...events ].sort((a, b) => a.date.getTime() - b.date.getTime());
-    const sortedEvents = [ ...events ].sort((a, b) => {
-        const aStart = new Date(a.date);
-        aStart.setHours(Math.floor(a.startHourInMinutes / 60));
-        aStart.setMinutes(a.startHourInMinutes % 60);
+  const sortedEvents = [...events].sort((a, b) => {
+    const isTrainingA = "trainingId" in a;
+    const isTrainingB = "trainingId" in b;
 
-        const bStart = new Date(b.date);
-        bStart.setHours(Math.floor(b.startHourInMinutes / 60));
-        bStart.setMinutes(b.startHourInMinutes % 60);
+    const dateA = isTrainingA
+      ? new Date((a as Training).dueDate)
+      : new Date((a as Checkout).date);
+    const startHourA = isTrainingA
+      ? (a as Training).hourInMinutes
+      : (a as Checkout).startHourInMinutes;
+    const durationA = isTrainingA
+      ? 120
+      : (a as Checkout).totalDurationInMinutes;
 
-        // return aStart.getTime() - bStart.getTime();
-        return (
-            aStart.getTime() - bStart.getTime() ||
-            a.totalDurationInMinutes - b.totalDurationInMinutes
-        );
-    });
-    const groups: Checkout[][] = [];
+    const dateB = isTrainingB
+      ? new Date((b as Training).dueDate)
+      : new Date((b as Checkout).date);
+    const startHourB = isTrainingB
+      ? (b as Training).hourInMinutes
+      : (b as Checkout).startHourInMinutes;
+    const durationB = isTrainingB
+      ? 120
+      : (b as Checkout).totalDurationInMinutes;
 
-    sortedEvents.forEach((event) => {
-        let foundGroup = false;
+    const aStart = new Date(dateA);
+    aStart.setHours(Math.floor(startHourA / 60));
+    aStart.setMinutes(startHourA % 60);
 
-        for (const group of groups) {
-            const overlapsWithGroup = group.some((groupEvent) => doEventsOverlap(event, groupEvent));
+    const bStart = new Date(dateB);
+    bStart.setHours(Math.floor(startHourB / 60));
+    bStart.setMinutes(startHourB % 60);
 
-            if (overlapsWithGroup) {
-                group.push(event);
-                foundGroup = true;
-                break;
-            }
-        }
+    return aStart.getTime() - bStart.getTime() || durationA - durationB;
+  });
 
-        if (!foundGroup) {
-            groups.push([ event ]);
-        }
-    });
+  const groups: CalendarEvent[][] = [];
 
-    return groups;
+  sortedEvents.forEach((event) => {
+    let foundGroup = false;
+
+    for (const group of groups) {
+      const overlapsWithGroup = group.some((groupEvent) =>
+        doEventsOverlap(event, groupEvent)
+      );
+
+      if (overlapsWithGroup) {
+        group.push(event);
+        foundGroup = true;
+        break;
+      }
+    }
+
+    if (!foundGroup) {
+      groups.push([event]);
+    }
+  });
+
+  return groups;
 }
 
 //
@@ -259,25 +317,32 @@ const firstHourOfTheDay = 5;
 const lastHourOfTheDay = 22;
 const workingHoursLength = lastHourOfTheDay - firstHourOfTheDay + 1;
 
-export const workingHours = Array.from({ length: workingHoursLength }, (_, i) => i + firstHourOfTheDay);
+export const workingHours = Array.from(
+  { length: workingHoursLength },
+  (_, i) => i + firstHourOfTheDay
+);
 
 export function getDistanceFromTop(hour: number, minute: number): number {
-    const hourHeight = hourHeighInPixels;
-    const hoursFromStart = hour - workingHours[0];
-    return hoursFromStart * hourHeight + (minute / 60) * hourHeight;
+  const hourHeight = hourHeighInPixels;
+  const hoursFromStart = hour - workingHours[0];
+  return hoursFromStart * hourHeight + (minute / 60) * hourHeight;
 }
 
 export function getEventBoxHeigh(durationInHours: number) {
-    return durationInHours * hourHeighInPixels;
+  return durationInHours * hourHeighInPixels;
 }
 
 //
 // ─── UTILITÁRIOS ───────────────────────────────────────────────────────────────────
 //
 
-export function createDate(dayOffset: number, hours: number, minutes: number): Date {
-    const date = new Date();
-    date.setDate(date.getDate() + dayOffset);
-    date.setHours(hours, minutes, 0, 0);
-    return date;
+export function createDate(
+  dayOffset: number,
+  hours: number,
+  minutes: number
+): Date {
+  const date = new Date();
+  date.setDate(date.getDate() + dayOffset);
+  date.setHours(hours, minutes, 0, 0);
+  return date;
 }

@@ -9,11 +9,11 @@ import {
     CalendarEvent,
 } from "./bookingViewHelpers";
 import { Clock, DollarSign, MapPin, User, GraduationCap } from "lucide-react";
-import { BookingStatusBadge } from "../common/BookingStatusBadge";
 import { Checkout } from "@/utils/@types/checkouts";
 import { Training } from "@/utils/@types/training";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { CheckoutStatuses } from "@/utils/constants";
+import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
 
 interface MobileDayViewProps {
   currentDate: Date;
