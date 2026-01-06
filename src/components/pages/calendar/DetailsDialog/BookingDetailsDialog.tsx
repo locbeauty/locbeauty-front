@@ -291,6 +291,8 @@ export function BookingDetailsDialog({
                                     />
                                     <BookingPaymentStatusBadge
                                         status={ selectedCheckout.CheckoutPayment.paymentStatus }
+                                        isCourtesy={ selectedCheckout.isCourtesy }
+                                        wasRefunded={ selectedCheckout.wasRefunded }
                                     />
                                 </div>
                             </div>

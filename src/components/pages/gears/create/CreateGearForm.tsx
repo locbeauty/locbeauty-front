@@ -61,7 +61,7 @@ export function CreateGearForm() {
                     style: { fontSize: "1rem" },
                 });
                 window.scroll({ top: 0 });
-                queryClient.invalidateQueries({ queryKey: ["get-all-gears"] });
+                queryClient.invalidateQueries({ queryKey: [ "get-all-gears" ] });
                 reset();
             }
         } catch {

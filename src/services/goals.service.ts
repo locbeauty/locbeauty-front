@@ -19,4 +19,3 @@ export async function CreateGoal(body: CreateGoalDataWithMoneyInCents) {
     return response;
 }
 
-

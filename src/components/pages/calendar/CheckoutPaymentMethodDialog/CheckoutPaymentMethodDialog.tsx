@@ -418,6 +418,7 @@ export function CheckoutPaymentMethodDialog({
                   Status do Pagamento
                                 </Label>
                                 <Select
+                                    disabled={ selectedCheckout.checkoutStatus === "Cancelado" }
                                     onValueChange={ (value: PaymentStatuses) =>
                                         setPaymentStatus(value)
                                     }

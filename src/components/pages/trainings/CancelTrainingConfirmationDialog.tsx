@@ -18,7 +18,8 @@ import { parseStringToCents } from "@/utils/parseStringToCents";
 
 interface CancelTrainingConfirmationDialogProps {
   selectedTraining: Training | null;
-  setSelectedTraining: Dispatch<SetStateAction<Training | null>>;
+  setSelectedTraining?: Dispatch<SetStateAction<Training | null>>;
+  setCurrentTrainingStatus: Dispatch<SetStateAction<"Pendente" | "Concluido" | "Cancelado">>
   setCancelTrainingConfirmationDialogOpen: Dispatch<SetStateAction<boolean>>;
   isCancelTrainingConfirmationDialogOpen: boolean;
   handleUpdateTrainingStatus: (
@@ -34,6 +35,7 @@ export function CancelTrainingConfirmationDialog({
     isCancelTrainingConfirmationDialogOpen,
     setCancelTrainingConfirmationDialogOpen,
     handleUpdateTrainingStatus,
+    setCurrentTrainingStatus,
 }: CancelTrainingConfirmationDialogProps) {
     const [ wasRefunded, setWasRefunded ] = useState(false);
     const [ cancellationFee, setCancellationFee ] = useState<string>("0,00");
@@ -62,6 +64,7 @@ export function CancelTrainingConfirmationDialog({
             somePaymentIsDone ? wasRefunded : undefined,
             feeInCents
         );
+        setCurrentTrainingStatus("Cancelado");
         setCancelTrainingConfirmationDialogOpen(false);
     };
 
@@ -120,36 +123,6 @@ export function CancelTrainingConfirmationDialog({
                             </p>
                         )}
                     </div>
-
-                    {somePaymentIsDone && (
-                        <div className="flex items-center space-x-2 justify-center mt-4">
-                            <Checkbox
-                                id="refunded"
-                                checked={ wasRefunded }
-                                onCheckedChange={ (checked) =>
-                                    setWasRefunded(checked as boolean)
-                                }
-                            />
-                            <Label
-                                htmlFor="refunded"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                Foi reembolsado?
-                            </Label>
-                        </div>
-                    )}
-
-                    {hasFee && (
-                        <div className="flex flex-col gap-2 mt-4 w-full px-10">
-                            <Label className="text-sm font-medium">
-                Taxa de cancelamento
-                            </Label>
-                            <PriceInput
-                                value={ cancellationFee }
-                                onChange={ (value) => setCancellationFee(value) }
-                            />
-                        </div>
-                    )}
                 </CardContent>
 
                 <DialogFooter className="flex justify-end gap-3 mt-4">

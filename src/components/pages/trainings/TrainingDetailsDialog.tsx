@@ -63,6 +63,7 @@ export function TrainingDetailsDialog({
     const [ selectedPayerType, setSelectedPayerType ] = useState<PayerType | null>(
         null
     );
+    const [ currentTrainingStatus, setCurrentTrainingStatus ] = useState(selectedTraining?.trainingStatus);
 
     // --- Extrair os pagamentos do Array ---
     const { traineePayment, volunteerPayment } = useMemo(() => {
@@ -130,7 +131,7 @@ export function TrainingDetailsDialog({
                 trainingStatus,
                 payerType: "TRAINEE",
                 TrainingPayment: paymentData,
-                isCourtesy: selectedTraining.isCourtesy,
+                isCourtesy: traineePayment?.isCourtesy ?? false,
                 wasRefunded: wasRefunded || false,
                 cancellationFee: cancellationFee || undefined,
             };
@@ -155,7 +156,7 @@ export function TrainingDetailsDialog({
                             : null
                     );
                 }
-                onOpenChange(false);
+                // onOpenChange(false);
             }
         } catch (error) {
             console.error("Erro ao atualizar status:", error);
@@ -218,15 +219,7 @@ export function TrainingDetailsDialog({
                                 </div>
                             </div>
                             <div className="flex gap-2 ml-auto items-center">
-                                {selectedTraining.isCourtesy && (
-                                    <Badge
-                                        variant="secondary"
-                                        className="bg-green-100 text-green-800 hover:bg-green-100"
-                                    >
-                    CORTESIA
-                                    </Badge>
-                                )}
-                                <BookingStatusBadge status={ selectedTraining.trainingStatus } />
+                                <BookingStatusBadge status={ currentTrainingStatus } />
                             </div>
                         </div>
 
@@ -318,6 +311,8 @@ export function TrainingDetailsDialog({
                                         <Wallet className="w-4 h-4" /> Financeiro - Aluno
                                         <BookingPaymentStatusBadge
                                             status={ traineePayment?.paymentStatus || "Pendente" }
+                                            isCourtesy={ traineePayment?.isCourtesy }
+                                            wasRefunded={ traineePayment?.wasRefunded }
                                         />
                                     </h4>
                                     <div className="space-y-2 text-sm">
@@ -356,6 +351,8 @@ export function TrainingDetailsDialog({
                                             <Wallet className="w-4 h-4" /> Financeiro - Modelo
                                             <BookingPaymentStatusBadge
                                                 status={ volunteerPayment?.paymentStatus || "Pendente" }
+                                                isCourtesy={ volunteerPayment?.isCourtesy }
+                                                wasRefunded={ volunteerPayment?.wasRefunded }
                                             />
                                         </h4>
                                         <div className="space-y-2 text-sm">
@@ -398,7 +395,7 @@ export function TrainingDetailsDialog({
                             {/* AÇÕES FINAIS */}
                             <div className="grid grid-cols-2 gap-2">
                                 <Button
-                                    disabled={ selectedTraining.trainingStatus !== "Pendente" }
+                                    disabled={ currentTrainingStatus !== "Pendente" }
                                     variant="destructive"
                                     className="flex items-center justify-center gap-2 w-full"
                                     onClick={ () => setCancelTrainingConfirmationDialogOpen(true) }
@@ -413,7 +410,8 @@ export function TrainingDetailsDialog({
                                     disabled={
                                         selectedTraining.trainingStatus === "Concluido" ||
                     selectedTraining.trainingStatus === "Cancelado" ||
-                    traineePayment?.paymentStatus !== "Pago"
+                    traineePayment?.paymentStatus !== "Pago" ||
+                    volunteerPayment?.paymentStatus !== "Pago"
                                     }
                                 >
                                     <Check className="w-4 h-4" />
@@ -444,8 +442,9 @@ export function TrainingDetailsDialog({
                 setCancelTrainingConfirmationDialogOpen={
                     setCancelTrainingConfirmationDialogOpen
                 }
+                setCurrentTrainingStatus={ setCurrentTrainingStatus }
                 selectedTraining={ selectedTraining }
-                setSelectedTraining={ setSelectedTraining || (() => {}) }
+                setSelectedTraining={ setSelectedTraining }
                 handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
             />
         </Dialog>

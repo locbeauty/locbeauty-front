@@ -79,8 +79,8 @@ export default function MetasMensaisPage() {
 
     const goals = data;
     useEffect(() => {
-        console.log(goals)
-    }, [goals])
+        console.log(goals);
+    }, [ goals ]);
 
     const filteredGoals = useMemo(() => {
         if (!goals) return [];

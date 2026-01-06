@@ -93,7 +93,11 @@ export function BookingsTable() {
                                     <BookingStatusBadge status={ checkout?.checkoutStatus } />
                                 </td>
                                 <td className="p-3 text-center">
-                                    <BookingPaymentStatusBadge status={ checkout?.CheckoutPayment.paymentStatus } />
+                                    <BookingPaymentStatusBadge
+                                        status={ checkout.CheckoutPayment.paymentStatus }
+                                        wasRefunded={ checkout.wasRefunded }
+                                        isCourtesy={ checkout.isCourtesy }
+                                    />
                                 </td>
                                 <td className="p-3 text-center">
                                     <Button onClick={ () => openCheckoutDetails({ checkoutId: checkout.checkoutId }) }>

@@ -2,7 +2,6 @@ import { Address } from "./address";
 import { Gear } from "./gears";
 import { Training } from "./training";
 
-
 export interface Trainee {
     traineeId: string,
     name: string,

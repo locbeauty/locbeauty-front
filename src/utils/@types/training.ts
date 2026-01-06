@@ -10,11 +10,7 @@ export interface Training {
   trainingId: string;
   trainingStatus: CheckoutStatuses;
   hourInMinutes: number;
-  additionalCost: number;
-  isCourtesy: boolean;
-  wasRefunded: boolean;
-  cancellationFee: number | null;
-  additionalCostDescription: string;
+
   gearId: string;
   volunteerId: string;
   traineeId: string;
