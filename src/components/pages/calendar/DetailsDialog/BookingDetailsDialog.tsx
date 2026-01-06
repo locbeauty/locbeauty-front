@@ -55,6 +55,8 @@ import { AddGearToCheckoutDialog } from "./AddGearToCheckoutDialog";
 import { RemoveBookingFromCheckout } from "@/services/bookings.service";
 import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentStatusBadge";
 import { formatDate, formatTime } from "../bookingViewHelpers";
+import PriceInput from "@/components/shared/PriceInput";
+import { parseStringToCents } from "@/utils/parseStringToCents";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -167,7 +169,8 @@ export function BookingDetailsDialog({
     async function handleChangeCheckoutStatus(
         checkoutId: string,
         checkoutStatus: "Concluido" | "Cancelado",
-        wasRefunded: boolean = false
+        wasRefunded: boolean = false,
+        cancellationFee: number | null = null
     ) {
         let response;
 
@@ -192,6 +195,7 @@ export function BookingDetailsDialog({
                             : null,
                         secondPaymentMethod: payment.secondPaymentMethod,
                         secondPaymentStatus: payment.secondPaymentStatus,
+                        cancellationFee,
                     },
                 },
             });
@@ -854,7 +858,8 @@ interface CancelBookingConfirmationDialogProps {
   handleChangeCheckoutStatus: (
     checkoutId: string,
     checkoutStatus: "Concluido" | "Cancelado",
-    wasRefunded?: boolean
+    wasRefunded?: boolean,
+    cancellationFee?: number | null
   ) => void;
 }
 
@@ -866,6 +871,7 @@ export function CancelBookingConfirmationDialog({
     handleChangeCheckoutStatus,
 }: CancelBookingConfirmationDialogProps) {
     const [ wasRefunded, setWasRefunded ] = useState(false);
+    const [ cancellationFee, setCancellationFee ] = useState<string>("0,00");
 
     if (!selectedCheckout) return null;
 
@@ -873,7 +879,9 @@ export function CancelBookingConfirmationDialog({
     const today = new Date();
     const daysUntilBooking = differenceInCalendarDays(bookingDate, today);
     const hasFee = daysUntilBooking < 7;
-    const somePaymentIsDone = selectedCheckout.CheckoutPayment.firstPaymentStatus === "Pago" || selectedCheckout.CheckoutPayment.secondPaymentStatus === "Pago";
+    const somePaymentIsDone =
+    selectedCheckout.CheckoutPayment.firstPaymentStatus === "Pago" ||
+    selectedCheckout.CheckoutPayment.secondPaymentStatus === "Pago";
 
     return (
         <Dialog
@@ -904,8 +912,10 @@ export function CancelBookingConfirmationDialog({
                             </>
                         ) : (
                             <>
-                                <span className="font-semibold text-green-600">não geram taxa</span>.
-                                Deseja confirmar o cancelamento?
+                                <span className="font-semibold text-green-600">
+                  não geram taxa
+                                </span>
+                . Deseja confirmar o cancelamento?
                             </>
                         )}
                     </DialogDescription>
@@ -933,23 +943,35 @@ export function CancelBookingConfirmationDialog({
                         )}
                     </div>
 
-                    {
-                        somePaymentIsDone && (
-                            <div className="flex items-center space-x-2 justify-center mt-4">
-                                <Checkbox
-                                    id="refunded"
-                                    checked={ wasRefunded }
-                                    onCheckedChange={ (checked) => setWasRefunded(checked as boolean) }
-                                />
-                                <Label
-                                    htmlFor="refunded"
-                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                Foi reembolsado?
-                                </Label>
-                            </div>
-                        )
-                    }
+                    {somePaymentIsDone && (
+                        <div className="flex items-center space-x-2 justify-center mt-4">
+                            <Checkbox
+                                id="refunded"
+                                checked={ wasRefunded }
+                                onCheckedChange={ (checked) =>
+                                    setWasRefunded(checked as boolean)
+                                }
+                            />
+                            <Label
+                                htmlFor="refunded"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                Foi reembolsado?
+                            </Label>
+                        </div>
+                    )}
+
+                    {hasFee && (
+                        <div className="flex flex-col gap-2 mt-4 w-full px-10">
+                            <Label className="text-sm font-medium">
+                Taxa de cancelamento
+                            </Label>
+                            <PriceInput
+                                value={ cancellationFee }
+                                onChange={ (value) => setCancellationFee(value) }
+                            />
+                        </div>
+                    )}
                 </CardContent>
 
                 <DialogFooter className="flex justify-end gap-3 mt-4">
@@ -965,7 +987,8 @@ export function CancelBookingConfirmationDialog({
                             handleChangeCheckoutStatus(
                                 selectedCheckout.checkoutId,
                                 "Cancelado",
-                                wasRefunded
+                                wasRefunded,
+                                parseStringToCents(cancellationFee)
                             );
                             setCancelBookingConfirmationDialogOpen(false);
                         } }

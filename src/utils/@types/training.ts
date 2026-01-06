@@ -11,6 +11,9 @@ export interface Training {
   trainingStatus: CheckoutStatuses;
   hourInMinutes: number;
   additionalCost: number;
+  isCourtesy: boolean;
+  wasRefunded: boolean;
+  cancellationFee: number | null;
   additionalCostDescription: string;
   gearId: string;
   volunteerId: string;
