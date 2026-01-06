@@ -21,6 +21,7 @@ import {
     Check,
     Trash2,
     Wallet,
+    FileText,
 } from "lucide-react";
 
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
@@ -35,7 +36,7 @@ import { TrainingPayment } from "@/utils/@types/payments";
 import { CancelTrainingConfirmationDialog } from "./CancelTrainingConfirmationDialog";
 import { UpdateTraining } from "@/services/trainings.service";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { FinishTrainingConfirmationDialog } from "./FinishTrainingConfirmationDialog";
 
 interface TrainingDetailsDialogProps {
   open: boolean;
@@ -60,10 +61,16 @@ export function TrainingDetailsDialog({
         isCancelTrainingConfirmationDialogOpen,
         setCancelTrainingConfirmationDialogOpen,
     ] = useState(false);
+    const [
+        isFinishTrainingConfirmationDialogOpen,
+        setFinishTrainingConfirmationDialogOpen,
+    ] = useState(false);
     const [ selectedPayerType, setSelectedPayerType ] = useState<PayerType | null>(
         null
     );
-    const [ currentTrainingStatus, setCurrentTrainingStatus ] = useState(selectedTraining?.trainingStatus);
+    const [ currentTrainingStatus, setCurrentTrainingStatus ] = useState(
+        selectedTraining?.trainingStatus
+    );
 
     // --- Extrair os pagamentos do Array ---
     const { traineePayment, volunteerPayment } = useMemo(() => {
@@ -245,6 +252,10 @@ export function TrainingDetailsDialog({
                                             {selectedTraining.Trainee.name}
                                         </p>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            <FileText className="h-3 w-3" />{" "}
+                                            {selectedTraining.Trainee.documentNumber || "N/A"}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                             <Phone className="h-3 w-3" />{" "}
                                             {selectedTraining.Trainee.cellphone || "N/A"}
                                         </div>
@@ -269,9 +280,14 @@ export function TrainingDetailsDialog({
                                         <p className="font-medium">
                                             {selectedTraining.Volunteer.name}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {selectedTraining.Volunteer.documentNumber}
-                                        </p>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            <FileText className="h-3 w-3" />{" "}
+                                            {selectedTraining.Volunteer.documentNumber || "N/A"}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            <Phone className="h-3 w-3" />{" "}
+                                            {selectedTraining.Volunteer.cellphone || "N/A"}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -413,6 +429,7 @@ export function TrainingDetailsDialog({
                     traineePayment?.paymentStatus !== "Pago" ||
                     volunteerPayment?.paymentStatus !== "Pago"
                                     }
+                                    onClick={ () => setFinishTrainingConfirmationDialogOpen(true) }
                                 >
                                     <Check className="w-4 h-4" />
                                     <span className="sr-only md:not-sr-only">Concluir</span>
@@ -445,6 +462,18 @@ export function TrainingDetailsDialog({
                 setCurrentTrainingStatus={ setCurrentTrainingStatus }
                 selectedTraining={ selectedTraining }
                 setSelectedTraining={ setSelectedTraining }
+                handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
+            />
+
+            <FinishTrainingConfirmationDialog
+                isFinishTrainingConfirmationDialogOpen={
+                    isFinishTrainingConfirmationDialogOpen
+                }
+                setFinishTrainingConfirmationDialogOpen={
+                    setFinishTrainingConfirmationDialogOpen
+                }
+                setCurrentTrainingStatus={ setCurrentTrainingStatus }
+                selectedTraining={ selectedTraining }
                 handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
             />
         </Dialog>

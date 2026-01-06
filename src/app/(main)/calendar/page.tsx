@@ -47,38 +47,14 @@ export default function AgendamentosPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <Button onClick={ () => router.back() } variant="outline" size="icon">
-                        <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Voltar</span>
-                    </Button>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Calendário</h1>
                         <p className="text-muted-foreground">
-              Visualize os agendamentos de locações
+              Visualize agendamentos e treinamentos
                         </p>
                     </div>
                 </div>
 
-                <div className="flex gap-4 justify-center">
-                    <Button className="flex justify-center items-center" asChild>
-                        <Link
-                            className="flex justify-center items-center"
-                            href={ ROUTES.CREATE_BOOKING }
-                        >
-                            <Plus className="" />
-                            <span className="hidden md:inline">Novo Agendamento</span>
-                        </Link>
-                    </Button>
-                    <Button className="flex justify-center items-center" variant="outline" asChild>
-                        <Link
-                            className="flex justify-center items-center"
-                            href={ ROUTES.BOOKING_TABLE }
-                        >
-                            <Table className="" />
-                            {/* <span className="hidden md:inline">Tabela de agendamentos</span> */}
-                        </Link>
-                    </Button>
-                </div>
             </div>
 
             <CalendarControls

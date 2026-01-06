@@ -22,7 +22,7 @@ export interface TrainingPayment {
   basePrice: number;
   totalPrice: number;
   paymentMode: PaymentModes;
-  paymentStatus: "Pendente" | "Pago" | "Parcial";
+  paymentStatus: PaymentStatuses;
   firstPaymentDate: string | null;
   firstPaymentAmount: number;
   firstPaymentMethod: string | null;

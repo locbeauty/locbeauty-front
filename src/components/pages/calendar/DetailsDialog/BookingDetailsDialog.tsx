@@ -945,30 +945,13 @@ export function CancelBookingConfirmationDialog({
                         )}
                     </div>
 
-                    {somePaymentIsDone && (
-                        <div className="flex items-center space-x-2 justify-center mt-4">
-                            <Checkbox
-                                id="refunded"
-                                checked={ wasRefunded }
-                                onCheckedChange={ (checked) =>
-                                    setWasRefunded(checked as boolean)
-                                }
-                            />
-                            <Label
-                                htmlFor="refunded"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                Foi reembolsado?
-                            </Label>
-                        </div>
-                    )}
-
                     {hasFee && (
                         <div className="flex flex-col gap-2 mt-4 w-full px-10">
                             <Label className="text-sm font-medium">
                 Taxa de cancelamento
                             </Label>
                             <PriceInput
+                                withLabel={ false }
                                 value={ cancellationFee }
                                 onChange={ (value) => setCancellationFee(value) }
                             />

@@ -314,6 +314,16 @@ export function CheckoutPaymentMethodDialog({
             return;
         }
 
+        if (wasRefunded) {
+            const cancellationFeeCents = parseStringToCents(cancellationFee);
+            if (cancellationFeeCents > selectedCheckout.totalPrice) {
+                toast.error(
+                    "O valor do reembolso não pode ser maior que o valor total."
+                );
+                return;
+            }
+        }
+
         setIsSubmitting(true);
 
         const payload: UpdateCheckoutPayload = {
