@@ -94,6 +94,8 @@ export function TrainingPaymentSection({
         formState: { errors },
     } = useFormContext<CreateTrainingDataType>();
 
+    const paymentStatus = watch(`${prefix}.paymentInfo.paymentStatus`);
+
     // ...
 
     // Helper para verificar erro no select de status
@@ -112,7 +114,7 @@ export function TrainingPaymentSection({
 
                     <FormField
                         control={ control }
-                        name={ paymentStatusPath }
+                        name={ `${prefix}.paymentInfo.paymentStatus` }
                         render={ ({ field }) => (
                             <FormItem>
                                 <Select
@@ -177,8 +179,11 @@ export function TrainingPaymentSection({
                                             <FormControl>
                                                 <PriceInput
                                                     { ...field }
-                                                    withLabel={ false }
-                                                    value={ field.value ?? "" }
+                                                    value={
+                                                        field.value != null
+                                                            ? String(field.value)
+                                                            : undefined
+                                                    }
                                                     // Desabilita edição se estiver "Pago" (pois o useEffect fixa o valor total)
                                                     disabled={ paymentStatus === "Pago" }
                                                 />
@@ -228,7 +233,7 @@ export function TrainingPaymentSection({
                                             </Label>
                                             <Select
                                                 onValueChange={ field.onChange }
-                                                value={ field.value }
+                                                value={ field.value ?? undefined }
                                             >
                                                 <FormControl>
                                                     <SelectTrigger>
@@ -283,7 +288,7 @@ export function TrainingPaymentSection({
                                                             { ...field }
                                                             withLabel={ false }
                                                             disabled={ true } // Sempre calculado automaticamente
-                                                            value={ field.value ?? "" }
+                                                            value={ field.value ? String(field.value) : "" }
                                                         />
                                                     </FormControl>
                                                     <FormMessage className="text-xs" />
@@ -331,7 +336,7 @@ export function TrainingPaymentSection({
                                                     </Label>
                                                     <Select
                                                         onValueChange={ field.onChange }
-                                                        value={ field.value }
+                                                        value={ field.value ?? undefined }
                                                     >
                                                         <FormControl>
                                                             <SelectTrigger>

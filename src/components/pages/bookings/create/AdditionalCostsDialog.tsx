@@ -168,7 +168,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LucideMessageCircleQuestion } from "lucide-react";
+import {
+    CarFront,
+    BedDouble,
+    Utensils,
+    MessageCircleQuestion,
+    MapPin,
+    Fuel,
+} from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -177,36 +184,29 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useFormContext } from "react-hook-form";
-import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation"; // Ajuste conforme seu caminho real
+import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import PriceInput from "@/components/shared/PriceInput";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { centsToString } from "@/utils/centsToString";
 import { toast } from "sonner";
 import { CityInput } from "./CityInput";
+import { Separator } from "@/components/ui/separator";
 
 interface AdditionalCostsDialogProps {
   setAdditionalCostsDialogOpen: Dispatch<SetStateAction<boolean>>;
   isAdditionalCostsDialogOpen: boolean;
-  setConsumptionKmPerLiter: Dispatch<SetStateAction<number>>;
-  consumptionKmPerLiter: number;
 }
 
 export function AdditionalCostsDialog({
     isAdditionalCostsDialogOpen,
     setAdditionalCostsDialogOpen,
-    consumptionKmPerLiter,
-    setConsumptionKmPerLiter
 }: AdditionalCostsDialogProps) {
-    const {
-        watch,
-        setValue,
-        getValues,
-        formState: { errors },
-    } = useFormContext<CreateCheckoutFormSchemaType>();
+    const { watch, setValue, getValues } =
+    useFormContext<CreateCheckoutFormSchemaType>();
 
     // Estados locais para edição dentro do modal
     const [ distanceInKM, setDistanceInKM ] = useState(0);
-    // const [ consumptionKmPerLiter, setConsumptionKmPerLiter ] = useState(10);
+    const [ consumptionKmPerLiter, setConsumptionKmPerLiter ] = useState(10);
     const [ fuelCost, setFuelCost ] = useState("");
     const [ lodgingCost, setLodgingCost ] = useState("");
     const [ foodCost, setFoodCost ] = useState("");
@@ -229,8 +229,13 @@ export function AdditionalCostsDialog({
     const pricePerLiterCents = parseStringToCents(fuelCost || "0");
     // Evita divisão por zero ou nulo
     const safeConsumption = Number(consumptionKmPerLiter) || 1;
-    const litersNeeded = Number(distanceInKM) / safeConsumption;
-    const fuelTotalCents = Math.round(pricePerLiterCents * litersNeeded);
+
+    // Cálculo de combustível
+    let fuelTotalCents = 0;
+    if (distanceInKM > 0 && pricePerLiterCents > 0) {
+        const litersNeeded = Number(distanceInKM) / safeConsumption;
+        fuelTotalCents = Math.round(pricePerLiterCents * litersNeeded);
+    }
 
     const finalCost =
     fuelTotalCents +
@@ -250,9 +255,7 @@ export function AdditionalCostsDialog({
             setFoodCost(currentValues.foodCost || "");
             setAdditionalTransportCost(currentValues.additionalTransportCost || "");
             setDistanceInKM(Number(currentValues.distanceInKm) || 0);
-
-            // Se você tiver um campo para consumo no form principal, carregue aqui também.
-            // Caso contrário, mantém o padrão ou o último estado.
+            setConsumptionKmPerLiter(Number(currentValues.consumption) || 10);
         }
     }, [ isAdditionalCostsDialogOpen, getValues ]);
 
@@ -262,6 +265,7 @@ export function AdditionalCostsDialog({
         setValue("foodCost", foodCost);
         setValue("additionalTransportCost", additionalTransportCost);
         setValue("distanceInKm", Number(distanceInKM));
+        setValue("consumption", Number(consumptionKmPerLiter));
 
         // Atualiza o total final no formulário
         setValue("totalPrice", centsToString(finalCost));
@@ -271,12 +275,9 @@ export function AdditionalCostsDialog({
     }
 
     function handleCancel() {
-    // Apenas fecha o modal. NÃO deve limpar o formulário (setValue).
-    // O usuário pode ter clicado em cancelar por engano e não quer perder o que já estava salvo anteriormente.
         setAdditionalCostsDialogOpen(false);
     }
 
-    // Função opcional caso queira um botão explícito para limpar
     function handleClear() {
         setFuelCost("");
         setLodgingCost("");
@@ -292,126 +293,208 @@ export function AdditionalCostsDialog({
             onOpenChange={ setAdditionalCostsDialogOpen }
         >
             <DialogTrigger asChild>
-                <Button variant="outline">+ Custos adicionais</Button>
+                <Button variant="outline" className="w-full">
+          + Custos adicionais
+                </Button>
             </DialogTrigger>
 
-            <DialogContent className="md:w-[70%] w-[90%] max-h-[90vh] overflow-y-auto space-y-4">
+            <DialogContent className="md:w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Valores adicionais</DialogTitle>
+                    <DialogTitle className="text-xl flex items-center gap-2">
+                        <CarFront className="h-6 w-6 text-primary" />
+            Custos de Logística e Viagem
+                    </DialogTitle>
                     <DialogDescription>
-            Insira as variáveis para compor o custo final da entrega.
+            Calcule e adicione custos variáveis relacionados à entrega e
+            estadia.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                        <Label>Distância (KM)</Label>
-                        {/* ATENÇÃO: O componente CityInput precisa ser capaz de receber
-               setDistanceInKM como prop (Controlled Component) ou callback.
-               Estou assumindo que você ajustou o CityInput para aceitar:
-               onDistanceChange={(dist) => setDistanceInKM(dist)}
-            */}
-                        <CityInput
-                            // Exemplo de como passar as props se o CityInput estiver ajustado:
-                            // initialDistance={distanceInKM}
-                            setDistanceInKM={ setDistanceInKM }
-                            distanceInKM={ distanceInKM }
-                        />
-                        {/* Fallback caso CityInput não funcione ou para teste manual: */}
-                        <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-muted-foreground">Manual:</span>
-                            <Input
-                                type="number"
-                                className="h-8 w-24"
-                                value={ distanceInKM }
-                                onChange={ (e) => setDistanceInKM(Number(e.target.value)) }
-                            />
-                            <span className="text-sm font-medium">{distanceInKM} km definidos</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                    {/* Coluna da Esquerda: Logística */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 font-semibold text-primary/80 border-b pb-2">
+                            <Fuel className="h-4 w-4" /> Transporte
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Preço Combustível (Litro)</Label>
+                        <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-1">
+                                    <MapPin className="h-3.5 w-3.5" /> Distância Total (Ida e
+                  Volta)
+                                </Label>
+                                <CityInput
+                                    setDistanceInKM={ setDistanceInKM }
+                                    distanceInKM={ distanceInKM }
+                                />
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs text-muted-foreground w-16">
+                    Manual:
+                                    </span>
+                                    <Input
+                                        type="number"
+                                        className="h-7 w-20 text-xs"
+                                        value={ distanceInKM }
+                                        onChange={ (e) => setDistanceInKM(Number(e.target.value)) }
+                                        placeholder="0"
+                                    />
+                                    <span className="text-xs font-medium text-muted-foreground">
+                    km
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs">Preço Combustível (Litro)</Label>
+                                    <PriceInput
+                                        withLabel={ false }
+                                        onChange={ setFuelCost }
+                                        value={ fuelCost }
+                                        placeholder="R$ 0,00"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs">Consumo (Km/L)</Label>
+                                    <Input
+                                        type="number"
+                                        min={ 1 }
+                                        onChange={ (e) =>
+                                            setConsumptionKmPerLiter(Number(e.target.value))
+                                        }
+                                        value={ consumptionKmPerLiter }
+                                        className="h-10"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="text-sm bg-primary/5 p-2 rounded text-primary flex justify-between items-center">
+                                <span>Custo estimado de combustível:</span>
+                                <span className="font-bold">
+                                    {centsToString(fuelTotalCents)}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 pt-2">
+                            <div className="flex items-center gap-2">
+                                <Label className="flex items-center gap-1">
+                                    <MessageCircleQuestion className="h-3.5 w-3.5" /> Extras
+                  (Pedágio, Balsa)
+                                </Label>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <MessageCircleQuestion className="h-4 w-4 text-muted-foreground cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Custos de pedágios, balsas e outros transportes.</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
                             <PriceInput
                                 withLabel={ false }
-                                onChange={ setFuelCost }
-                                value={ fuelCost }
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Consumo (Km/L)</Label>
-                            <Input
-                                type="number"
-                                min={ 1 }
-                                onChange={ (e) => setConsumptionKmPerLiter(Number(e.target.value)) }
-                                value={ consumptionKmPerLiter }
+                                onChange={ setAdditionalTransportCost }
+                                value={ additionalTransportCost }
+                                placeholder="R$ 0,00"
                             />
                         </div>
                     </div>
 
-                    {/* Exibição do custo calculado de combustível para feedback imediato */}
-                    <div className="text-sm text-muted-foreground text-right">
-            Custo estimado de combustível: <strong>{centsToString(fuelTotalCents)}</strong>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Custo de hospedagem</Label>
-                        <PriceInput
-                            withLabel={ false }
-                            onChange={ setLodgingCost }
-                            value={ lodgingCost }
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Custo de alimentação</Label>
-                        <PriceInput
-                            withLabel={ false }
-                            onChange={ setFoodCost }
-                            value={ foodCost }
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <Label>Custos extras (Pedágio, Balsa)</Label>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <LucideMessageCircleQuestion className="h-4 w-4 text-muted-foreground cursor-help" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Custos de pedágios, balsas e outros transportes.</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                    {/* Coluna da Direita: Estadia e Resumo */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 font-semibold text-primary/80 border-b pb-2">
+                            <BedDouble className="h-4 w-4" /> Estadia e Alimentação
                         </div>
-                        <PriceInput
-                            withLabel={ false }
-                            onChange={ setAdditionalTransportCost }
-                            value={ additionalTransportCost }
-                        />
+
+                        <div className="space-y-3">
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-1">
+                                    <BedDouble className="h-3.5 w-3.5" /> Custo de Hospedagem
+                                </Label>
+                                <PriceInput
+                                    withLabel={ false }
+                                    onChange={ setLodgingCost }
+                                    value={ lodgingCost }
+                                    placeholder="R$ 0,00"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-1">
+                                    <Utensils className="h-3.5 w-3.5" /> Custo de Alimentação
+                                </Label>
+                                <PriceInput
+                                    withLabel={ false }
+                                    onChange={ setFoodCost }
+                                    value={ foodCost }
+                                    placeholder="R$ 0,00"
+                                />
+                            </div>
+                        </div>
+
+                        <Separator className="my-4" />
+
+                        <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                            <h4 className="font-semibold text-sm mb-2 text-muted-foreground uppercase tracking-wider">
+                Resumo de Custos
+                            </h4>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Equipamentos:</span>
+                                <span>{centsToString(selectedGearsCost)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                  Combustível + Extras:
+                                </span>
+                                <span>
+                                    {centsToString(
+                                        Math.round(
+                                            (parseStringToCents(fuelCost || "0") /
+                                                (Number(consumptionKmPerLiter) || 1)) *
+                                            Number(distanceInKM || "0")
+                                        ) + parseStringToCents(additionalTransportCost || "0")
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                  Estadia + Alimentação:
+                                </span>
+                                <span>
+                                    {centsToString(
+                                        parseStringToCents(lodgingCost || "0") +
+                      parseStringToCents(foodCost || "0")
+                                    )}
+                                </span>
+                            </div>
+                            <Separator className="bg-primary/20" />
+                            <div className="flex justify-between items-center pt-2">
+                                <span className="font-semibold">Total Estimado:</span>
+                                <span className="font-bold text-xl text-primary">
+                                    {centsToString(finalCost)}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <DialogFooter className="flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
-                    <div className="flex flex-col text-sm">
-                        <span className="text-muted-foreground">Equipamentos: {centsToString(selectedGearsCost)}</span>
-                        <span>Total Estimado: <span className="font-bold text-lg text-primary">{centsToString(finalCost)}</span></span>
-                    </div>
-
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <Button variant="ghost" onClick={ handleClear } type="button">
-                Limpar
-                        </Button>
-                        <Button variant="outline" onClick={ handleCancel } type="button">
-              Cancelar
-                        </Button>
-                        <Button onClick={ handleSaveVariables } type="button">
-              Salvar Custos
-                        </Button>
-                    </div>
+                <DialogFooter className="flex-col sm:flex-row gap-3 sm:gap-2 border-t pt-4">
+                    <Button
+                        variant="ghost"
+                        onClick={ handleClear }
+                        type="button"
+                        className="sm:mr-auto"
+                    >
+            Limpar Campos
+                    </Button>
+                    <Button variant="outline" onClick={ handleCancel } type="button">
+            Cancelar
+                    </Button>
+                    <Button onClick={ handleSaveVariables } type="button" className="gap-2">
+                        <CarFront className="h-4 w-4" /> Aplicar Custos
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

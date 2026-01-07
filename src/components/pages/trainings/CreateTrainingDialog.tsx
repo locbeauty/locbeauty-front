@@ -61,15 +61,15 @@ import { Address } from "@/utils/@types/address";
 import { GetDayCheckoutsResponse } from "../bookings/create/CreateBookingForm";
 
 interface CreateTrainingDialogProps {
-    dialogNovoTreinamento: boolean;
-    setDialogNovoTreinamento: (openStatus: boolean) => void;
-    volunteers: Volunteer[] | undefined;
-    trainees: Trainee[] | undefined;
-    gears: Gear[] | undefined;
+  dialogNovoTreinamento: boolean;
+  setDialogNovoTreinamento: (openStatus: boolean) => void;
+  volunteers: Volunteer[] | undefined;
+  trainees: Trainee[] | undefined;
+  gears: Gear[] | undefined;
 }
 
 // Estrutura padrão para inicializar o form
-const defaultPaymentInfoStructure = {
+const defaultPaymentInfoStructure: CreateTrainingDataType["traineePayment"]["paymentInfo"] = {
     paymentStatus: "Pendente",
     firstPaymentDate: null,
     secondPaymentDate: null,
@@ -78,7 +78,7 @@ const defaultPaymentInfoStructure = {
     secondPaymentAmount: "0",
     secondPaymentStatus: "Pendente",
     firstPaymentMethod: "",
-    secondPaymentMethod: ""
+    secondPaymentMethod: "",
 };
 
 export function CreateTrainingDialog({
@@ -103,13 +103,13 @@ export function CreateTrainingDialog({
                 price: "",
                 additionalCost: "",
                 additionalCostDescription: "",
-                paymentInfo: { ...defaultPaymentInfoStructure }
+                paymentInfo: { ...defaultPaymentInfoStructure },
             },
             volunteerPayment: {
                 price: "",
-                paymentInfo: { ...defaultPaymentInfoStructure }
-            }
-        } as any,
+                paymentInfo: { ...defaultPaymentInfoStructure },
+            },
+        },
     });
 
     const {
@@ -122,9 +122,15 @@ export function CreateTrainingDialog({
     } = createTrainingMethods;
 
     // --- UI States ---
-    const [ selectedTraineeName, setSelectedTraineeName ] = useState<string | undefined>(undefined);
-    const [ selectedVolunteerName, setSelectedVolunteerName ] = useState<string | undefined>(undefined);
-    const [ selectedGearId, setSelectedGearId ] = useState<string | undefined>(undefined);
+    const [ selectedTraineeName, setSelectedTraineeName ] = useState<
+    string | undefined
+  >(undefined);
+    const [ selectedVolunteerName, setSelectedVolunteerName ] = useState<
+    string | undefined
+  >(undefined);
+    const [ selectedGearId, setSelectedGearId ] = useState<string | undefined>(
+        undefined
+    );
 
     // --- Watchers ---
     const watchSelectedTraineeId = watch("traineeId");
@@ -136,19 +142,23 @@ export function CreateTrainingDialog({
 
     // --- Effects: Sync UI ---
     useEffect(() => {
-        const trainee = trainees?.find((t) => t.traineeId === watchSelectedTraineeId);
+        const trainee = trainees?.find(
+            (t) => t.traineeId === watchSelectedTraineeId
+        );
         setSelectedTraineeName(trainee?.name);
     }, [ watchSelectedTraineeId, trainees ]);
 
     useEffect(() => {
-        const volunteer = volunteers?.find((v) => v.volunteerId === watchSelectedVolunteerId);
+        const volunteer = volunteers?.find(
+            (v) => v.volunteerId === watchSelectedVolunteerId
+        );
         setSelectedVolunteerName(volunteer?.name);
     }, [ watchSelectedVolunteerId, volunteers ]);
 
     // --- Helper de Formatação do Submit ---
     const formatPaymentPayload = (
         priceStr: string | undefined,
-        paymentInfo: any,
+        paymentInfo: CreateTrainingDataType["traineePayment"]["paymentInfo"],
         additionalCostStr?: string,
         additionalCostDesc?: string
     ) => {
@@ -157,7 +167,9 @@ export function CreateTrainingDialog({
             price: parseStringToCents(priceStr || "0"),
 
             // Se additionalCost não for preenchido, envia 0
-            additionalCost: additionalCostStr ? parseStringToCents(additionalCostStr) : 0,
+            additionalCost: additionalCostStr
+                ? parseStringToCents(additionalCostStr)
+                : 0,
 
             // Descrição pode ser undefined
             additionalCostDescription: additionalCostDesc,
@@ -166,12 +178,16 @@ export function CreateTrainingDialog({
                 paymentStatus: paymentInfo.paymentStatus || "Pendente",
 
                 // Datas: Se não existir, envia null
-                firstPaymentDate: paymentInfo.firstPaymentDate ? new Date(paymentInfo.firstPaymentDate) : null,
+                firstPaymentDate: paymentInfo.firstPaymentDate
+                    ? new Date(paymentInfo.firstPaymentDate)
+                    : null,
 
                 // Valores: Se string vazia ou null, parseStringToCents devolve 0 (assumindo que sua func trata isso),
                 // mas garantimos null se não houver pagamento.
                 firstPaymentAmount: paymentInfo.firstPaymentAmount
-                    ? parseStringToCents(paymentInfo.firstPaymentAmount)
+                    ? parseStringToCents(
+                        String(paymentInfo.firstPaymentAmount)
+                    )
                     : 0, // ou null, dependendo do seu backend. Normalmente 0 é mais seguro para cálculos.
 
                 firstPaymentMethod: paymentInfo.firstPaymentMethod || null,
@@ -179,15 +195,19 @@ export function CreateTrainingDialog({
                 // Se status é Pendente, firstPaymentStatus tbm é Pendente por coerência
                 firstPaymentStatus: paymentInfo.firstPaymentStatus || "Pendente",
 
-                secondPaymentDate: paymentInfo.secondPaymentDate ? new Date(paymentInfo.secondPaymentDate) : null,
+                secondPaymentDate: paymentInfo.secondPaymentDate
+                    ? new Date(paymentInfo.secondPaymentDate)
+                    : null,
 
                 secondPaymentAmount: paymentInfo.secondPaymentAmount
-                    ? parseStringToCents(paymentInfo.secondPaymentAmount)
+                    ? parseStringToCents(
+                        String(paymentInfo.secondPaymentAmount)
+                    )
                     : 0,
 
                 secondPaymentMethod: paymentInfo.secondPaymentMethod || null,
                 secondPaymentStatus: paymentInfo.secondPaymentStatus || "Pendente",
-            }
+            },
         };
     };
 
@@ -241,7 +261,8 @@ export function CreateTrainingDialog({
     // --- Queries ---
     const addressesData = useQuery<ApiResponse<Address[]>, Error>({
         queryKey: [ "get-all-trainee-addresses", watchSelectedTraineeId ],
-        queryFn: () => GetAllTraineeAddresses({ traineeId: watchSelectedTraineeId }),
+        queryFn: () =>
+            GetAllTraineeAddresses({ traineeId: watchSelectedTraineeId }),
         enabled: !!watchSelectedTraineeId,
         staleTime: 1000 * 60,
     });
@@ -255,7 +276,8 @@ export function CreateTrainingDialog({
     const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
         queryKey: [ "get-day-checkouts", params ],
         queryFn: () => getDayCheckouts({ body: params }),
-        enabled: !!user?.sourceFilial.filialId && !!watchDueDate && !!watchSelectedGear,
+        enabled:
+      !!user?.sourceFilial.filialId && !!watchDueDate && !!watchSelectedGear,
         staleTime: 0,
     });
     const checkoutSchedule = data?.data;
@@ -265,11 +287,14 @@ export function CreateTrainingDialog({
     }, [ setValue, watchSelectedGear ]);
 
     return (
-        <Dialog open={ dialogNovoTreinamento } onOpenChange={ setDialogNovoTreinamento }>
+        <Dialog
+            open={ dialogNovoTreinamento }
+            onOpenChange={ setDialogNovoTreinamento }
+        >
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Novo Treinamento
+          Novo Treinamento
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card">
@@ -277,7 +302,8 @@ export function CreateTrainingDialog({
                     <DialogHeader>
                         <DialogTitle>Criar Nova Sessão</DialogTitle>
                         <DialogDescription>
-                            Configure os detalhes do agendamento e valores para Aluno e Modelo.
+              Configure os detalhes do agendamento e valores para Aluno e
+              Modelo.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -293,7 +319,11 @@ export function CreateTrainingDialog({
                                         setSelectedGearId(gearId);
                                     } }
                                 />
-                                {errors.gearId && <p className="text-sm text-red-600">{errors.gearId.message}</p>}
+                                {errors.gearId && (
+                                    <p className="text-sm text-red-600">
+                                        {errors.gearId.message}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -303,14 +333,20 @@ export function CreateTrainingDialog({
                                         trainees={ trainees }
                                         selectedTrainee={ selectedTraineeName }
                                         onTraineeChange={ (traineeName) => {
-                                            const trainee = trainees?.find((s) => s.name === traineeName);
+                                            const trainee = trainees?.find(
+                                                (s) => s.name === traineeName
+                                            );
                                             if (trainee) {
                                                 setValue("traineeId", trainee.traineeId);
                                                 setSelectedTraineeName(traineeName);
                                             }
                                         } }
                                     />
-                                    {errors.traineeId && <p className="text-sm text-red-600">{errors.traineeId.message}</p>}
+                                    {errors.traineeId && (
+                                        <p className="text-sm text-red-600">
+                                            {errors.traineeId.message}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Paciente modelo *</Label>
@@ -318,14 +354,20 @@ export function CreateTrainingDialog({
                                         volunteers={ volunteers }
                                         selectedVolunteer={ selectedVolunteerName }
                                         onVolunteerChange={ (volunteerName) => {
-                                            const volunteer = volunteers?.find((p) => p.name === volunteerName);
+                                            const volunteer = volunteers?.find(
+                                                (p) => p.name === volunteerName
+                                            );
                                             if (volunteer) {
                                                 setValue("volunteerId", volunteer.volunteerId);
                                                 setSelectedVolunteerName(volunteerName);
                                             }
                                         } }
                                     />
-                                    {errors.volunteerId && <p className="text-sm text-red-600">{errors.volunteerId.message}</p>}
+                                    {errors.volunteerId && (
+                                        <p className="text-sm text-red-600">
+                                            {errors.volunteerId.message}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -334,9 +376,15 @@ export function CreateTrainingDialog({
                                 <SelectTrainingAddress
                                     addresses={ allCustomerAddresses }
                                     selectedAddress={ watchSelectedAddress }
-                                    onAddressChange={ (addressId) => setValue("addressId", addressId) }
+                                    onAddressChange={ (addressId) =>
+                                        setValue("addressId", addressId)
+                                    }
                                 />
-                                {errors.addressId && <p className="text-sm text-red-600">{errors.addressId.message}</p>}
+                                {errors.addressId && (
+                                    <p className="text-sm text-red-600">
+                                        {errors.addressId.message}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -365,31 +413,59 @@ export function CreateTrainingDialog({
                                         />
                                     ) }
                                 />
-                                {errors.dueDate && <p className="text-sm text-red-600">{errors.dueDate.message}</p>}
+                                {errors.dueDate && (
+                                    <p className="text-sm text-red-600">
+                                        {errors.dueDate.message}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
-                                {checkoutSchedule && (<Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> Horário de Início *</Label>)}
+                                {checkoutSchedule && (
+                                    <Label className="flex items-center gap-2">
+                                        <Clock className="h-4 w-4" /> Horário de Início *
+                                    </Label>
+                                )}
                                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2">
                                     {checkoutSchedule?.map((hour) => {
-                                        const hasSomeAvailableGapTime = hour.availability.some((item) => item.available);
+                                        const hasSomeAvailableGapTime = hour.availability.some(
+                                            (item) => item.available
+                                        );
                                         return (
                                             <Button
                                                 type="button"
                                                 key={ hour.hourInMinutes }
-                                                variant={ watchHour === hour.hourInMinutes ? "default" : "outline" }
+                                                variant={
+                                                    watchHour === hour.hourInMinutes
+                                                        ? "default"
+                                                        : "outline"
+                                                }
                                                 size="sm"
                                                 disabled={ !hasSomeAvailableGapTime }
-                                                onClick={ () => setValue("hourInMinutes", hour.hourInMinutes) }
-                                                className={ `text-xs h-9 transition-all ${watchHour === hour.hourInMinutes ? "ring-2 ring-primary ring-offset-2" : ""} ${!hasSomeAvailableGapTime ? "opacity-50" : "hover:scale-105"}` }
+                                                onClick={ () =>
+                                                    setValue("hourInMinutes", hour.hourInMinutes)
+                                                }
+                                                className={ `text-xs h-9 transition-all ${
+                                                    watchHour === hour.hourInMinutes
+                                                        ? "ring-2 ring-primary ring-offset-2"
+                                                        : ""
+                                                } ${
+                                                    !hasSomeAvailableGapTime
+                                                        ? "opacity-50"
+                                                        : "hover:scale-105"
+                                                }` }
                                             >
                                                 {hour.formattedTime}
-                                                {watchHour === hour.hourInMinutes && <CheckCircle2 className="h-3 w-3 absolute -top-1 -right-1 text-primary bg-background rounded-full" />}
+                                                {watchHour === hour.hourInMinutes && (
+                                                    <CheckCircle2 className="h-3 w-3 absolute -top-1 -right-1 text-primary bg-background rounded-full" />
+                                                )}
                                             </Button>
                                         );
                                     })}
                                 </div>
-                                {errors.hourInMinutes && <p className="text-sm text-red-600">Selecione um horário.</p>}
+                                {errors.hourInMinutes && (
+                                    <p className="text-sm text-red-600">Selecione um horário.</p>
+                                )}
                             </div>
                         </div>
 
@@ -404,14 +480,15 @@ export function CreateTrainingDialog({
                             {/* Envolvendo ambas as seções com o FormProvider */}
                             <FormProvider { ...createTrainingMethods }>
                                 <div className="flex flex-col gap-8">
-
                                     {/* --- BLOCO ALUNO --- */}
                                     <div className="border rounded-md p-5 bg-muted/10 shadow-sm">
                                         <div className="flex items-center gap-2 mb-4 border-b pb-2">
                                             <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
                                                 <GraduationCap className="h-5 w-5 text-blue-600 dark:text-blue-300" />
                                             </div>
-                                            <h3 className="font-semibold text-lg">Financeiro do Aluno</h3>
+                                            <h3 className="font-semibold text-lg">
+                        Financeiro do Aluno
+                                            </h3>
                                         </div>
 
                                         <div className="space-y-4">
@@ -424,7 +501,9 @@ export function CreateTrainingDialog({
                                                     render={ ({ field }) => (
                                                         <PriceInput
                                                             withLabel={ false }
-                                                            register={ createTrainingMethods.register("traineePayment.price") }
+                                                            register={ createTrainingMethods.register(
+                                                                "traineePayment.price"
+                                                            ) }
                                                             value={ field.value?.toString() ?? "" }
                                                             setValue={ setValue }
                                                             name="traineePayment.price"
@@ -437,7 +516,9 @@ export function CreateTrainingDialog({
                                             {/* 2. Custo Adicional */}
                                             <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-md border border-yellow-200 dark:border-yellow-900/50 space-y-3">
                                                 <div className="space-y-2">
-                                                    <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">Custos Operacionais Extras</Label>
+                                                    <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">
+                            Custos Operacionais Extras
+                                                    </Label>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <Controller
                                                             control={ control }
@@ -445,7 +526,9 @@ export function CreateTrainingDialog({
                                                             render={ ({ field }) => (
                                                                 <PriceInput
                                                                     withLabel={ false }
-                                                                    register={ createTrainingMethods.register("traineePayment.additionalCost") }
+                                                                    register={ createTrainingMethods.register(
+                                                                        "traineePayment.additionalCost"
+                                                                    ) }
                                                                     value={ field.value?.toString() ?? "" }
                                                                     setValue={ setValue }
                                                                     name="traineePayment.additionalCost"
@@ -454,7 +537,9 @@ export function CreateTrainingDialog({
                                                             ) }
                                                         />
                                                         <Textarea
-                                                            { ...createTrainingMethods.register("traineePayment.additionalCostDescription") }
+                                                            { ...createTrainingMethods.register(
+                                                                "traineePayment.additionalCostDescription"
+                                                            ) }
                                                             placeholder="Descrição: Taxa de sala, material..."
                                                             className="resize-none min-h-[40px]"
                                                             rows={ 1 }
@@ -475,7 +560,9 @@ export function CreateTrainingDialog({
                                             <div className="p-2 bg-green-100 dark:bg-green-900 rounded-full">
                                                 <User className="h-5 w-5 text-green-600 dark:text-green-300" />
                                             </div>
-                                            <h3 className="font-semibold text-lg">Financeiro do Paciente Modelo</h3>
+                                            <h3 className="font-semibold text-lg">
+                        Financeiro do Paciente Modelo
+                                            </h3>
                                         </div>
 
                                         <div className="space-y-4">
@@ -487,7 +574,9 @@ export function CreateTrainingDialog({
                                                     render={ ({ field }) => (
                                                         <PriceInput
                                                             withLabel={ false }
-                                                            register={ createTrainingMethods.register("volunteerPayment.price") }
+                                                            register={ createTrainingMethods.register(
+                                                                "volunteerPayment.price"
+                                                            ) }
                                                             value={ field.value?.toString() ?? "" }
                                                             setValue={ setValue }
                                                             name="volunteerPayment.price"
@@ -501,19 +590,24 @@ export function CreateTrainingDialog({
                                             <TrainingPaymentSection prefix="volunteerPayment" /> */}
                                         </div>
                                     </div>
-
                                 </div>
                             </FormProvider>
                         </div>
                     </div>
 
                     <DialogFooter className="mt-4">
-                        <Button variant="outline" type="button" onClick={ () => setDialogNovoTreinamento(false) }>
-                            Cancelar
+                        <Button
+                            variant="outline"
+                            type="button"
+                            onClick={ () => setDialogNovoTreinamento(false) }
+                        >
+              Cancelar
                         </Button>
                         <Button disabled={ isSubmitting } type="submit">
-                            {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                            Criar Treinamento
+                            {isSubmitting ? (
+                                <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                            ) : null}
+              Criar Treinamento
                         </Button>
                     </DialogFooter>
                 </form>

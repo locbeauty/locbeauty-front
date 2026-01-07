@@ -195,8 +195,8 @@ export function BookingDetailsDialog({
                             : null,
                         secondPaymentMethod: payment.secondPaymentMethod,
                         secondPaymentStatus: payment.secondPaymentStatus,
-                        cancellationFee,
                     },
+                    cancellationFee: cancellationFee ?? undefined,
                 },
             });
         } else {
@@ -257,525 +257,448 @@ export function BookingDetailsDialog({
             open={ isBookingDetailsDialogOpen }
             onOpenChange={ setBookingDetailsDialogOpen }
         >
-            <DialogContent className="max-h-[90vh] w-[80vw] overflow-scroll dark:bg-gray-900">
+            <DialogContent className="max-h-[95vh] w-full max-w-5xl overflow-y-auto dark:bg-gray-900 p-0 gap-0">
                 {selectedCheckout && (
                     <>
-                        <DialogHeader>
-                            <DialogTitle className="text-xl">
-                Detalhes do Agendamento
-                            </DialogTitle>
-                            <DialogDescription>
-                Informações completas sobre a locação do equipamento
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="space-y-4 py-4">
-                            {/* Cabeçalho com informações principais */}
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Package className="h-5 w-5 text-primary" />
-                                    <h3 className="text-lg font-semibold">
-                                        {selectedCheckout.Bookings.filter(
-                                            (booking) => booking.status === "ACTIVE"
-                                        )
-                                            .sort((a, b) =>
-                                                a.Gear.gearName.localeCompare(b.Gear.gearName)
+                        {/* Header Sticked */}
+                        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between">
+                            <div className="flex flex-col gap-1">
+                                <DialogTitle>
+                                    <div className="flex items-center gap-2 text-primary">
+                                        <Package className="h-5 w-5" />
+                                        <h2 className="text-xl font-bold leading-none tracking-tight">
+                                            {selectedCheckout.Bookings.filter(
+                                                (booking) => booking.status === "ACTIVE"
                                             )
-                                            .map((item) => item.Gear.gearName)
-                                            .join(", ")}
-                                    </h3>
-                                </div>
-                                <div className="flex gap-2">
-                                    <BookingStatusBadge
-                                        status={ selectedCheckout.checkoutStatus }
-                                    />
-                                    <BookingPaymentStatusBadge
-                                        status={ selectedCheckout.CheckoutPayment.paymentStatus }
-                                        isCourtesy={ selectedCheckout.isCourtesy }
-                                        wasRefunded={ selectedCheckout.wasRefunded }
-                                    />
-                                </div>
+                                                .sort((a, b) =>
+                                                    a.Gear.gearName.localeCompare(b.Gear.gearName)
+                                                )
+                                                .map((item) => item.Gear.gearName)
+                                                .join(", ")}
+                                        </h2>
+                                    </div>
+                                </DialogTitle>
+                                <span className="text-sm text-muted-foreground">
+                  Agendamento em {formatDate(selectedCheckout.date)}
+                                </span>
                             </div>
 
-                            <Separator />
+                            <div className="flex items-center gap-2">
+                                <BookingStatusBadge status={ selectedCheckout.checkoutStatus } />
+                                <BookingPaymentStatusBadge
+                                    status={ selectedCheckout.CheckoutPayment.paymentStatus }
+                                    isCourtesy={ selectedCheckout.isCourtesy }
+                                    wasRefunded={ selectedCheckout.wasRefunded }
+                                />
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={ () => setBookingDetailsDialogOpen(false) }
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
 
-                            {/* Informações do funcionário */}
-                            <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">
-                  FUNCIONÁRIO RESPONSÁVEL
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="p-6 space-y-6 bg-muted/10">
+                            {/* Cliente */}
+                            <Card className="shadow-sm border-l-4 border-l-primary/50">
+                                <CardHeader className="pb-2">
                                     <div className="flex items-center gap-2">
-                                        <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                                        <span>{selectedCheckout.AccountableEmployee.fullname}</span>
+                                        <User className="h-4 w-4 text-primary" />
+                                        <h3 className="font-semibold text-sm uppercase tracking-wide">
+                      Cliente
+                                        </h3>
                                     </div>
-                                    {selectedCheckout.Customer.email && (
-                                        <div className="flex items-center gap-2">
-                                            <FileText className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent className="space-y-3 pt-0">
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-lg">
+                                            {selectedCheckout.Customer.fullname}
+                                        </span>
+                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
+                                            {selectedCheckout.Customer.email && (
+                                                <div className="flex items-center gap-1">
+                                                    <Mail className="h-3.5 w-3.5" />
+                                                    {selectedCheckout.Customer.email}
+                                                </div>
+                                            )}
+                                            {selectedCheckout.Customer.cellphone && (
+                                                <div className="flex items-center gap-1">
+                                                    <Phone className="h-3.5 w-3.5" />
+                                                    {selectedCheckout.Customer.cellphone}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <Separator />
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                        <div>
+                                            <span className="block text-xs text-muted-foreground">
+                        Documento
+                                            </span>
                                             <span>
-                                                {selectedCheckout.AccountableEmployee.documentNumber}
+                                                {selectedCheckout.Customer.documentNumber || "—"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Localização */}
+                            <Card className="shadow-sm">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-primary" />
+                                        <h3 className="font-semibold text-sm uppercase tracking-wide">
+                      Localização
+                                        </h3>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-2 pt-0 text-sm">
+                                    <div className="font-medium">
+                                        {selectedCheckout.Address.Street.streetName},{" "}
+                                        {selectedCheckout.Address.buildingNumber}
+                                    </div>
+                                    <div className="text-muted-foreground">
+                                        {selectedCheckout.Address.Neighborhood.neighborhoodName},{" "}
+                                        {selectedCheckout.Address.City.cityName}
+                                    </div>
+                                    {selectedCheckout.Address.addressComplement && (
+                                        <div className="flex items-center gap-1 text-muted-foreground bg-muted p-2 rounded-md mt-2">
+                                            <CircleEllipsis className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="italic">
+                                                {selectedCheckout.Address.addressComplement}
                                             </span>
                                         </div>
                                     )}
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
 
-                            <Separator />
-                            {/* Informações do cliente */}
-                            <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">
-                  CLIENTE
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {/* Data e Hora */}
+                            <Card className="shadow-sm">
+                                <CardHeader className="pb-2">
                                     <div className="flex items-center gap-2">
-                                        <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                                        <span>{selectedCheckout.Customer.fullname}</span>
+                                        <Calendar className="h-4 w-4 text-primary" />
+                                        <h3 className="font-semibold text-sm uppercase tracking-wide">
+                      Agendamento
+                                        </h3>
                                     </div>
-                                    {selectedCheckout.Customer.email && (
-                                        <div className="flex items-center gap-2">
-                                            <Mail className="h-4 w-4 text-muted-foreground" />
-                                            <span>{selectedCheckout.Customer.email}</span>
+                                </CardHeader>
+                                <CardContent className="pt-0 grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                                            <Calendar className="h-3 w-3" /> Data
                                         </div>
-                                    )}
-                                    {selectedCheckout.Customer.documentNumber && (
-                                        <div className="flex items-center gap-2">
-                                            <FileText className="h-4 w-4 text-muted-foreground" />
-                                            <span>{selectedCheckout.Customer.documentNumber}</span>
+                                        <div className="font-medium">
+                                            {formatDate(selectedCheckout.date)}
                                         </div>
-                                    )}
-                                    {selectedCheckout.Customer.cellphone && (
-                                        <div className="flex items-center gap-2">
-                                            <Phone className="h-4 w-4 text-muted-foreground" />
-                                            <span>{selectedCheckout.Customer.cellphone}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <Separator />
-
-                            {/* Informações de local */}
-                            <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">
-                  LOCAL
-                                </h4>
-                                <div className="grid grid-cols-1 gap-3">
-                                    <div className="flex items-center gap-2">
-                                        <Building className="h-4 w-4 text-muted-foreground" />
-                                        <span>{selectedCheckout.Address.City.cityName}</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                                        <span>
-                                            {selectedCheckout.Address.Neighborhood.neighborhoodName},{" "}
-                                            {selectedCheckout.Address.Street.streetName},{" "}
-                                            {selectedCheckout.Address.buildingNumber}
-                                        </span>
-                                    </div>
-                                    {selectedCheckout.Address.addressComplement && (
-                                        <div className="flex items-center gap-2">
-                                            <CircleEllipsis className="h-4 w-4 text-muted-foreground" />
-                                            <span>{selectedCheckout.Address.addressComplement}</span>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                                            <Clock className="h-3 w-3" /> Horário
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <Separator />
-
-                            {/* Informações de data e hora */}
-                            <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">
-                  DATA E HORA
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                                        <span>{formatDate(selectedCheckout.date)}</span>
-                                        {/* <span>{ selectedCheckout.date.toString() }</span> */}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-muted-foreground" />
-                                        <span>
+                                        <div className="font-medium">
                                             {formatTime(startDate)} - {formatTime(endDate)}
-                                        </span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-muted-foreground" />
-                                        <span>
-                      Duração: {selectedCheckout.totalDurationInMinutes / 60}{" "}
-                      horas
-                                        </span>
+                                    <div className="col-span-2 space-y-1 border-t pt-3 mt-1">
+                                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                                            <Clock className="h-3 w-3" /> Duração Total
+                                        </div>
+                                        <div className="font-medium">
+                                            {selectedCheckout.totalDurationInMinutes / 60} horas
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
 
-                            <Separator />
-
-                            <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">
-                  MOTORISTA
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div>{selectedCheckout.driverId || "A definir"}</div>
-                                </div>
-                            </div>
-
-                            <Separator className="my-6" />
-
-                            {/* Informações financeiras */}
-                            <div className="space-y-2">
-                                <div className="flex items-center">
-                                    <h4 className="font-medium text-sm text-muted-foreground text-nowrap">
-                    INFORMAÇÕES FINANCEIRAS
-                                    </h4>
-                                    <div className="flex w-full justify-end mb-4">
-                                        {selectedCheckout.Bookings.filter(
-                                            (booking) => booking.status === "ACTIVE"
-                                        ).length < 3 &&
-                      checkoutCanBeUpdated && (
-                                            <>
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    onClick={ () => setIsAddGearDialogOpen(true) }
-                                                    className="flex items-center gap-2"
-                                                >
-                                                    <Package className="h-4 w-4" />
-                            Adicionar equipamento
-                                                </Button>
-                                                <AddGearToCheckoutDialog
-                                                    selectedCheckout={ selectedCheckout }
-                                                    setSelectedCheckout={ setSelectedCheckout }
-                                                    isOpen={ isAddGearDialogOpen }
-                                                    setIsOpen={ setIsAddGearDialogOpen }
-                                                />
-                                            </>
+                            {/* Funcionário & Motorista */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <Card className="shadow-sm">
+                                    <CardHeader className="pb-2">
+                                        <div className="flex items-center gap-2">
+                                            <User className="h-4 w-4 text-muted-foreground" />
+                                            <h3 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
+                        Funcionário
+                                            </h3>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="pt-0 text-sm font-medium">
+                                        {selectedCheckout.AccountableEmployee.fullname}
+                                    </CardContent>
+                                </Card>
+                                <Card className="shadow-sm">
+                                    <CardHeader className="pb-2">
+                                        <div className="flex items-center gap-2">
+                                            <Building className="h-4 w-4 text-muted-foreground" />
+                                            <h3 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
+                        Motorista
+                                            </h3>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="pt-0 text-sm font-medium">
+                                        {selectedCheckout.driverId || (
+                                            <span className="text-muted-foreground italic">
+                        A definir
+                                            </span>
                                         )}
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            {/* Financeiro */}
+                            <Card className="shadow-sm border-t-4 border-t-green-500">
+                                <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                                    <div className="flex items-center gap-2">
+                                        <DollarSign className="h-4 w-4 text-primary" />
+                                        <h3 className="font-semibold text-sm uppercase tracking-wide">
+                      Financeiro
+                                        </h3>
                                     </div>
-                                </div>
-                                <Card>
-                                    <CardContent>
-                                        {/* Informações individuais de cada booking */}
+                                    {selectedCheckout.Bookings.filter(
+                                        (booking) => booking.status === "ACTIVE"
+                                    ).length < 3 &&
+                    checkoutCanBeUpdated && (
+                                        <Button
+                                            size="xs"
+                                            variant="secondary"
+                                            onClick={ () => setIsAddGearDialogOpen(true) }
+                                            className="flex items-center gap-1 h-7 text-xs"
+                                        >
+                                            <Package className="h-3 w-3" />
+                        Add Equip.
+                                        </Button>
+                                    )}
+                                </CardHeader>
+                                <CardContent className="pt-0 space-y-4">
+                                    {/* Lista de Equipamentos e Custos Individuais */}
+                                    <div className="space-y-3">
                                         {selectedCheckout.Bookings.sort((a, b) =>
                                             a.Gear.gearName.localeCompare(b.Gear.gearName)
-                                        ).map((booking, index, arr) => {
-                                            if (booking.status === "INACTIVE") return;
-                                            const isLast = index === arr.length - 1;
+                                        ).map((booking) => {
+                                            if (booking.status === "INACTIVE") return null;
 
                                             return (
                                                 <div
                                                     key={ booking.bookingId }
-                                                    className={ `grid grid-cols-12 gap-2 py-2 ${
-                                                        isLast ? "" : "border-b"
-                                                    }` }
+                                                    className="bg-muted/30 p-3 rounded-md text-sm space-y-2 border"
                                                 >
-                                                    <div className="flex items-center gap-2 col-span-3">
-                                                        <Package className="h-4 w-4 text-muted-foreground" />
-                                                        <span>{booking.Gear.gearName}</span>
+                                                    <div className="flex items-start justify-between">
+                                                        <span className="font-semibold flex items-center gap-2">
+                                                            <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                                                            {booking.Gear.gearName}
+                                                        </span>
+                                                        <span className="font-medium">
+                                                            {centsToStringWithCurrencyMark(
+                                                                booking.individualPrice
+                                                            )}
+                                                        </span>
                                                     </div>
 
-                                                    <div className="flex flex-col gap-2 col-span-7">
-                                                        <div className="flex items-center gap-2">
-                                                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                                            <span>
-                                                                <span className="font-bold">Valor:</span>{" "}
-                                                                {centsToStringWithCurrencyMark(
-                                                                    booking.individualPrice
-                                                                )}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                                            <span className="text-sm">
-                                                                <span className="font-bold">
-                                  Custo extra máquina:
-                                                                </span>{" "}
+                                                    {booking.extraMachineCosts > 0 && (
+                                                        <div className="flex flex-col gap-0.5 text-muted-foreground text-xs pl-5 border-l-2 ml-1">
+                                                            <span>Extras:</span>
+                                                            <span className="font-semibold">
                                                                 {centsToStringWithCurrencyMark(
                                                                     booking.extraMachineCosts
                                                                 )}
                                                             </span>
-                                                        </div>
-                                                        {booking.extraMachineCostsDescription && (
-                                                            <div className="flex items-center gap-2">
-                                                                <Text className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                                                <span className="text-sm text-wrap">
-                                                                    <span className="font-bold">Descrição:</span>{" "}
+                                                            {booking.extraMachineCostsDescription && (
+                                                                <span className="italic opacity-80">
                                                                     {booking.extraMachineCostsDescription}
                                                                 </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                            )}
+                                                        </div>
+                                                    )}
 
                                                     {checkoutCanBeUpdated && (
-                                                        <div className="flex items-center justify-end col-span-2 gap-4">
-                                                            <Tooltip defaultOpen={ false }>
-                                                                <TooltipTrigger defaultChecked={ false } asChild>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="xs"
-                                                                        className="size-8"
-                                                                        onClick={ () =>
-                                                                            setSelectedBookingIdForExtraCosts(
-                                                                                booking.bookingId
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <Pencil />
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>Adicionar ou editar custos extras</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                            <Tooltip defaultOpen={ false }>
-                                                                <TooltipTrigger defaultChecked={ false } asChild>
-                                                                    <Button
-                                                                        disabled={
-                                                                            selectedCheckout.Bookings.filter(
-                                                                                (item) => item.status === "ACTIVE"
-                                                                            ).length < 2
-                                                                        }
-                                                                        variant="destructive"
-                                                                        size="xs"
-                                                                        className="size-8"
-                                                                        onClick={ () =>
-                                                                            handleRemoveGearFromCheckout(booking)
-                                                                        }
-                                                                    >
-                                                                        <X />
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>Remover equipamento do agendamento.</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-
-                                                            <MachineExtraCostsDialog
-                                                                setBookingDetailsDialogOpen={
-                                                                    setBookingDetailsDialogOpen
+                                                        <div className="flex justify-end gap-2 pt-1">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="xs"
+                                                                className="h-6 w-6 p-0"
+                                                                onClick={ () =>
+                                                                    setSelectedBookingIdForExtraCosts(
+                                                                        booking.bookingId
+                                                                    )
                                                                 }
-                                                                setSelectedCheckout={ setSelectedCheckout }
-                                                                selectedBookingId={
-                                                                    selectedBookingIdForExtraCosts
-                                                                }
-                                                                isMachineExtraCostsDialogOpen={
-                                                                    !!selectedBookingIdForExtraCosts
-                                                                }
-                                                                setMachineExtraCostsDialogOpen={ () =>
-                                                                    setSelectedBookingIdForExtraCosts(null)
-                                                                }
-                                                            />
+                                                            >
+                                                                <Pencil className="h-3 w-3" />
+                                                            </Button>
+                                                            {selectedCheckout.Bookings.filter(
+                                                                (b) => b.status === "ACTIVE"
+                                                            ).length > 1 && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="xs"
+                                                                    className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                                                    onClick={ () =>
+                                                                        handleRemoveGearFromCheckout(booking)
+                                                                    }
+                                                                >
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
                                             );
                                         })}
+                                    </div>
 
-                                        <Separator className="my-6" />
+                                    <Separator />
 
-                                        {/* Informações do checkout em geral */}
-                                        <div className="flex flex-col gap-4 text-sm text-muted-foreground mb-4">
-                                            {selectedCheckout.basePrice > 0 && (
-                                                <div>
-                                                    <span className="font-bold">Preço base:</span>{" "}
-                                                    {centsToStringWithCurrencyMark(
-                                                        selectedCheckout.basePrice
-                                                    )}
-                                                </div>
-                                            )}
-                                            {selectedCheckout.basePrice > 0 && (
-                                                <div>
-                                                    <span className="font-bold">Extras:</span>{" "}
-                                                    {centsToStringWithCurrencyMark(
-                                                        selectedCheckout.Bookings.filter(
-                                                            (a) => a.status === "ACTIVE"
-                                                        ).reduce(
-                                                            (acc, current) => acc + current.extraMachineCosts,
-                                                            0
-                                                        )
-                                                    )}
-                                                </div>
-                                            )}
-                                            {selectedCheckout.distanceInKm > 0 && (
-                                                <div>
-                                                    <span className="font-bold">Distância (km):</span>{" "}
-                                                    {selectedCheckout.distanceInKm}
-                                                </div>
-                                            )}
-                                            {selectedCheckout.fuelCost > 0 && (
-                                                <div>
-                                                    <span className="font-bold">Preço combustível:</span>{" "}
-                                                    {centsToStringWithCurrencyMark(
-                                                        selectedCheckout.fuelCost
-                                                    )}
-                                                </div>
-                                            )}
-                                            {selectedCheckout.foodCost > 0 && (
-                                                <div>
-                                                    <span className="font-bold">Alimentação:</span>{" "}
-                                                    {centsToStringWithCurrencyMark(
-                                                        selectedCheckout.foodCost
-                                                    )}
-                                                </div>
-                                            )}
-                                            {selectedCheckout.lodgingCost > 0 && (
-                                                <div>
-                                                    <span className="font-bold">Hospedagem:</span>{" "}
-                                                    {centsToStringWithCurrencyMark(
-                                                        selectedCheckout.lodgingCost
-                                                    )}
-                                                </div>
-                                            )}
-                                            {selectedCheckout.additionalTransportCost > 0 && (
-                                                <div>
-                                                    <span className="font-bold">
-                            Valores adicionais de transporte:
-                                                    </span>{" "}
-                                                    {centsToStringWithCurrencyMark(
-                                                        selectedCheckout.additionalTransportCost
-                                                    )}
-                                                </div>
-                                            )}
-                                            {checkoutCanBeUpdated && (
-                                                <div className="flex items-center justify-end col-span-2">
-                                                    <Tooltip defaultOpen={ false }>
-                                                        <TooltipTrigger defaultChecked={ false } asChild>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="xs"
-                                                                className="size-8"
-                                                                onClick={ () =>
-                                                                    setAdditionalCostsDialogOpen(true)
-                                                                }
-                                                            >
-                                                                <Pencil />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>Adicionar ou editar custos extras</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-
-                                                    <UpdateAdditionalCostsDialog
-                                                        selectedCheckout={ selectedCheckout }
-                                                        setAdditionalCostsDialogOpen={
-                                                            setAdditionalCostsDialogOpen
-                                                        }
-                                                        isAdditionalCostsDialogOpen={
-                                                            isAdditionalCostsDialogOpen
-                                                        }
-                                                        setSelectedCheckout={ setSelectedCheckout }
-                                                    />
-                                                </div>
-                                            )}
+                                    {/* Custos Adicionais Gerais */}
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between items-center text-muted-foreground p-1 hover:bg-muted/20 rounded">
+                                            <span>Preço Base</span>
+                                            <span>
+                                                {centsToStringWithCurrencyMark(
+                                                    selectedCheckout.basePrice
+                                                )}
+                                            </span>
                                         </div>
-                                        <Separator className="my-6" />
 
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex gap-2 items-center">
-                                                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                                <span>
-                                                    <span className="font-bold">Total do checkout: </span>
-                                                    {centsToStringWithCurrencyMark(
-                                                        selectedCheckout.totalPrice
-                                                    )}
+                                        <div className="flex justify-between items-center text-muted-foreground p-1 hover:bg-muted/20 rounded">
+                                            <span className="flex items-center gap-1">
+                        Combustível{" "}
+                                                <span className="text-xs opacity-70">
+                          ({selectedCheckout.distanceInKm} km)
                                                 </span>
-                                            </div>
-
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                type="button"
-                                                onClick={ () => {
-                                                    if (!selectedCheckout) return;
-
-                                                    const lines = [
-                                                        `Equipamento${
-                                                            selectedCheckout.Bookings.length > 1 ? "s" : ""
-                                                        }: ${selectedCheckout.Bookings.map(
-                                                            (item) => item.Gear.gearName
-                                                        ).join(", ")}`,
-                                                        `Data: ${new Date(
-                                                            selectedCheckout.date
-                                                        ).toLocaleDateString("pt-BR")}`,
-                                                        `Horário: ${formatTime(startDate)} - ${formatTime(
-                                                            endDate
-                                                        )}`,
-                                                        `Duração: ${
-                                                            selectedCheckout.totalDurationInMinutes / 60
-                                                        }h`,
-                                                        `Preço total: ${centsToStringWithCurrencyMark(
-                                                            selectedCheckout.totalPrice
-                                                        )}`,
-                                                        `Cliente: ${selectedCheckout.Customer.fullname} - ${
-                                                            selectedCheckout.Customer.documentNumber ||
-                              "Sem documento"
-                                                        }`,
-                                                        `Contato: ${
-                                                            selectedCheckout.Customer.cellphone ||
-                              "Sem telefone"
-                                                        }`,
-                                                        `Endereço: ${selectedCheckout.Address.Street.streetName}, ${selectedCheckout.Address.buildingNumber} - ${selectedCheckout.Address.Neighborhood.neighborhoodName}, ${selectedCheckout.Address.City.cityName}`,
-                                                        `Motorista: ${
-                                                            selectedCheckout.driverId || "A definir"
-                                                        }`,
-                                                        selectedCheckout.foodCost > 0 &&
-                              `Alimentação: ${centsToStringWithCurrencyMark(
-                                  selectedCheckout.foodCost
-                              )}`,
-                                                        selectedCheckout.fuelCost > 0 &&
-                              `Combustível: ${centsToStringWithCurrencyMark(
-                                  selectedCheckout.fuelCost
-                              )}`,
-                                                        selectedCheckout.lodgingCost > 0 &&
-                              `Hospedagem: ${centsToStringWithCurrencyMark(
-                                  selectedCheckout.lodgingCost
-                              )}`,
-                                                        selectedCheckout.additionalTransportCost > 0 &&
-                              `Custos adicionais de transporte: ${centsToStringWithCurrencyMark(
-                                  selectedCheckout.additionalTransportCost
-                              )}`,
-                                                        selectedCheckout.observations &&
-                              selectedCheckout.observations.trim().length > 0 &&
-                              `Observações: ${selectedCheckout.observations}`,
-                                                    ].filter(Boolean); // remove falsy (undefined/false) linhas
-
-                                                    const textToCopy = lines.join("\n");
-
-                                                    navigator.clipboard.writeText(textToCopy);
-                                                    toast.success(
-                                                        "Resumo copiado para a área de transferência."
-                                                    );
-                                                } }
-                                            >
-                                                <Copy className="w-4 h-4 text-primary" />
-                                            </Button>
+                                            </span>
+                                            <span>
+                                                {centsToStringWithCurrencyMark(
+                                                    selectedCheckout.fuelCost
+                                                )}
+                                            </span>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
+
+                                        {(selectedCheckout.lodgingCost > 0 ||
+                      selectedCheckout.foodCost > 0 ||
+                      selectedCheckout.additionalTransportCost > 0) && (
+                                            <div className="pl-2 border-l-2 border-muted space-y-1 my-1">
+                                                {selectedCheckout.lodgingCost > 0 && (
+                                                    <div className="flex justify-between items-center text-muted-foreground text-xs">
+                                                        <span>Hospedagem</span>
+                                                        <span>
+                                                            {centsToStringWithCurrencyMark(
+                                                                selectedCheckout.lodgingCost
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {selectedCheckout.foodCost > 0 && (
+                                                    <div className="flex justify-between items-center text-muted-foreground text-xs">
+                                                        <span>Alimentação</span>
+                                                        <span>
+                                                            {centsToStringWithCurrencyMark(
+                                                                selectedCheckout.foodCost
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {selectedCheckout.additionalTransportCost > 0 && (
+                                                    <div className="flex justify-between items-center text-muted-foreground text-xs">
+                                                        <span>Outros transportes</span>
+                                                        <span>
+                                                            {centsToStringWithCurrencyMark(
+                                                                selectedCheckout.additionalTransportCost
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {checkoutCanBeUpdated && (
+                                            <div className="flex justify-end pt-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="xs"
+                                                    className="flex items-center gap-1 h-7"
+                                                    onClick={ () => setAdditionalCostsDialogOpen(true) }
+                                                >
+                                                    <Pencil className="h-3 w-3" /> Editar Custos Extras
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <Separator />
+
+                                    {/* Total */}
+                                    <div className="bg-primary/5 p-4 rounded-lg flex items-center justify-between">
+                                        <span className="font-bold text-lg">Total</span>
+                                        <span className="font-bold text-2xl text-primary">
+                                            {centsToStringWithCurrencyMark(
+                                                selectedCheckout.totalPrice
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    {/* Copy Button */}
+                                    <Button
+                                        variant="secondary"
+                                        className="w-full"
+                                        onClick={ () => {
+                                            const lines = [
+                                                "*Resumo do Agendamento*",
+                                                `Máquina: ${selectedCheckout.Bookings.map(
+                                                    (b) => b.Gear.gearName
+                                                ).join(", ")}`,
+                                                `Data: ${new Date(
+                                                    selectedCheckout.date
+                                                ).toLocaleDateString("pt-BR")}`,
+                                                `Horário: ${formatTime(startDate)} - ${formatTime(
+                                                    endDate
+                                                )}`,
+                                                `Valor: ${centsToStringWithCurrencyMark(
+                                                    selectedCheckout.totalPrice
+                                                )}`,
+                                                "(Pagamento de locação somente por pix ou transferência bancária).",
+                                                `Cliente: ${selectedCheckout.Customer.fullname}`,
+                                                `Contato: ${selectedCheckout.Customer.cellphone}`,
+                                                `Endereço: ${selectedCheckout.Address.Street.streetName}, ${selectedCheckout.Address.buildingNumber} - ${selectedCheckout.Address.Neighborhood.neighborhoodName}, ${selectedCheckout.Address.City.cityName}`,
+                                                `Estado: ${selectedCheckout.Address.State.stateName}`,
+                                                `CPF/CNPJ: ${
+                                                    selectedCheckout.Customer.documentNumber || "—"
+                                                }`,
+                                                `MOTORISTA: ${
+                                                    selectedCheckout.driverId || "A definir"
+                                                }`,
+                                            ];
+                                            navigator.clipboard.writeText(lines.join("\n"));
+                                            toast.success("Resumo copiado!");
+                                        } }
+                                    >
+                                        <Copy className="h-4 w-4 mr-2" /> Copiar Resumo Curto
+                                    </Button>
+                                </CardContent>
+                            </Card>
 
                             {/* Observações */}
-                            <Card>
-                                <CardHeader>
-                                    <div className="space-y-2">
-                                        <h4 className="font-medium text-sm text-muted-foreground">
-                      OBSERVAÇÕES
-                                        </h4>
+                            <Card className="shadow-sm">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-muted-foreground" />
+                                        <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+                      Observações
+                                        </h3>
                                     </div>
                                 </CardHeader>
-                                <CardContent>
-                                    <div className="flex flex-col items-end gap-3">
-                                        <Textarea
-                                            disabled={ !checkoutCanBeUpdated }
-                                            placeholder="Adicione uma observação"
-                                            value={ checkoutObservations }
-                                            onChange={ (e) => setCheckoutObservations(e.target.value) }
-                                            className="max-h-[150px]"
-                                            maxLength={ 100 }
-                                        />
+                                <CardContent className="pt-0 space-y-2">
+                                    <Textarea
+                                        disabled={ !checkoutCanBeUpdated }
+                                        placeholder="Adicione uma observação"
+                                        value={ checkoutObservations }
+                                        onChange={ (e) => setCheckoutObservations(e.target.value) }
+                                        className="min-h-[100px] resize-none"
+                                        maxLength={ 500 }
+                                    />
+                                    <div className="flex justify-end">
                                         <Button
+                                            size="sm"
                                             onClick={ () => handleUpdateCheckoutObservations() }
                                             disabled={
                                                 checkoutObservations === selectedCheckout.observations
@@ -788,46 +711,48 @@ export function BookingDetailsDialog({
                             </Card>
                         </div>
 
-                        <DialogFooter className="flex flex-row gap-3 justify-center sm:justify-center items-center w-full">
+                        {/* Footer Sticked */}
+                        <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t p-4 flex flex-col sm:flex-row gap-3 justify-end z-10">
                             <Button
-                                className="flex items-center justify-center cursor-pointer"
-                                variant={ "outline" }
+                                variant="outline"
                                 onClick={ () => setIsCheckoutPaymentMethodDialogOpen(true) }
+                                className="sm:w-auto w-full"
                             >
-                                <DollarSign className="" />
-                                <span className="md:block hidden">Gerenciar pagamento</span>
+                                <DollarSign className="mr-2 h-4 w-4" />
+                Gerenciar Pagamento
                             </Button>
+
                             <Button
-                                variant="default"
-                                className="flex items-center justify-center cursor-pointer"
-                                onClick={ () =>
+                                onClick={ () => {
                                     handleChangeCheckoutStatus(
                                         selectedCheckout.checkoutId,
                                         "Concluido"
-                                    )
-                                }
+                                    );
+                                } }
                                 disabled={
                                     selectedCheckout.checkoutStatus === "Concluido" ||
-                  selectedCheckout.checkoutStatus === "Cancelado" ||
-                  selectedCheckout.CheckoutPayment.paymentStatus !== "Pago"
+                  selectedCheckout.checkoutStatus === "Cancelado"
                                 }
+                                className="sm:w-auto w-full"
                             >
-                                <Check className="" />
-                                <span className="md:block hidden">Marcar como concluído</span>
+                                <Check className="mr-2 h-4 w-4" />
+                Concluir Agendamento
                             </Button>
-                            <Button
-                                disabled={ selectedCheckout.checkoutStatus !== "Pendente" }
-                                variant="destructive"
-                                onClick={ () => setCancelBookingConfirmationDialogOpen(true) }
-                                className="flex items-center justify-center cursor-pointer"
-                            >
-                                <Trash2 className="" />
-                                <span className="md:block hidden">Cancelar Agendamento</span>
-                            </Button>
-                        </DialogFooter>
+
+                            {selectedCheckout.checkoutStatus === "Pendente" && (
+                                <Button
+                                    variant="destructive"
+                                    onClick={ () => setCancelBookingConfirmationDialogOpen(true) }
+                                    className="sm:w-auto w-full"
+                                >
+                  Cancelamento
+                                </Button>
+                            )}
+                        </div>
                     </>
                 )}
 
+                {/* Dialogs Components Rendered inside content but functionally independent */}
                 <CheckoutPaymentMethodDialog
                     selectedCheckout={ selectedCheckout }
                     setSelectedCheckout={ setSelectedCheckout }
@@ -836,6 +761,7 @@ export function BookingDetailsDialog({
                         setIsCheckoutPaymentMethodDialogOpen
                     }
                 />
+
                 <CancelBookingConfirmationDialog
                     handleChangeCheckoutStatus={ handleChangeCheckoutStatus }
                     selectedCheckout={ selectedCheckout }
@@ -846,6 +772,30 @@ export function BookingDetailsDialog({
                     isCancelBookingConfirmationDialogOpen={
                         isCancelBookingConfirmationDialogOpen
                     }
+                />
+
+                <UpdateAdditionalCostsDialog
+                    selectedCheckout={ selectedCheckout }
+                    setAdditionalCostsDialogOpen={ setAdditionalCostsDialogOpen }
+                    isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
+                    setSelectedCheckout={ setSelectedCheckout }
+                />
+
+                <MachineExtraCostsDialog
+                    setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
+                    setSelectedCheckout={ setSelectedCheckout }
+                    selectedBookingId={ selectedBookingIdForExtraCosts }
+                    isMachineExtraCostsDialogOpen={ !!selectedBookingIdForExtraCosts }
+                    setMachineExtraCostsDialogOpen={ () =>
+                        setSelectedBookingIdForExtraCosts(null)
+                    }
+                />
+
+                <AddGearToCheckoutDialog
+                    selectedCheckout={ selectedCheckout }
+                    setSelectedCheckout={ setSelectedCheckout }
+                    isOpen={ isAddGearDialogOpen }
+                    setIsOpen={ setIsAddGearDialogOpen }
                 />
             </DialogContent>
         </Dialog>

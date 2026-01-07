@@ -134,8 +134,13 @@ type CityOption = {
   distance: number;
 };
 
-export function CityInput({ distanceInKM, setDistanceInKM }: {distanceInKM: number, setDistanceInKM: (value: number) => void}) {
-
+export function CityInput({
+    distanceInKM,
+    setDistanceInKM,
+}: {
+  distanceInKM: number;
+  setDistanceInKM: (value: number) => void;
+}) {
     // const [ distanceInKM, setDistanceInKM ] = useState(0);
     const [ cityQuery, setCityQuery ] = useState("");
     const [ cityOptions, setCityOptions ] = useState<CityOption[]>([]);
@@ -162,32 +167,45 @@ export function CityInput({ distanceInKM, setDistanceInKM }: {distanceInKM: numb
                 // Coordenadas de referência (Recife)
                 const baseCity = { lat: -8.0476, lon: -34.877 };
 
-                const results = data.map((item: any) => {
-                    const lat = Number(item.lat);
-                    const lon = Number(item.lon);
+                const results = data.map(
+                    (item: {
+            lat: string;
+            lon: string;
+            place_id: number;
+            address?: {
+              city?: string;
+              town?: string;
+              village?: string;
+              municipality?: string;
+            };
+            display_name: string;
+          }) => {
+                        const lat = Number(item.lat);
+                        const lon = Number(item.lon);
 
-                    const distance = getDistanceInKm(
-                        baseCity.lat,
-                        baseCity.lon,
-                        lat,
-                        lon
-                    );
+                        const distance = getDistanceInKm(
+                            baseCity.lat,
+                            baseCity.lon,
+                            lat,
+                            lon
+                        );
 
-                    // CORREÇÃO LÓGICA: Usar 'item' em vez de 'data[0]'
-                    const cityName =
-            item.address?.city ||
-            item.address?.town ||
-            item.address?.village ||
-            item.address?.municipality ||
-            item.display_name.split(",")[0]; // Fallback para o nome principal
+                        // CORREÇÃO LÓGICA: Usar 'item' em vez de 'data[0]'
+                        const cityName =
+              item.address?.city ||
+              item.address?.town ||
+              item.address?.village ||
+              item.address?.municipality ||
+              item.display_name.split(",")[0]; // Fallback para o nome principal
 
-                    return {
-                        // CORREÇÃO: Usar ID único da API (place_id ou osm_id) em vez do index
-                        id: item.place_id,
-                        name: cityName,
-                        distance: Math.round(distance),
-                    };
-                });
+                        return {
+                            // CORREÇÃO: Usar ID único da API (place_id ou osm_id) em vez do index
+                            id: item.place_id,
+                            name: cityName,
+                            distance: Math.round(distance),
+                        };
+                    }
+                );
 
                 // Remove duplicatas baseadas no nome da cidade para limpar a UI
                 const uniqueResults = results.filter(
@@ -196,8 +214,8 @@ export function CityInput({ distanceInKM, setDistanceInKM }: {distanceInKM: numb
                 );
 
                 setCityOptions(uniqueResults);
-            } catch (error: any) {
-                if (error.name !== "AbortError") {
+            } catch (error: unknown) {
+                if (error instanceof Error && error.name !== "AbortError") {
                     console.error("Erro ao buscar cidades:", error);
                     setCityOptions([]);
                 }
@@ -238,7 +256,9 @@ export function CityInput({ distanceInKM, setDistanceInKM }: {distanceInKM: numb
                 <CommandList>
                     {isLoadingCities && <CommandEmpty>Buscando cidades...</CommandEmpty>}
 
-                    {!isLoadingCities && cityQuery.length > 0 && cityOptions.length === 0 && (
+                    {!isLoadingCities &&
+            cityQuery.length > 0 &&
+            cityOptions.length === 0 && (
                         <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
                     )}
 
@@ -266,7 +286,8 @@ export function CityInput({ distanceInKM, setDistanceInKM }: {distanceInKM: numb
             </Command>
 
             <p className="text-sm mt-4 text-center">
-        Distância selecionada: <strong className="text-primary">{distanceInKM} km</strong>
+        Distância selecionada:{" "}
+                <strong className="text-primary">{distanceInKM} km</strong>
             </p>
         </div>
     );

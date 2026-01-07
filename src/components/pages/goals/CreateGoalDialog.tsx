@@ -1,6 +1,12 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -22,7 +28,11 @@ import { toast } from "sonner";
 import PriceInput from "@/components/shared/PriceInput";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { CreateGoalDataType, CreateGoalDataWithMoneyInCents, CreateGoalSchema } from "@/lib/zod/CreateGoalValidation";
+import {
+    CreateGoalDataType,
+    CreateGoalDataWithMoneyInCents,
+    CreateGoalSchema,
+} from "@/lib/zod/CreateGoalValidation";
 import { CreateGoal } from "@/services/goals.service";
 import { getMonthName } from "@/utils/getMonthName";
 import { SelectGear } from "../bookings/create/SelectGear";
@@ -34,7 +44,15 @@ export function CreateGoalDialog() {
     const [ dialogNovaMeta, setDialogNovaMeta ] = useState(false);
     const [ isSubmitting, setIsSubmitting ] = useState(false); // Adicionado estado de submitting
 
-    const { control, register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<CreateGoalDataType>({
+    const {
+        control,
+        register,
+        handleSubmit,
+        formState: { errors },
+        setValue,
+        watch,
+        reset,
+    } = useForm<CreateGoalDataType>({
         resolver: zodResolver(CreateGoalSchema),
         defaultValues: {
             monthIndex: new Date().getMonth(),
@@ -43,18 +61,19 @@ export function CreateGoalDialog() {
             goalType: "MONEY", // 4. Definir "Faturamento" como padrão
             targetCents: "",
             targetQuantity: 0,
-        }
+        },
     });
     const watchTargetCents = watch("targetCents");
     const watchGoalType = watch("goalType"); // 5. Observar o tipo de meta
     const watchFilialId = watch("filialId"); // 5. Observar o tipo de meta
-    const [ selectedGearName, setSelectedGearName ] = useState<string | undefined>(undefined);
+    const [ selectedGearName, setSelectedGearName ] = useState<string | undefined>(
+        undefined
+    );
 
     useEffect(() => {
-        if(selectedGearName) {
+        if (selectedGearName) {
             setValue("gearId", selectedGearName);
         }
-
     }, [ setValue, selectedGearName ]);
     async function handleCreateGoal(newGoalData: CreateGoalDataType) {
         setIsSubmitting(true); // Desabilita o botão
@@ -69,13 +88,14 @@ export function CreateGoalDialog() {
                 targetCents: parseStringToCents(String(newGoalData.targetCents)), // Converte R$ para centavos
             };
             delete payload.targetQuantity; // Remove o campo não utilizado
-        } else { // goalType === "GEAR"
+        } else {
+            // goalType === "GEAR"
             // Se for 'GEAR', envie 'targetQuantity' como número
             payload = {
                 ...newGoalData,
                 goalType: "GEAR", // Garante o tipo correto
                 targetQuantity: newGoalData.targetQuantity, // Já é um número
-                targetCents: undefined
+                targetCents: undefined,
             };
             delete payload.targetCents; // Remove o campo não utilizado
         }
@@ -84,7 +104,9 @@ export function CreateGoalDialog() {
             const response = await CreateGoal(payload);
 
             if (response.statusCode !== 201) {
-                toast.warning(response.message || "Erro desconhecido", { style: { fontSize: "1rem" } });
+                toast.warning(response.message || "Erro desconhecido", {
+                    style: { fontSize: "1rem" },
+                });
             } else {
                 toast.success("Meta criada com sucesso!", {
                     style: { fontSize: "1rem" },
@@ -115,14 +137,16 @@ export function CreateGoalDialog() {
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                Nova Meta
+          Nova Meta
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
                 <form onSubmit={ handleSubmit(handleCreateGoal) }>
                     <DialogHeader>
                         <DialogTitle>Criar Nova Meta Mensal</DialogTitle>
-                        <DialogDescription>Defina uma nova meta de vendas para uma filial</DialogDescription>
+                        <DialogDescription>
+              Defina uma nova meta de vendas para uma filial
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-4 md:grid-cols-2">
@@ -150,8 +174,10 @@ export function CreateGoalDialog() {
                                             onValueChange={ (value: "MONEY" | "GEAR") => {
                                                 field.onChange(value);
                                                 // Limpa os valores ao trocar o tipo
-                                                if(value === "MONEY") {
-                                                    setValue("targetQuantity", 0, { shouldValidate: true });
+                                                if (value === "MONEY") {
+                                                    setValue("targetQuantity", 0, {
+                                                        shouldValidate: true,
+                                                    });
                                                 } else {
                                                     setValue("targetCents", "", { shouldValidate: true });
                                                 }
@@ -162,7 +188,9 @@ export function CreateGoalDialog() {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="MONEY">Faturamento (R$)</SelectItem>
-                                                <SelectItem value="GEAR">Máquinas Agendadas (Qtd)</SelectItem>
+                                                <SelectItem value="GEAR">
+                          Máquinas Agendadas (Qtd)
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                     ) }
@@ -244,7 +272,7 @@ export function CreateGoalDialog() {
                                     control={ control }
                                     render={ ({ field }) => (
                                         <Select
-                                            value={ field.value.toString() }
+                                            value={ field.value?.toString() ?? "" }
                                             onValueChange={ (value) => field.onChange(Number(value)) }
                                         >
                                             <SelectTrigger className="w-full">
@@ -271,8 +299,12 @@ export function CreateGoalDialog() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" type="button" onClick={ () => handleOpenChange(false) }>
-                  Cancelar
+                        <Button
+                            variant="outline"
+                            type="button"
+                            onClick={ () => handleOpenChange(false) }
+                        >
+              Cancelar
                         </Button>
                         <Button type="submit" disabled={ isSubmitting }>
                             {isSubmitting ? "Criando..." : "Criar Meta"}

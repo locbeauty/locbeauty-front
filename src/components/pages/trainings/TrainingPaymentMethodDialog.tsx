@@ -38,7 +38,12 @@ import {
     centsToStringWithCurrencyMark,
 } from "@/utils/centsToString";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { PaymentMethods, paymentStatuses } from "@/utils/constants";
+import {
+    PaymentMethods,
+    paymentStatuses,
+    PaymentStatuses,
+    PaymentModes,
+} from "@/utils/constants";
 import { validateCheckoutForm } from "@/utils/validators/update-payment-info";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
 import { UpdateTraining } from "@/services/trainings.service";
@@ -48,8 +53,6 @@ import { Training } from "@/utils/@types/training";
 
 // --- TIPOS ---
 
-type PaymentStatuses = "Pendente" | "Pago" | "Parcial";
-type PaymentModes = "AVista" | "Parcelado";
 export type PayerType = "TRAINEE" | "VOLUNTEER";
 type InstallmentStatus = "Pendente" | "Pago";
 
@@ -641,7 +644,7 @@ export function TrainingPaymentMethodDialog({
                                         id="isCourtesy"
                                         disabled={
                                             currentPaymentData?.firstPaymentStatus === "Pago" ||
-                                            currentPaymentData?.secondPaymentStatus === "Pago"
+                      currentPaymentData?.secondPaymentStatus === "Pago"
                                         }
                                         checked={ isCourtesy }
                                         onChange={ (e) => setIsCourtesy(e.target.checked) }

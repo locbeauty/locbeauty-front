@@ -31,7 +31,7 @@ export default function BirthdaysPage() {
                 currentDate={ currentDate }
                 setCurrentDate={ setCurrentDate }
                 viewType="mes"
-                setViewType={ setViewType as any }
+                setViewType={ (view) => setViewType() }
                 hideViewSelect={ true }
             />
             <BirthdayCalendarContent currentDate={ currentDate } />

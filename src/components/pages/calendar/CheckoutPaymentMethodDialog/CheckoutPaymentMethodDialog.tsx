@@ -77,23 +77,25 @@ export type LocalErrorsType = {
   };
 };
 
+export type PaymentMethodData = {
+  paymentStatus: PaymentStatuses;
+  paymentMode: PaymentModes;
+  firstPaymentAmount: number;
+  firstPaymentDate: Date | null;
+  firstPaymentMethod: PaymentMethod | null;
+  firstPaymentStatus: InstallmentStatus;
+  secondPaymentAmount: number;
+  secondPaymentDate: Date | null;
+  secondPaymentMethod: PaymentMethod | null;
+  secondPaymentStatus: InstallmentStatus;
+};
+
 export type UpdateCheckoutPayload = {
   checkoutStatus: CheckoutStatuses;
   isCourtesy?: boolean;
   wasRefunded?: boolean;
   cancellationFee?: number;
-  CheckoutPayment: {
-    paymentStatus: PaymentStatuses;
-    paymentMode: PaymentModes;
-    firstPaymentAmount: number;
-    firstPaymentDate: Date | null;
-    firstPaymentMethod: PaymentMethod | null;
-    firstPaymentStatus: InstallmentStatus;
-    secondPaymentAmount: number;
-    secondPaymentDate: Date | null;
-    secondPaymentMethod: PaymentMethod | null;
-    secondPaymentStatus: InstallmentStatus;
-  };
+  CheckoutPayment: PaymentMethodData;
 };
 
 const initialErrors: LocalErrorsType = {

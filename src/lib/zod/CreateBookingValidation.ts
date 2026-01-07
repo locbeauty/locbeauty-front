@@ -1,4 +1,10 @@
-import { CheckoutStatuses, PaymentMethods, paymentStatuses, PaymentStatuses } from "@/utils/constants";
+import {
+    CheckoutStatuses,
+    PaymentMethods,
+    paymentStatuses,
+    PaymentStatuses,
+} from "@/utils/constants";
+import { centsToString } from "@/utils/centsToString";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { z } from "zod";
 
@@ -9,15 +15,20 @@ export const checkoutPaymentDataSchema = z
         firstPaymentDate: z.coerce.date().optional().nullable(),
         firstPaymentAmount: z.string().optional(),
         firstPaymentMethod: z.enum(PaymentMethods).optional(),
-        firstPaymentStatus: z.enum([ "Pendente", "Pago" ]).default("Pendente").optional(),
+        firstPaymentStatus: z
+            .enum([ "Pendente", "Pago" ])
+            .default("Pendente")
+            .optional(),
 
         secondPaymentDate: z.coerce.date().optional().nullable(),
         secondPaymentAmount: z.string().optional(),
         secondPaymentMethod: z.enum(PaymentMethods).optional(),
-        secondPaymentStatus: z.enum([ "Pendente", "Pago" ]).default("Pendente").optional(),
+        secondPaymentStatus: z
+            .enum([ "Pendente", "Pago" ])
+            .default("Pendente")
+            .optional(),
     })
     .superRefine((data, ctx) => {
-
         if (data.paymentStatus === "Pendente") {
             return;
         }
@@ -49,20 +60,25 @@ export const checkoutPaymentDataSchema = z
         }
     });
 
-export  type CheckoutPaymenteDataType = z.infer<typeof checkoutPaymentDataSchema>
+export type CheckoutPaymenteDataType = z.infer<
+  typeof checkoutPaymentDataSchema
+>;
 
 export const createCheckoutFormSchema = z
     .object({
-        // ... (todos os campos mantidos: filialId, date, customer, gears, etc.) ...
+    // ... (todos os campos mantidos: filialId, date, customer, gears, etc.) ...
         filialId: z.string(),
 
-        date: z.date({ message: "Data é obrigatória." }).refine((val) => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            return val.getTime() >= today.getTime();
-        }, {
-            message: "Data não pode ser no passado.",
-        }),
+        date: z.date({ message: "Data é obrigatória." }).refine(
+            (val) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return val.getTime() >= today.getTime();
+            },
+            {
+                message: "Data não pode ser no passado.",
+            }
+        ),
         startHourInMinutes: z.number(),
         totalDurationInMinutes: z.number(),
 
@@ -72,18 +88,24 @@ export const createCheckoutFormSchema = z
         customer: z.object({
             customerId: z.string({ message: "ID do cliente é obrigatório" }),
             fullname: z.string({ message: "Nome do cliente é obrigatório" }),
-            documentNumber: z.string({ message: "Documento do cliente é obrigatório" }),
-            cellphone: z.string()
+            documentNumber: z.string({
+                message: "Documento do cliente é obrigatório",
+            }),
+            cellphone: z.string(),
         }),
         addressId: z.string(),
 
-        gears: z.array(z.object({
-            gearId: z.string({ message: "ID da máquina é obrigatório" }),
-            gearName: z.string({ message: "Nome da máquina é obrigatório" }),
-            individualPrice: z.string().refine(value => parseStringToCents(value) > 0, {
-                message: "Valor deve ser maior que R$ 0,00."
-            }),
-        })),
+        gears: z.array(
+            z.object({
+                gearId: z.string({ message: "ID da máquina é obrigatório" }),
+                gearName: z.string({ message: "Nome da máquina é obrigatório" }),
+                individualPrice: z
+                    .string()
+                    .refine((value) => parseStringToCents(value) > 0, {
+                        message: "Valor deve ser maior que R$ 0,00.",
+                    }),
+            })
+        ),
 
         basePrice: z.string().min(1, { message: "Preço base é obrigatório." }),
         extraMachineCosts: z.string().optional(),
@@ -93,6 +115,8 @@ export const createCheckoutFormSchema = z
         foodCost: z.string().optional(),
         fuelCost: z.string().optional(),
         additionalTransportCost: z.string().optional(),
+
+        consumption: z.number().optional(),
 
         totalPrice: z.string(),
 
@@ -107,11 +131,12 @@ export const createCheckoutFormSchema = z
         observations: z.string().trim().optional(),
     })
     .superRefine((data, ctx) => {
-
-        // 🎯 REGRA NOVA: Se "Parcial", o valor da 1ª parcela deve ser MENOR que o total.
+    // 🎯 REGRA NOVA: Se "Parcial", o valor da 1ª parcela deve ser MENOR que o total.
         if (data.paymentStatus === "Parcial") {
             const totalCents = parseStringToCents(data.totalPrice);
-            const firstPaymentCents = parseStringToCents(data.paymentInfo.firstPaymentAmount);
+            const firstPaymentCents = parseStringToCents(
+                data.paymentInfo.firstPaymentAmount
+            );
 
             // A validação de (firstPaymentCents === 0) já é feita pelo esquema aninhado.
             // Aqui, só precisamos checar se é >= ao total.
@@ -119,34 +144,58 @@ export const createCheckoutFormSchema = z
                 ctx.addIssue({
                     path: [ "paymentInfo", "firstPaymentAmount" ], // Anexa o erro ao campo de valor
                     code: z.ZodIssueCode.custom,
-                    message: "O valor parcial deve ser menor que o total. Para quitar, selecione 'Pago'.",
+                    message:
+            "O valor parcial deve ser menor que o total. Para quitar, selecione 'Pago'.",
                 });
             }
         }
 
-        // Validação do TotalPrice (mantida)
-        const fuelCost = (data.distanceInKm && data.fuelCost) ? parseStringToCents(data.fuelCost) * data.distanceInKm : 0;
-        const computedTotal =
-                parseStringToCents(data.basePrice)
-                + parseStringToCents(data.lodgingCost)
-                + parseStringToCents(data.foodCost)
-                + fuelCost
-                + parseStringToCents(data.additionalTransportCost)
-                + parseStringToCents(data.extraMachineCosts);
+        // Validação do TotalPrice
+        // O custo de combustível depende do consumo. Se não tiver consumo definido, assume 1 para evitar divisão por zero (embora o form use 10 ou 1).
+        // No form: const litersNeeded = distance / consumption;
+        //          const totalFuel = Math.round(litersNeeded * fuelCents);
+        const distance = data.distanceInKm || 0;
+        const consumption = data.consumption || 1; // Default seguro
+        const fuelPriceCents = parseStringToCents(data.fuelCost || "0");
 
+        let fuelCostCents = 0;
+        if (distance > 0 && fuelPriceCents > 0) {
+            const litersNeeded = distance / consumption;
+            fuelCostCents = Math.round(litersNeeded * fuelPriceCents);
+        }
+
+        const computedTotal =
+      parseStringToCents(data.basePrice) +
+      parseStringToCents(data.lodgingCost) +
+      parseStringToCents(data.foodCost) +
+      fuelCostCents +
+      parseStringToCents(data.additionalTransportCost) +
+      parseStringToCents(data.extraMachineCosts);
+
+        // Permitimos uma pequena margem de erro de arredondamento (ex: 1 centavo) se necessário,
+        // mas idealmente deve bater exato se a lógica for idêntica.
         if (parseStringToCents(data.totalPrice) !== computedTotal) {
             ctx.addIssue({
                 path: [ "totalPrice" ],
                 code: z.ZodIssueCode.custom,
-                message: "O preço total deve corresponder à soma dos custos e preço base.",
+                message: `O preço total (${
+                    data.totalPrice
+                }) não bate com a soma (${centsToString(
+                    computedTotal
+                )}). Verifique os custos.`,
             });
         }
     });
 
 // Types
-export type CreateCheckoutFormSchemaType = z.infer<typeof createCheckoutFormSchema>;
+export type CreateCheckoutFormSchemaType = z.infer<
+  typeof createCheckoutFormSchema
+>;
 
-export type CustomCheckoutFormSchemaType = Omit<CreateCheckoutFormSchemaType, "price"> & {
+export type CustomCheckoutFormSchemaType = Omit<
+  CreateCheckoutFormSchemaType,
+  "price"
+> & {
   price: number;
 };
 
@@ -161,6 +210,7 @@ export type CreateCheckoutValidationWithMoneyInCents = Omit<
   | "additionalTransportCost"
   | "gears"
   | "paymentInfo"
+  | "consumption"
 > & {
   basePrice: number;
   extraMachineCosts: number;
@@ -168,6 +218,7 @@ export type CreateCheckoutValidationWithMoneyInCents = Omit<
   foodCost: number;
   fuelCost: number;
   additionalTransportCost: number;
+  consumption: number;
   totalPrice: number;
   gears: {
     gearId: string;

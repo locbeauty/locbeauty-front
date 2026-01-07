@@ -516,9 +516,11 @@ export function TrainingDetailsDialog({
                                     className="flex items-center justify-center gap-2 w-full"
                                     disabled={
                                         selectedTraining.trainingStatus === "Concluido" ||
-                    selectedTraining.trainingStatus === "Cancelado" ||
-                    traineePayment?.paymentStatus !== "Pago" ||
-                    volunteerPayment?.paymentStatus !== "Pago"
+                                        selectedTraining.trainingStatus === "Cancelado" ||
+                                        (traineePayment?.paymentStatus !== "Pago" &&
+                                            !traineePayment?.isCourtesy) ||
+                                        (volunteerPayment?.paymentStatus !== "Pago" &&
+                                            !volunteerPayment?.isCourtesy)
                                     }
                                     onClick={ () => setFinishTrainingConfirmationDialogOpen(true) }
                                 >
