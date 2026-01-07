@@ -1,6 +1,13 @@
 "use client";
 
-import { Clock, DollarSign, MapPin, User, GraduationCap } from "lucide-react";
+import {
+    Clock,
+    DollarSign,
+    MapPin,
+    User,
+    GraduationCap,
+    Cake,
+} from "lucide-react";
 import {
     CalendarEvent,
     getDistanceFromTop,
@@ -10,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { centsToString } from "@/utils/centsToString";
 import { Checkout } from "@/utils/@types/checkouts";
 import { Training } from "@/utils/@types/training";
+import { BirthdayEvent } from "@/utils/@types/birthday";
 
 interface SingleEventBoxProps {
   eventType?: "training" | "checkout";
@@ -29,14 +37,31 @@ export function SingleEventBox({
     const hourColumnWidth = 100;
     const event = group[0];
     const isTraining = "trainingId" in event;
-    const training = event as Training;
-    const checkout = event as Checkout;
+    const isBirthday = "originalBirthdate" in event;
+
+    const training = isTraining ? (event as Training) : null;
+    const birthday = isBirthday ? (event as BirthdayEvent) : null;
+    const checkout = !isTraining && !isBirthday ? (event as Checkout) : null;
 
     // Common properties logic
-    const startHourInMinutes = isTraining
-        ? training.hourInMinutes
-        : checkout.startHourInMinutes;
-    const durationInHours = isTraining ? 2 : checkout.totalDurationInMinutes / 60;
+    let startHourInMinutes = 0;
+    let durationInHours = 1;
+
+    if (training) {
+        startHourInMinutes = training.hourInMinutes;
+        durationInHours = 2;
+    } else if (checkout) {
+        startHourInMinutes = checkout.startHourInMinutes;
+        durationInHours = checkout.totalDurationInMinutes / 60;
+    } else if (birthday) {
+    // Birthdays default to 8:00 AM or specific time if we had it, but helper sets it.
+    // We can parse date or set default.
+    // Helper `getEventBasicInfo` sets startDate.getHours() * 60 + startDate.getMinutes().
+    // Let's assume startDate is correct.
+        const date = new Date(birthday.date);
+        startHourInMinutes = date.getHours() * 60 + date.getMinutes();
+        durationInHours = 1;
+    }
 
     const startHour = Math.floor(startHourInMinutes / 60);
     const startMinute = startHourInMinutes % 60;
@@ -57,24 +82,27 @@ export function SingleEventBox({
     // Convert totalDuration from minutes to hours for styling logic
     return (
         <div
-            key={ isTraining ? training.trainingId : checkout.checkoutId }
+            key={ training?.trainingId || checkout?.checkoutId || birthday?.id }
             className={ cn(
-                "absolute rounded-md border-l-4 p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow overflow-y-auto",
+                "absolute rounded-md border-l-4 p-2 shadow-sm hover:shadow-md transition-shadow overflow-y-auto",
                 // Training specific styling
+                !isBirthday && "cursor-pointer",
                 isTraining &&
           "bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 border-blue-500",
-                !isTraining &&
+                isBirthday &&
+          "bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-100 border-green-500",
+                checkout &&
           "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
                 // Colors for 4h bookings duration
-                !isTraining &&
+                checkout &&
           durationInHours === 4 &&
           "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
                 // Colors for 6h bookings duration
-                !isTraining &&
+                checkout &&
           durationInHours === 6 &&
           "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
                 // Colors for 8 to 12 hours bookings duration
-                !isTraining &&
+                checkout &&
           durationInHours >= 8 &&
           durationInHours <= 12 &&
           "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
@@ -89,41 +117,52 @@ export function SingleEventBox({
         >
             <div className="font-medium text-sm truncate flex items-center gap-1">
                 {isTraining && <GraduationCap className="h-3 w-3" />}
+                {isBirthday && <Cake className="h-3 w-3" />}
                 {isTraining
-                    ? training.Gear.gearName
-                    : checkout.Bookings.filter((booking) => booking.status === "ACTIVE")
-                        .sort((a, b) => a.Gear.gearName.localeCompare(b.Gear.gearName))
-                        .map((item) => item.Gear.gearName)
-                        .join(", ")}
+                    ? training!.Gear.gearName
+                    : isBirthday
+                        ? birthday!.title
+                        : checkout!.Bookings.filter((booking) => booking.status === "ACTIVE")
+                            .sort((a, b) => a.Gear.gearName.localeCompare(b.Gear.gearName))
+                            .map((item) => item.Gear.gearName)
+                            .join(", ")}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
-                <User className="h-3 w-3" />
-                {isTraining ? training.Trainee.name : checkout.Customer.fullname}
-            </div>
-
-            <div className="flex items-center text-xs gap-1 truncate">
-                <MapPin className="h-3 w-3" />
+                {!isBirthday && <User className="h-3 w-3" />}
                 {isTraining
-                    ? training.SourceFilial.filialName
-                    : checkout.SourceFilial?.filialName ||
-            checkout.Address?.City?.cityName}
+                    ? training!.Trainee.name
+                    : isBirthday
+                        ? birthday!.role
+                        : checkout!.Customer.fullname}
             </div>
 
             <div className="flex items-center text-xs gap-1 truncate">
-                <Clock className="h-3 w-3" />
-                {String(startHour).padStart(2, "0")}:
-                {String(startMinute).padStart(2, "0")}
+                {!isBirthday && <MapPin className="h-3 w-3" />}
+                {isTraining
+                    ? training!.SourceFilial.filialName
+                    : isBirthday
+                        ? null
+                        : checkout?.SourceFilial?.filialName ||
+            checkout?.Address?.City?.cityName}
             </div>
 
-            {!isTraining && (
+            {!isBirthday && (
+                <div className="flex items-center text-xs gap-1 truncate">
+                    <Clock className="h-3 w-3" />
+                    {String(startHour).padStart(2, "0")}:
+                    {String(startMinute).padStart(2, "0")}
+                </div>
+            )}
+
+            {checkout && (
                 <div className="flex items-center text-xs gap-1 truncate">
                     <DollarSign className="h-3 w-3" />
                     {centsToString(checkout.totalPrice)}
                 </div>
             )}
 
-            {!isTraining && (
+            {checkout && (
                 <div
                     className={ cn(
                         "absolute bottom-0 left-0 h-1 w-full",
@@ -135,7 +174,7 @@ export function SingleEventBox({
                     ) }
                 />
             )}
-            {isTraining && (
+            {training && (
                 <div
                     className={ cn(
                         "absolute bottom-0 left-0 h-1 w-full",
@@ -146,6 +185,9 @@ export function SingleEventBox({
                                 : "bg-yellow-500"
                     ) }
                 />
+            )}
+            {birthday && (
+                <div className="absolute bottom-0 left-0 h-1 w-full bg-green-500" />
             )}
         </div>
     );

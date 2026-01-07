@@ -1,8 +1,9 @@
 import { Dispatch, SetStateAction } from "react";
 import { Checkout } from "@/utils/@types/checkouts";
 import { Training } from "@/utils/@types/training";
+import { BirthdayEvent } from "@/utils/@types/birthday";
 
-export type CalendarEvent = Checkout | Training;
+export type CalendarEvent = Checkout | Training | BirthdayEvent;
 
 //
 // ─── NAVEGAÇÃO DE DATAS ──────────────────────────────────────────────────────────
@@ -339,6 +340,8 @@ export function getEventBoxHeigh(durationInHours: number) {
 
 export function getEventBasicInfo(event: CalendarEvent) {
     const isTraining = "trainingId" in event;
+    const isBirthday =
+    "type" in event && (event.type === "CUSTOMER" || event.type === "EMPLOYEE");
     let id = "";
     let title = "";
     let durationInHours = 0;
@@ -353,6 +356,12 @@ export function getEventBasicInfo(event: CalendarEvent) {
         startDate = new Date(training.dueDate);
         startDate.setHours(Math.floor(training.hourInMinutes / 60));
         startDate.setMinutes(training.hourInMinutes % 60);
+    } else if (isBirthday) {
+        const birthday = event as BirthdayEvent;
+        id = birthday.id;
+        title = `${birthday.title} (${birthday.role})`;
+        durationInHours = 1; // Arbitrary duration for birthday view
+        startDate = new Date(birthday.date);
     } else {
         const checkout = event as Checkout;
         id = checkout.checkoutId;
@@ -366,5 +375,5 @@ export function getEventBasicInfo(event: CalendarEvent) {
         startDate.setMinutes(checkout.startHourInMinutes % 60);
     }
 
-    return { isTraining, id, title, durationInHours, startDate };
+    return { isTraining, isBirthday, id, title, durationInHours, startDate };
 }

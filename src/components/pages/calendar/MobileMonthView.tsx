@@ -61,6 +61,7 @@ export function MobileMonthView({
                                         {dayEvents.slice(0, 2).map((event) => {
                                             const {
                                                 isTraining,
+                                                isBirthday,
                                                 id,
                                                 title,
                                                 durationInHours,
@@ -71,20 +72,25 @@ export function MobileMonthView({
                                                 <div
                                                     key={ id }
                                                     className={ cn(
-                                                        "h-1.5 rounded-full cursor-pointer transition-all hover:h-2",
+                                                        "h-1.5 rounded-full transition-all hover:h-2",
+                                                        !isBirthday && "cursor-pointer",
                                                         isTraining
                                                             ? "bg-blue-400"
-                                                            : cn(
-                                                                "bg-gray-400",
-                                                                durationInHours === 4 && "bg-blue-400",
-                                                                durationInHours === 6 && "bg-green-400",
-                                                                durationInHours >= 8 &&
+                                                            : isBirthday
+                                                                ? "bg-green-400"
+                                                                : cn(
+                                                                    "bg-gray-400",
+                                                                    durationInHours === 4 && "bg-blue-400",
+                                                                    durationInHours === 6 && "bg-green-400",
+                                                                    durationInHours >= 8 &&
                                     durationInHours <= 12 &&
                                     "bg-purple-400"
-                                                            )
+                                                                )
                                                     ) }
                                                     onClick={ () => openDetails(event) }
-                                                    title={ `${formatTime(startDate)} - ${title}` }
+                                                    title={ `${
+                                                        !isBirthday ? formatTime(startDate) + " - " : ""
+                                                    }${title}` }
                                                 />
                                             );
                                         })}

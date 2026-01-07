@@ -11,8 +11,6 @@ import {
 } from "./bookingViewHelpers";
 import { CalendarMonthHeader } from "./CalendarMonthHeader";
 import { MobileMonthView } from "./MobileMonthView";
-import { Checkout } from "@/utils/@types/checkouts";
-import { Training } from "@/utils/@types/training";
 
 interface MonthViewProps {
   currentDate: Date;
@@ -75,6 +73,7 @@ export function MonthView({
                                         .map((event) => {
                                             const {
                                                 isTraining,
+                                                isBirthday,
                                                 id,
                                                 title,
                                                 durationInHours,
@@ -85,24 +84,30 @@ export function MonthView({
                                                 <div
                                                     key={ id }
                                                     className={ cn(
-                                                        "text-xs p-1 rounded border-l-2 cursor-pointer truncate",
+                                                        "text-xs p-1 rounded border-l-2 truncate",
+                                                        !isBirthday && "cursor-pointer",
                                                         isTraining
                                                             ? "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-500"
-                                                            : cn(
-                                                                "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
-                                                                durationInHours === 4 &&
+                                                            : isBirthday
+                                                                ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-500"
+                                                                : cn(
+                                                                    "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
+                                                                    durationInHours === 4 &&
                                     "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
-                                                                durationInHours === 6 &&
+                                                                    durationInHours === 6 &&
                                     "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
-                                                                durationInHours >= 8 &&
+                                                                    durationInHours >= 8 &&
                                     durationInHours <= 12 &&
                                     "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
-                                                            )
+                                                                )
                                                     ) }
                                                     onClick={ () => openDetails(event) }
-                                                    title={ `${formatTime(startDate)} - ${title}` }
+                                                    title={ `${
+                                                        !isBirthday ? formatTime(startDate) + " - " : ""
+                                                    }${title}` }
                                                 >
-                                                    {formatTime(startDate)} - {title}
+                                                    {!isBirthday && <>{formatTime(startDate)} - </>}
+                                                    {title}
                                                 </div>
                                             );
                                         })}

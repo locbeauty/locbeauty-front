@@ -14,5 +14,6 @@ export const ROUTES = {
     CREATE_BOOKING: "/bookings/create",
     BOOKING_TABLE: "/bookings",
     // VIEW_CALENDAR: "/bookings",
-    TRAININGS: "/trainings"
+    TRAININGS: "/trainings",
+    BIRTHDAYS: "/birthdays",
 };

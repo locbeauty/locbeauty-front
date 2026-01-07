@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/api";
-import { Booking } from "@/utils/@types/bookings";
+import { BookingWithCheckout } from "@/utils/@types/bookings";
 
 export async function UpdateBooking({ body, bookingId }: {body: { individualPrice: number, extraMachineCosts: number, extraMachineCostsDescription: string }, bookingId: string}) {
     const response = await apiRequest({ endpoint: "booking/update", method: "POST", body,  queryParams: { bookingId } });
@@ -7,8 +7,8 @@ export async function UpdateBooking({ body, bookingId }: {body: { individualPric
     return response;
 }
 
-export async function GetBookingById({ bookingId }: {bookingId: string}): Promise<Booking | undefined>{
-    const response = await apiRequest<Booking | undefined>({ endpoint: `booking/${bookingId}` });
+export async function GetBookingById({ bookingId }: {bookingId: string}): Promise<BookingWithCheckout | undefined>{
+    const response = await apiRequest<BookingWithCheckout | undefined>({ endpoint: `booking/${bookingId}` });
 
     return response.data;
 }
