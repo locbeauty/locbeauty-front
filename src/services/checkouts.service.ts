@@ -1,5 +1,8 @@
 import { GetDayCheckoutsResponse } from "@/components/pages/bookings/create/CreateBookingForm";
-import { UpdateCheckoutPayload } from "@/components/pages/bookings/view/CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
+import {
+    PaymentMethodData,
+    UpdateCheckoutPayload,
+} from "@/components/pages/calendar/CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 import { apiRequest, ApiResponse } from "@/lib/api";
 import {
     CreateCheckoutFormSchemaType,

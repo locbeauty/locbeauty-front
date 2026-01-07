@@ -75,6 +75,8 @@ export type UpdateTrainingPayload = {
   TrainingPayment: {
     totalPrice: number;
     basePrice: number;
+    additionalCost: number;
+    additionalCostDescription: string;
     paymentStatus: PaymentStatuses;
     paymentMode: PaymentModes;
     firstPaymentAmount: number;
@@ -147,6 +149,8 @@ interface TrainingPaymentMethodDialogProps {
   isTrainingPaymentMethodDialogOpen: boolean;
   setIsTrainingPaymentMethodDialogOpen: Dispatch<SetStateAction<boolean>>;
   payerType: PayerType;
+  traineeTotalPrice?: number;
+  volunteerTotalPrice?: number;
 }
 
 export function TrainingPaymentMethodDialog({
@@ -155,6 +159,8 @@ export function TrainingPaymentMethodDialog({
     setIsTrainingPaymentMethodDialogOpen,
     payerType,
     setSelectedTraining,
+    traineeTotalPrice,
+    volunteerTotalPrice,
 }: TrainingPaymentMethodDialogProps) {
     const [ trainingStatus, setTrainingStatus ] = useState<string>("Pendente");
     const [ paymentStatus, setPaymentStatus ] =
@@ -197,6 +203,22 @@ export function TrainingPaymentMethodDialog({
 
         return null;
     }, [ selectedTraining, payerType ]);
+
+    // Pega o preço para exibir no label (agora vindo de currentPaymentData) com a mesma lógica robusta
+    const displayPrice =
+    payerType === "TRAINEE"
+        ? traineeTotalPrice ??
+        (currentPaymentData
+            ? currentPaymentData.totalPrice ||
+            (currentPaymentData.basePrice || 0) +
+              (currentPaymentData.additionalCost || 0)
+            : 0)
+        : volunteerTotalPrice ??
+        (currentPaymentData
+            ? currentPaymentData.totalPrice ||
+            (currentPaymentData.basePrice || 0) +
+              (currentPaymentData.additionalCost || 0)
+            : 0);
 
     // Lógica de desabilitação
     const areDetailsDisabled = useMemo(() => {
@@ -309,7 +331,7 @@ export function TrainingPaymentMethodDialog({
     useEffect(() => {
         if (!currentPaymentData) return;
 
-        const totalCents = currentPaymentData.totalPrice;
+        const totalCents = displayPrice;
 
         // Helpers
         const totalString = centsToString(totalCents);
@@ -388,15 +410,13 @@ export function TrainingPaymentMethodDialog({
         firstPaymentStatus,
         secondPaymentStatus,
         secondPaymentAmount,
+        displayPrice,
     ]);
 
     async function handleSave() {
     // Recalcular total antes para validar
-        const totalCents =
-      currentPaymentData?.totalPrice ||
-      (currentPaymentData?.basePrice || 0) +
-        (currentPaymentData?.additionalCost || 0) ||
-      0;
+
+        const totalCents = displayPrice;
 
         const isValid = validateCheckoutForm({
             paymentStatus,
@@ -430,6 +450,9 @@ export function TrainingPaymentMethodDialog({
             wasRefunded,
             cancellationFee: parseStringToCents(cancellationFee),
             TrainingPayment: {
+                additionalCost: currentPaymentData?.additionalCost || 0,
+                additionalCostDescription:
+          currentPaymentData?.additionalCostDescription || "",
                 paymentStatus:
           firstPaymentMethod && secondPaymentMethod ? "Pago" : paymentStatus,
                 paymentMode,
@@ -526,13 +549,6 @@ export function TrainingPaymentMethodDialog({
     const headerColorClass = isTrainee
         ? "text-orange-600 bg-orange-50"
         : "text-blue-600 bg-blue-50";
-
-    // Pega o preço para exibir no label (agora vindo de currentPaymentData) com a mesma lógica robusta
-    const displayPrice = currentPaymentData
-        ? currentPaymentData.totalPrice ||
-      (currentPaymentData.basePrice || 0) +
-        (currentPaymentData.additionalCost || 0)
-        : 0;
 
     // Lógica para bloquear inputs se a parcela já estiver paga no banco
     const isFirstInstallmentSavedAsPaid =
@@ -698,7 +714,7 @@ export function TrainingPaymentMethodDialog({
                         paymentStatus === "Pago"
                                             }
                                             withLabel={ false }
-                                            value={ firstPaymentAmount || "2,00" }
+                                            value={ firstPaymentAmount || "0,00" }
                                             onChange={ (value) => setFirstPaymentAmount(value) }
                                         />
                                         {errors.paymentInfo?.firstPaymentAmount && (

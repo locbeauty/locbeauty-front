@@ -22,6 +22,7 @@ import {
     Trash2,
     Wallet,
     FileText,
+    Pencil,
 } from "lucide-react";
 
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
@@ -30,6 +31,7 @@ import {
     TrainingPaymentMethodDialog,
     UpdateTrainingPayload,
 } from "./TrainingPaymentMethodDialog";
+import EditTrainingFinancialsDialog from "./EditTrainingFinancialsDialog";
 import { centsToString } from "@/utils/centsToString";
 import { Training } from "@/utils/@types/training";
 import { TrainingPayment } from "@/utils/@types/payments";
@@ -71,6 +73,22 @@ export function TrainingDetailsDialog({
     const [ currentTrainingStatus, setCurrentTrainingStatus ] = useState(
         selectedTraining?.trainingStatus
     );
+
+    const [ isFinancialEditDialogOpen, setIsFinancialEditDialogOpen ] =
+    useState(false);
+    const [ financialEditPayerType, setFinancialEditPayerType ] =
+    useState<PayerType>("TRAINEE");
+
+    const handleOpenFinancialEdit = (type: PayerType) => {
+        setFinancialEditPayerType(type);
+        setIsFinancialEditDialogOpen(true);
+    };
+
+    const handleSuccessFinancialEdit = (updated: Training) => {
+        if (setSelectedTraining) {
+            setSelectedTraining(updated);
+        }
+    };
 
     // --- Extrair os pagamentos do Array ---
     const { traineePayment, volunteerPayment } = useMemo(() => {
@@ -118,6 +136,9 @@ export function TrainingDetailsDialog({
                         : null,
                     secondPaymentMethod: traineePayment.secondPaymentMethod,
                     secondPaymentStatus: traineePayment.secondPaymentStatus,
+                    additionalCost: traineePayment.additionalCost || 0,
+                    additionalCostDescription:
+              traineePayment.additionalCostDescription || "",
                 }
                 : {
                     paymentStatus: "Pendente" as const,
@@ -132,6 +153,8 @@ export function TrainingDetailsDialog({
                     secondPaymentDate: null,
                     secondPaymentMethod: null,
                     secondPaymentStatus: "Pendente" as const,
+                    additionalCost: 0,
+                    additionalCostDescription: "",
                 };
 
             const payload: UpdateTrainingPayload = {
@@ -171,17 +194,61 @@ export function TrainingDetailsDialog({
         }
     };
 
+    // Estados para os valores financeiros
+    const [ traineeBasePrice, setTraineeBasePrice ] = useState(0);
+    const [ traineeAdditionalCost, setTraineeAdditionalCost ] = useState(0);
+    const [
+        traineeAdditionalCostDescription,
+        setTraineeAdditionalCostDescription,
+    ] = useState("");
+    const [ traineeTotalPrice, setTraineeTotalPrice ] = useState(0);
+    const [ volunteerTotalPrice, setVolunteerTotalPrice ] = useState(0);
+
+    // Atualiza os estados quando o selectedTraining mudar
+    useEffect(() => {
+        if (traineePayment) {
+            setTraineeBasePrice(traineePayment.basePrice || 0);
+            setTraineeAdditionalCost(traineePayment.additionalCost || 0);
+            setTraineeAdditionalCostDescription(
+                traineePayment.additionalCostDescription || ""
+            );
+            setTraineeTotalPrice(traineePayment.totalPrice || 0);
+        } else {
+            setTraineeBasePrice(0);
+            setTraineeAdditionalCost(0);
+            setTraineeAdditionalCostDescription("");
+            setTraineeTotalPrice(0);
+        }
+
+        if (volunteerPayment) {
+            setVolunteerTotalPrice(volunteerPayment.totalPrice || 0);
+        } else {
+            setVolunteerTotalPrice(0);
+        }
+    }, [ traineePayment, volunteerPayment ]);
+
     // Helper para formatar moeda
     const formatCurrency = (val: number) => `R$ ${centsToString(val)}`;
 
-    // Valores para exibição
-    const traineeBasePrice = traineePayment?.basePrice || 0;
-    const traineeAdditionalCost = traineePayment?.additionalCost || 0;
-    const traineeAdditionalCostDescription =
-    traineePayment?.additionalCostDescription || "";
-    const traineeTotalPrice = traineePayment?.totalPrice || 0;
-
-    const volunteerTotalPrice = volunteerPayment?.totalPrice || 0;
+    // Callback para atualizar o estado financeiro imediatamente
+    const handleFinancialUpdate = (values: {
+    basePrice: number;
+    additionalCost: number;
+    additionalCostDescription: string;
+    totalPrice: number;
+  }) => {
+        if (financialEditPayerType === "TRAINEE") {
+            setTraineeBasePrice(values.basePrice);
+            setTraineeAdditionalCost(values.additionalCost);
+            setTraineeAdditionalCostDescription(values.additionalCostDescription);
+            setTraineeTotalPrice(values.totalPrice);
+        } else if (financialEditPayerType === "VOLUNTEER") {
+            // Volunteers might only use total price in this logic, but if needed we can map others
+            // For now, based on the dialog logic, it sends all 4 fields.
+            // If volunteer logic differs, adapt here. Assuming similar structure:
+            setVolunteerTotalPrice(values.totalPrice);
+        }
+    };
 
     return (
         <Dialog open={ open } onOpenChange={ onOpenChange }>
@@ -323,13 +390,25 @@ export function TrainingDetailsDialog({
                             {/* Card 1: Financeiro - Aluno */}
                             <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10">
                                 <div>
-                                    <h4 className="font-semibold text-sm flex items-center gap-2 mb-3 text-muted-foreground">
-                                        <Wallet className="w-4 h-4" /> Financeiro - Aluno
-                                        <BookingPaymentStatusBadge
-                                            status={ traineePayment?.paymentStatus || "Pendente" }
-                                            isCourtesy={ traineePayment?.isCourtesy }
-                                            wasRefunded={ traineePayment?.wasRefunded }
-                                        />
+                                    <h4 className="font-semibold text-sm flex items-center justify-between gap-2 mb-3 text-muted-foreground">
+                                        <div className="flex items-center gap-2">
+                                            <Wallet className="w-4 h-4" /> Financeiro - Aluno
+                                            <BookingPaymentStatusBadge
+                                                status={ traineePayment?.paymentStatus || "Pendente" }
+                                                isCourtesy={ traineePayment?.isCourtesy }
+                                                wasRefunded={ traineePayment?.wasRefunded }
+                                            />
+                                        </div>
+                                        {traineePayment?.paymentStatus === "Pendente" && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6"
+                                                onClick={ () => handleOpenFinancialEdit("TRAINEE") }
+                                            >
+                                                <Pencil className="h-3 w-3" />
+                                            </Button>
+                                        )}
                                     </h4>
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between items-center text-muted-foreground">
@@ -363,13 +442,25 @@ export function TrainingDetailsDialog({
                             {(volunteerTotalPrice > 0 || selectedTraining.Volunteer) && (
                                 <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10">
                                     <div>
-                                        <h4 className="font-semibold text-sm flex items-center gap-2 mb-3 text-muted-foreground">
-                                            <Wallet className="w-4 h-4" /> Financeiro - Modelo
-                                            <BookingPaymentStatusBadge
-                                                status={ volunteerPayment?.paymentStatus || "Pendente" }
-                                                isCourtesy={ volunteerPayment?.isCourtesy }
-                                                wasRefunded={ volunteerPayment?.wasRefunded }
-                                            />
+                                        <h4 className="font-semibold text-sm flex items-center justify-between gap-2 mb-3 text-muted-foreground">
+                                            <div className="flex items-center gap-2">
+                                                <Wallet className="w-4 h-4" /> Financeiro - Modelo
+                                                <BookingPaymentStatusBadge
+                                                    status={ volunteerPayment?.paymentStatus || "Pendente" }
+                                                    isCourtesy={ volunteerPayment?.isCourtesy }
+                                                    wasRefunded={ volunteerPayment?.wasRefunded }
+                                                />
+                                            </div>
+                                            {volunteerPayment?.paymentStatus === "Pendente" && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-6 w-6"
+                                                    onClick={ () => handleOpenFinancialEdit("VOLUNTEER") }
+                                                >
+                                                    <Pencil className="h-3 w-3" />
+                                                </Button>
+                                            )}
                                         </h4>
                                         <div className="space-y-2 text-sm">
                                             <div className="flex justify-between items-center font-bold">
@@ -449,6 +540,8 @@ export function TrainingDetailsDialog({
                     setIsTrainingPaymentMethodDialogOpen={
                         setIsTrainingPaymentMethodDialogOpen
                     }
+                    traineeTotalPrice={ traineeTotalPrice }
+                    volunteerTotalPrice={ volunteerTotalPrice }
                 />
             )}
 
@@ -475,6 +568,30 @@ export function TrainingDetailsDialog({
                 setCurrentTrainingStatus={ setCurrentTrainingStatus }
                 selectedTraining={ selectedTraining }
                 handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
+            />
+
+            <EditTrainingFinancialsDialog
+                open={ isFinancialEditDialogOpen }
+                onOpenChange={ setIsFinancialEditDialogOpen }
+                training={ selectedTraining }
+                payerType={ financialEditPayerType }
+                onSuccess={ handleSuccessFinancialEdit }
+                onFinancialUpdate={ handleFinancialUpdate }
+                currentValues={
+                    financialEditPayerType === "TRAINEE"
+                        ? {
+                            basePrice: traineeBasePrice,
+                            additionalCost: traineeAdditionalCost,
+                            additionalCostDescription: traineeAdditionalCostDescription,
+                            totalPrice: traineeTotalPrice,
+                        }
+                        : {
+                            basePrice: 0, // Volunteers might not check basePrice but we pass 0
+                            additionalCost: 0,
+                            additionalCostDescription: "",
+                            totalPrice: volunteerTotalPrice,
+                        }
+                }
             />
         </Dialog>
     );
