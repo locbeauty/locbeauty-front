@@ -12,12 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
     User,
-    Mail,
     Phone,
-    MapPin,
     FileText,
-    Hash,
-    Home,
     Calendar,
     Clock,
     CheckCircle2,
@@ -25,13 +21,14 @@ import {
     Filter,
 } from "lucide-react";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
-import { Trainee } from "@/utils/@types/trainee";
-import { Training } from "@/utils/@types/training";
+import { Volunteer } from "@/utils/@types/volunteer";
+import { Training } from "@/utils/@types/training"; // Assuming Training type is available or needs to be defined
+import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 
-export interface TraineeDetailsDialogProps {
+export interface VolunteerDetailsDialogProps {
   isOpen: boolean;
-  setIsOpen: Dispatch<SetStateAction<boolean>>;
-  trainee: Trainee | null;
+  setIsOpen: (isOpen: boolean) => void;
+  volunteer: Volunteer | null;
   allTrainings: Training[];
 }
 
@@ -54,18 +51,18 @@ const getStatusColorClass = (status: string | null) => {
     }
 };
 
-export function TraineeDetailsDialog({
+export function VolunteerDetailsDialog({
     isOpen,
     setIsOpen,
-    trainee,
+    volunteer,
     allTrainings,
-}: TraineeDetailsDialogProps) {
+}: VolunteerDetailsDialogProps) {
     const [ filterDate, setFilterDate ] = useState<string>("");
 
     const trainingsList = useMemo(() => {
-        if (!trainee || !allTrainings) return [];
-        return allTrainings.filter((t) => t.traineeId === trainee.traineeId);
-    }, [ trainee, allTrainings ]);
+        if (!volunteer || !allTrainings) return [];
+        return allTrainings.filter((t) => t.volunteerId === volunteer.volunteerId);
+    }, [ volunteer, allTrainings ]);
 
     const filteredTrainings = useMemo(() => {
         if (!filterDate) return trainingsList;
@@ -85,13 +82,15 @@ export function TraineeDetailsDialog({
 
     const clearFilter = () => setFilterDate("");
 
-    if (!trainee) return null;
+    if (!volunteer) return null;
 
     return (
         <Dialog open={ isOpen } onOpenChange={ setIsOpen }>
             <DialogContent className="max-h-[90vh] w-[90vw] md:w-[600px] overflow-hidden flex flex-col">
                 <DialogHeader className="px-1">
-                    <DialogTitle className="text-xl">Detalhes do Aluno</DialogTitle>
+                    <DialogTitle className="text-xl">
+            Detalhes do Paciente Modelo
+                    </DialogTitle>
                     <DialogDescription>
             Informações completas do cadastro e histórico.
                     </DialogDescription>
@@ -105,10 +104,10 @@ export function TraineeDetailsDialog({
                                 <User className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold">{trainee.name}</h3>
+                                <h3 className="text-lg font-bold">{volunteer.name}</h3>
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-muted-foreground">
-                    Aluno Ativo
+                    Paciente Modelo
                                     </span>
                                 </div>
                             </div>
@@ -126,7 +125,7 @@ export function TraineeDetailsDialog({
                                     <span className="font-medium text-muted-foreground">
                     CPF:
                                     </span>
-                                    <span>{trainee.documentNumber || "Não informado"}</span>
+                                    <span>{volunteer.documentNumber || "Não informado"}</span>
                                 </div>
                             </div>
                         </div>
@@ -140,72 +139,9 @@ export function TraineeDetailsDialog({
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg border">
                                 <div className="flex items-center gap-2 text-sm">
-                                    <Mail className="h-4 w-4 text-primary/70 shrink-0" />
-                                    <span className="truncate" title={ trainee.email }>
-                                        {trainee.email}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm">
                                     <Phone className="h-4 w-4 text-primary/70 shrink-0" />
-                                    <span>{trainee.cellphone}</span>
+                                    <span>{volunteer.cellphone}</span>
                                 </div>
-                            </div>
-                        </div>
-
-                        <Separator />
-
-                        {/* Endereços */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                    <MapPin className="h-3 w-3" /> Endereços
-                                </h4>
-                                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                                    {trainee.Addresses?.length || 0}
-                                </span>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-3">
-                                {trainee.Addresses && trainee.Addresses.length > 0 ? (
-                                    trainee.Addresses.map((addr, index) => (
-                                        <div
-                                            key={ index }
-                                            className="relative flex flex-col gap-1 p-4 rounded-lg border bg-card text-card-foreground shadow-sm"
-                                        >
-                                            <div className="absolute top-3 right-3">
-                                                <Home className="h-4 w-4 text-muted-foreground/30" />
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <div className="mt-1">
-                                                    <div className="flex h-2 w-2 rounded-full bg-primary" />
-                                                </div>
-                                                <div className="text-sm">
-                                                    <p className="font-medium leading-none mb-1">
-                                                        {addr.Street.streetName}, {addr.buildingNumber}
-                                                    </p>
-                                                    {addr.addressComplement && (
-                                                        <p className="text-muted-foreground text-xs mb-1">
-                              Comp: {addr.addressComplement}
-                                                        </p>
-                                                    )}
-                                                    <p className="text-muted-foreground">
-                                                        {addr.Neighborhood.neighborhoodName}
-                                                    </p>
-                                                    <p className="text-muted-foreground">
-                                                        {addr.City.cityName} - {addr.State.stateName}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center py-6 text-center border-2 border-dashed rounded-lg bg-muted/10">
-                                        <MapPin className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                                        <p className="text-sm text-muted-foreground">
-                      Nenhum endereço vinculado.
-                                        </p>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -265,9 +201,9 @@ export function TraineeDetailsDialog({
                             ) : (
                                 <div className="flex flex-col gap-3">
                                     {filteredTrainings.map((training) => {
-                                        // Encontra o pagamento específico do aluno (TRAINEE)
+                                        // Encontra o pagamento específico do modelo (VOLUNTEER)
                                         const payment = training.TrainingPayment?.find(
-                                            (p) => p.payerType === "TRAINEE"
+                                            (p) => p.payerType === "VOLUNTEER"
                                         );
 
                                         return (
@@ -300,16 +236,9 @@ export function TraineeDetailsDialog({
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    {payment && (
-                                                        <Badge
-                                                            variant="outline"
-                                                            className={ `${getStatusColorClass(
-                                                                payment.paymentStatus
-                                                            )}` }
-                                                        >
-                                                            {payment.paymentStatus}
-                                                        </Badge>
-                                                    )}
+                                                    <BookingStatusBadge
+                                                        status={ training.trainingStatus }
+                                                    />
                                                 </div>
 
                                                 {payment && (
@@ -318,7 +247,6 @@ export function TraineeDetailsDialog({
                                                             <p className="text-xs font-semibold text-muted-foreground">
                                 Detalhes do Pagamento
                                                             </p>
-                                                            {/* --- CORREÇÃO AQUI: Usando payment.price --- */}
                                                             <span className="text-xs font-bold text-primary/80">
                                 Total:{" "}
                                                                 {centsToStringWithCurrencyMark(

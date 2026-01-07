@@ -11,6 +11,8 @@ export interface BookingWithCheckout {
   extraMachineCosts: number
   extraMachineCostsDescription: string
   status: "ACTIVE" | "INACTIVE"
+  isCourtesy: boolean
+  wasRefunded: boolean
   gear: {
     gearId: string
     gearName: string

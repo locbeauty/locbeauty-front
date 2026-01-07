@@ -302,6 +302,7 @@ export function CheckoutPaymentMethodDialog({
             firstPaymentAmount,
             firstPaymentDate,
             firstPaymentMethod,
+            firstPaymentStatus, // Passando o status da 1ª parcela
             secondPaymentAmount,
             secondPaymentDate,
             secondPaymentMethod,
@@ -381,7 +382,7 @@ export function CheckoutPaymentMethodDialog({
               secondPaymentMethod && secondPaymentDate
                   ? "Pago"
                   : selectedCheckout.CheckoutPayment.secondPaymentStatus,
-                        paymentMode: paymentStatus === "Parcial" ? "Parcelado" : "AVista",
+                        paymentMode: paymentMode,
                         paymentStatus:
               secondPaymentMethod && secondPaymentDate ? "Pago" : paymentStatus,
                     },
@@ -476,7 +477,7 @@ export function CheckoutPaymentMethodDialog({
                                     htmlFor="courtesy"
                                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                 >
-                  É Cortesia?
+                  Cortesia
                                 </Label>
                             </div>
 

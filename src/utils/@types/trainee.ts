@@ -3,13 +3,13 @@ import { Gear } from "./gears";
 import { Training } from "./training";
 
 export interface Trainee {
-    traineeId: string,
-    name: string,
-    documentNumber: string,
-    cellphone: string,
-    email: string,
-    Addresses: Address[],
-    Trainings: Training[]
+  traineeId: string;
+  name: string;
+  documentNumber: string;
+  cellphone: string;
+  email: string;
+  Addresses: Address[];
+  Trainings: Training[];
 }
 
 // export interface Training {

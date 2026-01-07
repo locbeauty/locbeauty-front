@@ -338,16 +338,22 @@ export function TrainingPaymentMethodDialog({
 
         switch (paymentStatus) {
         case "Pago": {
-        // if (secondPaymentStatus !== "Pendente") {
-        //     setSecondPaymentStatus("Pendente");
-        // }
-            setPaymentMode("AVista");
-            if (firstPaymentAmount !== totalString) {
-                setFirstPaymentAmount(totalString);
+        // Se já for Parcelado, mantém. Se não, vira À Vista (comportamento padrão de "Pago" direto)
+            if (paymentMode !== "Parcelado") {
+                setPaymentMode("AVista");
             }
-            // if (secondPaymentAmount !== "0,00") {
-            //     setSecondPaymentAmount("0,00");
-            // }
+
+            if (firstPaymentAmount !== totalString) {
+                // Se for parcelado, não queremos sobrescrever o valor da 1ª parcela com o total
+                // A menos que o usuário esteja mudando de ideia e queira pagar tudo na 1ª.
+                // Mas aqui, se o status é "Pago" e o mode é "Parcelado", assumimos que as DUAS parcelas foram pagas?
+                // Ou que o usuário quer dizer que "Está tudo pago".
+
+                // Se for "AVista", preenchemos tudo na 1ª parcela.
+                if (paymentMode !== "Parcelado") {
+                    setFirstPaymentAmount(totalString);
+                }
+            }
 
             if (!firstPaymentDate) {
                 setFirstPaymentDate(new Date().toISOString().split("T")[0]);
@@ -411,6 +417,7 @@ export function TrainingPaymentMethodDialog({
         secondPaymentStatus,
         secondPaymentAmount,
         displayPrice,
+        paymentMode,
     ]);
 
     async function handleSave() {
@@ -424,6 +431,7 @@ export function TrainingPaymentMethodDialog({
             firstPaymentAmount,
             firstPaymentDate,
             firstPaymentMethod,
+            firstPaymentStatus, // Passando o status da 1ª parcela
             secondPaymentAmount,
             secondPaymentDate,
             secondPaymentMethod,
@@ -631,6 +639,10 @@ export function TrainingPaymentMethodDialog({
                                     <input
                                         type="checkbox"
                                         id="isCourtesy"
+                                        disabled={
+                                            currentPaymentData?.firstPaymentStatus === "Pago" ||
+                                            currentPaymentData?.secondPaymentStatus === "Pago"
+                                        }
                                         checked={ isCourtesy }
                                         onChange={ (e) => setIsCourtesy(e.target.checked) }
                                         className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
@@ -639,7 +651,7 @@ export function TrainingPaymentMethodDialog({
                                         htmlFor="isCourtesy"
                                         className="font-normal cursor-pointer"
                                     >
-                    É Cortesia?
+                    Cortesia
                                     </Label>
                                 </div>
 

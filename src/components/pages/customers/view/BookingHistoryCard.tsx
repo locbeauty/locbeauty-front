@@ -13,6 +13,7 @@ import type { BookingWithCheckout } from "@/utils/@types/bookings";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 import { format } from "date-fns";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { centsToString } from "@/utils/centsToString";
 
 interface BookingHistoryCardProps {
   isCustomerDetailsModalOpen: boolean
@@ -157,7 +158,7 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                                                     <span className="font-medium">Valor:</span>
-                                                    <span className="font-semibold text-green-600">R$ {booking.totalPrice.toFixed(2)}</span>
+                                                    <span className="font-semibold text-green-600">R$ {centsToString(booking.totalPrice)}</span>
                                                 </div>
 
                                                 <div className="flex items-center gap-2 text-sm">
@@ -178,7 +179,11 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
 
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex gap-2">
-                                                        <BookingPaymentStatusBadge status={ booking.paymentStatus } />
+                                                        <BookingPaymentStatusBadge
+                                                            status={ booking.paymentStatus }
+                                                            wasRefunded={ booking.wasRefunded }
+                                                            isCourtesy={ booking.isCourtesy }
+                                                        />
                                                         <BookingStatusBadge status={ booking.checkoutStatus } />
                                                     </div>
                                                 </div>

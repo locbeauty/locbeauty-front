@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GetAllTrainees } from "@/services/trainees.service";
 import { useQuery } from "@tanstack/react-query";
@@ -12,19 +12,17 @@ import { CreateTrainingDialog } from "@/components/pages/trainings/CreateTrainin
 import { Training } from "@/utils/@types/training";
 import { GetAllTrainings } from "@/services/trainings.service";
 import { CreateTraineeDialog } from "@/components/pages/trainings/CreateTraineeDialog";
-import { TrainingsList } from "@/components/pages/trainings/TrainingsList";
-import { TraineesList } from "@/components/pages/trainings/TraineeList";
-import { VolunteersList } from "@/components/pages/trainings/VolunteersList";
+import { TrainingsTable } from "@/components/pages/trainings/TrainingsTable";
+import { TraineesTable } from "@/components/pages/trainings/TraineesTable";
+import { VolunteersTable } from "@/components/pages/trainings/VolunteersTable";
 import { SummarySection } from "@/components/pages/trainings/SummarySection";
 import { GetAllGears } from "@/services/gears.service";
 import { Gear } from "@/utils/@types/gears";
 import { CreateVolunteerDialog } from "@/components/pages/trainings/CreateVolunteerDialog";
-import { TraineeDetailsDialog } from "@/components/pages/trainings/TraineeDetailsDialog";
 
 export default function Treinamentos() {
     const [ activeTab, setActiveTab ] = useState("treinamentos");
-    const [ dialogNewVolunteer, setDialogNewVolunteer ] =
-    useState(false);
+    const [ dialogNewVolunteer, setDialogNewVolunteer ] = useState(false);
     const [ dialogNovoAluno, setDialogNovoAluno ] = useState(false);
     const [ dialogNovoTreinamento, setDialogNovoTreinamento ] = useState(false);
 
@@ -57,21 +55,10 @@ export default function Treinamentos() {
     const trainings = trainingsData.data?.data;
     const gears = gearsData.data?.data;
 
-    const [ selectedTrainee, setSelectedTrainee ] = useState<Trainee | null>(null);
-    const [ isDialogOpen, setIsDialogOpen ] = useState(false);
-
-    // Função passada para a lista apenas selecionar
-    const handleSelectTrainee = (trainee: Trainee) => {
-        setSelectedTrainee(trainee);
-        setIsDialogOpen(true);
-    };
-
     return (
         <div className="container mx-auto py-2">
             <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">
-          Treinamentos
-                </h1>
+                <h1 className="text-3xl font-bold text-gray-900">Treinamentos</h1>
                 <p className="text-gray-600">
           Gerencie treinamentos, alunos e pacientes modelos
                 </p>
@@ -105,7 +92,7 @@ export default function Treinamentos() {
                         />
                     </div>
 
-                    <TrainingsList trainings={ trainings } />
+                    <TrainingsTable trainings={ trainings } />
                 </TabsContent>
 
                 {/* Tab Alunos */}
@@ -118,10 +105,7 @@ export default function Treinamentos() {
                         />
                     </div>
 
-                    <TraineesList
-                        trainees={ trainees }
-                        onViewDetails={ handleSelectTrainee }
-                    />
+                    <TraineesTable trainees={ trainees } allTrainings={ trainings || [] } />
                 </TabsContent>
 
                 {/* Tab Volunteeres */}
@@ -134,14 +118,12 @@ export default function Treinamentos() {
                         />
                     </div>
 
-                    <VolunteersList volunteers={ volunteers } />
+                    <VolunteersTable
+                        volunteers={ volunteers }
+                        allTrainings={ trainings || [] }
+                    />
                 </TabsContent>
             </Tabs>
-            <TraineeDetailsDialog
-                isOpen={ isDialogOpen }
-                setIsOpen={ setIsDialogOpen }
-                trainee={ selectedTrainee }
-            />
         </div>
     );
 }

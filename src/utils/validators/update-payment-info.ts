@@ -9,6 +9,7 @@ interface ValidateFormParams {
   firstPaymentAmount: string;
   firstPaymentDate: string | null;
   firstPaymentMethod: string | null;
+  firstPaymentStatus?: string; // Add optional type to be backward compatible or strict depending on usage
   secondPaymentAmount: string;
   secondPaymentDate: string | null;
   secondPaymentMethod: string | null;
@@ -30,6 +31,7 @@ export function validateCheckoutForm({
     firstPaymentAmount,
     firstPaymentDate,
     firstPaymentMethod,
+    firstPaymentStatus,
     secondPaymentAmount,
     secondPaymentDate,
     secondPaymentMethod,
@@ -140,14 +142,19 @@ export function validateCheckoutForm({
                 newErrors.paymentInfo.secondPaymentAmount = "";
             }
 
-            // Data é obrigatória? Se for apenas previsão, talvez sim. O front pede "Data Prevista".
-            //     if (!secondPaymentDate || secondPaymentDate === "") {
-            //         newErrors.paymentInfo.secondPaymentDate =
-            //   "A data prevista é obrigatória.";
-            //         isValid = false;
-            //     } else {
-            //         newErrors.paymentInfo.secondPaymentDate = "";
-            //     }
+            // Data é obrigatória apenas se a primeira parcela já foi paga (Status: Parcial)
+            // A regra do usuário é: "apenas se este [firstPaymentStatus] for 'Pago'"
+            if (firstPaymentStatus === "Pago") {
+                if (!secondPaymentDate || secondPaymentDate === "") {
+                    newErrors.paymentInfo.secondPaymentDate =
+            "A data prevista é obrigatória.";
+                    isValid = false;
+                } else {
+                    newErrors.paymentInfo.secondPaymentDate = "";
+                }
+            } else {
+                newErrors.paymentInfo.secondPaymentDate = "";
+            }
         }
     // Se pendingValue for 0 (primeira parcela cobriu tudo), teoricamente não deveria estar aqui ou status seria Pago.
     } else {

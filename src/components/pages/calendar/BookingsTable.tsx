@@ -9,7 +9,7 @@ import { ApiResponse } from "@/lib/api";
 import { GetAllCheckouts } from "@/services/checkouts.service";
 import { BookingDetailsDialog } from "./DetailsDialog/BookingDetailsDialog";
 import { useState } from "react";
-import { Pencil } from "lucide-react";
+import { Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
 
@@ -101,7 +101,7 @@ export function BookingsTable() {
                                 </td>
                                 <td className="p-3 text-center">
                                     <Button onClick={ () => openCheckoutDetails({ checkoutId: checkout.checkoutId }) }>
-                                        <Pencil />
+                                        <Eye />
                                     </Button>
                                 </td>
                             </tr>
