@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Employee } from "@/utils/@types/employee";
 import { EmployeeDetailsCard } from "./EmployeeDetailsCard";
 
+import { AccessControlDialog } from "./AccessControlDialog";
+
 interface EmployeeDetailsDialogProps {
   handleToggleEmployeeDetailsDialog: (
     _openStatus: boolean,
@@ -53,6 +55,14 @@ export function EmployeeDetailsDialog({
 
                 <div className="flex-1 overflow-y-auto space-y-6">
                     <EmployeeDetailsCard selectedEmployee={ selectedEmployee } />
+
+                    {selectedEmployee && (
+                        <div className="border-t pt-6">
+                            <h3 className="text-xl font-semibold mb-4">Configurações</h3>
+                            <AccessControlDialog employee={ selectedEmployee } />
+                        </div>
+                    )}
+
                     <DialogFooter className="border-t pt-4">
                         <Button onClick={ handleOpenUpdateEmployeeDialog } className="gap-2">
                             <Pencil className="h-4 w-4" />
