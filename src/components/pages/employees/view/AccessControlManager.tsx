@@ -60,7 +60,7 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
     async function handlePermissionChange(
         filialId: string,
         module: SYSTEM_MODULES,
-        permission: "canView" | "canCreate" | "canEdit" | "canDelete",
+        permission: "canView" | "canCreate" | "canEdit",
         checked: boolean
     ) {
         const currentAccess = accessesByFilial[filialId]?.modules[module];
@@ -70,7 +70,6 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
             canView: currentAccess?.canView ?? false,
             canCreate: currentAccess?.canCreate ?? false,
             canEdit: currentAccess?.canEdit ?? false,
-            canDelete: currentAccess?.canDelete ?? false,
             [permission]: checked,
         };
 
@@ -104,7 +103,6 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
             mod.canView,
             mod.canCreate,
             mod.canEdit,
-            mod.canDelete,
         ]);
 
         // Ensure we consider all potential modules vs just the ones in DB?
@@ -124,8 +122,7 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
             trueCount += modAccess?.canView ? 1 : 0;
             trueCount += modAccess?.canCreate ? 1 : 0;
             trueCount += modAccess?.canEdit ? 1 : 0;
-            trueCount += modAccess?.canDelete ? 1 : 0;
-            totalCount += 4;
+            totalCount += 3;
         });
 
         if (trueCount === totalCount) return "all";
@@ -148,7 +145,6 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
                     canView: shouldEnable,
                     canCreate: shouldEnable,
                     canEdit: shouldEnable,
-                    canDelete: shouldEnable,
                 },
             })
         );
@@ -247,35 +243,46 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
                                                     {module}
                                                 </div>
                                                 <div className="flex flex-wrap gap-x-6 gap-y-2">
-                                                    {(
-                            [
-                                "canView",
-                                "canCreate",
-                                "canEdit",
-                                "canDelete",
-                            ] as const
-                                                    ).map((perm) => (
-                                                        <div key={ perm } className="flex items-center gap-2">
-                                                            <Checkbox
-                                                                id={ `${filialId}-${module}-${perm}` }
-                                                                checked={ access?.[perm] ?? false }
-                                                                onCheckedChange={ (checked) =>
-                                                                    handlePermissionChange(
-                                                                        filialId,
-                                                                        module,
-                                                                        perm,
-                                    checked as boolean
-                                                                    )
-                                                                }
-                                                            />
-                                                            <Label
-                                                                htmlFor={ `${filialId}-${module}-${perm}` }
-                                                                className="text-sm font-normal cursor-pointer"
-                                                            >
-                                                                {perm.replace("can", "")}
-                                                            </Label>
-                                                        </div>
-                                                    ))}
+                                                    {([ "canView", "canCreate", "canEdit" ] as const).map(
+                                                        (perm) => {
+                                                            const isCreate = perm === "canCreate";
+                                                            const isCreateDisabled =
+                                isCreate &&
+                                [
+                                    SYSTEM_MODULES.DASHBOARD,
+                                    SYSTEM_MODULES.CALENDAR,
+                                    SYSTEM_MODULES.BIRTHDAYS,
+                                ].includes(module as SYSTEM_MODULES);
+
+                                                            if (isCreateDisabled) return null;
+
+                                                            return (
+                                                                <div
+                                                                    key={ perm }
+                                                                    className="flex items-center gap-2"
+                                                                >
+                                                                    <Checkbox
+                                                                        id={ `${filialId}-${module}-${perm}` }
+                                                                        checked={ access?.[perm] ?? false }
+                                                                        onCheckedChange={ (checked) =>
+                                                                            handlePermissionChange(
+                                                                                filialId,
+                                                                                module,
+                                                                                perm,
+                                        checked as boolean
+                                                                            )
+                                                                        }
+                                                                    />
+                                                                    <Label
+                                                                        htmlFor={ `${filialId}-${module}-${perm}` }
+                                                                        className="text-sm font-normal cursor-pointer"
+                                                                    >
+                                                                        {perm.replace("can", "")}
+                                                                    </Label>
+                                                                </div>
+                                                            );
+                                                        }
+                                                    )}
                                                 </div>
                                             </div>
                                         );

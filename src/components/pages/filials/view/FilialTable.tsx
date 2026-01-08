@@ -8,9 +8,10 @@ import { FilialDetailsDialog } from "./FilialDetailsDialog";
 import { UpdateFilialDialog } from "../update/UpdateFilialDialog";
 import { Filial } from "@/utils/@types/filials";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 export function FilialsTable() {
-
     const [ isUpdateFilialDialogOpen, setIsUpdateFilialDialogOpen ] =
     useState(false);
     const [ selectedFilial, setSelectedFilial ] = useState<Filial | null>(null);
@@ -40,12 +41,15 @@ export function FilialsTable() {
 
     useEffect(() => {
         async function handleGetAllFilials() {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials`, {
-                credentials: "include",
-                next: {
-                    tags: [ "get-all-filials" ]
+            const response = await fetchWithToken(
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/filials`,
+                {
+                    credentials: "include",
+                    next: {
+                        tags: [ "get-all-filials" ],
+                    },
                 }
-            });
+            );
             const { data }: { data: Filial[] } = await response.json();
             setAllFilials(data);
 
@@ -72,38 +76,58 @@ export function FilialsTable() {
                         {allFilials?.length === 0 && (
                             <tr>
                                 <td className="text-center p-4" colSpan={ 8 }>
-          Nada a mostrar por aqui.
+                  Nada a mostrar por aqui.
                                 </td>
                             </tr>
                         )}
-                        {allFilials ? (allFilials.map((filial) => (
-                            <tr key={ filial.filialId } className="border-t hover:bg-muted/50">
-                                <td className="p-3 text-sm truncate max-w-[200px]">{filial.filialName}</td>
-                                <td className="p-3 text-sm">{filial.CNPJ}</td>
-                                <td className="p-3 text-sm">{filial.managerEmployee.fullname}</td>
-                                <td className="p-3 text-center text-sm truncate max-w-[200px]">
-                                    {filial.Address.Street.streetName}, {filial.Address.buildingNumber} -{" "}
-                                    {filial.Address.City.cityName}/{filial.Address.State.UF}{" "}
-                                </td>
-                                <td className="p-3 text-center text-sm">{filial.cellphone}</td>
-                                <td className="p-3 text-center text-sm">{filial.email}</td>
-                                <td className="">
-                                    <div className="flex gap-2 items-center">
-                                        <Button
-                                            onClick={ () => handleToggleFilialDetailsDialog(true, filial) }
-                                        >
-                                            <Eye />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            onClick={ () => handleToggleUpdateFilialDialog(true, filial) }
-                                        >
-                                            <Pencil />
-                                        </Button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))) : (
+                        {allFilials ? (
+                            allFilials.map((filial) => (
+                                <tr
+                                    key={ filial.filialId }
+                                    className="border-t hover:bg-muted/50"
+                                >
+                                    <td className="p-3 text-sm truncate max-w-[200px]">
+                                        {filial.filialName}
+                                    </td>
+                                    <td className="p-3 text-sm">{filial.CNPJ}</td>
+                                    <td className="p-3 text-sm">
+                                        {filial.managerEmployee.fullname}
+                                    </td>
+                                    <td className="p-3 text-center text-sm truncate max-w-[200px]">
+                                        {filial.Address.Street.streetName},{" "}
+                                        {filial.Address.buildingNumber} -{" "}
+                                        {filial.Address.City.cityName}/{filial.Address.State.UF}{" "}
+                                    </td>
+                                    <td className="p-3 text-center text-sm">
+                                        {filial.cellphone}
+                                    </td>
+                                    <td className="p-3 text-center text-sm">{filial.email}</td>
+                                    <td className="">
+                                        <div className="flex gap-2 items-center">
+                                            <Can module={ SYSTEM_MODULES.FILIALS } action="canView">
+                                                <Button
+                                                    onClick={ () =>
+                                                        handleToggleFilialDetailsDialog(true, filial)
+                                                    }
+                                                >
+                                                    <Eye />
+                                                </Button>
+                                            </Can>
+                                            <Can module={ SYSTEM_MODULES.FILIALS } action="canEdit">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={ () =>
+                                                        handleToggleUpdateFilialDialog(true, filial)
+                                                    }
+                                                >
+                                                    <Pencil />
+                                                </Button>
+                                            </Can>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
                             <tr>
                                 <td
                                     colSpan={ 8 }
@@ -117,8 +141,10 @@ export function FilialsTable() {
                 </table>
             </div>
 
-            {allFilials && allFilials.map((filial) => (
-                <Fragment key={ filial.filialId }>
+            {allFilials &&
+        allFilials.map((filial) => (
+            <Fragment key={ filial.filialId }>
+                <Can module={ SYSTEM_MODULES.FILIALS } action="canView">
                     <ResponsiveCard
                         cardData={ {
                             id: filial.filialId,
@@ -134,8 +160,9 @@ export function FilialsTable() {
                         rawData={ filial }
                         handleToggleDialog={ handleToggleFilialDetailsDialog }
                     />
-                </Fragment>
-            ))}
+                </Can>
+            </Fragment>
+        ))}
 
             <FilialDetailsDialog
                 selectedFilial={ selectedFilial }

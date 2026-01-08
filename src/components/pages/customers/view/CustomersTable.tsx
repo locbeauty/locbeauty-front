@@ -12,14 +12,15 @@ import { fetchWithToken } from "@/utils/fetchWithToken";
 import { useQuery } from "@tanstack/react-query";
 import { GetAllCustomers } from "@/services/customers.service";
 import { ApiResponse } from "@/lib/api";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 export function CustomersTable() {
-
     const { data } = useQuery<ApiResponse<Customer[]>, Error>({
         queryKey: [ "get-all-customers" ],
         queryFn: GetAllCustomers,
         staleTime: 1000 * 60, // 1 minuto de cache
-        // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
+    // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
     });
 
     const customers = data?.data;
@@ -76,44 +77,56 @@ export function CustomersTable() {
                             </tr>
                         )}
                         {customers ? (
-                            customers.sort((a, b) => a.fullname.localeCompare(b.fullname)).map((customer) => (
-                                <tr
-                                    key={ customer.customerId }
-                                    className="border-t hover:bg-muted/50"
-                                >
-                                    <td className="p-3 text-sm">
-                                        {customer.fullname || customer.companyName}
-                                    </td>
-                                    <td className="p-3 text-center text-sm">{customer.documentNumber}</td>
-                                    <td className="p-3 text-center text-sm">{customer.email}</td>
-                                    <td className="p-3 text-center text-sm">{customer.cellphone}</td>
-                                    <td className="p-3 text-center text-sm">
-                                        <CustomerStatusBadge status={ customer.customerStatus } />
-                                    </td>
-                                    <td className="p-3 text-center text-sm">
-                                        {customer.lastBooking
-                                            ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
-                                            : "Não informado"}
-                                    </td>
-                                    <td className="p-3 flex justify-center items-center gap-4">
-                                        <Button
-                                            onClick={ () =>
-                                                handleToggleCustomerDetailsDialog(true, customer)
-                                            }
-                                        >
-                                            <Eye />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            onClick={ () =>
-                                                handleToggleUpdateCustomerDialog(true, customer)
-                                            }
-                                        >
-                                            <Pencil />
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))
+                            customers
+                                .sort((a, b) => a.fullname.localeCompare(b.fullname))
+                                .map((customer) => (
+                                    <tr
+                                        key={ customer.customerId }
+                                        className="border-t hover:bg-muted/50"
+                                    >
+                                        <td className="p-3 text-sm">
+                                            {customer.fullname || customer.companyName}
+                                        </td>
+                                        <td className="p-3 text-center text-sm">
+                                            {customer.documentNumber}
+                                        </td>
+                                        <td className="p-3 text-center text-sm">
+                                            {customer.email}
+                                        </td>
+                                        <td className="p-3 text-center text-sm">
+                                            {customer.cellphone}
+                                        </td>
+                                        <td className="p-3 text-center text-sm">
+                                            <CustomerStatusBadge status={ customer.customerStatus } />
+                                        </td>
+                                        <td className="p-3 text-center text-sm">
+                                            {customer.lastBooking
+                                                ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
+                                                : "Não informado"}
+                                        </td>
+                                        <td className="p-3 flex justify-center items-center gap-4">
+                                            <Can module={ SYSTEM_MODULES.CUSTOMERS } action="canView">
+                                                <Button
+                                                    onClick={ () =>
+                                                        handleToggleCustomerDetailsDialog(true, customer)
+                                                    }
+                                                >
+                                                    <Eye />
+                                                </Button>
+                                            </Can>
+                                            <Can module={ SYSTEM_MODULES.CUSTOMERS } action="canEdit">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={ () =>
+                                                        handleToggleUpdateCustomerDialog(true, customer)
+                                                    }
+                                                >
+                                                    <Pencil />
+                                                </Button>
+                                            </Can>
+                                        </td>
+                                    </tr>
+                                ))
                         ) : (
                             <tr>
                                 <td
@@ -131,38 +144,44 @@ export function CustomersTable() {
             {customers &&
         customers.map((customer) => (
             <Fragment key={ customer.customerId }>
-                <ResponsiveCard
-                    cardData={ {
-                        id: customer.customerId,
-                        title: customer.fullname || customer.companyName || "",
-                        description: "",
-                        items: [
-                            {
-                                itemLabel: "Email: ",
-                                itemInfo: customer.email || "Não informado",
-                            },
-                            {
-                                itemLabel: "Telefone: ",
-                                itemInfo: customer.cellphone || "Não informado",
-                            },
-                            { itemLabel: "Status: ", itemInfo: customer.customerStatus },
-                            {
-                                itemLabel: "Ultimo registro:",
-                                itemInfo: customer.lastBooking
-                                    ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
-                                    : "Não informado",
-                            },
-                        ],
-                    } }
-                    rawData={ customer }
-                    handleToggleDialog={ handleToggleCustomerDetailsDialog }
-                />
+                <Can module={ SYSTEM_MODULES.CUSTOMERS } action="canView">
+                    <ResponsiveCard
+                        cardData={ {
+                            id: customer.customerId,
+                            title: customer.fullname || customer.companyName || "",
+                            description: "",
+                            items: [
+                                {
+                                    itemLabel: "Email: ",
+                                    itemInfo: customer.email || "Não informado",
+                                },
+                                {
+                                    itemLabel: "Telefone: ",
+                                    itemInfo: customer.cellphone || "Não informado",
+                                },
+                                {
+                                    itemLabel: "Status: ",
+                                    itemInfo: customer.customerStatus,
+                                },
+                                {
+                                    itemLabel: "Ultimo registro:",
+                                    itemInfo: customer.lastBooking
+                                        ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
+                                        : "Não informado",
+                                },
+                            ],
+                        } }
+                        rawData={ customer }
+                        handleToggleDialog={ handleToggleCustomerDetailsDialog }
+                    />
+                </Can>
             </Fragment>
         ))}
 
-            {!customers || customers.length === 0 && (
-                <h1 className="w-full text-center">Nada a mostrar aqui</h1>
-            )}
+            {!customers ||
+        (customers.length === 0 && (
+            <h1 className="w-full text-center">Nada a mostrar aqui</h1>
+        ))}
 
             <CustomerDetailsDialog
                 selectedCustomer={ selectedCustomer }

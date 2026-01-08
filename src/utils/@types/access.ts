@@ -15,7 +15,6 @@ export type AccessPermissions = {
   canView: boolean;
   canCreate: boolean;
   canEdit: boolean;
-  canDelete: boolean;
 };
 
 export type EmployeeAccess = {

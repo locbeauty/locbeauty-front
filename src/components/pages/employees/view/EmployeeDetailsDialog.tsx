@@ -10,6 +10,8 @@ import { Employee } from "@/utils/@types/employee";
 import { EmployeeDetailsCard } from "./EmployeeDetailsCard";
 
 import { AccessControlDialog } from "./AccessControlDialog";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 interface EmployeeDetailsDialogProps {
   handleToggleEmployeeDetailsDialog: (
@@ -57,17 +59,24 @@ export function EmployeeDetailsDialog({
                     <EmployeeDetailsCard selectedEmployee={ selectedEmployee } />
 
                     {selectedEmployee && (
-                        <div className="border-t pt-6">
-                            <h3 className="text-xl font-semibold mb-4">Configurações</h3>
-                            <AccessControlDialog employee={ selectedEmployee } />
-                        </div>
+                        <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canEdit">
+                            <div className="border-t pt-6">
+                                <h3 className="text-xl font-semibold mb-4">Configurações</h3>
+                                <AccessControlDialog employee={ selectedEmployee } />
+                            </div>
+                        </Can>
                     )}
 
                     <DialogFooter className="border-t pt-4">
-                        <Button onClick={ handleOpenUpdateEmployeeDialog } className="gap-2">
-                            <Pencil className="h-4 w-4" />
-              Editar Cliente
-                        </Button>
+                        <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canEdit">
+                            <Button
+                                onClick={ handleOpenUpdateEmployeeDialog }
+                                className="gap-2"
+                            >
+                                <Pencil className="h-4 w-4" />
+                Editar Funcionário
+                            </Button>
+                        </Can>
                         <Button
                             variant="outline"
                             onClick={ () =>

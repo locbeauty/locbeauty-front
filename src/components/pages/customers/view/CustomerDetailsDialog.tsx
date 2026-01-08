@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { BookingHistoryCard } from "./BookingHistoryCard";
 import { CustomerDetailsCard } from "./CustomerDetailsCard";
 import { Customer } from "@/utils/@types/customer";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 interface CustomerDetailsDialogProps {
   handleToggleCustomerDetailsDialog: (
@@ -60,10 +62,15 @@ export function CustomerDetailsDialog({
                         selectedCustomer={ selectedCustomer }
                     />
                     <DialogFooter className="pt-4">
-                        <Button onClick={ handleOpenUpdateCustomerDialog } className="gap-2">
-                            <Pencil className="h-4 w-4" />
-              Editar Cliente
-                        </Button>
+                        <Can module={ SYSTEM_MODULES.CUSTOMERS } action="canEdit">
+                            <Button
+                                onClick={ handleOpenUpdateCustomerDialog }
+                                className="gap-2"
+                            >
+                                <Pencil className="h-4 w-4" />
+                Editar Cliente
+                            </Button>
+                        </Can>
                         <Button
                             variant="outline"
                             onClick={ () =>

@@ -8,6 +8,8 @@ import {
 import { Pencil } from "lucide-react";
 import { FilialDetailsCard } from "./FilialDetailsCard";
 import { Filial } from "@/utils/@types/filials";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 interface FilialDetailsDialogProps {
   handleToggleFilialDetailsDialog: (
@@ -54,10 +56,12 @@ export function FilialDetailsDialog({
                     <FilialDetailsCard selectedFilial={ selectedFilial } />
 
                     <DialogFooter className="border-t pt-4">
-                        <Button onClick={ handleOpenUpdateFilialDialog } className="gap-2">
-                            <Pencil className="h-4 w-4" />
-              Editar Cliente
-                        </Button>
+                        <Can module={ SYSTEM_MODULES.FILIALS } action="canEdit">
+                            <Button onClick={ handleOpenUpdateFilialDialog } className="gap-2">
+                                <Pencil className="h-4 w-4" />
+                Editar Filial
+                            </Button>
+                        </Can>
                         <Button
                             variant="outline"
                             onClick={ () => handleToggleFilialDetailsDialog(false, null) }

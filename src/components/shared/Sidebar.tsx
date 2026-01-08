@@ -17,60 +17,73 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Label } from "../ui/label";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { useAccess } from "@/contexts/access-provider";
 
 export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
     const pathname = usePathname();
+    const { can } = useAccess();
 
     const routes = [
         {
             name: "Dashboard",
             href: ROUTES.DASHBOARD,
             icon: Home,
+            module: SYSTEM_MODULES.DASHBOARD,
         },
         {
             name: "Clientes",
             href: ROUTES.CUSTOMERS,
             icon: Users,
+            module: SYSTEM_MODULES.CUSTOMERS,
         },
         {
             name: "Equipamentos",
             href: ROUTES.GEARS,
             icon: Package,
+            module: SYSTEM_MODULES.GEARS,
         },
         {
             name: "Filiais",
             href: ROUTES.FILIALS,
             icon: Building2,
+            module: SYSTEM_MODULES.FILIALS,
         },
         {
             name: "Funcionários",
             href: ROUTES.EMPLOYEES,
             icon: UserRound,
+            module: SYSTEM_MODULES.EMPLOYEES,
         },
         {
             name: "Agendamentos",
             href: ROUTES.BOOKING_TABLE,
             icon: Calendar,
+            module: SYSTEM_MODULES.BOOKINGS,
         },
         {
             name: "Calendário",
             href: ROUTES.CALENDAR,
             icon: Calendar1,
+            module: SYSTEM_MODULES.CALENDAR,
         },
         {
             name: "Metas",
             href: ROUTES.GOALS,
             icon: TargetIcon,
+            module: SYSTEM_MODULES.GOALS,
         },
         {
             name: "Treinamentos",
             href: ROUTES.TRAININGS,
             icon: BicepsFlexed,
+            module: SYSTEM_MODULES.TRAININGS,
         },
         {
             name: "Aniversariantes",
             href: ROUTES.BIRTHDAYS,
             icon: Cake,
+            module: SYSTEM_MODULES.BIRTHDAYS,
         },
     ];
 
@@ -93,22 +106,24 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
             </div>
             <nav className="flex-1 overflow-auto py-4">
                 <ul className="grid gap-1 px-2">
-                    {routes.map((route) => (
-                        <li key={ route.href }>
-                            <Link
-                                href={ route.href }
-                                className={ cn(
-                                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-primary-foreground/10 dark:hover:bg-secondary-foreground/10 hover:text-white transition-colors",
-                                    pathname.includes(route.href)
-                                        ? "bg-primary-foreground/10 dark:hover:text-gray-400 dark:bg-secondary-foreground/10 text-white"
-                                        : "text-primary-foreground/80 dark:text-secondary-foreground"
-                                ) }
-                            >
-                                <route.icon className="h-5 w-5" />
-                                {route.name}
-                            </Link>
-                        </li>
-                    ))}
+                    {routes
+                        .filter((route) => can(route.module, "canView"))
+                        .map((route) => (
+                            <li key={ route.href }>
+                                <Link
+                                    href={ route.href }
+                                    className={ cn(
+                                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-primary-foreground/10 dark:hover:bg-secondary-foreground/10 hover:text-white transition-colors",
+                                        pathname.includes(route.href)
+                                            ? "bg-primary-foreground/10 dark:hover:text-gray-400 dark:bg-secondary-foreground/10 text-white"
+                                            : "text-primary-foreground/80 dark:text-secondary-foreground"
+                                    ) }
+                                >
+                                    <route.icon className="h-5 w-5" />
+                                    {route.name}
+                                </Link>
+                            </li>
+                        ))}
                 </ul>
             </nav>
         </aside>

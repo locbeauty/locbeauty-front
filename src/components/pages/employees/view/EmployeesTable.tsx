@@ -7,6 +7,8 @@ import { Fragment, useEffect, useState } from "react";
 import { UpdateEmployeeDialog } from "../update/UpdateEmployeeDialog";
 import { EmployeeDetailsDialog } from "./EmployeeDetailsDialog";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 export function EmployeesTable() {
     const [ isUpdateEmployeeDialogOpen, setIsUpdateEmployeeDialogOpen ] =
@@ -40,9 +42,12 @@ export function EmployeesTable() {
 
     useEffect(() => {
         async function getEmployees() {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/employees`, {
-                credentials: "include",
-            });
+            const response = await fetchWithToken(
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/employees`,
+                {
+                    credentials: "include",
+                }
+            );
 
             const { data } = await response.json();
 
@@ -67,43 +72,55 @@ export function EmployeesTable() {
                         </tr>
                     </thead>
                     <tbody>
-                        {(allEmployees?.length === 0) && (
+                        {allEmployees?.length === 0 && (
                             <tr>
                                 <td className="text-center p-4" colSpan={ 8 }>
-          Nada a mostrar por aqui.
+                  Nada a mostrar por aqui.
                                 </td>
                             </tr>
                         )}
-                        {allEmployees ? (allEmployees.map((employee) => (
-                            <tr
-                                key={ employee.employeeId }
-                                className="border-t hover:bg-muted/50"
-                            >
-                                <td className="p-3 text-sm">{employee.fullname}</td>
-                                <td className="p-3 text-sm">{employee.documentNumber}</td>
-                                <td className="p-3 text-center text-sm">{employee.role}</td>
-                                <td className="p-3 text-center text-sm">{employee.SourceFilial.filialName}</td>
-                                <td className="p-3 text-center text-sm">{employee.cellphone ?? "-"}</td>
-                                <td className="p-3 text-center text-sm">{employee.email ?? "-"}</td>
-                                <td className="p-3 flex justify-center items-center gap-4">
-                                    <Button
-                                        onClick={ () =>
-                                            handleToggleEmployeeDetailsDialog(true, employee)
-                                        }
-                                    >
-                                        <Eye />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={ () =>
-                                            handleToggleUpdateEmployeeDialog(true, employee)
-                                        }
-                                    >
-                                        <Pencil />
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))) : (
+                        {allEmployees ? (
+                            allEmployees.map((employee) => (
+                                <tr
+                                    key={ employee.employeeId }
+                                    className="border-t hover:bg-muted/50"
+                                >
+                                    <td className="p-3 text-sm">{employee.fullname}</td>
+                                    <td className="p-3 text-sm">{employee.documentNumber}</td>
+                                    <td className="p-3 text-center text-sm">{employee.role}</td>
+                                    <td className="p-3 text-center text-sm">
+                                        {employee.SourceFilial.filialName}
+                                    </td>
+                                    <td className="p-3 text-center text-sm">
+                                        {employee.cellphone ?? "-"}
+                                    </td>
+                                    <td className="p-3 text-center text-sm">
+                                        {employee.email ?? "-"}
+                                    </td>
+                                    <td className="p-3 flex justify-center items-center gap-4">
+                                        <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canView">
+                                            <Button
+                                                onClick={ () =>
+                                                    handleToggleEmployeeDetailsDialog(true, employee)
+                                                }
+                                            >
+                                                <Eye />
+                                            </Button>
+                                        </Can>
+                                        <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canEdit">
+                                            <Button
+                                                variant="outline"
+                                                onClick={ () =>
+                                                    handleToggleUpdateEmployeeDialog(true, employee)
+                                                }
+                                            >
+                                                <Pencil />
+                                            </Button>
+                                        </Can>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
                             <tr>
                                 <td
                                     colSpan={ 8 }
