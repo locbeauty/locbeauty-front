@@ -96,34 +96,79 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
         }
     }
 
-    function hasFilialAccess(filialId: string) {
-        return !!accessesByFilial[filialId];
+    function getFilialAccessState(filialId: string): "all" | "some" | "none" {
+        const filialData = accessesByFilial[filialId];
+        if (!filialData) return "none";
+
+        const allPermissions = Object.values(filialData.modules).flatMap((mod) => [
+            mod.canView,
+            mod.canCreate,
+            mod.canEdit,
+            mod.canDelete,
+        ]);
+
+        // Ensure we consider all potential modules vs just the ones in DB?
+        // Logic: if DB record exists, use value. If not, it's false.
+        // We have `modules` list (SYSTEM_MODULES values). We should check against THAT full set for "All".
+
+        const allSystemModules = Object.values(SYSTEM_MODULES);
+        // Calculate total possible permissions count
+        // const totalPossible = allSystemModules.length * 4;
+
+        // Actually, easier way: Iterate over all system modules and check values
+        let trueCount = 0;
+        let totalCount = 0;
+
+        allSystemModules.forEach((modKey) => {
+            const modAccess = filialData.modules[modKey];
+            trueCount += modAccess?.canView ? 1 : 0;
+            trueCount += modAccess?.canCreate ? 1 : 0;
+            trueCount += modAccess?.canEdit ? 1 : 0;
+            trueCount += modAccess?.canDelete ? 1 : 0;
+            totalCount += 4;
+        });
+
+        if (trueCount === totalCount) return "all";
+        if (trueCount > 0) return "some";
+        return "none";
     }
 
     async function toggleFilialAccess(filialId: string, checked: boolean) {
-        if (checked) {
-            // Grant default access (e.g. Dashboard View) to "initialize" the filial in the list
-            try {
-                const newAccess = await manageAccess({
-                    targetEmployeeId: employee.employeeId,
-                    filialId: filialId,
-                    module: SYSTEM_MODULES.DASHBOARD,
-                    permissions: {
-                        canView: true,
-                        canCreate: false,
-                        canEdit: false,
-                        canDelete: false,
-                    },
-                });
-                setAccesses((prev) => [ ...prev, newAccess ]);
-                toast.success("Acesso habilitado.");
-            } catch (err) {
-                toast.error("Erro ao habilitar acesso.");
-            }
-        } else {
-            toast.info(
-                "Para remover o acesso, desmarque todas as permissões ou use a interface de gerenciamento."
+        const toastId = toast.loading("Atualizando permissões...");
+        const modulesList = Object.values(SYSTEM_MODULES);
+
+        const shouldEnable = checked;
+
+        const promises = modulesList.map((module) =>
+            manageAccess({
+                targetEmployeeId: employee.employeeId,
+                filialId: filialId,
+                module: module,
+                permissions: {
+                    canView: shouldEnable,
+                    canCreate: shouldEnable,
+                    canEdit: shouldEnable,
+                    canDelete: shouldEnable,
+                },
+            })
+        );
+
+        try {
+            await Promise.all(promises);
+            const [ accessData ] = await Promise.all([
+                getEmployeeAccesses(employee.employeeId),
+            ]);
+            setAccesses(accessData);
+
+            toast.success(
+                shouldEnable
+                    ? "Todos os acessos habilitados."
+                    : "Todos os acessos removidos.",
+                { id: toastId }
             );
+        } catch (err) {
+            console.error(err);
+            toast.error("Erro ao atualizar acessos da filial.", { id: toastId });
         }
     }
 
@@ -136,7 +181,14 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
             <Accordion type="single" collapsible className="w-full space-y-2">
                 {filials.map((filial) => {
                     const filialId = filial.filialId;
-                    const hasAccess = hasFilialAccess(filialId);
+                    const accessState = getFilialAccessState(filialId);
+                    const isChecked =
+            accessState === "all"
+                ? true
+                : accessState === "some"
+                    ? "indeterminate"
+                    : false;
+
                     const filialModules = accessesByFilial[filialId]?.modules || {};
 
                     return (
@@ -144,21 +196,30 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
                             key={ filialId }
                             value={ filialId }
                             className={ `border rounded-md px-0 overflow-hidden transition-all hover:bg-gray-50 dark:hover:bg-gray-900 hover:border-gray-400 dark:hover:border-gray-600 ${
-                                !hasAccess ? "opacity-75 border-dashed" : ""
+                                accessState === "none" ? "opacity-75 border-dashed" : ""
                             }` }
                         >
                             <AccordionTrigger
                                 className="pl-4 py-4"
                                 actions={
-                                    <div className="flex items-center gap-2 pr-4 ml-4">
+                                    <div
+                                        className="flex items-center gap-2 pr-4 ml-4"
+                                        onClick={ (e) => e.stopPropagation() }
+                                    >
                                         <Checkbox
                                             id={ `enable-${filialId}` }
-                                            checked={ hasAccess }
+                                            checked={ isChecked }
                                             onCheckedChange={ (c) => {
-                                                if (c === true && !hasAccess)
-                                                    toggleFilialAccess(filialId, true);
-                                                if (c === false && hasAccess)
-                                                    toggleFilialAccess(filialId, false);
+                                                // c is boolean | 'indeterminate'.
+                                                // logic: if user CLICKS, they want to toggle.
+                                                // If current was 'some' or 'none', they likely want 'all' (true).
+                                                // If current was 'all', they want 'none' (false).
+
+                                                // Simplified: accept 'c' as the desired state if boolean?
+                                                // if isChecked is 'indeterminate', c will be true.
+
+                                                const desired = c === true;
+                                                toggleFilialAccess(filialId, desired);
                                             } }
                                         />
                                         <Label
@@ -174,61 +235,52 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
                             </AccordionTrigger>
 
                             <AccordionContent className="px-4">
-                                {hasAccess ? (
-                                    <div className="pt-2 space-y-4">
-                                        {modules.map((module) => {
-                                            const access = filialModules[module];
-                                            return (
-                                                <div
-                                                    key={ module }
-                                                    className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b last:border-0 gap-4"
-                                                >
-                                                    <div className="w-1/3 font-medium text-sm">
-                                                        {module}
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-x-6 gap-y-2">
-                                                        {(
-                              [
-                                  "canView",
-                                  "canCreate",
-                                  "canEdit",
-                                  "canDelete",
-                              ] as const
-                                                        ).map((perm) => (
-                                                            <div
-                                                                key={ perm }
-                                                                className="flex items-center gap-2"
-                                                            >
-                                                                <Checkbox
-                                                                    id={ `${filialId}-${module}-${perm}` }
-                                                                    checked={ access?.[perm] ?? false }
-                                                                    onCheckedChange={ (checked) =>
-                                                                        handlePermissionChange(
-                                                                            filialId,
-                                                                            module,
-                                                                            perm,
-                                      checked as boolean
-                                                                        )
-                                                                    }
-                                                                />
-                                                                <Label
-                                                                    htmlFor={ `${filialId}-${module}-${perm}` }
-                                                                    className="text-sm font-normal cursor-pointer"
-                                                                >
-                                                                    {perm.replace("can", "")}
-                                                                </Label>
-                                                            </div>
-                                                        ))}
-                                                    </div>
+                                <div className="pt-2 space-y-4">
+                                    {modules.map((module) => {
+                                        const access = filialModules[module];
+                                        return (
+                                            <div
+                                                key={ module }
+                                                className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b last:border-0 gap-4"
+                                            >
+                                                <div className="w-1/3 font-medium text-sm">
+                                                    {module}
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="py-4 text-muted-foreground text-center text-sm">
-                    Habilite o acesso para configurar permissões.
-                                    </div>
-                                )}
+                                                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                                                    {(
+                            [
+                                "canView",
+                                "canCreate",
+                                "canEdit",
+                                "canDelete",
+                            ] as const
+                                                    ).map((perm) => (
+                                                        <div key={ perm } className="flex items-center gap-2">
+                                                            <Checkbox
+                                                                id={ `${filialId}-${module}-${perm}` }
+                                                                checked={ access?.[perm] ?? false }
+                                                                onCheckedChange={ (checked) =>
+                                                                    handlePermissionChange(
+                                                                        filialId,
+                                                                        module,
+                                                                        perm,
+                                    checked as boolean
+                                                                    )
+                                                                }
+                                                            />
+                                                            <Label
+                                                                htmlFor={ `${filialId}-${module}-${perm}` }
+                                                                className="text-sm font-normal cursor-pointer"
+                                                            >
+                                                                {perm.replace("can", "")}
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </AccordionContent>
                         </AccordionItem>
                     );
