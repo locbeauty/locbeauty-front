@@ -9,8 +9,10 @@ import { EmployeeDetailsDialog } from "./EmployeeDetailsDialog";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { useAuth } from "@/contexts/auth-provider";
 
 export function EmployeesTable() {
+    const { user } = useAuth();
     const [ isUpdateEmployeeDialogOpen, setIsUpdateEmployeeDialogOpen ] =
     useState(false);
     const [ allEmployees, setAllEmployees ] = useState<Employee[] | null>(null);
@@ -80,46 +82,48 @@ export function EmployeesTable() {
                             </tr>
                         )}
                         {allEmployees ? (
-                            allEmployees.map((employee) => (
-                                <tr
-                                    key={ employee.employeeId }
-                                    className="border-t hover:bg-muted/50"
-                                >
-                                    <td className="p-3 text-sm">{employee.fullname}</td>
-                                    <td className="p-3 text-sm">{employee.documentNumber}</td>
-                                    <td className="p-3 text-center text-sm">{employee.role}</td>
-                                    <td className="p-3 text-center text-sm">
-                                        {employee.SourceFilial.filialName}
-                                    </td>
-                                    <td className="p-3 text-center text-sm">
-                                        {employee.cellphone ?? "-"}
-                                    </td>
-                                    <td className="p-3 text-center text-sm">
-                                        {employee.email ?? "-"}
-                                    </td>
-                                    <td className="p-3 flex justify-center items-center gap-4">
-                                        <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canView">
-                                            <Button
-                                                onClick={ () =>
-                                                    handleToggleEmployeeDetailsDialog(true, employee)
-                                                }
-                                            >
-                                                <Eye />
-                                            </Button>
-                                        </Can>
-                                        <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canEdit">
-                                            <Button
-                                                variant="outline"
-                                                onClick={ () =>
-                                                    handleToggleUpdateEmployeeDialog(true, employee)
-                                                }
-                                            >
-                                                <Pencil />
-                                            </Button>
-                                        </Can>
-                                    </td>
-                                </tr>
-                            ))
+                            allEmployees
+                                .filter((employee) => employee.employeeId !== user?.sub)
+                                .map((employee) => (
+                                    <tr
+                                        key={ employee.employeeId }
+                                        className="border-t hover:bg-muted/50"
+                                    >
+                                        <td className="p-3 text-sm">{employee.fullname}</td>
+                                        <td className="p-3 text-sm">{employee.documentNumber}</td>
+                                        <td className="p-3 text-center text-sm">{employee.role}</td>
+                                        <td className="p-3 text-center text-sm">
+                                            {employee.SourceFilial.filialName}
+                                        </td>
+                                        <td className="p-3 text-center text-sm">
+                                            {employee.cellphone ?? "-"}
+                                        </td>
+                                        <td className="p-3 text-center text-sm">
+                                            {employee.email ?? "-"}
+                                        </td>
+                                        <td className="p-3 flex justify-center items-center gap-4">
+                                            <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canView">
+                                                <Button
+                                                    onClick={ () =>
+                                                        handleToggleEmployeeDetailsDialog(true, employee)
+                                                    }
+                                                >
+                                                    <Eye />
+                                                </Button>
+                                            </Can>
+                                            <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canEdit">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={ () =>
+                                                        handleToggleUpdateEmployeeDialog(true, employee)
+                                                    }
+                                                >
+                                                    <Pencil />
+                                                </Button>
+                                            </Can>
+                                        </td>
+                                    </tr>
+                                ))
                         ) : (
                             <tr>
                                 <td
@@ -133,27 +137,29 @@ export function EmployeesTable() {
                     </tbody>
                 </table>
             </div>
-            {allEmployees?.map((employee) => (
-                <Fragment key={ employee.employeeId }>
-                    <ResponsiveCard
-                        cardData={ {
-                            id: employee.employeeId,
-                            title: employee.fullname,
-                            description: "",
-                            items: [
-                                { itemLabel: "Função: ", itemInfo: employee.role },
-                                { itemLabel: "Email: ", itemInfo: employee.email ?? "-" },
-                                {
-                                    itemLabel: "Telefone: ",
-                                    itemInfo: employee.cellphone ?? "-",
-                                },
-                            ],
-                        } }
-                        rawData={ employee }
-                        handleToggleDialog={ handleToggleEmployeeDetailsDialog }
-                    />
-                </Fragment>
-            ))}
+            {allEmployees
+                ?.filter((employee) => employee.employeeId !== user?.sub)
+                .map((employee) => (
+                    <Fragment key={ employee.employeeId }>
+                        <ResponsiveCard
+                            cardData={ {
+                                id: employee.employeeId,
+                                title: employee.fullname,
+                                description: "",
+                                items: [
+                                    { itemLabel: "Função: ", itemInfo: employee.role },
+                                    { itemLabel: "Email: ", itemInfo: employee.email ?? "-" },
+                                    {
+                                        itemLabel: "Telefone: ",
+                                        itemInfo: employee.cellphone ?? "-",
+                                    },
+                                ],
+                            } }
+                            rawData={ employee }
+                            handleToggleDialog={ handleToggleEmployeeDetailsDialog }
+                        />
+                    </Fragment>
+                ))}
 
             <EmployeeDetailsDialog
                 selectedEmployee={ selectedEmployee }

@@ -18,9 +18,12 @@ export function AccessControlDialog({ employee }: AccessControlDialogProps) {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2 w-full justify-start">
+                <Button
+                    variant="outline"
+                    className="gap-2 w-full justify-start border-dashed"
+                >
                     <ShieldCheck className="h-4 w-4" />
-          Gerenciar Acessos
+          Gerenciar Acessos e Permissões
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">

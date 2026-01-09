@@ -242,19 +242,33 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
                                                 <div className="w-1/3 font-medium text-sm">
                                                     {module}
                                                 </div>
-                                                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                                                <div className="grid grid-cols-3 gap-4 w-full">
                                                     {([ "canView", "canCreate", "canEdit" ] as const).map(
                                                         (perm) => {
                                                             const isCreate = perm === "canCreate";
+                                                            const isEdit = perm === "canEdit";
+
+                                                            const disabledModules = [
+                                                                SYSTEM_MODULES.DASHBOARD,
+                                                                SYSTEM_MODULES.CALENDAR,
+                                                                SYSTEM_MODULES.BIRTHDAYS,
+                                                            ] as SYSTEM_MODULES[];
+
                                                             const isCreateDisabled =
                                 isCreate &&
-                                [
-                                    SYSTEM_MODULES.DASHBOARD,
-                                    SYSTEM_MODULES.CALENDAR,
-                                    SYSTEM_MODULES.BIRTHDAYS,
-                                ].includes(module as SYSTEM_MODULES);
+                                disabledModules.includes(
+                                  module as SYSTEM_MODULES
+                                );
 
-                                                            if (isCreateDisabled) return null;
+                                                            const isEditDisabled =
+                                isEdit &&
+                                disabledModules.includes(
+                                  module as SYSTEM_MODULES
+                                );
+
+                                                            if (isCreateDisabled || isEditDisabled) {
+                                                                return <div key={ perm } aria-hidden="true" />;
+                                                            }
 
                                                             return (
                                                                 <div

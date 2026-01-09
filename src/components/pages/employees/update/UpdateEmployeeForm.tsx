@@ -9,6 +9,8 @@ import {
 import { EmployeeForm } from "../forms/EmployeeForm";
 import { UpdateEmployeeDialog } from "./UpdateEmployeeDialog";
 import { FilialUpdateAddressForm } from "../../filials/update/FilialUpdateAddressForm";
+import { AccessControlDialog } from "../view/AccessControlDialog";
+import { Separator } from "@/components/ui/separator";
 import { useEffect } from "react";
 
 interface UpdateEmployeeFormProps {
@@ -18,19 +20,21 @@ interface UpdateEmployeeFormProps {
 export function UpdateEmployeeForm({
     selectedEmployee,
 }: UpdateEmployeeFormProps) {
-
-    // useEffect(() => {
-    //     if (selectedEmployee) {
-    //         reset({
-
-    //         });
-    //     }
-    // }, [ selectedEmployee, reset ]);
-
     return (
         <>
             <EmployeeForm />
             <FilialUpdateAddressForm />
+
+            <Separator className="my-6" />
+
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Controle de Acessos</h3>
+                <p className="text-sm text-muted-foreground">
+          Gerencie as permissões de acesso deste funcionário por filial. As
+          alterações são salvas automaticamente.
+                </p>
+                <AccessControlDialog employee={ selectedEmployee } />
+            </div>
         </>
     );
 }

@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Employee } from "@/utils/@types/employee";
 import { EmployeeDetailsCard } from "./EmployeeDetailsCard";
 
-import { AccessControlDialog } from "./AccessControlDialog";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 
@@ -57,15 +56,6 @@ export function EmployeeDetailsDialog({
 
                 <div className="flex-1 overflow-y-auto space-y-6">
                     <EmployeeDetailsCard selectedEmployee={ selectedEmployee } />
-
-                    {selectedEmployee && (
-                        <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canEdit">
-                            <div className="border-t pt-6">
-                                <h3 className="text-xl font-semibold mb-4">Configurações</h3>
-                                <AccessControlDialog employee={ selectedEmployee } />
-                            </div>
-                        </Can>
-                    )}
 
                     <DialogFooter className="border-t pt-4">
                         <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canEdit">
