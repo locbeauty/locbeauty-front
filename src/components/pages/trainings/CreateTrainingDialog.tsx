@@ -46,6 +46,15 @@ import { getDayCheckouts } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { useAuth } from "@/contexts/auth-provider";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { findAllFilials } from "@/services/filials.service";
+import { Filial } from "@/utils/@types/filials";
 
 // Types & Schemas
 import {
@@ -69,17 +78,18 @@ interface CreateTrainingDialogProps {
 }
 
 // Estrutura padrão para inicializar o form
-const defaultPaymentInfoStructure: CreateTrainingDataType["traineePayment"]["paymentInfo"] = {
-    paymentStatus: "Pendente",
-    firstPaymentDate: null,
-    secondPaymentDate: null,
-    firstPaymentAmount: "0",
-    firstPaymentStatus: "Pendente",
-    secondPaymentAmount: "0",
-    secondPaymentStatus: "Pendente",
-    firstPaymentMethod: "",
-    secondPaymentMethod: "",
-};
+const defaultPaymentInfoStructure: CreateTrainingDataType["traineePayment"]["paymentInfo"] =
+  {
+      paymentStatus: "Pendente",
+      firstPaymentDate: null,
+      secondPaymentDate: null,
+      firstPaymentAmount: "0",
+      firstPaymentStatus: "Pendente",
+      secondPaymentAmount: "0",
+      secondPaymentStatus: "Pendente",
+      firstPaymentMethod: "",
+      secondPaymentMethod: "",
+  };
 
 export function CreateTrainingDialog({
     dialogNovoTreinamento,
@@ -185,9 +195,7 @@ export function CreateTrainingDialog({
                 // Valores: Se string vazia ou null, parseStringToCents devolve 0 (assumindo que sua func trata isso),
                 // mas garantimos null se não houver pagamento.
                 firstPaymentAmount: paymentInfo.firstPaymentAmount
-                    ? parseStringToCents(
-                        String(paymentInfo.firstPaymentAmount)
-                    )
+                    ? parseStringToCents(String(paymentInfo.firstPaymentAmount))
                     : 0, // ou null, dependendo do seu backend. Normalmente 0 é mais seguro para cálculos.
 
                 firstPaymentMethod: paymentInfo.firstPaymentMethod || null,
@@ -200,9 +208,7 @@ export function CreateTrainingDialog({
                     : null,
 
                 secondPaymentAmount: paymentInfo.secondPaymentAmount
-                    ? parseStringToCents(
-                        String(paymentInfo.secondPaymentAmount)
-                    )
+                    ? parseStringToCents(String(paymentInfo.secondPaymentAmount))
                     : 0,
 
                 secondPaymentMethod: paymentInfo.secondPaymentMethod || null,
@@ -282,6 +288,14 @@ export function CreateTrainingDialog({
     });
     const checkoutSchedule = data?.data;
 
+    // --- Filials Query (Managers only) ---
+    const { data: filialsData } = useQuery<Filial[], Error>({
+        queryKey: [ "get-all-filials" ],
+        queryFn: findAllFilials,
+        enabled: user?.role === "Gerente",
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
     useEffect(() => {
         setValue("hourInMinutes", 0);
     }, [ setValue, watchSelectedGear ]);
@@ -310,6 +324,30 @@ export function CreateTrainingDialog({
                     <div className="grid gap-6 py-4">
                         {/* --- DADOS GERAIS --- */}
                         <div className="grid gap-4">
+                            {user?.role === "Gerente" && (
+                                <div className="space-y-2">
+                                    <Label>Filial *</Label>
+                                    <Select
+                                        onValueChange={ (value) => setValue("filialId", value) }
+                                        defaultValue={ user?.sourceFilial.filialId }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione a filial" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {filialsData?.map((filial) => (
+                                                <SelectItem
+                                                    key={ filial.filialId }
+                                                    value={ filial.filialId }
+                                                >
+                                                    {filial.filialName}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+
                             <div className="space-y-2">
                                 <Label htmlFor="gearId">Equipamento *</Label>
                                 <SelectTrainingGear

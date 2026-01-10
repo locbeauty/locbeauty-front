@@ -42,8 +42,7 @@ export function SelectGear({ onSelect }: { onSelect: (gear: Gear) => void }) {
     // const selectedGears = useMemo(() => watch("gears") || [], [ watch ]);
     const items = watch("gears");
 
-    const filialId =
-    user?.role === "Gerente" ? user.sourceFilial.filialId : undefined;
+    const filialId = watch("filialId");
 
     const { data } = useQuery<ApiResponse<Gear[]>, Error>({
         queryKey: [ "get-all-gears", filialId ],
@@ -55,7 +54,7 @@ export function SelectGear({ onSelect }: { onSelect: (gear: Gear) => void }) {
 
     useEffect(() => {
         const updated = originalGears?.filter(
-            gear => !items?.some(item => item.gearId === gear.gearId)
+            (gear) => !items?.some((item) => item.gearId === gear.gearId)
         );
         setFilteredGears(updated);
     }, [ items, originalGears ]);
@@ -64,15 +63,13 @@ export function SelectGear({ onSelect }: { onSelect: (gear: Gear) => void }) {
 
     return (
         <div className="flex flex-col space-y-1">
-            {
-                !filteredGears ? (<Loader2 className="animate-spin" />) : (
-                    isDesktop ? (
-                        <DesktopSelect gears={ filteredGears } onSelect={ onSelect } />
-                    ) : (
-                        <MobileSelect gears={ filteredGears } onSelect={ onSelect } />
-                    )
-                )
-            }
+            {!filteredGears ? (
+                <Loader2 className="animate-spin" />
+            ) : isDesktop ? (
+                <DesktopSelect gears={ filteredGears } onSelect={ onSelect } />
+            ) : (
+                <MobileSelect gears={ filteredGears } onSelect={ onSelect } />
+            )}
         </div>
     );
 }

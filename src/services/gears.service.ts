@@ -5,6 +5,7 @@ import { Training } from "@/utils/@types/training";
 
 export async function GetAllGears({ filialId }: {filialId?: string | undefined}) {
     const response = await apiRequest<Gear[]>({ endpoint: "gears", queryParams: filialId ? { filialId } : {}  });
+    console.log("response: ", response);
     return response;
 }
 

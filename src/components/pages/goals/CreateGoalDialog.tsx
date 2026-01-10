@@ -17,12 +17,10 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { z } from "zod";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import PriceInput from "@/components/shared/PriceInput";
@@ -35,37 +33,45 @@ import {
 } from "@/lib/zod/CreateGoalValidation";
 import { CreateGoal } from "@/services/goals.service";
 import { getMonthName } from "@/utils/getMonthName";
-import { SelectGear } from "../bookings/create/SelectGear";
-import { Gear } from "@/utils/@types/gears";
 import { SelectTrainingGear } from "../trainings/SelectTrainingGear";
 import { queryClient } from "@/app/(main)/layout";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
 
 export function CreateGoalDialog() {
     const [ dialogNovaMeta, setDialogNovaMeta ] = useState(false);
-    const [ isSubmitting, setIsSubmitting ] = useState(false); // Adicionado estado de submitting
+    const [ isSubmitting, setIsSubmitting ] = useState(false);
 
-    const {
-        control,
-        register,
-        handleSubmit,
-        formState: { errors },
-        setValue,
-        watch,
-        reset,
-    } = useForm<CreateGoalDataType>({
+    const form = useForm<CreateGoalDataType>({
         resolver: zodResolver(CreateGoalSchema),
         defaultValues: {
             monthIndex: new Date().getMonth(),
-            year: new Date().getFullYear(), // Adicionado ano padrão
+            year: new Date().getFullYear(),
             status: "EM_ANDAMENTO",
-            goalType: "MONEY", // 4. Definir "Faturamento" como padrão
+            goalType: "MONEY",
             targetCents: "",
             targetQuantity: 0,
         },
     });
+
+    const {
+        control,
+        setValue,
+        watch,
+        reset,
+        handleSubmit,
+        formState: { errors },
+    } = form;
+
     const watchTargetCents = watch("targetCents");
-    const watchGoalType = watch("goalType"); // 5. Observar o tipo de meta
-    const watchFilialId = watch("filialId"); // 5. Observar o tipo de meta
+    const watchGoalType = watch("goalType");
+    const watchFilialId = watch("filialId");
     const [ selectedGearName, setSelectedGearName ] = useState<string | undefined>(
         undefined
     );
@@ -75,62 +81,53 @@ export function CreateGoalDialog() {
             setValue("gearId", selectedGearName);
         }
     }, [ setValue, selectedGearName ]);
+
     async function handleCreateGoal(newGoalData: CreateGoalDataType) {
-        setIsSubmitting(true); // Desabilita o botão
-        // 6. Preparar o payload condicionalmente
+        setIsSubmitting(true);
         let payload: CreateGoalDataWithMoneyInCents;
 
         if (newGoalData.goalType === "MONEY") {
-            // Se for 'MONEY', envie 'targetCents' como centavos
             payload = {
                 ...newGoalData,
-                goalType: "MONEY", // Garante o tipo correto
-                targetCents: parseStringToCents(String(newGoalData.targetCents)), // Converte R$ para centavos
+                goalType: "MONEY",
+                targetCents: parseStringToCents(String(newGoalData.targetCents)),
             };
-            delete payload.targetQuantity; // Remove o campo não utilizado
+            delete payload.targetQuantity;
         } else {
-            // goalType === "GEAR"
-            // Se for 'GEAR', envie 'targetQuantity' como número
             payload = {
                 ...newGoalData,
-                goalType: "GEAR", // Garante o tipo correto
-                targetQuantity: newGoalData.targetQuantity, // Já é um número
+                goalType: "GEAR",
+                targetQuantity: newGoalData.targetQuantity,
                 targetCents: undefined,
             };
-            delete payload.targetCents; // Remove o campo não utilizado
+            delete payload.targetCents;
         }
 
         try {
             const response = await CreateGoal(payload);
 
             if (response.statusCode !== 201) {
-                toast.warning(response.message || "Erro desconhecido", {
-                    style: { fontSize: "1rem" },
-                });
+                toast.warning(response.message || "Erro desconhecido");
             } else {
-                toast.success("Meta criada com sucesso!", {
-                    style: { fontSize: "1rem" },
-                });
+                toast.success("Meta criada com sucesso!");
                 queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
-                setDialogNovaMeta(false); // Fecha o diálogo
-                reset(); // Reseta o formulário
+                setDialogNovaMeta(false);
+                reset();
             }
         } catch (error) {
             console.error("Erro ao criar meta:", error);
             toast.error("Ocorreu um erro. Tente novamente.");
         } finally {
-            setIsSubmitting(false); // Reabilita o botão
+            setIsSubmitting(false);
         }
     }
 
     const handleOpenChange = (open: boolean) => {
         if (!open) {
-            reset(); // Reseta o formulário ao fechar
+            reset();
         }
         setDialogNovaMeta(open);
     };
-
-    // --- FIM DAS MUDANÇAS ---
 
     return (
         <Dialog open={ dialogNovaMeta } onOpenChange={ handleOpenChange }>
@@ -140,177 +137,205 @@ export function CreateGoalDialog() {
           Nova Meta
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-                <form onSubmit={ handleSubmit(handleCreateGoal) }>
-                    <DialogHeader>
-                        <DialogTitle>Criar Nova Meta Mensal</DialogTitle>
-                        <DialogDescription>
-              Defina uma nova meta de vendas para uma filial
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="filial">Filial *</Label>
-                                <SelectFilial control={ control } name="filialId" />
-                                <div className="h-3">
+            <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                    <DialogTitle>Criar Nova Meta Mensal</DialogTitle>
+                    <DialogDescription>
+            Defina uma nova meta de vendas para uma filial
+                    </DialogDescription>
+                </DialogHeader>
+
+                <Form { ...form }>
+                    <form onSubmit={ handleSubmit(handleCreateGoal) } className="space-y-6">
+                        <div className="grid gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Filial - Custom Integration */}
+                                <div className="space-y-2">
+                                    <FormLabel
+                                        className={ errors.filialId ? "text-destructive" : "" }
+                                    >
+                    Filial *
+                                    </FormLabel>
+                                    <SelectFilial control={ control } name="filialId" />
                                     {errors.filialId && (
-                                        <p className="text-xs font-medium text-destructive">
+                                        <p className="text-[0.8rem] font-medium text-destructive">
                                             {errors.filialId.message}
                                         </p>
                                     )}
                                 </div>
-                            </div>
 
-                            {/* 8. Seletor do Tipo de Meta (Atualizado para MONEY/GEAR) */}
-                            <div className="space-y-2">
-                                <Label htmlFor="goalType">Tipo de Meta *</Label>
-                                <Controller
+                                <FormField
+                                    control={ control }
                                     name="goalType"
-                                    control={ control }
                                     render={ ({ field }) => (
-                                        <Select
-                                            value={ field.value }
-                                            onValueChange={ (value: "MONEY" | "GEAR") => {
-                                                field.onChange(value);
-                                                // Limpa os valores ao trocar o tipo
-                                                if (value === "MONEY") {
-                                                    setValue("targetQuantity", 0, {
-                                                        shouldValidate: true,
-                                                    });
-                                                } else {
-                                                    setValue("targetCents", "", { shouldValidate: true });
-                                                }
-                                            } }
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Selecione o tipo" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="MONEY">Faturamento (R$)</SelectItem>
-                                                <SelectItem value="GEAR">
-                          Máquinas Agendadas (Qtd)
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    ) }
-                                />
-                                <div className="h-3">
-                                    {/* O Zod cuidará do erro se não for MONEY ou GEAR, mas é improvável */}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 9. Renderização Condicional do Input da Meta (Atualizado para MONEY/GEAR) */}
-                        {watchGoalType === "MONEY" && (
-                            <div className="space-y-2">
-                                <Label htmlFor="valorMeta">Valor da Meta (R$) *</Label>
-                                <PriceInput
-                                    register={ register("targetCents") }
-                                    value={ watchTargetCents }
-                                    setValue={ setValue }
-                                    name="targetCents"
-                                    withLabel={ false }
-                                />
-                                <div className="h-3">
-                                    {errors.targetCents && (
-                                        <p className="text-xs font-medium text-destructive">
-                                            {errors.targetCents.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {watchGoalType === "GEAR" && (
-                            <div className="space-y-2">
-                                <SelectTrainingGear
-                                    disabled={ !watchFilialId }
-                                    selectedGear={ selectedGearName }
-                                    onGearChange={ (gearName) => {
-                                        setSelectedGearName(gearName);
-                                    } }
-                                />
-                                <Label htmlFor="quantidadeMeta">Qtd. de Máquinas *</Label>
-                                <Input
-                                    id="quantidadeMeta"
-                                    type="number"
-                                    { ...register("targetQuantity", { valueAsNumber: true }) }
-                                    placeholder="Ex: 50"
-                                />
-                                <div className="h-3">
-                                    {errors.targetQuantity && (
-                                        <p className="text-xs font-medium text-destructive">
-                                            {errors.targetQuantity.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="ano">Ano *</Label>
-                                <Input
-                                    type="number"
-                                    defaultValue={ new Date().getFullYear() } // Adicionado valor padrão
-                                    { ...register("year", { valueAsNumber: true }) }
-                                    placeholder="Ex: 2025"
-                                />
-                                <div className="h-3">
-                                    {errors.year && (
-                                        <p className="text-xs font-medium text-destructive">
-                                            {errors.year.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="mes">Mês *</Label>
-                                <Controller
-                                    name="monthIndex"
-                                    control={ control }
-                                    render={ ({ field }) => (
-                                        <Select
-                                            value={ field.value?.toString() ?? "" }
-                                            onValueChange={ (value) => field.onChange(Number(value)) }
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Selecione o mês" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Array.from({ length: 12 }, (_, i) => (
-                                                    <SelectItem key={ i } value={ i.toString() }>
-                                                        {getMonthName(i)}
+                                        <FormItem>
+                                            <FormLabel>Tipo de Meta *</FormLabel>
+                                            <Select
+                                                onValueChange={ (value: "MONEY" | "GEAR") => {
+                                                    field.onChange(value);
+                                                    if (value === "MONEY") {
+                                                        setValue("targetQuantity", 0, {
+                                                            shouldValidate: true,
+                                                        });
+                                                    } else {
+                                                        setValue("targetCents", "", {
+                                                            shouldValidate: true,
+                                                        });
+                                                    }
+                                                } }
+                                                defaultValue={ field.value }
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecione o tipo" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="MONEY">
+                            Faturamento (R$)
                                                     </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                                    <SelectItem value="GEAR">
+                            Máquinas Agendadas (Qtd)
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
                                     ) }
                                 />
-                                <div className="h-3">
-                                    {errors.monthIndex && (
-                                        <p className="text-xs font-medium text-destructive">
-                                            {errors.monthIndex.message}
-                                        </p>
-                                    )}
+                            </div>
+
+                            {watchGoalType === "MONEY" && (
+                                <FormField
+                                    control={ control }
+                                    name="targetCents"
+                                    render={ ({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <PriceInput
+                                                    withLabel={ true }
+                                                    value={ field.value as string }
+                                                    onChange={ field.onChange }
+                                                    error={ errors.targetCents?.message }
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) }
+                                />
+                            )}
+
+                            {watchGoalType === "GEAR" && (
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <FormLabel>Equipamento *</FormLabel>
+                                        <SelectTrainingGear
+                                            disabled={ !watchFilialId }
+                                            selectedGear={ selectedGearName }
+                                            onGearChange={ (gearName) => {
+                                                setSelectedGearName(gearName);
+                                            } }
+                                        />
+                                    </div>
+                                    <FormField
+                                        control={ control }
+                                        name="targetQuantity"
+                                        render={ ({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Qtd. de Máquinas *</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="Ex: 50"
+                                                        { ...field }
+                                                        onChange={ (e) =>
+                                                            field.onChange(e.target.valueAsNumber)
+                                                        }
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        ) }
+                                    />
                                 </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={ control }
+                                    name="year"
+                                    render={ ({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Ano *</FormLabel>
+                                            <Select
+                                                onValueChange={ (val) => field.onChange(Number(val)) }
+                                                value={ field.value?.toString() }
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecione o ano" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {Array.from({ length: 2 }, (_, i) => {
+                                                        const y = new Date().getFullYear() + i;
+                                                        return (
+                                                            <SelectItem key={ y } value={ y.toString() }>
+                                                                {y}
+                                                            </SelectItem>
+                                                        );
+                                                    })}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) }
+                                />
+
+                                <FormField
+                                    control={ control }
+                                    name="monthIndex"
+                                    render={ ({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Mês *</FormLabel>
+                                            <Select
+                                                onValueChange={ (val) => field.onChange(Number(val)) }
+                                                value={ field.value?.toString() }
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Selecione o mês" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {Array.from({ length: 12 }, (_, i) => (
+                                                        <SelectItem key={ i } value={ i.toString() }>
+                                                            {getMonthName(i)}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) }
+                                />
                             </div>
                         </div>
-                    </div>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            type="button"
-                            onClick={ () => handleOpenChange(false) }
-                        >
-              Cancelar
-                        </Button>
-                        <Button type="submit" disabled={ isSubmitting }>
-                            {isSubmitting ? "Criando..." : "Criar Meta"}
-                        </Button>
-                    </DialogFooter>
-                </form>
+
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                type="button"
+                                onClick={ () => handleOpenChange(false) }
+                            >
+                Cancelar
+                            </Button>
+                            <Button type="submit" disabled={ isSubmitting }>
+                                {isSubmitting ? "Criando..." : "Criar Meta"}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
             </DialogContent>
         </Dialog>
     );
