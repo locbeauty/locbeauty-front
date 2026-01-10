@@ -26,3 +26,12 @@ export const goalStatuses = [
 ] as const;
 
 export type GoalStatuses = (typeof goalStatuses)[number];
+
+// User Roles
+export const USER_ROLES = {
+    GERENTE: "Gerente",
+    ADMIN: "ADMIN",
+    MASTER: "MASTER",
+} as const;
+
+export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];

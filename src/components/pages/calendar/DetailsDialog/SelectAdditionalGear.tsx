@@ -26,20 +26,27 @@ import { useMounted } from "@/hooks/useMounted";
 import { useEffect, useMemo, useState } from "react";
 import { Gear } from "@/utils/@types/gears";
 import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 import { GetAllGears } from "@/services/gears.service";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { Checkout } from "@/utils/@types/checkouts";
 
-export function SelectAdditionalGear({ onSelect, selectedCheckout }: { onSelect: (gear: Gear) => void, selectedCheckout: Checkout }) {
+export function SelectAdditionalGear({
+    onSelect,
+    selectedCheckout,
+}: {
+  onSelect: (gear: Gear) => void;
+  selectedCheckout: Checkout;
+}) {
     const [ filteredGears, setFilteredGears ] = useState<Gear[] | undefined>([]);
     const { user } = useAuth();
     const isMounted = useMounted();
     const isDesktop = useMediaQuery("(min-width: 768px)");
 
     const filialId =
-    user?.role === "Gerente" ? user.sourceFilial.filialId : undefined;
+    user?.role === USER_ROLES.GERENTE ? user.sourceFilial.filialId : undefined;
 
     const { data } = useQuery<ApiResponse<Gear[]>, Error>({
         queryKey: [ "get-all-gears", filialId ],
@@ -51,7 +58,10 @@ export function SelectAdditionalGear({ onSelect, selectedCheckout }: { onSelect:
 
     useEffect(() => {
         const updated = originalGears?.filter(
-            gear => !selectedCheckout.Bookings.some(item => (item.Gear.gearId === gear.gearId && item.status === "ACTIVE"))
+            (gear) =>
+                !selectedCheckout.Bookings.some(
+                    (item) => item.Gear.gearId === gear.gearId && item.status === "ACTIVE"
+                )
         );
         setFilteredGears(updated);
     }, [ selectedCheckout, originalGears ]);
@@ -60,27 +70,36 @@ export function SelectAdditionalGear({ onSelect, selectedCheckout }: { onSelect:
 
     return (
         <div className="flex flex-col space-y-1">
-            {
-                !filteredGears ? (<Loader2 className="animate-spin" />) : (
-                    isDesktop ? (
-                        <DesktopSelect gears={ filteredGears } onSelect={ onSelect } />
-                    ) : (
-                        <MobileSelect gears={ filteredGears } onSelect={ onSelect } />
-                    )
-                )
-            }
+            {!filteredGears ? (
+                <Loader2 className="animate-spin" />
+            ) : isDesktop ? (
+                <DesktopSelect gears={ filteredGears } onSelect={ onSelect } />
+            ) : (
+                <MobileSelect gears={ filteredGears } onSelect={ onSelect } />
+            )}
         </div>
     );
 }
 
-function DesktopSelect({ gears, onSelect }: { gears: Gear[]; onSelect: (gear: Gear) => void }) {
+function DesktopSelect({
+    gears,
+    onSelect,
+}: {
+  gears: Gear[];
+  onSelect: (gear: Gear) => void;
+}) {
     const [ open, setOpen ] = useState(false);
     const [ selectedLabel, setSelectedLabel ] = useState<string | null>(null);
 
     return (
         <Popover open={ open } onOpenChange={ setOpen } modal={ true }>
             <PopoverTrigger asChild>
-                <Button variant="outline" className={ `w-full justify-start ${!selectedLabel && "text-placeholder"}` }>
+                <Button
+                    variant="outline"
+                    className={ `w-full justify-start ${
+                        !selectedLabel && "text-placeholder"
+                    }` }
+                >
                     {selectedLabel ?? "Selecione a máquina"}
                 </Button>
             </PopoverTrigger>

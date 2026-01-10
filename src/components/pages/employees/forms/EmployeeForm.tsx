@@ -1,4 +1,3 @@
-import { SelectFilial } from "@/components/shared/SelectFilial";
 import DocumentInput from "../../../shared/DocumentInput";
 import { SelectRole } from "@/components/shared/SelectRole";
 import PhoneInput from "../../../shared/PhoneInput";
@@ -110,17 +109,6 @@ export function EmployeeForm() {
                         {errors.role && (
                             <p className="text-xs font-medium text-destructive">
                                 {errors.role.message}
-                            </p>
-                        )}
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="nome">Filial:</Label>
-                    <SelectFilial control={ control } name="sourceFilialId" />
-                    <div className="h-3">
-                        {errors.sourceFilialId && (
-                            <p className="text-xs font-medium text-destructive">
-                                {errors.sourceFilialId.message}
                             </p>
                         )}
                     </div>

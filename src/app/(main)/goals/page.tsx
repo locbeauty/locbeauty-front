@@ -7,6 +7,7 @@ import {
     useEffect,
 } from "react";
 import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
@@ -105,7 +106,9 @@ export default function MetasMensaisPage() {
         queryFn: () =>
             GetAllGoals({
                 filialId:
-          user?.role === "Gerente" ? undefined : user?.sourceFilial.filialId,
+          user?.role === USER_ROLES.GERENTE
+              ? undefined
+              : user?.sourceFilial.filialId,
             }),
         staleTime: 1000 * 60,
     });

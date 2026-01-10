@@ -9,6 +9,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 import { getEmployeeAccesses } from "@/services/access.service";
 import { EmployeeAccess, SYSTEM_MODULES } from "@/utils/@types/access";
 import { Loader2 } from "lucide-react";
@@ -21,6 +22,9 @@ type AccessContextType = {
     action: "canView" | "canCreate" | "canEdit",
     filialId?: string
   ) => boolean;
+  getAccessibleFilialsForCreate: (
+    module: SYSTEM_MODULES
+  ) => { filialId: string; filialName: string }[];
   reloadAccesses: () => Promise<void>;
 };
 
@@ -28,6 +32,7 @@ const AccessContext = createContext<AccessContextType>({
     accesses: [],
     isLoading: true,
     can: () => false,
+    getAccessibleFilialsForCreate: () => [],
     reloadAccesses: async () => {},
 });
 
@@ -83,29 +88,51 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
             action: "canView" | "canCreate" | "canEdit",
             filialId?: string
         ) => {
-            // ADMIN Bypass (Optional - based on requirement. Assuming 'ADMIN' role in User exists)
-            if (user?.role === "ADMIN" || user?.role === "MASTER") return true;
+            // ADMIN Bypass
+            if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER)
+                return true;
 
-            // Find relevant permission
-            const permission = accesses.find((a) => {
-                const moduleMatch = a.module === module;
-                // If filialId provided, match it. If not, match "any"?
-                // Usually "global" access check means "do they have this access in ANY filial"
-                // OR "do they have this access in CURRENT context's filial".
-                // If filialId is NOT provided, it depends on the use case.
-                // Strict mode: if no filialId passed, we might check if they have it in AT LEAST ONE place?
-                // Let's implement: if filialId provided, exact match.
-                // If NO filialId provided, return true if they have it for ANY filial (e.g. can view "Employees" page at all).
+            // If specific filialId provided, find exact permission
+            if (filialId) {
+                const permission = accesses.find(
+                    (a) => a.module === module && a.filialId === filialId
+                );
+                if (!permission) return false;
+                return !!permission[action];
+            }
 
-                if (filialId) {
-                    return moduleMatch && a.filialId === filialId;
-                }
-                return moduleMatch;
-            });
+            // If filialId NOT provided, check if they have the permission in ANY filial
+            return accesses.some((a) => a.module === module && !!a[action]);
+        },
+        [ accesses, user?.role ]
+    );
 
-            if (!permission) return false;
+    const getAccessibleFilialsForCreate = useCallback(
+        (module: SYSTEM_MODULES) => {
+            // ADMIN/MASTER bypass - they have access to all filials
+            // For now, we return empty array to indicate they should see the select
+            // The SelectFilial component will fetch all available filials
+            if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
+                return [];
+            }
 
-            return !!permission[action];
+            // Filter accesses with canCreate = true for the specific module
+            const createAccesses = accesses.filter(
+                (a) => a.module === module && a.canCreate
+            );
+
+            // Map to return unique filials
+            const uniqueFilials = createAccesses
+                .map((a) => ({
+                    filialId: a.filialId,
+                    filialName: a.Filial.filialName,
+                }))
+                .filter(
+                    (filial, index, self) =>
+                        index === self.findIndex((f) => f.filialId === filial.filialId)
+                );
+
+            return uniqueFilials;
         },
         [ accesses, user?.role ]
     );
@@ -114,6 +141,7 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
         accesses,
         isLoading,
         can,
+        getAccessibleFilialsForCreate,
         reloadAccesses: fetchAccesses,
     };
 

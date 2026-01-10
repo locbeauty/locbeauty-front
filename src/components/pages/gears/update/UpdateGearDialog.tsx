@@ -12,8 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { Gear } from "@/utils/@types/gears";
 import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import { updateGearFormSchema, UpdateGearFormSchemaType } from "@/lib/zod/UpdateGearValidation";
+import {
+    updateGearFormSchema,
+    UpdateGearFormSchemaType,
+} from "@/lib/zod/UpdateGearValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import { TransferableCheckbox } from "../shared/canBeTransferredCheckbox";
@@ -69,14 +73,17 @@ export function UpdateGearDialog({
 
     const handleSaveGear = async (targetGearData: UpdateGearFormSchemaType) => {
         try {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears/update?gearId=${selectedGear?.gearId}`, {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(targetGearData),
-            });
+            const response = await fetchWithToken(
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/gears/update?gearId=${selectedGear?.gearId}`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(targetGearData),
+                }
+            );
             const data = await response.json();
 
             if (!response.ok) {
@@ -109,35 +116,33 @@ export function UpdateGearDialog({
                 </DialogHeader>
 
                 {selectedGear && (
-                    <form onSubmit={ handleSubmit(handleSaveGear) } className="grid gap-6 py-4">
+                    <form
+                        onSubmit={ handleSubmit(handleSaveGear) }
+                        className="grid gap-6 py-4"
+                    >
                         <div className="grid grid-cols-1 gap-3">
                             <Label>Nome</Label>
-                            <Input
-                                { ...register("gearName") }
-                            />
+                            <Input { ...register("gearName") } />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid grid-cols-1 gap-3">
-                                {
-                                    user?.role === "Gerente" && (
-
-                                        <div className="space-y-2">
-                                            <Label>Filial</Label>
-                                            <FormProvider { ...updateGearMethods }>
-                                                <SelectFilial<UpdateGearFormSchemaType>
-                                                    control={ control }
-                                                    name="sourceFilialId"
-                                                />
-                                            </FormProvider>
-                                            {errors.sourceFilialId && (
-                                                <p className="text-sm text-destructive mt-2">
-                                                    {errors.sourceFilialId.message}
-                                                </p>
-                                            )}
-                                        </div>
-                                    )
-                                }
+                                {user?.role === USER_ROLES.GERENTE && (
+                                    <div className="space-y-2">
+                                        <Label>Filial</Label>
+                                        <FormProvider { ...updateGearMethods }>
+                                            <SelectFilial<UpdateGearFormSchemaType>
+                                                control={ control }
+                                                name="sourceFilialId"
+                                            />
+                                        </FormProvider>
+                                        {errors.sourceFilialId && (
+                                            <p className="text-sm text-destructive mt-2">
+                                                {errors.sourceFilialId.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* <div className="flex flex-col gap-6 mt-4">
@@ -244,11 +249,11 @@ export function UpdateGearDialog({
                                 variant="outline"
                                 onClick={ () => setIsUpdateGearDialogOpen(false) }
                             >
-            Cancelar
+                Cancelar
                             </Button>
                             <Button disabled={ !isDirty }>
                                 <Save className="mr-2 h-4 w-4" />
-            Salvar alterações
+                Salvar alterações
                             </Button>
                         </DialogFooter>
                     </form>

@@ -26,6 +26,9 @@ import { useEffect, useMemo, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-provider";
+import { useAccess } from "@/contexts/access-provider";
+import { USER_ROLES } from "@/utils/constants";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import CheckoutTimeSelector from "./CheckoutTimeSelector";
 import { Textarea } from "@/components/ui/textarea";
@@ -162,6 +165,28 @@ export function GearsSection() {
 
 export function CreateBookingForm() {
     const { user } = useAuth();
+    const { getAccessibleFilialsForCreate } = useAccess();
+
+    // Get accessible filials for create
+    const accessibleFilialsObjects =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+        ? []
+        : getAccessibleFilialsForCreate(SYSTEM_MODULES.BOOKINGS);
+
+    const accessibleFilialsIds =
+    accessibleFilialsObjects.length > 0
+        ? accessibleFilialsObjects.map((f) => f.filialId)
+        : user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+            ? undefined
+            : [];
+
+    const defaultFilialId =
+        user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+            ? user?.sourceFilial.filialId
+            : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
+                ? user?.sourceFilial.filialId
+                : accessibleFilialsIds?.[0];
+
     const createBookingFormMethods = useForm<CreateCheckoutFormSchemaType>({
         resolver: zodResolver(createCheckoutFormSchema),
         defaultValues: {
@@ -185,7 +210,7 @@ export function CreateBookingForm() {
             additionalTransportCost: "0,00",
             consumption: 10,
             addressId: "",
-            filialId: user?.sourceFilial.filialId,
+            filialId: defaultFilialId || "",
             accountableEmployeeId: user?.sub,
         },
     });
@@ -366,19 +391,18 @@ export function CreateBookingForm() {
         <div className="">
             <div className="space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
                 <div className="ml-auto mr-auto w-[50%]">
-                    {user?.role === "Gerente" && (
-                        <Controller
-                            control={ control }
-                            name="filialId"
-                            render={ ({ field }) => (
-                                <SelectFilial
-                                    control={ control }
-                                    name={ field.name }
-                                    defaultFilial={ user?.sourceFilial.filialId }
-                                />
-                            ) }
-                        />
-                    )}
+                    <Controller
+                        control={ control }
+                        name="filialId"
+                        render={ ({ field }) => (
+                            <SelectFilial
+                                control={ control }
+                                name={ field.name }
+                                accessibleFilials={ accessibleFilialsIds }
+                                defaultFilial={ user?.sourceFilial.filialId }
+                            />
+                        ) }
+                    />
                 </div>
             </div>
 
@@ -439,7 +463,7 @@ export function CreateBookingForm() {
                                         setDriverString={ setDriverString }
                                         employeeRole="Motorista"
                                         filialId={
-                                            user?.role === "Gerente"
+                                            user?.role === USER_ROLES.GERENTE
                                                 ? undefined
                                                 : user?.sourceFilial.filialId
                                         }

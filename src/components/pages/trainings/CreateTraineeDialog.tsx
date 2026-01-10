@@ -13,7 +13,12 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
-import { FormProvider, useForm } from "react-hook-form";
+import { Controller, FormProvider, useForm } from "react-hook-form";
+import { useAuth } from "@/contexts/auth-provider";
+import { useAccess } from "@/contexts/access-provider";
+import { USER_ROLES } from "@/utils/constants";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { SelectFilial } from "@/components/shared/SelectFilial";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { queryClient } from "@/app/(main)/layout";
@@ -35,8 +40,26 @@ export function CreateTraineeDialog({
     dialogNovoAluno,
     setDialogNovoAluno,
 }: CreateTraineeDialogProps) {
+    const { user } = useAuth();
+    const { getAccessibleFilialsForCreate } = useAccess();
+
+    const accessibleFilialsObjects =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+        ? []
+        : getAccessibleFilialsForCreate(SYSTEM_MODULES.TRAININGS);
+
+    const accessibleFilialsIds =
+    accessibleFilialsObjects.length > 0
+        ? accessibleFilialsObjects.map((f) => f.filialId)
+        : user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+            ? undefined
+            : [];
+
     const traineeForm = useForm<CreateTraineeFormDataType>({
         resolver: zodResolver(CreateTraineeSchema),
+        defaultValues: {
+            filialId: user?.sourceFilial.filialId,
+        },
     });
 
     const onSubmitTrainee = async (data: CreateTraineeFormDataType) => {
@@ -72,6 +95,20 @@ export function CreateTraineeDialog({
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Filial *</Label>
+                            <SelectFilial
+                                control={ traineeForm.control }
+                                name="filialId"
+                                accessibleFilials={ accessibleFilialsIds }
+                                defaultFilial={ user?.sourceFilial.filialId }
+                            />
+                            {traineeForm.formState.errors.filialId && (
+                                <p className="text-sm text-destructive">
+                                    {traineeForm.formState.errors.filialId.message}
+                                </p>
+                            )}
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="traineeName">Nome Completo *</Label>
                             <Input

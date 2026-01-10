@@ -17,6 +17,7 @@ export interface Customer {
   birthdate: Date | null;
   customerStatus: CUSTOMER_STATUSES;
   lastBooking: Date | null;
+  sourceFilialId: string;
   createdAt: Date;
   updatedAt: Date;
   Addresses: Address[];

@@ -6,7 +6,8 @@ export const CreateTraineeSchema = z.object({
     documentNumber: z.string().min(11, "CPF inválido").max(14, "CPF inválido"),
     cellphone: z.string().min(10, "Telefone inválido"),
     email: z.string().email("Email inválido"),
-    address: addressSchema
+    filialId: z.string().cuid({ message: "Filial é obrigatória" }),
+    address: addressSchema,
 });
 
 export type CreateTraineeFormDataType = z.infer<typeof CreateTraineeSchema>;

@@ -15,24 +15,29 @@ import { fetchWithToken } from "@/utils/fetchWithToken";
 type SelectFilialProps<T extends FieldValues> = {
   control: Control<T>;
   name: FieldPath<T>;
-  defaultFilial?: string
+  defaultFilial?: string;
+  accessibleFilials?: string[];
 };
 
 export function SelectFilial<T extends FieldValues>({
     control,
     name,
-    defaultFilial
+    defaultFilial,
+    accessibleFilials,
 }: SelectFilialProps<T>) {
     const [ allFilials, setAllFilials ] = useState<Filial[]>([]);
 
     useEffect(() => {
         async function handleGetAllFilials() {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/filials`, {
-                credentials: "include",
-                next: {
-                    tags: [ "get-all-filials" ],
-                },
-            });
+            const response = await fetchWithToken(
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/filials`,
+                {
+                    credentials: "include",
+                    next: {
+                        tags: [ "get-all-filials" ],
+                    },
+                }
+            );
             const { data }: { data: Filial[] } = await response.json();
             setAllFilials(data);
         }
@@ -43,18 +48,28 @@ export function SelectFilial<T extends FieldValues>({
             name={ name }
             control={ control }
             render={ ({ field }) => (
-                <Select defaultValue={ defaultFilial } onValueChange={ field.onChange } value={ field.value ?? "" }>
+                <Select
+                    defaultValue={ defaultFilial }
+                    onValueChange={ field.onChange }
+                    value={ field.value ?? "" }
+                >
                     <SelectTrigger className="w-full md:w-[90%] data-[placeholder]:text-placeholder">
                         <SelectValue placeholder="Selecione uma filial" />
                     </SelectTrigger>
                     <SelectContent>
-                        {allFilials.map((filial) => {
-                            return (
-                                <SelectItem key={ filial.filialId } value={ filial.filialId }>
-                                    {filial.filialName}
-                                </SelectItem>
-                            );
-                        })}
+                        {allFilials
+                            .filter(
+                                (filial) =>
+                                    !accessibleFilials ||
+                  accessibleFilials.includes(filial.filialId)
+                            )
+                            .map((filial) => {
+                                return (
+                                    <SelectItem key={ filial.filialId } value={ filial.filialId }>
+                                        {filial.filialName}
+                                    </SelectItem>
+                                );
+                            })}
                     </SelectContent>
                 </Select>
             ) }

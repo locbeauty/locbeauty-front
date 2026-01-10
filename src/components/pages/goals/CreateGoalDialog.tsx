@@ -43,10 +43,34 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
+import { useAccess } from "@/contexts/access-provider";
+import { useAuth } from "@/contexts/auth-provider";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { USER_ROLES } from "@/utils/constants";
 
 export function CreateGoalDialog() {
     const [ dialogNovaMeta, setDialogNovaMeta ] = useState(false);
     const [ isSubmitting, setIsSubmitting ] = useState(false);
+
+    const { user } = useAuth();
+    const { getAccessibleFilialsForCreate } = useAccess();
+
+    // Determine accessible filials for select options
+    const accessibleFilialsObjects = getAccessibleFilialsForCreate(
+        SYSTEM_MODULES.GOALS
+    );
+    const isRestricted =
+    user?.role !== USER_ROLES.ADMIN && user?.role !== USER_ROLES.MASTER;
+    const accessibleFilialsIds = isRestricted
+        ? accessibleFilialsObjects.map((f) => f.filialId)
+        : undefined;
+
+    const defaultFilialId =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+        ? user?.sourceFilial.filialId
+        : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
+            ? user?.sourceFilial.filialId
+            : accessibleFilialsIds?.[0];
 
     const form = useForm<CreateGoalDataType>({
         resolver: zodResolver(CreateGoalSchema),
@@ -57,6 +81,7 @@ export function CreateGoalDialog() {
             goalType: "MONEY",
             targetCents: "",
             targetQuantity: 0,
+            filialId: defaultFilialId || "",
         },
     });
 
@@ -156,7 +181,11 @@ export function CreateGoalDialog() {
                                     >
                     Filial *
                                     </FormLabel>
-                                    <SelectFilial control={ control } name="filialId" />
+                                    <SelectFilial
+                                        control={ control }
+                                        name="filialId"
+                                        accessibleFilials={ accessibleFilialsIds }
+                                    />
                                     {errors.filialId && (
                                         <p className="text-[0.8rem] font-medium text-destructive">
                                             {errors.filialId.message}

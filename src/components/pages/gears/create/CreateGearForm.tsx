@@ -15,16 +15,41 @@ import {
 import { toast } from "sonner";
 import { TransferableCheckbox } from "../shared/canBeTransferredCheckbox";
 import { useAuth } from "@/contexts/auth-provider";
+import { useAccess } from "@/contexts/access-provider";
+import { USER_ROLES } from "@/utils/constants";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { queryClient } from "@/app/(main)/layout";
 
 export function CreateGearForm() {
     const { user } = useAuth();
+    const { getAccessibleFilialsForCreate } = useAccess();
+
+    // Get accessible filials for create
+    const accessibleFilialsObjects =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+        ? []
+        : getAccessibleFilialsForCreate(SYSTEM_MODULES.GEARS);
+
+    const accessibleFilialsIds =
+    accessibleFilialsObjects.length > 0
+        ? accessibleFilialsObjects.map((f) => f.filialId)
+        : user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+            ? undefined
+            : [];
+
+    const defaultFilialId =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+        ? user?.sourceFilial.filialId
+        : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
+            ? user?.sourceFilial.filialId
+            : accessibleFilialsIds?.[0];
+
     const createGearMethods = useForm<CreateGearFormSchemaType>({
         resolver: zodResolver(createGearFormSchema),
         defaultValues: {
             transferable: false,
-            sourceFilialId: user?.role === "Gerente" ? "" : user?.sourceFilial.filialId
+            sourceFilialId: defaultFilialId,
         },
     });
 
@@ -43,14 +68,17 @@ export function CreateGearForm() {
 
     async function handleCreateGear(newGearData: CreateGearFormSchemaType) {
         try {
-            const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears/create`, {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(newGearData),
-            });
+            const response = await fetchWithToken(
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/gears/create`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(newGearData),
+                }
+            );
             const data = await response.json();
 
             if (!response.ok) {
@@ -92,25 +120,22 @@ export function CreateGearForm() {
                                 </p>
                             )}
                         </div>
-                        {
-                            user?.role === "Gerente" && (
-
-                                <div className="space-y-2">
-                                    <Label>Filial</Label>
-                                    <FormProvider { ...createGearMethods }>
-                                        <SelectFilial<CreateGearFormSchemaType>
-                                            control={ control }
-                                            name="sourceFilialId"
-                                        />
-                                    </FormProvider>
-                                    {errors.sourceFilialId && (
-                                        <p className="text-sm text-destructive mt-2">
-                                            {errors.sourceFilialId.message}
-                                        </p>
-                                    )}
-                                </div>
-                            )
-                        }
+                        <div className="space-y-2">
+                            <Label>Filial</Label>
+                            <FormProvider { ...createGearMethods }>
+                                <SelectFilial<CreateGearFormSchemaType>
+                                    control={ control }
+                                    name="sourceFilialId"
+                                    accessibleFilials={ accessibleFilialsIds }
+                                    defaultFilial={ user?.sourceFilial.filialId }
+                                />
+                            </FormProvider>
+                            {errors.sourceFilialId && (
+                                <p className="text-sm text-destructive mt-2">
+                                    {errors.sourceFilialId.message}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <div className="space-y-2 flex-1 mt-4">

@@ -5,6 +5,7 @@ import { DayView } from "./DayView";
 import { WeekView } from "./WeekView";
 import { MonthView } from "./MonthView";
 import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 import { Checkout } from "@/utils/@types/checkouts";
 import { useQuery } from "@tanstack/react-query";
 import { GetAllCheckouts } from "@/services/checkouts.service";
@@ -30,10 +31,11 @@ export function CalendarContent({
     const [ selectedTraining, setSelectedTraining ] = useState<Training | null>(
         null
     );
-    const [ isTrainingDetailsDialogOpen, setIsTrainingDetailsDialogOpen ] = useState(false);
+    const [ isTrainingDetailsDialogOpen, setIsTrainingDetailsDialogOpen ] =
+    useState(false);
 
     const queryParams = user
-        ? user.role === "Gerente"
+        ? user.role === USER_ROLES.GERENTE
             ? {}
             : { filialId: user.sourceFilial.filialId }
         : undefined;

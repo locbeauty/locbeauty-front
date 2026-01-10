@@ -38,6 +38,7 @@ import { SelectTrainee } from "./SelectTrainee";
 import { SelectVolunteer } from "./SelectVolunteer";
 import { SelectTrainingAddress } from "./SelectTrainingAddress";
 import { TrainingPaymentSection } from "./TrainingPaymentSection";
+import { SelectFilial } from "@/components/shared/SelectFilial";
 
 // Services & Utils
 import { CreateTraining } from "@/services/trainings.service";
@@ -46,6 +47,7 @@ import { getDayCheckouts } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { useAuth } from "@/contexts/auth-provider";
+import { useAccess } from "@/contexts/access-provider";
 import {
     Select,
     SelectContent,
@@ -55,6 +57,8 @@ import {
 } from "@/components/ui/select";
 import { findAllFilials } from "@/services/filials.service";
 import { Filial } from "@/utils/@types/filials";
+import { USER_ROLES } from "@/utils/constants";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 // Types & Schemas
 import {
@@ -98,15 +102,35 @@ export function CreateTrainingDialog({
     trainees,
 }: CreateTrainingDialogProps) {
     const { user } = useAuth();
+    const { getAccessibleFilialsForCreate } = useAccess();
+
+    const accessibleFilialsObjects =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+        ? []
+        : getAccessibleFilialsForCreate(SYSTEM_MODULES.TRAININGS);
+
+    const accessibleFilialsIds =
+    accessibleFilialsObjects.length > 0
+        ? accessibleFilialsObjects.map((f) => f.filialId)
+        : user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+            ? undefined
+            : [];
+
+    const defaultFilialId =
+        user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+            ? user?.sourceFilial.filialId
+            : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
+                ? user?.sourceFilial.filialId
+                : accessibleFilialsIds?.[0];
 
     const createTrainingMethods = useForm<CreateTrainingDataType>({
         resolver: zodResolver(CreateTrainingSchema),
         defaultValues: {
-            volunteerId: "",
-            traineeId: "",
+            filialId: defaultFilialId || "",
+            traineeId: undefined,
+            volunteerId: undefined,
             gearId: "",
             addressId: "",
-            filialId: user?.sourceFilial.filialId,
 
             // Estrutura aninhada conforme novo Schema
             traineePayment: {
@@ -288,14 +312,6 @@ export function CreateTrainingDialog({
     });
     const checkoutSchedule = data?.data;
 
-    // --- Filials Query (Managers only) ---
-    const { data: filialsData } = useQuery<Filial[], Error>({
-        queryKey: [ "get-all-filials" ],
-        queryFn: findAllFilials,
-        enabled: user?.role === "Gerente",
-        staleTime: 1000 * 60 * 5, // 5 minutes
-    });
-
     useEffect(() => {
         setValue("hourInMinutes", 0);
     }, [ setValue, watchSelectedGear ]);
@@ -324,29 +340,15 @@ export function CreateTrainingDialog({
                     <div className="grid gap-6 py-4">
                         {/* --- DADOS GERAIS --- */}
                         <div className="grid gap-4">
-                            {user?.role === "Gerente" && (
-                                <div className="space-y-2">
-                                    <Label>Filial *</Label>
-                                    <Select
-                                        onValueChange={ (value) => setValue("filialId", value) }
-                                        defaultValue={ user?.sourceFilial.filialId }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Selecione a filial" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {filialsData?.map((filial) => (
-                                                <SelectItem
-                                                    key={ filial.filialId }
-                                                    value={ filial.filialId }
-                                                >
-                                                    {filial.filialName}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            )}
+                            <div className="space-y-2">
+                                <Label>Filial *</Label>
+                                <SelectFilial
+                                    control={ control }
+                                    name="filialId"
+                                    accessibleFilials={ accessibleFilialsIds }
+                                    defaultFilial={ defaultFilialId }
+                                />
+                            </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="gearId">Equipamento *</Label>
