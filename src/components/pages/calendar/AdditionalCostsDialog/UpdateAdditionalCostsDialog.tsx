@@ -204,11 +204,11 @@
 import { Dispatch, SetStateAction, useEffect, useState, useMemo } from "react";
 
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkout } from "@/utils/@types/checkouts";
 import { Button } from "@/components/ui/button";
@@ -230,180 +230,180 @@ interface UpdateAdditionalCostsDialogProps {
 }
 
 export function UpdateAdditionalCostsDialog({
-    isAdditionalCostsDialogOpen,
-    setAdditionalCostsDialogOpen,
-    selectedCheckout,
-    setSelectedCheckout,
+  isAdditionalCostsDialogOpen,
+  setAdditionalCostsDialogOpen,
+  selectedCheckout,
+  setSelectedCheckout,
 }: UpdateAdditionalCostsDialogProps) {
-    const [ distanceInKm, setDistanceInKm ] = useState(0);
-    const [ foodCost, setFoodCost ] = useState("0");
-    const [ fuelCost, setFuelCost ] = useState("0");
-    const [ lodgingCost, setLodgingCost ] = useState("0");
-    const [ additionalTransportCost, setAdditionalTransportCost ] = useState("0");
+  const [ distanceInKm, setDistanceInKm ] = useState(0);
+  const [ foodCost, setFoodCost ] = useState("0");
+  const [ fuelCost, setFuelCost ] = useState("0");
+  const [ lodgingCost, setLodgingCost ] = useState("0");
+  const [ additionalTransportCost, setAdditionalTransportCost ] = useState("0");
 
-    useEffect(() => {
-        setDistanceInKm(selectedCheckout.distanceInKm);
-        setFoodCost(centsToString(selectedCheckout.foodCost));
-        setFuelCost(centsToString(selectedCheckout.fuelCost));
-        setLodgingCost(centsToString(selectedCheckout.lodgingCost));
-        setAdditionalTransportCost(centsToString(selectedCheckout.additionalTransportCost));
-    }, [ selectedCheckout ]);
+  useEffect(() => {
+    setDistanceInKm(selectedCheckout.distanceInKm);
+    setFoodCost(centsToString(selectedCheckout.foodCost));
+    setFuelCost(centsToString(selectedCheckout.fuelCost));
+    setLodgingCost(centsToString(selectedCheckout.lodgingCost));
+    setAdditionalTransportCost(centsToString(selectedCheckout.additionalTransportCost));
+  }, [ selectedCheckout ]);
 
-    // =====================================
-    // CÁLCULO DO NOVO TOTAL (PREVIEW LOCAL)
-    // =====================================
-    const newTotalPricePreview = useMemo(() => {
-        const newDistanceInKm = distanceInKm ?? selectedCheckout.distanceInKm;
-        const newFuelCost = fuelCost ? parseStringToCents(fuelCost) : selectedCheckout.fuelCost;
-        const newLodgingCost = lodgingCost ? parseStringToCents(lodgingCost) : selectedCheckout.lodgingCost;
-        const newAdditionalTransportCost = additionalTransportCost
-            ? parseStringToCents(additionalTransportCost)
-            : selectedCheckout.additionalTransportCost;
-        const newFoodCost = foodCost ? parseStringToCents(foodCost) : selectedCheckout.foodCost;
+  // =====================================
+  // CÁLCULO DO NOVO TOTAL (PREVIEW LOCAL)
+  // =====================================
+  const newTotalPricePreview = useMemo(() => {
+    const newDistanceInKm = distanceInKm ?? selectedCheckout.distanceInKm;
+    const newFuelCost = fuelCost ? parseStringToCents(fuelCost) : selectedCheckout.fuelCost;
+    const newLodgingCost = lodgingCost ? parseStringToCents(lodgingCost) : selectedCheckout.lodgingCost;
+    const newAdditionalTransportCost = additionalTransportCost
+      ? parseStringToCents(additionalTransportCost)
+      : selectedCheckout.additionalTransportCost;
+    const newFoodCost = foodCost ? parseStringToCents(foodCost) : selectedCheckout.foodCost;
 
-        const basePrice = selectedCheckout.basePrice || 0;
-        const extraPrice = selectedCheckout.Bookings.filter(booking => booking.status === "ACTIVE").reduce((acc, current) => acc + current.extraMachineCosts, 0) || 0;
-        const total =
+    const basePrice = selectedCheckout.basePrice || 0;
+    const extraPrice = selectedCheckout.Bookings.filter(booking => booking.status === "ACTIVE").reduce((acc, current) => acc + current.extraMachineCosts, 0) || 0;
+    const total =
             basePrice + extraPrice +
             newDistanceInKm * newFuelCost +
             newLodgingCost +
             newAdditionalTransportCost +
             newFoodCost;
 
-        return Math.round(total);
-    }, [
-        distanceInKm,
-        fuelCost,
-        lodgingCost,
-        additionalTransportCost,
-        foodCost,
-        selectedCheckout,
-    ]);
+    return Math.round(total);
+  }, [
+    distanceInKm,
+    fuelCost,
+    lodgingCost,
+    additionalTransportCost,
+    foodCost,
+    selectedCheckout,
+  ]);
 
-    async function handleUpdateAdditionalCosts() {
-        const newDistanceInKm = distanceInKm ?? selectedCheckout.distanceInKm;
-        const newFuelCost = fuelCost ? parseStringToCents(fuelCost) : selectedCheckout.fuelCost;
-        const newLodgingCost = lodgingCost ? parseStringToCents(lodgingCost) : selectedCheckout.lodgingCost;
-        const newAdditionalTransportCost = additionalTransportCost
-            ? parseStringToCents(additionalTransportCost)
-            : selectedCheckout.additionalTransportCost;
-        const newFoodCost = foodCost ? parseStringToCents(foodCost) : selectedCheckout.foodCost;
+  async function handleUpdateAdditionalCosts() {
+    const newDistanceInKm = distanceInKm ?? selectedCheckout.distanceInKm;
+    const newFuelCost = fuelCost ? parseStringToCents(fuelCost) : selectedCheckout.fuelCost;
+    const newLodgingCost = lodgingCost ? parseStringToCents(lodgingCost) : selectedCheckout.lodgingCost;
+    const newAdditionalTransportCost = additionalTransportCost
+      ? parseStringToCents(additionalTransportCost)
+      : selectedCheckout.additionalTransportCost;
+    const newFoodCost = foodCost ? parseStringToCents(foodCost) : selectedCheckout.foodCost;
 
-        const response = await UpdateCheckout({
-            body: {
-                distanceInKm: newDistanceInKm,
-                fuelCost: newFuelCost,
-                lodgingCost: newLodgingCost,
-                additionalTransportCost: newAdditionalTransportCost,
-                foodCost: newFoodCost,
-            },
-            checkoutId: selectedCheckout.checkoutId,
-        });
+    const response = await UpdateCheckout({
+      body: {
+        distanceInKm: newDistanceInKm,
+        fuelCost: newFuelCost,
+        lodgingCost: newLodgingCost,
+        additionalTransportCost: newAdditionalTransportCost,
+        foodCost: newFoodCost,
+      },
+      checkoutId: selectedCheckout.checkoutId,
+    });
 
-        if (response.statusCode !== 200) {
-            toast.warning(response.message, { style: { fontSize: "1rem" } });
-            window.scroll({ top: 0 });
-            return;
-        }
-
-        toast.success(response.message, { style: { fontSize: "1rem" } });
-        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
-
-        setSelectedCheckout((prev) => {
-            if (!prev) return prev;
-            return {
-                ...prev,
-                distanceInKm: newDistanceInKm,
-                fuelCost: newFuelCost,
-                lodgingCost: newLodgingCost,
-                additionalTransportCost: newAdditionalTransportCost,
-                foodCost: newFoodCost,
-                totalPrice: newTotalPricePreview,
-            };
-        });
-
-        setDistanceInKm(0);
-        setFoodCost("");
-        setFuelCost("");
-        setLodgingCost("");
-        setAdditionalTransportCost("");
-        setAdditionalCostsDialogOpen(false);
+    if (response.statusCode !== 200) {
+      toast.warning(response.message, { style: { fontSize: "1rem" } });
+      window.scroll({ top: 0 });
+      return;
     }
 
-    return (
-        <Dialog
-            open={ isAdditionalCostsDialogOpen }
-            onOpenChange={ setAdditionalCostsDialogOpen }
-        >
-            <DialogContent className="max-h-[90vh] w-[90vw] md:w-[600px] overflow-scroll dark:bg-gray-900">
-                <DialogHeader>
-                    <DialogTitle className="text-xl">Custos adicionais</DialogTitle>
-                    <DialogDescription>
+    toast.success(response.message, { style: { fontSize: "1rem" } });
+    queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+
+    setSelectedCheckout((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        distanceInKm: newDistanceInKm,
+        fuelCost: newFuelCost,
+        lodgingCost: newLodgingCost,
+        additionalTransportCost: newAdditionalTransportCost,
+        foodCost: newFoodCost,
+        totalPrice: newTotalPricePreview,
+      };
+    });
+
+    setDistanceInKm(0);
+    setFoodCost("");
+    setFuelCost("");
+    setLodgingCost("");
+    setAdditionalTransportCost("");
+    setAdditionalCostsDialogOpen(false);
+  }
+
+  return (
+    <Dialog
+      open={ isAdditionalCostsDialogOpen }
+      onOpenChange={ setAdditionalCostsDialogOpen }
+    >
+      <DialogContent className="max-h-[90vh] w-[90vw] md:w-[600px] overflow-scroll dark:bg-gray-900">
+        <DialogHeader>
+          <DialogTitle className="text-xl">Custos adicionais</DialogTitle>
+          <DialogDescription>
                         Defina aqui custos adicionais como hospedagem, alimentação, combustível, custos de transporte adicionais, etc.
-                    </DialogDescription>
-                </DialogHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-                <div className="space-y-4 mt-4">
-                    <div>
-                        <Label>Valor do combustível (litro)</Label>
-                        <PriceInput withLabel={ false } onChange={ setFuelCost } value={ fuelCost } />
-                    </div>
+        <div className="space-y-4 mt-4">
+          <div>
+            <Label>Valor do combustível (litro)</Label>
+            <PriceInput withLabel={ false } onChange={ setFuelCost } value={ fuelCost } />
+          </div>
 
-                    <div>
-                        <Label>Distância (km)</Label>
-                        <Input
-                            type="number"
-                            value={ distanceInKm }
-                            onChange={ (e) => setDistanceInKm(Number(e.target.value) || 0) }
-                        />
-                    </div>
+          <div>
+            <Label>Distância (km)</Label>
+            <Input
+              type="number"
+              value={ distanceInKm }
+              onChange={ (e) => setDistanceInKm(Number(e.target.value) || 0) }
+            />
+          </div>
 
-                    <div>
-                        <Label>Alimentação</Label>
-                        <PriceInput withLabel={ false } onChange={ setFoodCost } value={ foodCost } />
-                    </div>
+          <div>
+            <Label>Alimentação</Label>
+            <PriceInput withLabel={ false } onChange={ setFoodCost } value={ foodCost } />
+          </div>
 
-                    <div>
-                        <Label>Hospedagem</Label>
-                        <PriceInput withLabel={ false } onChange={ setLodgingCost } value={ lodgingCost } />
-                    </div>
+          <div>
+            <Label>Hospedagem</Label>
+            <PriceInput withLabel={ false } onChange={ setLodgingCost } value={ lodgingCost } />
+          </div>
 
-                    <div className="pb-3">
-                        <Label>Custos adicionais de transporte</Label>
-                        <PriceInput
-                            withLabel={ false }
-                            onChange={ setAdditionalTransportCost }
-                            value={ additionalTransportCost }
-                        />
-                    </div>
-                    <Separator />
-                    {/* PREVIEW DO NOVO TOTAL */}
-                    <div className="pt-3 mt-4 text-right">
-                        <p className="text-sm text-muted-foreground">
+          <div className="pb-3">
+            <Label>Custos adicionais de transporte</Label>
+            <PriceInput
+              withLabel={ false }
+              onChange={ setAdditionalTransportCost }
+              value={ additionalTransportCost }
+            />
+          </div>
+          <Separator />
+          {/* PREVIEW DO NOVO TOTAL */}
+          <div className="pt-3 mt-4 text-right">
+            <p className="text-sm text-muted-foreground">
                             Total atual: <span className="font-medium">R$ {centsToString(selectedCheckout.totalPrice)}</span>
-                        </p>
-                        <p className="text-sm">
+            </p>
+            <p className="text-sm">
                             Novo total:{" "}
-                            <span className="font-semibold text-green-500">
+              <span className="font-semibold text-green-500">
                                 R$ {centsToString(newTotalPricePreview)}
-                            </span>
-                        </p>
-                    </div>
+              </span>
+            </p>
+          </div>
 
-                    <div className="flex justify-end gap-2 mt-4">
-                        <Button
-                            type="button"
-                            onClick={ () => setAdditionalCostsDialogOpen(false) }
-                            variant="outline"
-                        >
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              type="button"
+              onClick={ () => setAdditionalCostsDialogOpen(false) }
+              variant="outline"
+            >
                             Cancelar
-                        </Button>
-                        <Button type="button" onClick={ handleUpdateAdditionalCosts }>
+            </Button>
+            <Button type="button" onClick={ handleUpdateAdditionalCosts }>
                             Salvar
-                        </Button>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }

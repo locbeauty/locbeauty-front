@@ -1,9 +1,9 @@
 import {
-    Select,
-    SelectTrigger,
-    SelectValue,
-    SelectContent,
-    SelectItem
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
 } from "@/components/ui/select";
 import React from "react";
 
@@ -14,23 +14,23 @@ interface CustomFilterSelectProps extends React.ComponentPropsWithoutRef<typeof 
 }
 
 export function CustomFilterSelect({
-    items,
-    placeholder,
-    triggerProps,
-    ...selectProps
+  items,
+  placeholder,
+  triggerProps,
+  ...selectProps
 }: CustomFilterSelectProps) {
-    return (
-        <Select { ...selectProps }>
-            <SelectTrigger { ...triggerProps }>
-                <SelectValue placeholder={ placeholder } />
-            </SelectTrigger>
-            <SelectContent>
-                { items.map((item) => (
-                    <SelectItem key={ item.toLowerCase() } value={ item.toLowerCase() }>
-                        { item }
-                    </SelectItem>
-                )) }
-            </SelectContent>
-        </Select>
-    );
+  return (
+    <Select { ...selectProps }>
+      <SelectTrigger { ...triggerProps }>
+        <SelectValue placeholder={ placeholder } />
+      </SelectTrigger>
+      <SelectContent>
+        { items.map((item) => (
+          <SelectItem key={ item.toLowerCase() } value={ item.toLowerCase() }>
+            { item }
+          </SelectItem>
+        )) }
+      </SelectContent>
+    </Select>
+  );
 }

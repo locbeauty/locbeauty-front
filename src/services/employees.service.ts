@@ -17,14 +17,26 @@ import { ROLES } from "@/utils/@types/roles";
 //     return response;
 // }
 
-export async function GetAllEmployees(
-    { employeeRole, filialId }: {employeeRole?: ROLES | undefined, filialId?: string}
-) {
-    const queryParams: Record<string, string> = {};
+export async function GetAllEmployees({
+  employeeRole,
+  filialId,
+  page,
+  limit,
+}: {
+  employeeRole?: ROLES | undefined;
+  filialId?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const queryParams: Record<string, string> = {};
 
-    if (employeeRole) queryParams.employeeRole = employeeRole;
-    if (filialId) queryParams.filialId = filialId;
+  if (employeeRole) queryParams.employeeRole = employeeRole;
+  if (filialId) queryParams.filialId = filialId;
+  if (page) queryParams.page = page.toString();
+  if (limit) queryParams.limit = limit.toString();
 
-    const response = await apiRequest<Employee[]>({ endpoint: "employees", queryParams });
-    return response;
+  const response = await apiRequest<
+    { items: Employee[]; total: number } | Employee[]
+  >({ endpoint: "employees", queryParams });
+  return response;
 }

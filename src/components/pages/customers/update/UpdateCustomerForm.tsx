@@ -1,11 +1,11 @@
 "use client";
 
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,152 +28,249 @@ interface UpdateCustomerFormProps {
 }
 
 export function UpdateCustomerForm({
-    selectedCustomer,
+  selectedCustomer,
 }: UpdateCustomerFormProps) {
+  const {
+    handleSubmit,
+    formState: { errors },
+    register,
+    setValue,
+    control,
+  } = useFormContext<UpdateCustomerFormSchemaType>();
+  // const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(null);
 
-    const { handleSubmit, formState: { errors }, register, setValue, control } = useFormContext<UpdateCustomerFormSchemaType>();
-    // const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(null);
+  const { data, isLoading, error, refetch } = useQuery<
+    ApiResponse<Address[]>,
+    Error
+  >({
+    queryKey: [ "get-all-customer-addresses", selectedCustomer?.customerId ],
+    queryFn: ({ queryKey }) => {
+      const [ , customerId ] = queryKey as [string, string | undefined];
+      if (!customerId) throw new Error("Nenhum cliente selecionado");
+      return GetAllCustomerAddresses({ customerId });
+    },
+    enabled: !!selectedCustomer,
+    staleTime: 1000 * 60, // 1 minuto de cache
+    // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
+  });
 
-    const { data, isLoading, error, refetch } = useQuery<ApiResponse<Address[]>, Error>({
-        queryKey: [ "get-all-customer-addresses", selectedCustomer?.customerId ],
-        queryFn: ({ queryKey }) => {
-            const [ , customerId ] = queryKey as [string, string | undefined];
-            if (!customerId) throw new Error("Nenhum cliente selecionado");
-            return GetAllCustomerAddresses({ customerId });
-        },
-        enabled: !!selectedCustomer,
-        staleTime: 1000 * 60, // 1 minuto de cache
-        // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
-    });
+  const customerAddresses = data?.data ?? [];
 
-    const customerAddresses = data?.data ?? [];
+  // useEffect(() => {
+  //     async function getCustomerAddresses(customerId: string) {
+  //         const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${customerId}`, {
+  //             credentials: "include",
+  //         });
+  //         const { data }: {data: Address[]} = await response.json();
+  //         // setCustomerAddresses(data);
+  //     }
+  //     if(selectedCustomer && selectedCustomer.customerId) {
+  //         getCustomerAddresses(selectedCustomer.customerId);
+  //     }
+  // }, [ selectedCustomer ]);
 
-    // useEffect(() => {
-    //     async function getCustomerAddresses(customerId: string) {
-    //         const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${customerId}`, {
-    //             credentials: "include",
-    //         });
-    //         const { data }: {data: Address[]} = await response.json();
-    //         // setCustomerAddresses(data);
-    //     }
-    //     if(selectedCustomer && selectedCustomer.customerId) {
-    //         getCustomerAddresses(selectedCustomer.customerId);
-    //     }
-    // }, [ selectedCustomer ]);
+  if (!selectedCustomer) return;
 
-    if(!selectedCustomer) return;
+  return (
+    <>
+      {/* <CustomerGeneralInformationForm /> */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dados Pessoais</CardTitle>
+          <CardDescription>
+            Preencha os dados pessoais do cliente
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="border p-4 rounded-md md:h-[300px] h-[400px]">
+            <h3 className="text-lg font-medium mb-4">Informações do Cliente</h3>
 
-    return (
-        <>
-            {/* <CustomerGeneralInformationForm /> */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Dados Pessoais</CardTitle>
-                    <CardDescription>Preencha os dados pessoais do cliente</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="border p-4 rounded-md md:h-[300px] h-[400px]">
-                        <h3 className="text-lg font-medium mb-4">Informações do Cliente</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome Completo</Label>
+                <Input
+                  className="placeholder:text-placeholder"
+                  { ...register("fullname") }
+                  id="nome"
+                  placeholder="Nome completo"
+                />
+                <div className="h-3">
+                  {errors.fullname && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.fullname.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="empresa">Empresa</Label>
+                <Input
+                  className="placeholder:text-placeholder"
+                  { ...register("companyName") }
+                  id="empresa"
+                  placeholder="Nome da empresa"
+                  onBlur={ (e) => {
+                    if (e.target.value === "") {
+                      setValue("companyName", null);
+                    }
+                  } }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="documentNumber">CPF/CNPJ</Label>
+                <DocumentInput
+                  disabled={ true }
+                  register={ register("documentNumber") }
+                />
+                <div className="h-3">
+                  {errors.documentNumber && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.documentNumber.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
 
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="nome">Nome Completo</Label>
-                                <Input
-                                    className="placeholder:text-placeholder"
-                                    { ...register("fullname") }
-                                    id="nome"
-                                    placeholder="Nome completo"
-                                />
-                                <div className="h-3">
-                                    {errors.fullname && (
-                                        <p className="text-xs font-medium text-destructive">
-                                            {errors.fullname.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="empresa">Empresa</Label>
-                                <Input
-                                    className="placeholder:text-placeholder"
-                                    { ...register("companyName") }
-                                    id="empresa"
-                                    placeholder="Nome da empresa"
-                                    onBlur={ (e) => {
-                                        if(e.target.value === "") {
-                                            setValue("companyName", null);
-                                        }
-                                    } }
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="documentNumber">CPF/CNPJ</Label>
-                                <DocumentInput disabled={ true } register={ register("documentNumber") } />
-                                <div className="h-3">
-                                    {errors.documentNumber && (
-                                        <p className="text-xs font-medium text-destructive">
-                                            {errors.documentNumber.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+          <div className="border p-4 rounded-md">
+            <h3 className="text-lg font-medium mb-4">Informações de Contato</h3>
+            <div className="space-y-4">
+              <div className="space-y-4">
+                {/* Emails */}
+                <div className="space-y-4">
+                  <Label>Emails</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Input
+                        { ...register("email") }
+                        placeholder="Email Principal"
+                        type="email"
+                        onBlur={ (e) => {
+                          if (e.target.value === "") setValue("email", null);
+                        } }
+                      />
                     </div>
-
-                    <div className="border p-4 rounded-md">
-                        <h3 className="text-lg font-medium mb-4">Informações de Contato</h3>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input
-                                        className="placeholder:text-placeholder"
-                                        { ...register("email") }
-                                        id="email"
-                                        type="email"
-                                        placeholder="email@exemplo.com"
-                                        onBlur={ (e) => {
-                                            if(e.target.value === "") {
-                                                setValue("email", null);
-                                            }
-                                        } }
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="telefone">Telefone</Label>
-                                    <PhoneInput register={ register("cellphone") } />
-                                    <div className="h-3">
-                                        {errors.cellphone && (
-                                            <p className="text-xs font-medium text-destructive">
-                                                {errors.cellphone.message}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="instagram">Instagram</Label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">@</span>
-                                    <Input
-                                        { ...register("instagram") }
-                                        id="instagram"
-                                        className="pl-8 placeholder:text-placeholder"
-                                        placeholder="usuario"
-                                        onBlur={ (e) => {
-                                            if(e.target.value === "") {
-                                                setValue("instagram", null);
-                                            }
-                                        } }
-                                    />
-                                </div>
-                                {errors.instagram && <p className="text-xs font-medium text-destructive">{errors.instagram.message}</p>}
-                            </div>
-                        </div>
+                    <div className="space-y-2">
+                      <Input
+                        { ...register("emailDescription") }
+                        placeholder="Descrição (ex: Pessoal)"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("emailDescription", null);
+                        } }
+                      />
                     </div>
-                </CardContent>
-            </Card>
-            <ListCustomerAddressesCard customerId={ selectedCustomer.customerId } customerAddresses={ customerAddresses } />
-        </>
-    );
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Input
+                        { ...register("secondaryEmail") }
+                        placeholder="Email Secundário"
+                        type="email"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("secondaryEmail", null);
+                        } }
+                      />
+                      {errors.secondaryEmail && (
+                        <p className="text-xs font-medium text-destructive">
+                          {errors.secondaryEmail.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        { ...register("secondaryEmailDescription") }
+                        placeholder="Descrição (ex: Trabalho)"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("secondaryEmailDescription", null);
+                        } }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Phones */}
+                <div className="space-y-4">
+                  <Label>Telefones</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <PhoneInput register={ register("cellphone") } />
+                      <div className="h-3">
+                        {errors.cellphone && (
+                          <p className="text-xs font-medium text-destructive">
+                            {errors.cellphone.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        { ...register("cellphoneDescription") }
+                        placeholder="Descrição (ex: WhatsApp)"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("cellphoneDescription", null);
+                        } }
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <PhoneInput register={ register("secondaryCellphone") } />
+                      {errors.secondaryCellphone && (
+                        <p className="text-xs font-medium text-destructive">
+                          {errors.secondaryCellphone.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        { ...register("secondaryCellphoneDescription") }
+                        placeholder="Descrição (ex: Casa)"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("secondaryCellphoneDescription", null);
+                        } }
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="instagram">Instagram</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                    @
+                  </span>
+                  <Input
+                    { ...register("instagram") }
+                    id="instagram"
+                    className="pl-8 placeholder:text-placeholder"
+                    placeholder="usuario"
+                    onBlur={ (e) => {
+                      if (e.target.value === "") {
+                        setValue("instagram", null);
+                      }
+                    } }
+                  />
+                </div>
+                {errors.instagram && (
+                  <p className="text-xs font-medium text-destructive">
+                    {errors.instagram.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <ListCustomerAddressesCard
+        customerId={ selectedCustomer.customerId }
+        customerAddresses={ customerAddresses }
+      />
+    </>
+  );
 }

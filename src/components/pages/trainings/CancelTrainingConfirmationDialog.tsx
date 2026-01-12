@@ -1,12 +1,12 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { differenceInCalendarDays } from "date-fns";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
@@ -31,112 +31,112 @@ interface CancelTrainingConfirmationDialogProps {
 }
 
 export function CancelTrainingConfirmationDialog({
-    selectedTraining,
-    isCancelTrainingConfirmationDialogOpen,
-    setCancelTrainingConfirmationDialogOpen,
-    handleUpdateTrainingStatus,
-    setCurrentTrainingStatus,
+  selectedTraining,
+  isCancelTrainingConfirmationDialogOpen,
+  setCancelTrainingConfirmationDialogOpen,
+  handleUpdateTrainingStatus,
+  setCurrentTrainingStatus,
 }: CancelTrainingConfirmationDialogProps) {
-    const [ wasRefunded, setWasRefunded ] = useState(false);
-    const [ cancellationFee, setCancellationFee ] = useState<string>("0,00");
+  const [ wasRefunded, setWasRefunded ] = useState(false);
+  const [ cancellationFee, setCancellationFee ] = useState<string>("0,00");
 
-    if (!selectedTraining) return null;
+  if (!selectedTraining) return null;
 
-    const trainingDate = new Date(selectedTraining.dueDate);
-    const today = new Date();
-    const daysUntilTraining = differenceInCalendarDays(trainingDate, today);
-    const hasFee = daysUntilTraining < 7;
+  const trainingDate = new Date(selectedTraining.dueDate);
+  const today = new Date();
+  const daysUntilTraining = differenceInCalendarDays(trainingDate, today);
+  const hasFee = daysUntilTraining < 7;
 
-    // Check if any payment is made (Trainee or Volunteer)
-    const somePaymentIsDone = selectedTraining.TrainingPayment?.some(
-        (p) =>
-            p.paymentStatus === "Pago" ||
+  // Check if any payment is made (Trainee or Volunteer)
+  const somePaymentIsDone = selectedTraining.TrainingPayment?.some(
+    (p) =>
+      p.paymentStatus === "Pago" ||
       p.paymentStatus === "Parcial" ||
       p.firstPaymentStatus === "Pago" ||
       p.secondPaymentStatus === "Pago"
+  );
+
+  const handleConfirm = () => {
+    const feeInCents = hasFee ? parseStringToCents(cancellationFee) : null;
+    handleUpdateTrainingStatus(
+      selectedTraining.trainingId,
+      "Cancelado",
+      somePaymentIsDone ? wasRefunded : undefined,
+      feeInCents
     );
+    setCurrentTrainingStatus("Cancelado");
+    setCancelTrainingConfirmationDialogOpen(false);
+  };
 
-    const handleConfirm = () => {
-        const feeInCents = hasFee ? parseStringToCents(cancellationFee) : null;
-        handleUpdateTrainingStatus(
-            selectedTraining.trainingId,
-            "Cancelado",
-            somePaymentIsDone ? wasRefunded : undefined,
-            feeInCents
-        );
-        setCurrentTrainingStatus("Cancelado");
-        setCancelTrainingConfirmationDialogOpen(false);
-    };
-
-    return (
-        <Dialog
-            open={ isCancelTrainingConfirmationDialogOpen }
-            onOpenChange={ setCancelTrainingConfirmationDialogOpen }
-        >
-            <DialogContent className="max-h-[90vh] w-[90vw] md:w-[500px] overflow-hidden dark:bg-gray-900">
-                <DialogHeader className="space-y-2 text-center">
-                    <DialogTitle className="text-2xl font-semibold text-red-600">
+  return (
+    <Dialog
+      open={ isCancelTrainingConfirmationDialogOpen }
+      onOpenChange={ setCancelTrainingConfirmationDialogOpen }
+    >
+      <DialogContent className="max-h-[90vh] w-[90vw] md:w-[500px] overflow-hidden dark:bg-gray-900">
+        <DialogHeader className="space-y-2 text-center">
+          <DialogTitle className="text-2xl font-semibold text-red-600">
             Confirmar cancelamento
-                    </DialogTitle>
-                    <DialogDescription className="text-base text-gray-500 dark:text-gray-400 leading-relaxed">
+          </DialogTitle>
+          <DialogDescription className="text-base text-gray-500 dark:text-gray-400 leading-relaxed">
             Este treinamento está previsto para acontecer{" "}
-                        {daysUntilTraining === 0
-                            ? "hoje"
-                            : daysUntilTraining === 1
-                                ? "amanhã"
-                                : `daqui a ${daysUntilTraining} dias`}
+            {daysUntilTraining === 0
+              ? "hoje"
+              : daysUntilTraining === 1
+                ? "amanhã"
+                : `daqui a ${daysUntilTraining} dias`}
             . Cancelamentos realizados com{" "}
-                        <span className="font-semibold text-red-500">menos de 7 dias</span>{" "}
+            <span className="font-semibold text-red-500">menos de 7 dias</span>{" "}
             de antecedência{" "}
-                        {hasFee ? (
-                            <>
-                                <span className="font-semibold">
+            {hasFee ? (
+              <>
+                <span className="font-semibold">
                   geram uma taxa de cancelamento
-                                </span>
+                </span>
                 . Deseja prosseguir mesmo assim?
-                            </>
-                        ) : (
-                            <>
-                                <span className="font-semibold text-green-600">
+              </>
+            ) : (
+              <>
+                <span className="font-semibold text-green-600">
                   não geram taxa
-                                </span>
+                </span>
                 . Deseja confirmar o cancelamento?
-                            </>
-                        )}
-                    </DialogDescription>
-                </DialogHeader>
+              </>
+            )}
+          </DialogDescription>
+        </DialogHeader>
 
-                <CardContent className="mt-6 flex flex-col items-center justify-center space-y-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                        <p>
-                            <span className="font-medium text-gray-700 dark:text-gray-200">
+        <CardContent className="mt-6 flex flex-col items-center justify-center space-y-2">
+          <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+            <p>
+              <span className="font-medium text-gray-700 dark:text-gray-200">
                 Aluno:
-                            </span>{" "}
-                            {selectedTraining.Trainee.name}
-                        </p>
-                        {selectedTraining.dueDate && (
-                            <p>
-                                <span className="font-medium text-gray-700 dark:text-gray-200">
+              </span>{" "}
+              {selectedTraining.Trainee.name}
+            </p>
+            {selectedTraining.dueDate && (
+              <p>
+                <span className="font-medium text-gray-700 dark:text-gray-200">
                   Data do treinamento:
-                                </span>{" "}
-                                {trainingDate.toLocaleDateString("pt-BR")}
-                            </p>
-                        )}
-                    </div>
-                </CardContent>
+                </span>{" "}
+                {trainingDate.toLocaleDateString("pt-BR")}
+              </p>
+            )}
+          </div>
+        </CardContent>
 
-                <DialogFooter className="flex justify-end gap-3 mt-4">
-                    <Button
-                        variant="outline"
-                        onClick={ () => setCancelTrainingConfirmationDialogOpen(false) }
-                    >
+        <DialogFooter className="flex justify-end gap-3 mt-4">
+          <Button
+            variant="outline"
+            onClick={ () => setCancelTrainingConfirmationDialogOpen(false) }
+          >
             Voltar
-                    </Button>
-                    <Button variant="destructive" onClick={ handleConfirm }>
+          </Button>
+          <Button variant="destructive" onClick={ handleConfirm }>
             Confirmar Cancelamento
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

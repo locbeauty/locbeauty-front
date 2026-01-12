@@ -1,11 +1,11 @@
 "use client";
 
 import {
-    workingHours,
-    groupOverlappingEvents,
-    isSameDay,
-    CalendarEvent,
-    getEventBasicInfo,
+  workingHours,
+  groupOverlappingEvents,
+  isSameDay,
+  CalendarEvent,
+  getEventBasicInfo,
 } from "./bookingViewHelpers";
 import { MobileDayView } from "./MobileDayView";
 import { CalendarDayHeader } from "./CalendarDayHeader";
@@ -19,60 +19,60 @@ interface DayViewProps {
 }
 
 export function DayView({ currentDate, events, openDetails }: DayViewProps) {
-    const dayEvents = events.filter((event) => {
-        const { startDate } = getEventBasicInfo(event);
-        return isSameDay(startDate, currentDate);
-    });
+  const dayEvents = events.filter((event) => {
+    const { startDate } = getEventBasicInfo(event);
+    return isSameDay(startDate, currentDate);
+  });
 
-    const eventGroups = groupOverlappingEvents(dayEvents);
+  const eventGroups = groupOverlappingEvents(dayEvents);
 
-    return (
-        <>
-            <MobileDayView
-                events={ dayEvents }
-                currentDate={ currentDate }
-                openDetails={ openDetails }
-            />
+  return (
+    <>
+      <MobileDayView
+        events={ dayEvents }
+        currentDate={ currentDate }
+        openDetails={ openDetails }
+      />
 
-            <div className="hidden md:block min-w-full">
-                <CalendarDayHeader currentDate={ currentDate } />
+      <div className="hidden md:block min-w-full">
+        <CalendarDayHeader currentDate={ currentDate } />
 
-                <div className="relative">
-                    {workingHours.map((hour) => (
-                        <div
-                            key={ hour }
-                            className="grid grid-cols-2 border-b h-[64px]"
-                            style={ { gridTemplateColumns: "100px repeat(1, 1fr)" } }
-                        >
-                            <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">{`${hour}:00`}</div>
-                            <div className="h-16 border-r relative"></div>
-                        </div>
-                    ))}
-
-                    {eventGroups.flatMap((group) => {
-                        const firstEvent = group[0];
-                        const { id: key } = getEventBasicInfo(firstEvent);
-
-                        return group.length === 1 ? (
-                            <SingleEventBox
-                                key={ key }
-                                dayIndex={ 0 }
-                                group={ group }
-                                openDetails={ openDetails }
-                                totalColumns={ 1 }
-                            />
-                        ) : (
-                            <MultipleEventBox
-                                key={ key }
-                                dayIndex={ 0 }
-                                group={ group }
-                                openDetails={ openDetails }
-                                totalColumns={ 1 }
-                            />
-                        );
-                    })}
-                </div>
+        <div className="relative">
+          {workingHours.map((hour) => (
+            <div
+              key={ hour }
+              className="grid grid-cols-2 border-b h-[64px]"
+              style={ { gridTemplateColumns: "100px repeat(1, 1fr)" } }
+            >
+              <div className="p-2 border-r text-xs text-muted-foreground text-right pr-2">{`${hour}:00`}</div>
+              <div className="h-16 border-r relative"></div>
             </div>
-        </>
-    );
+          ))}
+
+          {eventGroups.flatMap((group) => {
+            const firstEvent = group[0];
+            const { id: key } = getEventBasicInfo(firstEvent);
+
+            return group.length === 1 ? (
+              <SingleEventBox
+                key={ key }
+                dayIndex={ 0 }
+                group={ group }
+                openDetails={ openDetails }
+                totalColumns={ 1 }
+              />
+            ) : (
+              <MultipleEventBox
+                key={ key }
+                dayIndex={ 0 }
+                group={ group }
+                openDetails={ openDetails }
+                totalColumns={ 1 }
+              />
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
 }

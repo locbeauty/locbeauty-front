@@ -9,8 +9,8 @@ import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import { Label } from "@/components/ui/label";
 import {
-    createEmployeeFormSchema,
-    CreateEmployeeFormSchemaType,
+  createEmployeeFormSchema,
+  CreateEmployeeFormSchemaType,
 } from "@/lib/zod/CreateEmployeeValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -19,104 +19,104 @@ import { EmployeeAddressForm } from "../forms/EmployeeAddressForm";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function CreateEmployeeForm() {
-    const { user } = useAuth();
-    const { getAccessibleFilialsForCreate } = useAccess();
+  const { user } = useAuth();
+  const { getAccessibleFilialsForCreate } = useAccess();
 
-    const accessibleFilialsObjects =
+  const accessibleFilialsObjects =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
-        ? []
-        : getAccessibleFilialsForCreate(SYSTEM_MODULES.EMPLOYEES);
+      ? []
+      : getAccessibleFilialsForCreate(SYSTEM_MODULES.EMPLOYEES);
 
-    const accessibleFilialsIds =
+  const accessibleFilialsIds =
     accessibleFilialsObjects.length > 0
-        ? accessibleFilialsObjects.map((f) => f.filialId)
-        : user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
-            ? undefined
-            : [];
+      ? accessibleFilialsObjects.map((f) => f.filialId)
+      : user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+        ? undefined
+        : [];
 
-    const defaultFilialId =
+  const defaultFilialId =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+      ? user?.sourceFilial.filialId
+      : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
         ? user?.sourceFilial.filialId
-        : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
-            ? user?.sourceFilial.filialId
-            : accessibleFilialsIds?.[0];
+        : accessibleFilialsIds?.[0];
 
-    const CreateEmployeeMethods = useForm<CreateEmployeeFormSchemaType>({
-        resolver: zodResolver(createEmployeeFormSchema),
-        defaultValues: {
-            sourceFilialId: defaultFilialId || "",
-        },
-    });
+  const CreateEmployeeMethods = useForm<CreateEmployeeFormSchemaType>({
+    resolver: zodResolver(createEmployeeFormSchema),
+    defaultValues: {
+      sourceFilialId: defaultFilialId || "",
+    },
+  });
 
-    const { handleSubmit, reset, setError } = CreateEmployeeMethods;
+  const { handleSubmit, reset, setError } = CreateEmployeeMethods;
 
-    async function handleCreateEmployee(
-        newEmployeeData: CreateEmployeeFormSchemaType
-    ) {
-        try {
-            const response = await fetchWithToken(
-                `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/create`,
-                {
-                    method: "POST",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(newEmployeeData),
-                }
-            );
-            const data = await response.json();
-
-            if (!response.ok) {
-                toast.warning(data.message, { style: { fontSize: "1rem" } });
-                window.scroll({ top: 0 });
-                if (response.status === 409) {
-                    setError("documentNumber", { message: "Documento já cadastrado." });
-                }
-            } else {
-                toast.success("Funcionário criado com sucesso!", {
-                    style: { fontSize: "1rem" },
-                });
-                window.scroll({ top: 0 });
-                reset();
-            }
-        } catch {
-            toast.error("Erro ao criar funcionário.");
+  async function handleCreateEmployee(
+    newEmployeeData: CreateEmployeeFormSchemaType
+  ) {
+    try {
+      const response = await fetchWithToken(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/create`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newEmployeeData),
         }
-    }
+      );
+      const data = await response.json();
 
-    return (
-        <CardContent>
-            <form
-                id="create-employee-form"
-                className="space-y-6"
-                onSubmit={ handleSubmit(handleCreateEmployee) }
-            >
-                <FormProvider { ...CreateEmployeeMethods }>
-                    <div className="space-y-2">
-                        <Label>Filial *</Label>
-                        <Controller
-                            control={ CreateEmployeeMethods.control }
-                            name="sourceFilialId"
-                            render={ ({ field }) => (
-                                <SelectFilial
-                                    control={ CreateEmployeeMethods.control }
-                                    name="sourceFilialId"
-                                    accessibleFilials={ accessibleFilialsIds }
-                                    defaultFilial={ defaultFilialId }
-                                />
-                            ) }
-                        />
-                        {CreateEmployeeMethods.formState.errors.sourceFilialId && (
-                            <p className="text-sm text-destructive">
-                                {CreateEmployeeMethods.formState.errors.sourceFilialId.message}
-                            </p>
-                        )}
-                    </div>
-                    <EmployeeForm />
-                    <EmployeeAddressForm />
-                </FormProvider>
-            </form>
-        </CardContent>
-    );
+      if (!response.ok) {
+        toast.warning(data.message, { style: { fontSize: "1rem" } });
+        window.scroll({ top: 0 });
+        if (response.status === 409) {
+          setError("documentNumber", { message: "Documento já cadastrado." });
+        }
+      } else {
+        toast.success("Funcionário criado com sucesso!", {
+          style: { fontSize: "1rem" },
+        });
+        window.scroll({ top: 0 });
+        reset();
+      }
+    } catch {
+      toast.error("Erro ao criar funcionário.");
+    }
+  }
+
+  return (
+    <CardContent>
+      <form
+        id="create-employee-form"
+        className="space-y-6"
+        onSubmit={ handleSubmit(handleCreateEmployee) }
+      >
+        <FormProvider { ...CreateEmployeeMethods }>
+          <div className="space-y-2">
+            <Label>Filial *</Label>
+            <Controller
+              control={ CreateEmployeeMethods.control }
+              name="sourceFilialId"
+              render={ ({ field }) => (
+                <SelectFilial
+                  control={ CreateEmployeeMethods.control }
+                  name="sourceFilialId"
+                  accessibleFilials={ accessibleFilialsIds }
+                  defaultFilial={ defaultFilialId }
+                />
+              ) }
+            />
+            {CreateEmployeeMethods.formState.errors.sourceFilialId && (
+              <p className="text-sm text-destructive">
+                {CreateEmployeeMethods.formState.errors.sourceFilialId.message}
+              </p>
+            )}
+          </div>
+          <EmployeeForm />
+          <EmployeeAddressForm />
+        </FormProvider>
+      </form>
+    </CardContent>
+  );
 }

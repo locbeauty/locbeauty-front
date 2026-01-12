@@ -12,12 +12,22 @@ export interface Customer {
   documentNumber: string;
   companyName: string | null;
   email: string | null;
+  emailDescription?: string | null;
+  secondaryEmail?: string | null;
+  secondaryEmailDescription?: string | null;
   cellphone: string | null;
+  cellphoneDescription?: string | null;
+  secondaryCellphone?: string | null;
+  secondaryCellphoneDescription?: string | null;
   instagram: string | null;
   birthdate: Date | null;
   customerStatus: CUSTOMER_STATUSES;
   lastBooking: Date | null;
   sourceFilialId: string;
+  SourceFilial: {
+    filialId: string;
+    filialName: string;
+  };
   createdAt: Date;
   updatedAt: Date;
   Addresses: Address[];

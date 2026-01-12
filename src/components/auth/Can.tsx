@@ -13,17 +13,17 @@ interface CanProps {
 }
 
 export function Can({
-    module,
-    action,
-    filialId,
-    children,
-    fallback = null,
+  module,
+  action,
+  filialId,
+  children,
+  fallback = null,
 }: CanProps) {
-    const { can } = useAccess();
+  const { can } = useAccess();
 
-    if (can(module, action, filialId)) {
-        return <>{children}</>;
-    }
+  if (can(module, action, filialId)) {
+    return <>{children}</>;
+  }
 
-    return <>{fallback}</>;
+  return <>{fallback}</>;
 }

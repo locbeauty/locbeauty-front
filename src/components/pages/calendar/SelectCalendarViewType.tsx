@@ -7,16 +7,16 @@ interface SelectCalendarViewTypeProps {
 }
 
 export function SelectCalendarViewType({ setViewType, viewType }: SelectCalendarViewTypeProps) {
-    return (
-        <Select value={ viewType } onValueChange={ (value) => setViewType(value as "dia" | "semana" | "mes") }>
-            <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Visualização" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="dia">Dia</SelectItem>
-                <SelectItem value="semana">Semana</SelectItem>
-                <SelectItem value="mes">Mês</SelectItem>
-            </SelectContent>
-        </Select>
-    );
+  return (
+    <Select value={ viewType } onValueChange={ (value) => setViewType(value as "dia" | "semana" | "mes") }>
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Visualização" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="dia">Dia</SelectItem>
+        <SelectItem value="semana">Semana</SelectItem>
+        <SelectItem value="mes">Mês</SelectItem>
+      </SelectContent>
+    </Select>
+  );
 }

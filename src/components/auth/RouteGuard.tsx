@@ -12,23 +12,23 @@ interface RouteGuardProps {
 }
 
 export function RouteGuard({
-    module,
-    action = "canView",
-    children,
-    fallback = (
-        <div className="flex flex-col items-center justify-center h-full w-full min-h-[50vh] space-y-4">
-            <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
-            <p className="text-muted-foreground">
+  module,
+  action = "canView",
+  children,
+  fallback = (
+    <div className="flex flex-col items-center justify-center h-full w-full min-h-[50vh] space-y-4">
+      <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
+      <p className="text-muted-foreground">
         Você não tem permissão para acessar esta página.
-            </p>
-        </div>
-    ),
+      </p>
+    </div>
+  ),
 }: RouteGuardProps) {
-    const { can } = useAccess();
+  const { can } = useAccess();
 
-    if (can(module, action)) {
-        return <>{children}</>;
-    }
+  if (can(module, action)) {
+    return <>{children}</>;
+  }
 
-    return <>{fallback}</>;
+  return <>{fallback}</>;
 }

@@ -1,35 +1,35 @@
 import { Dispatch, SetStateAction, useEffect, useState, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-    User,
-    MapPin,
-    Calendar,
-    Clock,
-    Phone,
-    GraduationCap,
-    DollarSign,
-    Check,
-    Trash2,
-    Wallet,
-    FileText,
-    Pencil,
+  User,
+  MapPin,
+  Calendar,
+  Clock,
+  Phone,
+  GraduationCap,
+  DollarSign,
+  Check,
+  Trash2,
+  Wallet,
+  FileText,
+  Pencil,
 } from "lucide-react";
 
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
 import {
-    TrainingPaymentMethodDialog,
-    UpdateTrainingPayload,
+  TrainingPaymentMethodDialog,
+  UpdateTrainingPayload,
 } from "./TrainingPaymentMethodDialog";
 import EditTrainingFinancialsDialog from "./EditTrainingFinancialsDialog";
 import { centsToString } from "@/utils/centsToString";
@@ -50,551 +50,551 @@ interface TrainingDetailsDialogProps {
 export type PayerType = "TRAINEE" | "VOLUNTEER";
 
 export function TrainingDetailsDialog({
-    open,
-    onOpenChange,
-    selectedTraining,
-    setSelectedTraining,
+  open,
+  onOpenChange,
+  selectedTraining,
+  setSelectedTraining,
 }: TrainingDetailsDialogProps) {
-    const [
-        isTrainingPaymentMethodDialogOpen,
-        setIsTrainingPaymentMethodDialogOpen,
-    ] = useState(false);
-    const [
-        isCancelTrainingConfirmationDialogOpen,
-        setCancelTrainingConfirmationDialogOpen,
-    ] = useState(false);
-    const [
-        isFinishTrainingConfirmationDialogOpen,
-        setFinishTrainingConfirmationDialogOpen,
-    ] = useState(false);
-    const [ selectedPayerType, setSelectedPayerType ] = useState<PayerType | null>(
-        null
-    );
-    const [ currentTrainingStatus, setCurrentTrainingStatus ] = useState(
-        selectedTraining?.trainingStatus
-    );
+  const [
+    isTrainingPaymentMethodDialogOpen,
+    setIsTrainingPaymentMethodDialogOpen,
+  ] = useState(false);
+  const [
+    isCancelTrainingConfirmationDialogOpen,
+    setCancelTrainingConfirmationDialogOpen,
+  ] = useState(false);
+  const [
+    isFinishTrainingConfirmationDialogOpen,
+    setFinishTrainingConfirmationDialogOpen,
+  ] = useState(false);
+  const [ selectedPayerType, setSelectedPayerType ] = useState<PayerType | null>(
+    null
+  );
+  const [ currentTrainingStatus, setCurrentTrainingStatus ] = useState(
+    selectedTraining?.trainingStatus
+  );
 
-    const [ isFinancialEditDialogOpen, setIsFinancialEditDialogOpen ] =
+  const [ isFinancialEditDialogOpen, setIsFinancialEditDialogOpen ] =
     useState(false);
-    const [ financialEditPayerType, setFinancialEditPayerType ] =
+  const [ financialEditPayerType, setFinancialEditPayerType ] =
     useState<PayerType>("TRAINEE");
 
-    const handleOpenFinancialEdit = (type: PayerType) => {
-        setFinancialEditPayerType(type);
-        setIsFinancialEditDialogOpen(true);
+  const handleOpenFinancialEdit = (type: PayerType) => {
+    setFinancialEditPayerType(type);
+    setIsFinancialEditDialogOpen(true);
+  };
+
+  const handleSuccessFinancialEdit = (updated: Training) => {
+    if (setSelectedTraining) {
+      setSelectedTraining(updated);
+    }
+  };
+
+  // --- Extrair os pagamentos do Array ---
+  const { traineePayment, volunteerPayment } = useMemo(() => {
+    const payments = Array.isArray(selectedTraining.TrainingPayment)
+      ? selectedTraining.TrainingPayment
+      : [];
+
+    return {
+      traineePayment: payments.find(
+        (p: TrainingPayment) => p.payerType === "TRAINEE"
+      ),
+      volunteerPayment: payments.find(
+        (p: TrainingPayment) => p.payerType === "VOLUNTEER"
+      ),
     };
+  }, [ selectedTraining ]);
 
-    const handleSuccessFinancialEdit = (updated: Training) => {
-        if (setSelectedTraining) {
-            setSelectedTraining(updated);
-        }
-    };
+  const handleOpenPaymentDialog = (type: PayerType) => {
+    setSelectedPayerType(type);
+    setIsTrainingPaymentMethodDialogOpen(true);
+  };
 
-    // --- Extrair os pagamentos do Array ---
-    const { traineePayment, volunteerPayment } = useMemo(() => {
-        const payments = Array.isArray(selectedTraining.TrainingPayment)
-            ? selectedTraining.TrainingPayment
-            : [];
-
-        return {
-            traineePayment: payments.find(
-                (p: TrainingPayment) => p.payerType === "TRAINEE"
-            ),
-            volunteerPayment: payments.find(
-                (p: TrainingPayment) => p.payerType === "VOLUNTEER"
-            ),
-        };
-    }, [ selectedTraining ]);
-
-    const handleOpenPaymentDialog = (type: PayerType) => {
-        setSelectedPayerType(type);
-        setIsTrainingPaymentMethodDialogOpen(true);
-    };
-
-    const handleUpdateTrainingStatus = async (
-        trainingId: string,
-        trainingStatus: "Concluido" | "Cancelado",
-        wasRefunded?: boolean,
-        cancellationFee?: number | null
-    ) => {
-        try {
-            const paymentData = traineePayment
-                ? {
-                    totalPrice: traineePayment.totalPrice,
-                    basePrice: traineePayment.basePrice,
-                    paymentStatus: traineePayment.paymentStatus,
-                    paymentMode: traineePayment.paymentMode,
-                    firstPaymentAmount: traineePayment.firstPaymentAmount || 0,
-                    firstPaymentDate: traineePayment.firstPaymentDate
-                        ? new Date(traineePayment.firstPaymentDate)
-                        : null,
-                    firstPaymentMethod: traineePayment.firstPaymentMethod,
-                    firstPaymentStatus: traineePayment.firstPaymentStatus,
-                    secondPaymentAmount: traineePayment.secondPaymentAmount || 0,
-                    secondPaymentDate: traineePayment.secondPaymentDate
-                        ? new Date(traineePayment.secondPaymentDate)
-                        : null,
-                    secondPaymentMethod: traineePayment.secondPaymentMethod,
-                    secondPaymentStatus: traineePayment.secondPaymentStatus,
-                    additionalCost: traineePayment.additionalCost || 0,
-                    additionalCostDescription:
+  const handleUpdateTrainingStatus = async (
+    trainingId: string,
+    trainingStatus: "Concluido" | "Cancelado",
+    wasRefunded?: boolean,
+    cancellationFee?: number | null
+  ) => {
+    try {
+      const paymentData = traineePayment
+        ? {
+          totalPrice: traineePayment.totalPrice,
+          basePrice: traineePayment.basePrice,
+          paymentStatus: traineePayment.paymentStatus,
+          paymentMode: traineePayment.paymentMode,
+          firstPaymentAmount: traineePayment.firstPaymentAmount || 0,
+          firstPaymentDate: traineePayment.firstPaymentDate
+            ? new Date(traineePayment.firstPaymentDate)
+            : null,
+          firstPaymentMethod: traineePayment.firstPaymentMethod,
+          firstPaymentStatus: traineePayment.firstPaymentStatus,
+          secondPaymentAmount: traineePayment.secondPaymentAmount || 0,
+          secondPaymentDate: traineePayment.secondPaymentDate
+            ? new Date(traineePayment.secondPaymentDate)
+            : null,
+          secondPaymentMethod: traineePayment.secondPaymentMethod,
+          secondPaymentStatus: traineePayment.secondPaymentStatus,
+          additionalCost: traineePayment.additionalCost || 0,
+          additionalCostDescription:
               traineePayment.additionalCostDescription || "",
-                }
-                : {
-                    paymentStatus: "Pendente" as const,
-                    paymentMode: "AVista" as const,
-                    totalPrice: 0,
-                    basePrice: 0,
-                    firstPaymentAmount: 0,
-                    firstPaymentDate: null,
-                    firstPaymentMethod: null,
-                    firstPaymentStatus: "Pendente" as const,
-                    secondPaymentAmount: 0,
-                    secondPaymentDate: null,
-                    secondPaymentMethod: null,
-                    secondPaymentStatus: "Pendente" as const,
-                    additionalCost: 0,
-                    additionalCostDescription: "",
-                };
+        }
+        : {
+          paymentStatus: "Pendente" as const,
+          paymentMode: "AVista" as const,
+          totalPrice: 0,
+          basePrice: 0,
+          firstPaymentAmount: 0,
+          firstPaymentDate: null,
+          firstPaymentMethod: null,
+          firstPaymentStatus: "Pendente" as const,
+          secondPaymentAmount: 0,
+          secondPaymentDate: null,
+          secondPaymentMethod: null,
+          secondPaymentStatus: "Pendente" as const,
+          additionalCost: 0,
+          additionalCostDescription: "",
+        };
 
-            const payload: UpdateTrainingPayload = {
+      const payload: UpdateTrainingPayload = {
+        trainingStatus,
+        payerType: "TRAINEE",
+        TrainingPayment: paymentData,
+        isCourtesy: traineePayment?.isCourtesy ?? false,
+        wasRefunded: wasRefunded || false,
+        cancellationFee: cancellationFee || undefined,
+      };
+
+      const response = await UpdateTraining({ trainingId, body: payload });
+
+      if (response) {
+        toast.success(
+          `Treinamento ${
+            trainingStatus === "Cancelado" ? "cancelado" : "concluído"
+          } com sucesso!`
+        );
+        if (setSelectedTraining) {
+          setSelectedTraining((prev) =>
+            prev
+              ? {
+                ...prev,
                 trainingStatus,
-                payerType: "TRAINEE",
-                TrainingPayment: paymentData,
-                isCourtesy: traineePayment?.isCourtesy ?? false,
                 wasRefunded: wasRefunded || false,
-                cancellationFee: cancellationFee || undefined,
-            };
-
-            const response = await UpdateTraining({ trainingId, body: payload });
-
-            if (response) {
-                toast.success(
-                    `Treinamento ${
-                        trainingStatus === "Cancelado" ? "cancelado" : "concluído"
-                    } com sucesso!`
-                );
-                if (setSelectedTraining) {
-                    setSelectedTraining((prev) =>
-                        prev
-                            ? {
-                                ...prev,
-                                trainingStatus,
-                                wasRefunded: wasRefunded || false,
-                                cancellationFee: cancellationFee || null,
-                            }
-                            : null
-                    );
-                }
-                // onOpenChange(false);
-            }
-        } catch (error) {
-            console.error("Erro ao atualizar status:", error);
-            toast.error("Erro ao atualizar status do treinamento.");
+                cancellationFee: cancellationFee || null,
+              }
+              : null
+          );
         }
-    };
+        // onOpenChange(false);
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      toast.error("Erro ao atualizar status do treinamento.");
+    }
+  };
 
-    // Estados para os valores financeiros
-    const [ traineeBasePrice, setTraineeBasePrice ] = useState(0);
-    const [ traineeAdditionalCost, setTraineeAdditionalCost ] = useState(0);
-    const [
-        traineeAdditionalCostDescription,
-        setTraineeAdditionalCostDescription,
-    ] = useState("");
-    const [ traineeTotalPrice, setTraineeTotalPrice ] = useState(0);
-    const [ volunteerTotalPrice, setVolunteerTotalPrice ] = useState(0);
+  // Estados para os valores financeiros
+  const [ traineeBasePrice, setTraineeBasePrice ] = useState(0);
+  const [ traineeAdditionalCost, setTraineeAdditionalCost ] = useState(0);
+  const [
+    traineeAdditionalCostDescription,
+    setTraineeAdditionalCostDescription,
+  ] = useState("");
+  const [ traineeTotalPrice, setTraineeTotalPrice ] = useState(0);
+  const [ volunteerTotalPrice, setVolunteerTotalPrice ] = useState(0);
 
-    // Atualiza os estados quando o selectedTraining mudar
-    useEffect(() => {
-        if (traineePayment) {
-            setTraineeBasePrice(traineePayment.basePrice || 0);
-            setTraineeAdditionalCost(traineePayment.additionalCost || 0);
-            setTraineeAdditionalCostDescription(
-                traineePayment.additionalCostDescription || ""
-            );
-            setTraineeTotalPrice(traineePayment.totalPrice || 0);
-        } else {
-            setTraineeBasePrice(0);
-            setTraineeAdditionalCost(0);
-            setTraineeAdditionalCostDescription("");
-            setTraineeTotalPrice(0);
-        }
+  // Atualiza os estados quando o selectedTraining mudar
+  useEffect(() => {
+    if (traineePayment) {
+      setTraineeBasePrice(traineePayment.basePrice || 0);
+      setTraineeAdditionalCost(traineePayment.additionalCost || 0);
+      setTraineeAdditionalCostDescription(
+        traineePayment.additionalCostDescription || ""
+      );
+      setTraineeTotalPrice(traineePayment.totalPrice || 0);
+    } else {
+      setTraineeBasePrice(0);
+      setTraineeAdditionalCost(0);
+      setTraineeAdditionalCostDescription("");
+      setTraineeTotalPrice(0);
+    }
 
-        if (volunteerPayment) {
-            setVolunteerTotalPrice(volunteerPayment.totalPrice || 0);
-        } else {
-            setVolunteerTotalPrice(0);
-        }
-    }, [ traineePayment, volunteerPayment ]);
+    if (volunteerPayment) {
+      setVolunteerTotalPrice(volunteerPayment.totalPrice || 0);
+    } else {
+      setVolunteerTotalPrice(0);
+    }
+  }, [ traineePayment, volunteerPayment ]);
 
-    // Helper para formatar moeda
-    const formatCurrency = (val: number) => `R$ ${centsToString(val)}`;
+  // Helper para formatar moeda
+  const formatCurrency = (val: number) => `R$ ${centsToString(val)}`;
 
-    // Callback para atualizar o estado financeiro imediatamente
-    const handleFinancialUpdate = (values: {
+  // Callback para atualizar o estado financeiro imediatamente
+  const handleFinancialUpdate = (values: {
     basePrice: number;
     additionalCost: number;
     additionalCostDescription: string;
     totalPrice: number;
   }) => {
-        if (financialEditPayerType === "TRAINEE") {
-            setTraineeBasePrice(values.basePrice);
-            setTraineeAdditionalCost(values.additionalCost);
-            setTraineeAdditionalCostDescription(values.additionalCostDescription);
-            setTraineeTotalPrice(values.totalPrice);
-        } else if (financialEditPayerType === "VOLUNTEER") {
-            // Volunteers might only use total price in this logic, but if needed we can map others
-            // For now, based on the dialog logic, it sends all 4 fields.
-            // If volunteer logic differs, adapt here. Assuming similar structure:
-            setVolunteerTotalPrice(values.totalPrice);
-        }
-    };
+    if (financialEditPayerType === "TRAINEE") {
+      setTraineeBasePrice(values.basePrice);
+      setTraineeAdditionalCost(values.additionalCost);
+      setTraineeAdditionalCostDescription(values.additionalCostDescription);
+      setTraineeTotalPrice(values.totalPrice);
+    } else if (financialEditPayerType === "VOLUNTEER") {
+      // Volunteers might only use total price in this logic, but if needed we can map others
+      // For now, based on the dialog logic, it sends all 4 fields.
+      // If volunteer logic differs, adapt here. Assuming similar structure:
+      setVolunteerTotalPrice(values.totalPrice);
+    }
+  };
 
-    return (
-        <Dialog open={ open } onOpenChange={ onOpenChange }>
-            <DialogContent className="max-h-[90vh] w-[90vw] md:w-[900px] overflow-hidden flex flex-col dark:bg-gray-900">
-                <DialogHeader className="px-1">
-                    <DialogTitle className="text-xl">Detalhes do Treinamento</DialogTitle>
-                    <DialogDescription>
+  return (
+    <Dialog open={ open } onOpenChange={ onOpenChange }>
+      <DialogContent className="max-h-[90vh] w-[90vw] md:w-[900px] overflow-hidden flex flex-col dark:bg-gray-900">
+        <DialogHeader className="px-1">
+          <DialogTitle className="text-xl">Detalhes do Treinamento</DialogTitle>
+          <DialogDescription>
             Informações do treinamento e gestão financeira.
-                    </DialogDescription>
-                </DialogHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto pr-2 -mr-2 py-4 custom-scrollbar">
-                    <div className="space-y-6">
-                        {/* 1. CABEÇALHO (Mantido) */}
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                                <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold">
-                                    {selectedTraining.Gear.gearName}
-                                </h3>
-                                <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                                    <span className="flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
-                                        {String(
-                                            Math.floor(selectedTraining.hourInMinutes / 60)
-                                        ).padStart(2, "0")}
+        <div className="flex-1 overflow-y-auto pr-2 -mr-2 py-4 custom-scrollbar">
+          <div className="space-y-6">
+            {/* 1. CABEÇALHO (Mantido) */}
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">
+                  {selectedTraining.Gear.gearName}
+                </h3>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {String(
+                      Math.floor(selectedTraining.hourInMinutes / 60)
+                    ).padStart(2, "0")}
                     :
-                                        {String(selectedTraining.hourInMinutes % 60).padStart(
-                                            2,
-                                            "0"
-                                        )}
-                                    </span>
-                                    <span>•</span>
-                                    <span>
-                                        {new Date(selectedTraining.dueDate).toLocaleDateString(
-                                            "pt-BR",
-                                            { dateStyle: "long" }
-                                        )}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="flex gap-2 ml-auto items-center">
-                                <BookingStatusBadge status={ currentTrainingStatus } />
-                            </div>
-                        </div>
-
-                        <Separator />
-
-                        {/* 2. PARTICIPANTES (Mantido) */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Aluno */}
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                        <GraduationCap className="h-3 w-3" /> Aluno
-                                    </h4>
-                                </div>
-                                <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
-                                        <span className="font-bold text-xs text-orange-600">
-                                            {selectedTraining.Trainee.name.charAt(0)}
-                                        </span>
-                                    </div>
-                                    <div className="text-sm">
-                                        <p className="font-medium">
-                                            {selectedTraining.Trainee.name}
-                                        </p>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <FileText className="h-3 w-3" />{" "}
-                                            {selectedTraining.Trainee.documentNumber || "N/A"}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <Phone className="h-3 w-3" />{" "}
-                                            {selectedTraining.Trainee.cellphone || "N/A"}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Paciente Modelo */}
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                        <User className="h-3 w-3" /> Paciente Modelo
-                                    </h4>
-                                </div>
-                                <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                        <span className="font-bold text-xs text-primary">
-                                            {selectedTraining.Volunteer.name.charAt(0)}
-                                        </span>
-                                    </div>
-                                    <div className="text-sm">
-                                        <p className="font-medium">
-                                            {selectedTraining.Volunteer.name}
-                                        </p>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <FileText className="h-3 w-3" />{" "}
-                                            {selectedTraining.Volunteer.documentNumber || "N/A"}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <Phone className="h-3 w-3" />{" "}
-                                            {selectedTraining.Volunteer.cellphone || "N/A"}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <Separator />
-
-                        {/* 3. LOCALIZAÇÃO (Mantido) */}
-                        <div className="space-y-3">
-                            <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                <MapPin className="h-3 w-3" /> Localização
-                            </h4>
-                            <div className="p-4 rounded-lg border bg-muted/20 text-sm">
-                                <p className="font-medium">
-                                    {selectedTraining.Address.Street.streetName},{" "}
-                                    {selectedTraining.Address.buildingNumber}
-                                </p>
-                                <p className="text-muted-foreground mt-1">
-                                    {selectedTraining.Address.Neighborhood.neighborhoodName} -{" "}
-                                    {selectedTraining.Address.City.cityName}/
-                                    {selectedTraining.Address.State.UF}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    {String(selectedTraining.hourInMinutes % 60).padStart(
+                      2,
+                      "0"
+                    )}
+                  </span>
+                  <span>•</span>
+                  <span>
+                    {new Date(selectedTraining.dueDate).toLocaleDateString(
+                      "pt-BR",
+                      { dateStyle: "long" }
+                    )}
+                  </span>
                 </div>
+              </div>
+              <div className="flex gap-2 ml-auto items-center">
+                <BookingStatusBadge status={ currentTrainingStatus } />
+              </div>
+            </div>
 
-                {/* --- FOOTER ATUALIZADO --- */}
-                <DialogFooter className="sm:justify-between w-full">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                        {/* COLUNA 1: RESUMO FINANCEIRO (DUAS CARTAS) */}
-                        <div className="flex flex-col gap-4 h-full">
-                            {/* Card 1: Financeiro - Aluno */}
-                            <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10">
-                                <div>
-                                    <h4 className="font-semibold text-sm flex items-center justify-between gap-2 mb-3 text-muted-foreground">
-                                        <div className="flex items-center gap-2">
-                                            <Wallet className="w-4 h-4" /> Financeiro - Aluno
-                                            <BookingPaymentStatusBadge
-                                                status={ traineePayment?.paymentStatus || "Pendente" }
-                                                isCourtesy={ traineePayment?.isCourtesy }
-                                                wasRefunded={ traineePayment?.wasRefunded }
-                                            />
-                                        </div>
-                                        {traineePayment?.paymentStatus === "Pendente" && (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6"
-                                                onClick={ () => handleOpenFinancialEdit("TRAINEE") }
-                                            >
-                                                <Pencil className="h-3 w-3" />
-                                            </Button>
-                                        )}
-                                    </h4>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>Valor Base</span>
-                                            <span>{formatCurrency(traineeBasePrice)}</span>
-                                        </div>
-                                        {traineeAdditionalCost > 0 && (
-                                            <>
-                                                <div className="flex justify-between items-center text-muted-foreground">
-                                                    <span>Custos Adicionais</span>
-                                                    <span>+ {formatCurrency(traineeAdditionalCost)}</span>
-                                                </div>
-                                                <div className="flex justify-between items-center text-muted-foreground">
-                                                    <span>Descrição</span>
-                                                    <span>{traineeAdditionalCostDescription}</span>
-                                                </div>
-                                            </>
-                                        )}
-                                        <Separator className="my-2" />
-                                        <div className="flex justify-between items-center font-bold">
-                                            <span>Total (Aluno)</span>
-                                            <span className="text-primary">
-                                                {formatCurrency(traineeTotalPrice)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+            <Separator />
 
-                            {/* Card 2: Financeiro - Modelo */}
-                            {(volunteerTotalPrice > 0 || selectedTraining.Volunteer) && (
-                                <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10">
-                                    <div>
-                                        <h4 className="font-semibold text-sm flex items-center justify-between gap-2 mb-3 text-muted-foreground">
-                                            <div className="flex items-center gap-2">
-                                                <Wallet className="w-4 h-4" /> Financeiro - Modelo
-                                                <BookingPaymentStatusBadge
-                                                    status={ volunteerPayment?.paymentStatus || "Pendente" }
-                                                    isCourtesy={ volunteerPayment?.isCourtesy }
-                                                    wasRefunded={ volunteerPayment?.wasRefunded }
-                                                />
-                                            </div>
-                                            {volunteerPayment?.paymentStatus === "Pendente" && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6"
-                                                    onClick={ () => handleOpenFinancialEdit("VOLUNTEER") }
-                                                >
-                                                    <Pencil className="h-3 w-3" />
-                                                </Button>
-                                            )}
-                                        </h4>
-                                        <div className="space-y-2 text-sm">
-                                            <div className="flex justify-between items-center font-bold">
-                                                <span>Total (Modelo)</span>
-                                                <span className="text-primary">
-                                                    {formatCurrency(volunteerTotalPrice)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+            {/* 2. PARTICIPANTES (Mantido) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Aluno */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <GraduationCap className="h-3 w-3" /> Aluno
+                  </h4>
+                </div>
+                <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
+                    <span className="font-bold text-xs text-orange-600">
+                      {selectedTraining.Trainee.name.charAt(0)}
+                    </span>
+                  </div>
+                  <div className="text-sm">
+                    <p className="font-medium">
+                      {selectedTraining.Trainee.name}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <FileText className="h-3 w-3" />{" "}
+                      {selectedTraining.Trainee.documentNumber || "N/A"}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Phone className="h-3 w-3" />{" "}
+                      {selectedTraining.Trainee.cellphone || "N/A"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Paciente Modelo */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <User className="h-3 w-3" /> Paciente Modelo
+                  </h4>
+                </div>
+                <div className="p-3 rounded-lg border bg-card flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="font-bold text-xs text-primary">
+                      {selectedTraining.Volunteer.name.charAt(0)}
+                    </span>
+                  </div>
+                  <div className="text-sm">
+                    <p className="font-medium">
+                      {selectedTraining.Volunteer.name}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <FileText className="h-3 w-3" />{" "}
+                      {selectedTraining.Volunteer.documentNumber || "N/A"}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Phone className="h-3 w-3" />{" "}
+                      {selectedTraining.Volunteer.cellphone || "N/A"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* 3. LOCALIZAÇÃO (Mantido) */}
+            <div className="space-y-3">
+              <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <MapPin className="h-3 w-3" /> Localização
+              </h4>
+              <div className="p-4 rounded-lg border bg-muted/20 text-sm">
+                <p className="font-medium">
+                  {selectedTraining.Address.Street.streetName},{" "}
+                  {selectedTraining.Address.buildingNumber}
+                </p>
+                <p className="text-muted-foreground mt-1">
+                  {selectedTraining.Address.Neighborhood.neighborhoodName} -{" "}
+                  {selectedTraining.Address.City.cityName}/
+                  {selectedTraining.Address.State.UF}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* --- FOOTER ATUALIZADO --- */}
+        <DialogFooter className="sm:justify-between w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            {/* COLUNA 1: RESUMO FINANCEIRO (DUAS CARTAS) */}
+            <div className="flex flex-col gap-4 h-full">
+              {/* Card 1: Financeiro - Aluno */}
+              <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10">
+                <div>
+                  <h4 className="font-semibold text-sm flex items-center justify-between gap-2 mb-3 text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="w-4 h-4" /> Financeiro - Aluno
+                      <BookingPaymentStatusBadge
+                        status={ traineePayment?.paymentStatus || "Pendente" }
+                        isCourtesy={ traineePayment?.isCourtesy }
+                        wasRefunded={ traineePayment?.wasRefunded }
+                      />
+                    </div>
+                    {traineePayment?.paymentStatus === "Pendente" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={ () => handleOpenFinancialEdit("TRAINEE") }
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center text-muted-foreground">
+                      <span>Valor Base</span>
+                      <span>{formatCurrency(traineeBasePrice)}</span>
+                    </div>
+                    {traineeAdditionalCost > 0 && (
+                      <>
+                        <div className="flex justify-between items-center text-muted-foreground">
+                          <span>Custos Adicionais</span>
+                          <span>+ {formatCurrency(traineeAdditionalCost)}</span>
                         </div>
+                        <div className="flex justify-between items-center text-muted-foreground">
+                          <span>Descrição</span>
+                          <span>{traineeAdditionalCostDescription}</span>
+                        </div>
+                      </>
+                    )}
+                    <Separator className="my-2" />
+                    <div className="flex justify-between items-center font-bold">
+                      <span>Total (Aluno)</span>
+                      <span className="text-primary">
+                        {formatCurrency(traineeTotalPrice)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                        {/* COLUNA 2: BOTÕES DE AÇÃO (VERTICAL) */}
-                        <div className="flex flex-col gap-2 justify-center">
-                            {/* BOTÃO 1: ALUNO */}
-                            <Button
-                                className="flex items-center justify-start gap-2 h-10 w-full"
-                                variant="outline"
-                                onClick={ () => handleOpenPaymentDialog("TRAINEE") }
-                            >
-                                <DollarSign className="w-4 h-4 text-orange-600" />
-                                <span>Gerenciar pgto. do Aluno</span>
-                            </Button>
+              {/* Card 2: Financeiro - Modelo */}
+              {(volunteerTotalPrice > 0 || selectedTraining.Volunteer) && (
+                <div className="flex flex-col gap-3 p-4 rounded-lg border bg-muted/10">
+                  <div>
+                    <h4 className="font-semibold text-sm flex items-center justify-between gap-2 mb-3 text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Wallet className="w-4 h-4" /> Financeiro - Modelo
+                        <BookingPaymentStatusBadge
+                          status={ volunteerPayment?.paymentStatus || "Pendente" }
+                          isCourtesy={ volunteerPayment?.isCourtesy }
+                          wasRefunded={ volunteerPayment?.wasRefunded }
+                        />
+                      </div>
+                      {volunteerPayment?.paymentStatus === "Pendente" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={ () => handleOpenFinancialEdit("VOLUNTEER") }
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center font-bold">
+                        <span>Total (Modelo)</span>
+                        <span className="text-primary">
+                          {formatCurrency(volunteerTotalPrice)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-                            {/* BOTÃO 2: MODELO */}
-                            <Button
-                                className="flex items-center justify-start gap-2 h-10 w-full"
-                                variant="outline"
-                                onClick={ () => handleOpenPaymentDialog("VOLUNTEER") }
-                            >
-                                <DollarSign className="w-4 h-4 text-blue-600" />
-                                <span>Gerenciar pgto. do Modelo</span>
-                            </Button>
+            {/* COLUNA 2: BOTÕES DE AÇÃO (VERTICAL) */}
+            <div className="flex flex-col gap-2 justify-center">
+              {/* BOTÃO 1: ALUNO */}
+              <Button
+                className="flex items-center justify-start gap-2 h-10 w-full"
+                variant="outline"
+                onClick={ () => handleOpenPaymentDialog("TRAINEE") }
+              >
+                <DollarSign className="w-4 h-4 text-orange-600" />
+                <span>Gerenciar pgto. do Aluno</span>
+              </Button>
 
-                            <div className="h-px bg-border my-1" />
+              {/* BOTÃO 2: MODELO */}
+              <Button
+                className="flex items-center justify-start gap-2 h-10 w-full"
+                variant="outline"
+                onClick={ () => handleOpenPaymentDialog("VOLUNTEER") }
+              >
+                <DollarSign className="w-4 h-4 text-blue-600" />
+                <span>Gerenciar pgto. do Modelo</span>
+              </Button>
 
-                            {/* AÇÕES FINAIS */}
-                            <div className="grid grid-cols-2 gap-2">
-                                <Button
-                                    disabled={ currentTrainingStatus !== "Pendente" }
-                                    variant="destructive"
-                                    className="flex items-center justify-center gap-2 w-full"
-                                    onClick={ () => setCancelTrainingConfirmationDialogOpen(true) }
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                    <span className="sr-only md:not-sr-only">Cancelar</span>
-                                </Button>
+              <div className="h-px bg-border my-1" />
 
-                                <Button
-                                    variant="default"
-                                    className="flex items-center justify-center gap-2 w-full"
-                                    disabled={
-                                        selectedTraining.trainingStatus === "Concluido" ||
+              {/* AÇÕES FINAIS */}
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  disabled={ currentTrainingStatus !== "Pendente" }
+                  variant="destructive"
+                  className="flex items-center justify-center gap-2 w-full"
+                  onClick={ () => setCancelTrainingConfirmationDialogOpen(true) }
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="sr-only md:not-sr-only">Cancelar</span>
+                </Button>
+
+                <Button
+                  variant="default"
+                  className="flex items-center justify-center gap-2 w-full"
+                  disabled={
+                    selectedTraining.trainingStatus === "Concluido" ||
                                         selectedTraining.trainingStatus === "Cancelado" ||
                                         (traineePayment?.paymentStatus !== "Pago" &&
                                             !traineePayment?.isCourtesy) ||
                                         (volunteerPayment?.paymentStatus !== "Pago" &&
                                             !volunteerPayment?.isCourtesy)
-                                    }
-                                    onClick={ () => setFinishTrainingConfirmationDialogOpen(true) }
-                                >
-                                    <Check className="w-4 h-4" />
-                                    <span className="sr-only md:not-sr-only">Concluir</span>
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </DialogFooter>
-            </DialogContent>
+                  }
+                  onClick={ () => setFinishTrainingConfirmationDialogOpen(true) }
+                >
+                  <Check className="w-4 h-4" />
+                  <span className="sr-only md:not-sr-only">Concluir</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogFooter>
+      </DialogContent>
 
-            {selectedPayerType && (
-                <TrainingPaymentMethodDialog
-                    payerType={ selectedPayerType }
-                    isTrainingPaymentMethodDialogOpen={ isTrainingPaymentMethodDialogOpen }
-                    selectedTraining={ selectedTraining }
-                    setSelectedTraining={ setSelectedTraining }
-                    setIsTrainingPaymentMethodDialogOpen={
-                        setIsTrainingPaymentMethodDialogOpen
-                    }
-                    traineeTotalPrice={ traineeTotalPrice }
-                    volunteerTotalPrice={ volunteerTotalPrice }
-                />
-            )}
+      {selectedPayerType && (
+        <TrainingPaymentMethodDialog
+          payerType={ selectedPayerType }
+          isTrainingPaymentMethodDialogOpen={ isTrainingPaymentMethodDialogOpen }
+          selectedTraining={ selectedTraining }
+          setSelectedTraining={ setSelectedTraining }
+          setIsTrainingPaymentMethodDialogOpen={
+            setIsTrainingPaymentMethodDialogOpen
+          }
+          traineeTotalPrice={ traineeTotalPrice }
+          volunteerTotalPrice={ volunteerTotalPrice }
+        />
+      )}
 
-            <CancelTrainingConfirmationDialog
-                isCancelTrainingConfirmationDialogOpen={
-                    isCancelTrainingConfirmationDialogOpen
-                }
-                setCancelTrainingConfirmationDialogOpen={
-                    setCancelTrainingConfirmationDialogOpen
-                }
-                setCurrentTrainingStatus={ setCurrentTrainingStatus }
-                selectedTraining={ selectedTraining }
-                setSelectedTraining={ setSelectedTraining }
-                handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
-            />
+      <CancelTrainingConfirmationDialog
+        isCancelTrainingConfirmationDialogOpen={
+          isCancelTrainingConfirmationDialogOpen
+        }
+        setCancelTrainingConfirmationDialogOpen={
+          setCancelTrainingConfirmationDialogOpen
+        }
+        setCurrentTrainingStatus={ setCurrentTrainingStatus }
+        selectedTraining={ selectedTraining }
+        setSelectedTraining={ setSelectedTraining }
+        handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
+      />
 
-            <FinishTrainingConfirmationDialog
-                isFinishTrainingConfirmationDialogOpen={
-                    isFinishTrainingConfirmationDialogOpen
-                }
-                setFinishTrainingConfirmationDialogOpen={
-                    setFinishTrainingConfirmationDialogOpen
-                }
-                setCurrentTrainingStatus={ setCurrentTrainingStatus }
-                selectedTraining={ selectedTraining }
-                handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
-            />
+      <FinishTrainingConfirmationDialog
+        isFinishTrainingConfirmationDialogOpen={
+          isFinishTrainingConfirmationDialogOpen
+        }
+        setFinishTrainingConfirmationDialogOpen={
+          setFinishTrainingConfirmationDialogOpen
+        }
+        setCurrentTrainingStatus={ setCurrentTrainingStatus }
+        selectedTraining={ selectedTraining }
+        handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
+      />
 
-            <EditTrainingFinancialsDialog
-                open={ isFinancialEditDialogOpen }
-                onOpenChange={ setIsFinancialEditDialogOpen }
-                training={ selectedTraining }
-                payerType={ financialEditPayerType }
-                onSuccess={ handleSuccessFinancialEdit }
-                onFinancialUpdate={ handleFinancialUpdate }
-                currentValues={
-                    financialEditPayerType === "TRAINEE"
-                        ? {
-                            basePrice: traineeBasePrice,
-                            additionalCost: traineeAdditionalCost,
-                            additionalCostDescription: traineeAdditionalCostDescription,
-                            totalPrice: traineeTotalPrice,
-                        }
-                        : {
-                            basePrice: 0, // Volunteers might not check basePrice but we pass 0
-                            additionalCost: 0,
-                            additionalCostDescription: "",
-                            totalPrice: volunteerTotalPrice,
-                        }
-                }
-            />
-        </Dialog>
-    );
+      <EditTrainingFinancialsDialog
+        open={ isFinancialEditDialogOpen }
+        onOpenChange={ setIsFinancialEditDialogOpen }
+        training={ selectedTraining }
+        payerType={ financialEditPayerType }
+        onSuccess={ handleSuccessFinancialEdit }
+        onFinancialUpdate={ handleFinancialUpdate }
+        currentValues={
+          financialEditPayerType === "TRAINEE"
+            ? {
+              basePrice: traineeBasePrice,
+              additionalCost: traineeAdditionalCost,
+              additionalCostDescription: traineeAdditionalCostDescription,
+              totalPrice: traineeTotalPrice,
+            }
+            : {
+              basePrice: 0, // Volunteers might not check basePrice but we pass 0
+              additionalCost: 0,
+              additionalCostDescription: "",
+              totalPrice: volunteerTotalPrice,
+            }
+        }
+      />
+    </Dialog>
+  );
 }

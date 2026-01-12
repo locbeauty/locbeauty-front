@@ -18,85 +18,85 @@ interface ListCustomerAddressesCardProps {
     customerId: string,
 }
 export function ListCustomerAddressesCard({ customerAddresses, customerId }: ListCustomerAddressesCardProps) {
-    const [ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen ] = useState(false);
+  const [ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen ] = useState(false);
 
-    const { mutateAsync: deactivateAddress, isPending } = useMutation({
-        mutationFn: ({ addressId }: { addressId: string }) =>
-            DeactivateCustomerAddress({ addressId }),
+  const { mutateAsync: deactivateAddress, isPending } = useMutation({
+    mutationFn: ({ addressId }: { addressId: string }) =>
+      DeactivateCustomerAddress({ addressId }),
 
-        onSuccess: (_, variables) => {
-            toast.success("Endereço desativado com sucesso!", { style: { fontSize: "1rem" } });
+    onSuccess: (_, variables) => {
+      toast.success("Endereço desativado com sucesso!", { style: { fontSize: "1rem" } });
 
-            // revalida os endereços do cliente específico
-            queryClient.invalidateQueries({
-                queryKey: [ "get-all-customer-addresses" ],
-            });
-        },
+      // revalida os endereços do cliente específico
+      queryClient.invalidateQueries({
+        queryKey: [ "get-all-customer-addresses" ],
+      });
+    },
 
-        onError: (error: any) => {
-            toast.warning(error.message, { style: { fontSize: "1rem" } });
-            window.scroll({ top: 0 });
-        },
-    });
+    onError: (error: any) => {
+      toast.warning(error.message, { style: { fontSize: "1rem" } });
+      window.scroll({ top: 0 });
+    },
+  });
 
-    async function handleDeactivateAddress(addressId: string) {
-        await deactivateAddress({ addressId });
-    }
+  async function handleDeactivateAddress(addressId: string) {
+    await deactivateAddress({ addressId });
+  }
 
-    return (
-        <Card className="">
-            <CardHeader>
-                <CardDescription className="text-xl font-bold">Endereços cadastrados:</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {
-                    customerAddresses?.sort((a, b) => a.Street.streetName.localeCompare(b.Street.streetName)).map(addr => {
-                        return (
-                            <div
-                                key={ addr.addressId }
-                                className="flex justify-between items-center"
-                            >
-                                <p>
-                                    {addr.Street.streetName}, {addr.Neighborhood.neighborhoodName},{" "}
-                                    {addr.buildingNumber}, {addr.addressComplement} -{" "}
-                                    {addr.City.cityName}/{addr.State.UF}
-                                </p>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                onClick={ () => addr.isActive && handleDeactivateAddress(addr.addressId) }
-                                                className={
-                                                    !addr.isActive
-                                                        ? "pointer-events-none opacity-50 hover:bg-transparent"
-                                                        : ""
-                                                }
-                                            >
-                                                <X className="size-5" />
-                                            </Button>
-                                        </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        {addr.isActive ? (
-                                            <p>Desativar endereço</p>
-                                        ) : (
-                                            <p>Endereço já desativado</p>
-                                        )}
-                                    </TooltipContent>
-                                </Tooltip>
-                            </div>
-                        );
-                    })
-                }
+  return (
+    <Card className="">
+      <CardHeader>
+        <CardDescription className="text-xl font-bold">Endereços cadastrados:</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {
+          customerAddresses?.sort((a, b) => a.Street.streetName.localeCompare(b.Street.streetName)).map(addr => {
+            return (
+              <div
+                key={ addr.addressId }
+                className="flex justify-between items-center"
+              >
+                <p>
+                  {addr.Street.streetName}, {addr.Neighborhood.neighborhoodName},{" "}
+                  {addr.buildingNumber}, {addr.addressComplement} -{" "}
+                  {addr.City.cityName}/{addr.State.UF}
+                </p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={ () => addr.isActive && handleDeactivateAddress(addr.addressId) }
+                        className={
+                          !addr.isActive
+                            ? "pointer-events-none opacity-50 hover:bg-transparent"
+                            : ""
+                        }
+                      >
+                        <X className="size-5" />
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {addr.isActive ? (
+                      <p>Desativar endereço</p>
+                    ) : (
+                      <p>Endereço já desativado</p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            );
+          })
+        }
 
-                <RegisterNewAddressDialog
-                    customerId={ customerId }
-                    isRegisterNewAddressDialogOpen={ isRegisterNewAddressDialogOpen }
-                    setIsRegisterNewAddressDialogOpen={ setIsRegisterNewAddressDialogOpen }
-                />
-            </CardContent>
-        </Card>
-    );
+        <RegisterNewAddressDialog
+          customerId={ customerId }
+          isRegisterNewAddressDialogOpen={ isRegisterNewAddressDialogOpen }
+          setIsRegisterNewAddressDialogOpen={ setIsRegisterNewAddressDialogOpen }
+        />
+      </CardContent>
+    </Card>
+  );
 }

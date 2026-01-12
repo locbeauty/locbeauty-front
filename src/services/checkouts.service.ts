@@ -1,12 +1,12 @@
 import { GetDayCheckoutsResponse } from "@/components/pages/bookings/create/CreateBookingForm";
 import {
-    PaymentMethodData,
-    UpdateCheckoutPayload,
+  PaymentMethodData,
+  UpdateCheckoutPayload,
 } from "@/components/pages/calendar/CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 import { apiRequest, ApiResponse } from "@/lib/api";
 import {
-    CreateCheckoutFormSchemaType,
-    CreateCheckoutValidationWithMoneyInCents,
+  CreateCheckoutFormSchemaType,
+  CreateCheckoutValidationWithMoneyInCents,
 } from "@/lib/zod/CreateBookingValidation";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
@@ -17,67 +17,73 @@ import { ROLES } from "@/utils/@types/roles";
 import { CheckoutStatuses } from "@/utils/constants";
 
 export async function CreateCheckout(
-    body: CreateCheckoutValidationWithMoneyInCents
+  body: CreateCheckoutValidationWithMoneyInCents
 ) {
-    const response = await apiRequest({
-        endpoint: "bookings/create",
-        method: "POST",
-        body,
-    });
+  const response = await apiRequest({
+    endpoint: "bookings/create",
+    method: "POST",
+    body,
+  });
 
-    return response;
+  return response;
 }
 
 export async function GetAllCheckouts({
-    queryParams,
+  queryParams,
 }: {
-  queryParams?: Record<string, string>;
+  queryParams?: Record<
+    string,
+    string | number | boolean | Date | string[] | undefined | null
+  >;
 }) {
-    const response = await apiRequest<Checkout[]>({
-        endpoint: "checkouts",
-        queryParams,
-    });
+  const response = await apiRequest<{ items: Checkout[]; total: number }>({
+    endpoint: "checkouts",
+    queryParams,
+  });
 
-    if (!response?.data) return response;
+  if (!response?.data) return response;
 
-    const parsedData: Checkout[] = response?.data?.map((checkout) => ({
-        ...checkout,
-        date: new Date(checkout.date),
-        customer: {
-            ...checkout.Customer,
-            lastBooking: checkout.Customer.lastBooking
-                ? new Date(checkout.Customer.lastBooking)
-                : null,
-        },
-        address: {
-            ...checkout.Address,
-            createdAt: new Date(checkout.Address.createdAt),
-            updatedAt: new Date(checkout.Address.updatedAt),
-        },
-        Bookings: checkout.Bookings.map((b) => ({
-            ...b,
-        })),
-    }));
+  const parsedItems: Checkout[] = response.data.items.map((checkout) => ({
+    ...checkout,
+    date: new Date(checkout.date),
+    customer: {
+      ...checkout.Customer,
+      lastBooking: checkout.Customer.lastBooking
+        ? new Date(checkout.Customer.lastBooking)
+        : null,
+    },
+    address: {
+      ...checkout.Address,
+      createdAt: new Date(checkout.Address.createdAt),
+      updatedAt: new Date(checkout.Address.updatedAt),
+    },
+    Bookings: checkout.Bookings.map((b) => ({
+      ...b,
+    })),
+  }));
 
-    return { ...response, data: parsedData };
+  return {
+    ...response,
+    data: { items: parsedItems, total: response.data.total },
+  };
 }
 
 export async function getDayCheckouts({
-    body,
+  body,
 }: {
   body: Record<string, unknown>;
 }) {
-    const response = await apiRequest<GetDayCheckoutsResponse[]>({
-        endpoint: "bookings/available",
-        body,
-        method: "POST",
-    });
-    return response;
+  const response = await apiRequest<GetDayCheckoutsResponse[]>({
+    endpoint: "bookings/available",
+    body,
+    method: "POST",
+  });
+  return response;
 }
 
 export async function UpdateCheckout({
-    body,
-    checkoutId,
+  body,
+  checkoutId,
 }: {
   body: {
     distanceInKm?: number;
@@ -94,32 +100,32 @@ export async function UpdateCheckout({
   };
   checkoutId: string;
 }) {
-    const response = await apiRequest({
-        endpoint: "checkout/update",
-        method: "POST",
-        body,
-        queryParams: { checkoutId },
-    });
+  const response = await apiRequest({
+    endpoint: "checkout/update",
+    method: "POST",
+    body,
+    queryParams: { checkoutId },
+  });
 
-    return response;
+  return response;
 }
 
 export async function UpdateCheckoutStatus({
-    checkoutId,
-    date,
-    checkoutStatus,
+  checkoutId,
+  date,
+  checkoutStatus,
 }: {
   date: string;
   checkoutId: string;
   checkoutStatus: CheckoutStatuses;
 }) {
-    const response = await apiRequest({
-        endpoint: "bookings/config/status",
-        method: "POST",
-        body: { checkoutId, date, checkoutStatus },
-    });
+  const response = await apiRequest({
+    endpoint: "bookings/config/status",
+    method: "POST",
+    body: { checkoutId, date, checkoutStatus },
+  });
 
-    return response;
+  return response;
 }
 
 interface AddGearInCheckoutResponse {
@@ -131,11 +137,11 @@ interface AddGearInCheckoutResponse {
 }
 
 export async function AddGearInCheckout({
-    checkoutId,
-    extraMachineCosts,
-    extraMachineCostsDescription,
-    gear,
-    individualPrice,
+  checkoutId,
+  extraMachineCosts,
+  extraMachineCostsDescription,
+  gear,
+  individualPrice,
 }: {
   checkoutId: string;
   gear: {
@@ -146,17 +152,17 @@ export async function AddGearInCheckout({
   extraMachineCosts: number;
   extraMachineCostsDescription?: string;
 }): Promise<AddGearInCheckoutResponse> {
-    const response = await apiRequest<{ bookingId: string }>({
-        endpoint: "booking/update/add-gear",
-        method: "POST",
-        body: {
-            checkoutId,
-            extraMachineCosts,
-            extraMachineCostsDescription,
-            gear,
-            individualPrice,
-        },
-    });
+  const response = await apiRequest<{ bookingId: string }>({
+    endpoint: "booking/update/add-gear",
+    method: "POST",
+    body: {
+      checkoutId,
+      extraMachineCosts,
+      extraMachineCostsDescription,
+      gear,
+      individualPrice,
+    },
+  });
 
-    return response;
+  return response;
 }

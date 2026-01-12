@@ -7,16 +7,16 @@ interface GetBirthdaysParams {
 }
 
 export const GetBirthdays = async (
-    params: GetBirthdaysParams
+  params: GetBirthdaysParams
 ): Promise<ApiResponse<BirthdayEvent[]>> => {
-    const cleanParams = Object.entries(params).reduce((acc, [ key, value ]) => {
-        if (value) acc[key] = value;
-        return acc;
-    }, {} as Record<string, string>);
+  const cleanParams = Object.entries(params).reduce((acc, [ key, value ]) => {
+    if (value) acc[key] = value;
+    return acc;
+  }, {} as Record<string, string>);
 
-    return await apiRequest<BirthdayEvent[]>({
-        endpoint: "birthdays",
-        method: "GET",
-        queryParams: cleanParams,
-    });
+  return await apiRequest<BirthdayEvent[]>({
+    endpoint: "birthdays",
+    method: "GET",
+    queryParams: cleanParams,
+  });
 };

@@ -3,17 +3,17 @@ import { CreateVolunteerFormDataType } from "@/lib/zod/CreateVolunteerValidation
 import { Volunteer } from "@/utils/@types/volunteer";
 
 export async function GetAllVolunteers() {
-    const response = await apiRequest<Volunteer[]>({ endpoint: "volunteers" });
-    return response;
+  const response = await apiRequest<Volunteer[]>({ endpoint: "volunteers" });
+  return response;
 }
 export async function CreateVolunteer(body: CreateVolunteerFormDataType) {
-    const response = await apiRequest({
-        endpoint: "volunteers/create",
-        method: "POST",
-        body,
-    });
+  const response = await apiRequest({
+    endpoint: "volunteers/create",
+    method: "POST",
+    body,
+  });
 
-    return response;
+  return response;
 }
 
 // export async function UpdateCustomer({ body, queryParams }: {body: UpdateCustomerFormSchemaType, queryParams?: Record<string, string>}) {

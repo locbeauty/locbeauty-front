@@ -18,36 +18,36 @@ interface SelectTrainingAddressProps {
 }
 
 export function SelectTrainingAddress({
-    disabled = false,
-    addresses,
-    selectedAddress,
-    onAddressChange,
+  disabled = false,
+  addresses,
+  selectedAddress,
+  onAddressChange,
 }: SelectTrainingAddressProps) {
-    const isMounted = useMounted();
-    const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isMounted = useMounted();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
-    if (!isMounted) {
-        return <div className="h-10 w-full" />;
-    }
+  if (!isMounted) {
+    return <div className="h-10 w-full" />;
+  }
 
-    return (
-        <div className="flex flex-col space-y-1 w-full">
-            {isDesktop ? (
-                <DesktopSelect
-                    disabled={ disabled }
-                    allAddresses={ addresses }
-                    selectedAddress={ selectedAddress }
-                    onAddressChange={ onAddressChange }
-                />
-            ) : (
-                <MobileSelect
-                    allAddresses={ addresses }
-                    selectedAddress={ selectedAddress }
-                    onAddressChange={ onAddressChange }
-                />
-            )}
-        </div>
-    );
+  return (
+    <div className="flex flex-col space-y-1 w-full">
+      {isDesktop ? (
+        <DesktopSelect
+          disabled={ disabled }
+          allAddresses={ addresses }
+          selectedAddress={ selectedAddress }
+          onAddressChange={ onAddressChange }
+        />
+      ) : (
+        <MobileSelect
+          allAddresses={ addresses }
+          selectedAddress={ selectedAddress }
+          onAddressChange={ onAddressChange }
+        />
+      )}
+    </div>
+  );
 }
 
 interface SelectProps {
@@ -58,61 +58,61 @@ interface SelectProps {
 }
 
 function DesktopSelect({ disabled, allAddresses, selectedAddress, onAddressChange }: SelectProps) {
-    const [ open, setOpen ] = useState(false);
+  const [ open, setOpen ] = useState(false);
 
-    const selectedValue = getDisplayValue(selectedAddress, allAddresses);
+  const selectedValue = getDisplayValue(selectedAddress, allAddresses);
 
-    return (
-        <Popover modal={ true } open={ open } onOpenChange={ setOpen }>
-            <PopoverTrigger asChild>
-                <Button disabled={ disabled } variant="outline" className="w-full justify-start group cursor-pointer">
-                    {selectedValue ? (
-                        <>{selectedValue}</>
-                    ) : (
-                        <span className="text-placeholder group-hover:text-white">Selecione o endereço</span>
-                    )}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0 w-full" align="start">
-                <AddressesList
-                    allAddresses={ allAddresses }
-                    setOpen={ setOpen }
-                    onAddressChange={ onAddressChange }
-                />
-            </PopoverContent>
-        </Popover>
-    );
+  return (
+    <Popover modal={ true } open={ open } onOpenChange={ setOpen }>
+      <PopoverTrigger asChild>
+        <Button disabled={ disabled } variant="outline" className="w-full justify-start group cursor-pointer">
+          {selectedValue ? (
+            <>{selectedValue}</>
+          ) : (
+            <span className="text-placeholder group-hover:text-white">Selecione o endereço</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-full" align="start">
+        <AddressesList
+          allAddresses={ allAddresses }
+          setOpen={ setOpen }
+          onAddressChange={ onAddressChange }
+        />
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 function MobileSelect({ allAddresses, selectedAddress, onAddressChange }: Omit<SelectProps, "disabled">) {
-    const [ open, setOpen ] = useState(false);
+  const [ open, setOpen ] = useState(false);
 
-    const selectedValue = getDisplayValue(selectedAddress, allAddresses);
+  const selectedValue = getDisplayValue(selectedAddress, allAddresses);
 
-    return (
-        <Drawer open={ open } onOpenChange={ setOpen }>
-            <DrawerTrigger asChild>
-                <Button variant="outline" className="w-full justify-start">
-                    {selectedValue ? (
-                        <>{selectedValue}</>
-                    ) : (
-                        <span className="text-placeholder">Selecione o endereço</span>
-                    )}
-                </Button>
-            </DrawerTrigger>
-            <DrawerContent className="w-full" aria-describedby={ undefined }>
-                <DrawerTitle>
-                    <div className="mt-4 border-t">
-                        <AddressesList
-                            allAddresses={ allAddresses }
-                            setOpen={ setOpen }
-                            onAddressChange={ onAddressChange }
-                        />
-                    </div>
-                </DrawerTitle>
-            </DrawerContent>
-        </Drawer>
-    );
+  return (
+    <Drawer open={ open } onOpenChange={ setOpen }>
+      <DrawerTrigger asChild>
+        <Button variant="outline" className="w-full justify-start">
+          {selectedValue ? (
+            <>{selectedValue}</>
+          ) : (
+            <span className="text-placeholder">Selecione o endereço</span>
+          )}
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent className="w-full" aria-describedby={ undefined }>
+        <DrawerTitle>
+          <div className="mt-4 border-t">
+            <AddressesList
+              allAddresses={ allAddresses }
+              setOpen={ setOpen }
+              onAddressChange={ onAddressChange }
+            />
+          </div>
+        </DrawerTitle>
+      </DrawerContent>
+    </Drawer>
+  );
 }
 
 interface AddressesListProps {
@@ -122,43 +122,43 @@ interface AddressesListProps {
 }
 
 function AddressesList({ setOpen, onAddressChange, allAddresses }: AddressesListProps) {
-    const handleSelect = (address: Address) => {
-        onAddressChange(address.addressId);
-        setOpen(false);
-    };
+  const handleSelect = (address: Address) => {
+    onAddressChange(address.addressId);
+    setOpen(false);
+  };
 
-    return (
-        <Command>
-            <CommandInput placeholder="Filtrar endereços..." />
-            <CommandList>
-                <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
-                <CommandGroup>
-                    {allAddresses?.map((address) => (
-                        <CommandItem
-                            key={ address.addressId }
-                            value={ formatAddress(address) }
-                            onSelect={ () => handleSelect(address) }
-                        >
-                            {formatAddress(address)}
-                        </CommandItem>
-                    ))}
-                </CommandGroup>
-            </CommandList>
-        </Command>
-    );
+  return (
+    <Command>
+      <CommandInput placeholder="Filtrar endereços..." />
+      <CommandList>
+        <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+        <CommandGroup>
+          {allAddresses?.map((address) => (
+            <CommandItem
+              key={ address.addressId }
+              value={ formatAddress(address) }
+              onSelect={ () => handleSelect(address) }
+            >
+              {formatAddress(address)}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  );
 }
 
 function getDisplayValue(addressId: string | undefined, allAddresses: Address[] | undefined): string | null {
-    if (!addressId || !allAddresses) return null;
+  if (!addressId || !allAddresses) return null;
 
-    const address = allAddresses.find(a => a.addressId === addressId);
-    if (address) {
-        return formatAddress(address);
-    }
+  const address = allAddresses.find(a => a.addressId === addressId);
+  if (address) {
+    return formatAddress(address);
+  }
 
-    return null;
+  return null;
 }
 
 function formatAddress(address: Address): string {
-    return `${address.Street.streetName}, ${address.Neighborhood.neighborhoodName}, ${address.addressComplement} - ${address.City.cityName}/${address.State.UF}`;
+  return `${address.Street.streetName}, ${address.Neighborhood.neighborhoodName}, ${address.addressComplement} - ${address.City.cityName}/${address.State.UF}`;
 }

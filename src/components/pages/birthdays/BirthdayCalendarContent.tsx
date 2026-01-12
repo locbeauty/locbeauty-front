@@ -18,69 +18,69 @@ interface BirthdayCalendarContentProps {
 }
 
 export function BirthdayCalendarContent({
-    currentDate,
+  currentDate,
 }: {
   currentDate: Date;
 }) {
-    const { user } = useAuth();
+  const { user } = useAuth();
 
-    // Default to Month view logic
-    const startDate = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1,
-        0,
-        0,
-        0,
-        0
-    );
+  // Default to Month view logic
+  const startDate = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    1,
+    0,
+    0,
+    0,
+    0
+  );
 
-    const endDate = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        0,
-        23,
-        59,
-        59,
-        999
-    );
+  const endDate = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  );
 
-    const { data: birthdaysData, isLoading } = useQuery<
+  const { data: birthdaysData, isLoading } = useQuery<
     ApiResponse<BirthdayEvent[]>,
     Error
   >({
-      queryKey: [ "get-birthdays", startDate, endDate ],
-      queryFn: () =>
-          GetBirthdays({
-              startDate: startDate?.toISOString(),
-              endDate: endDate?.toISOString(),
-          }),
-      enabled: !!user,
-      staleTime: 1000 * 60,
+    queryKey: [ "get-birthdays", startDate, endDate ],
+    queryFn: () =>
+      GetBirthdays({
+        startDate: startDate?.toISOString(),
+        endDate: endDate?.toISOString(),
+      }),
+    enabled: !!user,
+    staleTime: 1000 * 60,
   });
 
-    const birthdays = birthdaysData?.data || [];
-    const allEvents: CalendarEvent[] = [ ...birthdays ];
+  const birthdays = birthdaysData?.data || [];
+  const allEvents: CalendarEvent[] = [ ...birthdays ];
 
-    const openDetails = (event: CalendarEvent) => {
-        console.log("Birthday clicked:", event);
-    };
+  const openDetails = (event: CalendarEvent) => {
+    console.log("Birthday clicked:", event);
+  };
 
-    return (
-        <Card className="overflow-hidden py-0">
-            <CardContent className="p-0">
-                <MonthView
-                    currentDate={ currentDate }
-                    events={ allEvents }
-                    openDetails={ openDetails }
-                />
-                {isLoading && <div className="p-4 text-center">Carregando...</div>}
-                {!isLoading && allEvents.length === 0 && (
-                    <div className="p-4 text-center">
+  return (
+    <Card className="overflow-hidden py-0">
+      <CardContent className="p-0">
+        <MonthView
+          currentDate={ currentDate }
+          events={ allEvents }
+          openDetails={ openDetails }
+        />
+        {isLoading && <div className="p-4 text-center">Carregando...</div>}
+        {!isLoading && allEvents.length === 0 && (
+          <div className="p-4 text-center">
             Nenhum aniversariante encontrado.
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
