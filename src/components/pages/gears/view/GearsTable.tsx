@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/auth-provider";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { useAccess } from "@/contexts/access-provider";
 
 export function GearsTable() {
   const [ gears, setGears ] = useState<Gear[] | null>(null);
@@ -19,6 +20,24 @@ export function GearsTable() {
   const [ selectedGear, setSelectedGear ] = useState<Gear | null>(null);
 
   const { user } = useAuth();
+  const { accesses } = useAccess();
+
+  const accessibleFilialIds = (() => {
+    // Admin/Master can see all
+    if (user?.role === "ADMIN" || user?.role === "MASTER") {
+      return undefined;
+    }
+
+    // Strict access control: derived only from EmployeeAccess permissions
+    const permissions = accesses
+      .filter((a) => a.module === SYSTEM_MODULES.GEARS && a.canView)
+      .map((a) => a.filialId);
+
+    const uniquePermissions = Array.from(new Set(permissions));
+
+    // Fail-safe: if restricted user has no permissions, ensures NO_ACCESS
+    return uniquePermissions.length > 0 ? uniquePermissions : [ "NO_ACCESS" ];
+  })();
 
   const handleToggleUpdateGearDialog = (
     openStatus: boolean,
@@ -41,16 +60,23 @@ export function GearsTable() {
   useEffect(() => {
     async function getGears() {
       const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears`);
-      if (user && user?.role !== "Gerente") {
-        url.searchParams.append("filialId", user?.sourceFilial.filialId);
+
+      // If user is restricted (accessibleFilialIds is defined), add filters
+      if (accessibleFilialIds) {
+        accessibleFilialIds.forEach((id) =>
+          url.searchParams.append("filialIds", id)
+        );
       }
+
+      console.log("Gears API Request:", url.toString());
+
       const response = await fetchWithToken(url, { credentials: "include" });
 
       const { data } = await response.json();
       setGears(data);
     }
     getGears();
-  }, [ user ]);
+  }, [ user, accessibleFilialIds ]);
 
   return (
     <>
