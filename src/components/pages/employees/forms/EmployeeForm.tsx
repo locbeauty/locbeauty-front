@@ -5,8 +5,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Controller, useFormContext } from "react-hook-form";
 import { CreateEmployeeFormSchemaType } from "@/lib/zod/CreateEmployeeValidation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { SelectFilial } from "@/components/shared/SelectFilial";
+import { useAuth } from "@/contexts/auth-provider";
+import { useAccess } from "@/contexts/access-provider";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { USER_ROLES } from "@/utils/constants";
+import {
+  User,
+  FileText,
+  Calendar as CalendarIcon,
+  Briefcase,
+  Building,
+  Phone,
+  Mail,
+  Lock,
+} from "lucide-react";
 
 export function EmployeeForm() {
   const {
@@ -33,34 +48,56 @@ export function EmployeeForm() {
     }
   }, [ setError, clearErrors, password, confirmPassword ]);
 
+  const { user } = useAuth();
+  const { accesses } = useAccess();
+
+  const accessibleFilials = useMemo(() => {
+    if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
+      return undefined;
+    }
+    return accesses
+      .filter((a) => a.module === SYSTEM_MODULES.EMPLOYEES && a.canView)
+      .map((a) => a.filialId);
+  }, [ user, accesses ]);
+
   return (
-    <>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="nome">Nome</Label>
-          <Input
-            { ...register("fullname") }
-            id="nome"
-            placeholder="Nome completo"
-            className="placeholder:text-placeholder"
-            type="name"
-          />
-          <div className="h-3">
+    <div className="space-y-6">
+      {/* Personal Information Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 pb-2 border-b">
+          <User className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-medium">Dados Pessoais</h3>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="fullname" className="flex items-center gap-2">
+              <User className="w-4 h-4 text-muted-foreground" />
+              Nome Completo
+            </Label>
+            <Input
+              { ...register("fullname") }
+              id="fullname"
+              placeholder="Ex: Maria Silva"
+              className="placeholder:text-placeholder"
+            />
             {errors.fullname && (
               <p className="text-xs font-medium text-destructive">
                 {errors.fullname.message}
               </p>
             )}
           </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="cpf">CPF</Label>
-          <DocumentInput
-            isCPF={ true }
-            placeholder="000.000.000-00"
-            register={ register("documentNumber") }
-          />
-          <div className="h-3">
+
+          <div className="space-y-2">
+            <Label htmlFor="documentNumber" className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-muted-foreground" />
+              CPF
+            </Label>
+            <DocumentInput
+              isCPF={ true }
+              placeholder="000.000.000-00"
+              register={ register("documentNumber") }
+            />
             {errors.documentNumber && (
               <p className="text-xs font-medium text-destructive">
                 {errors.documentNumber.message}
@@ -68,44 +105,46 @@ export function EmployeeForm() {
             )}
           </div>
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="birthdate">Data de nascimento</Label>
-        <Controller
-          control={ control }
-          name="birthdate"
-          render={ () => (
-            <DatePicker
-              id="birthdate"
-              placeholder="Escolha a data de nascimento"
-              value={ birthdate }
-              onChange={ (date) => {
-                setValue("birthdate", date!);
-                trigger("birthdate");
-              } }
-              classNames={ {
-                trigger:
-                  errors.birthdate &&
-                  "border-destructive focus-visible:ring-destructive",
-              } }
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="birthdate" className="flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+              Data de Nascimento
+            </Label>
+            <Controller
+              control={ control }
+              name="birthdate"
+              render={ () => (
+                <DatePicker
+                  id="birthdate"
+                  placeholder="Selecione a data"
+                  value={ birthdate }
+                  onChange={ (date) => {
+                    setValue("birthdate", date!);
+                    trigger("birthdate");
+                  } }
+                  classNames={ {
+                    trigger:
+                      errors.birthdate &&
+                      "border-destructive focus-visible:ring-destructive",
+                  } }
+                />
+              ) }
             />
-          ) }
-        />
-        <div className="h-3">
-          {errors.birthdate && (
-            <p className="text-xs font-medium text-destructive">
-              {errors.birthdate.message}
-            </p>
-          )}
-        </div>
-      </div>
+            {errors.birthdate && (
+              <p className="text-xs font-medium text-destructive">
+                {errors.birthdate.message}
+              </p>
+            )}
+          </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="nome">Cargo:</Label>
-          <SelectRole control={ control } name="role" />
-          <div className="h-3">
+          <div className="space-y-2">
+            <Label htmlFor="role" className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-muted-foreground" />
+              Cargo
+            </Label>
+            <SelectRole control={ control } name="role" />
             {errors.role && (
               <p className="text-xs font-medium text-destructive">
                 {errors.role.message}
@@ -113,30 +152,59 @@ export function EmployeeForm() {
             )}
           </div>
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="sourceFilialId" className="flex items-center gap-2">
+            <Building className="w-4 h-4 text-muted-foreground" />
+            Filial de Origem
+          </Label>
+          <SelectFilial
+            control={ control }
+            name="sourceFilialId"
+            accessibleFilials={ accessibleFilials }
+            placeholder="Selecione a filial principal"
+          />
+          {errors.sourceFilialId && (
+            <p className="text-xs font-medium text-destructive">
+              {errors.sourceFilialId.message}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="telefone">Telefone</Label>
-          <PhoneInput register={ register("cellphone") } />
-          <div className="h-3">
+      {/* Contact Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 pb-2 border-b mt-6">
+          <Phone className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-medium">Contato</h3>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="cellphone" className="flex items-center gap-2">
+              <Phone className="w-4 h-4 text-muted-foreground" />
+              Telefone
+            </Label>
+            <PhoneInput register={ register("cellphone") } />
             {errors.cellphone && (
               <p className="text-xs font-medium text-destructive">
                 {errors.cellphone.message}
               </p>
             )}
           </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            { ...register("email") }
-            id="email"
-            type="email"
-            placeholder="exemple@exemple.com"
-            className="placeholder:text-placeholder"
-          />
-          <div className="h-3">
+
+          <div className="space-y-2">
+            <Label htmlFor="email" className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-muted-foreground" />
+              Email
+            </Label>
+            <Input
+              { ...register("email") }
+              id="email"
+              type="email"
+              placeholder="exemplo@email.com"
+              className="placeholder:text-placeholder"
+            />
             {errors.email && (
               <p className="text-xs font-medium text-destructive">
                 {errors.email.message}
@@ -144,36 +212,55 @@ export function EmployeeForm() {
             )}
           </div>
         </div>
-        <div className="flex gap-10">
+      </div>
+
+      {/* Security Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 pb-2 border-b mt-6">
+          <Lock className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-medium">Segurança</h3>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password" className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-muted-foreground" />
+              Senha
+            </Label>
             <Input
               { ...register("password") }
               id="password"
               type="password"
-              placeholder="Escolha a senha para login"
+              placeholder="Senha de acesso"
               className="placeholder:text-placeholder"
             />
+            {/* Note: Password error display depends on if it's required during edit.
+                Commonly only show if error exists. */}
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="password">Confirme a senha</Label>
+            <Label
+              htmlFor="confirmPassword"
+              className="flex items-center gap-2"
+            >
+              <Lock className="w-4 h-4 text-muted-foreground" />
+              Confirmar Senha
+            </Label>
             <Input
               onChange={ (e) => setConfirmPassword(e.target.value) }
               id="confirmPassword"
               type="password"
-              placeholder="Confirme a senha para login"
+              placeholder="Repita a senha"
               className="placeholder:text-placeholder"
             />
-            <div className="h-3">
-              {errors.password && (
-                <p className="text-xs font-medium text-destructive">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
+            {errors.password && (
+              <p className="text-xs font-medium text-destructive">
+                {errors.password.message}
+              </p>
+            )}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

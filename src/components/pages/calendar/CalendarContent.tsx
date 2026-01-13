@@ -6,10 +6,12 @@ import { WeekView } from "./WeekView";
 import { MonthView } from "./MonthView";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
+import { useAccess } from "@/contexts/access-provider";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { Checkout } from "@/utils/@types/checkouts";
 import { useQuery } from "@tanstack/react-query";
 import { GetAllCheckouts } from "@/services/checkouts.service";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ApiResponse } from "@/lib/api";
 import { Training } from "@/utils/@types/training";
 import { GetAllTrainings } from "@/services/trainings.service";
@@ -28,17 +30,34 @@ export function CalendarContent({
   openCheckoutDetails,
 }: CalendarContentProps) {
   const { user } = useAuth();
+  const { accesses } = useAccess();
+
   const [ selectedTraining, setSelectedTraining ] = useState<Training | null>(
     null
   );
   const [ isTrainingDetailsDialogOpen, setIsTrainingDetailsDialogOpen ] =
     useState(false);
 
-  const queryParams = user
-    ? user.role === USER_ROLES.GERENTE
-      ? {}
-      : { filialId: user.sourceFilial.filialId }
-    : undefined;
+  const accessibleFilialIds = useMemo(() => {
+    // Admin/Master can see all
+    if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
+      return undefined;
+    }
+
+    // Strict access control: derived only from EmployeeAccess permissions
+    const permissions = accesses
+      .filter((a) => a.module === SYSTEM_MODULES.BOOKINGS && a.canView)
+      .map((a) => a.filialId);
+
+    const uniquePermissions = Array.from(new Set(permissions));
+
+    // Fail-safe: if restricted user has no permissions, ensures NO_ACCESS
+    return uniquePermissions.length > 0 ? uniquePermissions : [ "NO_ACCESS" ];
+  }, [ user, accesses ]);
+
+  const queryParams = accessibleFilialIds
+    ? { filialIds: accessibleFilialIds }
+    : {};
 
   // Calcula startDate e endDate conforme viewType
   const startDate = (() => {
@@ -101,7 +120,10 @@ export function CalendarContent({
     }).filter(([ _, v ]) => v !== undefined)
   ) as Record<string, string>;
 
-  const { data, isLoading } = useQuery<ApiResponse<Checkout[]>, Error>({
+  const { data, isLoading } = useQuery<
+    ApiResponse<{ items: Checkout[]; total: number }>,
+    Error
+  >({
     queryKey: [ "get-all-checkouts", queryParams, startDate, endDate ],
     queryFn: () =>
       GetAllCheckouts({
@@ -117,7 +139,7 @@ export function CalendarContent({
     staleTime: 1000 * 60, // 1 minuto de cache
   });
 
-  const checkouts = data?.data || [];
+  const checkouts = data?.data?.items || [];
   const trainings = trainingsData.data?.data || [];
 
   const allEvents: CalendarEvent[] = [ ...checkouts, ...trainings ];
