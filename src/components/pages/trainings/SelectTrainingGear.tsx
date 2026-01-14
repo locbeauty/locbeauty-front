@@ -29,24 +29,25 @@ import { ApiResponse } from "@/lib/api";
 import { GetAllGears } from "@/services/gears.service";
 
 interface SelectTrainingGearProps {
-    disabled?: boolean;
-    selectedGear: string | undefined;
-    filialId?: string | undefined
-    onGearChange: (gearName: string) => void;
+  disabled?: boolean;
+  selectedGear: string | undefined;
+  filialId?: string | undefined;
+  onGearChange: (gearName: string) => void;
 }
 
 export function SelectTrainingGear({
   disabled = false,
   selectedGear,
   onGearChange,
-  filialId
+  filialId,
 }: SelectTrainingGearProps) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const gearsData = useQuery<ApiResponse<Gear[]>, Error>({
     queryKey: [ "get-all-gears", filialId ],
-    queryFn: () => GetAllGears({}),
+    queryFn: () => GetAllGears({ filialId }),
+    enabled: !!filialId,
     staleTime: 1000 * 60,
   });
 
@@ -77,13 +78,18 @@ export function SelectTrainingGear({
 }
 
 interface SelectProps {
-    disabled?: boolean;
-    allGears: Gear[] | undefined;
-    selectedGear: string | undefined;
-    onGearChange: (gearName: string) => void;
+  disabled?: boolean;
+  allGears: Gear[] | undefined;
+  selectedGear: string | undefined;
+  onGearChange: (gearName: string) => void;
 }
 
-function DesktopSelect({ disabled, allGears, selectedGear, onGearChange }: SelectProps) {
+function DesktopSelect({
+  disabled,
+  allGears,
+  selectedGear,
+  onGearChange,
+}: SelectProps) {
   const [ open, setOpen ] = useState(false);
 
   const selectedValue = getDisplayValue(selectedGear, allGears);
@@ -91,11 +97,17 @@ function DesktopSelect({ disabled, allGears, selectedGear, onGearChange }: Selec
   return (
     <Popover open={ open } onOpenChange={ setOpen } modal={ true }>
       <PopoverTrigger asChild>
-        <Button disabled={ disabled } variant="outline" className="w-full justify-start group cursor-pointer">
+        <Button
+          disabled={ disabled }
+          variant="outline"
+          className="w-full justify-start group cursor-pointer"
+        >
           {selectedValue ? (
             <>{selectedValue.gearName}</>
           ) : (
-            <span className="text-placeholder group-hover:text-white">Selecione o equipamento</span>
+            <span className="text-placeholder group-hover:text-white">
+              Selecione o equipamento
+            </span>
           )}
         </Button>
       </PopoverTrigger>
@@ -110,7 +122,11 @@ function DesktopSelect({ disabled, allGears, selectedGear, onGearChange }: Selec
   );
 }
 
-function MobileSelect({ allGears, selectedGear, onGearChange }: Omit<SelectProps, "disabled">) {
+function MobileSelect({
+  allGears,
+  selectedGear,
+  onGearChange,
+}: Omit<SelectProps, "disabled">) {
   const [ open, setOpen ] = useState(false);
 
   const selectedValue = getDisplayValue(selectedGear, allGears);
@@ -142,9 +158,9 @@ function MobileSelect({ allGears, selectedGear, onGearChange }: Omit<SelectProps
 }
 
 interface GearsListProps {
-    setOpen: (_open: boolean) => void;
-    onGearChange: (gearName: string) => void;
-    allGears: Gear[] | undefined;
+  setOpen: (_open: boolean) => void;
+  onGearChange: (gearName: string) => void;
+  allGears: Gear[] | undefined;
 }
 
 function GearsList({ setOpen, onGearChange, allGears }: GearsListProps) {
@@ -175,8 +191,11 @@ function GearsList({ setOpen, onGearChange, allGears }: GearsListProps) {
   );
 }
 
-function getDisplayValue(gearId: string | undefined, allGears: Gear[] | undefined) {
+function getDisplayValue(
+  gearId: string | undefined,
+  allGears: Gear[] | undefined
+) {
   if (!gearId || !allGears) return null;
-  const gear = allGears.find(g => g.gearId === gearId);
+  const gear = allGears.find((g) => g.gearId === gearId);
   return gear ? { gearName: gear.gearName } : null;
 }

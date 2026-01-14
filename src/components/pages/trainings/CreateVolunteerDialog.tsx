@@ -57,7 +57,7 @@ export function CreateVolunteerDialog({
   const volunteerForm = useForm<CreateVolunteerFormDataType>({
     resolver: zodResolver(CreateVolunteerSchema),
     defaultValues: {
-      filialId: user?.sourceFilial.filialId,
+      filialId: user?.sourceFilialId,
     },
   });
 
@@ -105,7 +105,7 @@ export function CreateVolunteerDialog({
                 control={ volunteerForm.control }
                 name="filialId"
                 accessibleFilials={ accessibleFilialsIds }
-                defaultFilial={ user?.sourceFilial.filialId }
+                defaultFilial={ user?.sourceFilialId }
               />
               {volunteerForm.formState.errors.filialId && (
                 <p className="text-sm text-destructive">

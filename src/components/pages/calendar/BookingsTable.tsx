@@ -46,7 +46,6 @@ export function BookingsTable({ filters }: BookingsTableProps) {
   const accessibleFilialIds = useMemo(() => {
     // Superusers can view all filials
     if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
-      console.log("BookingsTable: Superuser access confirmed", user.role);
       return undefined;
     }
 
@@ -55,16 +54,8 @@ export function BookingsTable({ filters }: BookingsTableProps) {
       .filter((a) => a.module === SYSTEM_MODULES.BOOKINGS && a.canView)
       .map((a) => a.filialId);
 
-    // Removed implicit sourceFilial access per user requirement.
-    // Permissions are now strictly derived from accesses.
-
     const uniquePermissions = Array.from(new Set(permissions));
-    console.log("BookingsTable: Restricted access", {
-      role: user?.role,
-      permissions: uniquePermissions,
-    });
 
-    // Fail-safe: If restricted user has no permissions, return NO_ACCESS immediately
     return uniquePermissions.length > 0 ? uniquePermissions : [ "NO_ACCESS" ];
   }, [ user, accesses ]);
 

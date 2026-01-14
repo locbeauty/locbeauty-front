@@ -67,9 +67,9 @@ export function CreateGoalDialog() {
 
   const defaultFilialId =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
-      ? user?.sourceFilial.filialId
-      : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
-        ? user?.sourceFilial.filialId
+      ? user?.sourceFilialId
+      : accessibleFilialsIds?.includes(user?.sourceFilialId || "")
+        ? user?.sourceFilialId
         : accessibleFilialsIds?.[0];
 
   const form = useForm<CreateGoalDataType>({

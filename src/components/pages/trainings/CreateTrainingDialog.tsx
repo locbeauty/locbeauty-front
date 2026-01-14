@@ -117,11 +117,11 @@ export function CreateTrainingDialog({
         : [];
 
   const defaultFilialId =
-        user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
-          ? user?.sourceFilial.filialId
-          : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
-            ? user?.sourceFilial.filialId
-            : accessibleFilialsIds?.[0];
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+      ? user?.sourceFilialId
+      : accessibleFilialsIds?.includes(user?.sourceFilialId || "")
+        ? user?.sourceFilialId
+        : accessibleFilialsIds?.[0];
 
   const createTrainingMethods = useForm<CreateTrainingDataType>({
     resolver: zodResolver(CreateTrainingSchema),
@@ -171,6 +171,7 @@ export function CreateTrainingDialog({
   const watchSelectedVolunteerId = watch("volunteerId");
   const watchSelectedAddress = watch("addressId");
   const watchSelectedGear = watch("gearId");
+  const watchFilialId = watch("filialId");
   const watchDueDate = watch("dueDate");
   const watchHour = watch("hourInMinutes");
 
@@ -299,15 +300,14 @@ export function CreateTrainingDialog({
   const allCustomerAddresses = addressesData.data?.data;
 
   const params = {
-    filialId: user?.sourceFilial.filialId,
+    filialId: user?.sourceFilialId,
     gears: [ { gearId: watchSelectedGear, gearName: "" } ],
     date: watchDueDate,
   };
   const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
     queryKey: [ "get-day-checkouts", params ],
     queryFn: () => getDayCheckouts({ body: params }),
-    enabled:
-      !!user?.sourceFilial.filialId && !!watchDueDate && !!watchSelectedGear,
+    enabled: !!user?.sourceFilialId && !!watchDueDate && !!watchSelectedGear,
     staleTime: 0,
   });
   const checkoutSchedule = data?.data;
@@ -353,6 +353,8 @@ export function CreateTrainingDialog({
               <div className="space-y-2">
                 <Label htmlFor="gearId">Equipamento *</Label>
                 <SelectTrainingGear
+                  disabled={ !watchFilialId }
+                  filialId={ watchFilialId }
                   selectedGear={ selectedGearId }
                   onGearChange={ (gearId) => {
                     setValue("gearId", gearId);

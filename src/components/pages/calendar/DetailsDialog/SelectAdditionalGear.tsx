@@ -46,7 +46,7 @@ export function SelectAdditionalGear({
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const filialId =
-    user?.role === USER_ROLES.GERENTE ? user.sourceFilial.filialId : undefined;
+    user?.role === USER_ROLES.GERENTE ? user?.sourceFilialId : undefined;
 
   const { data } = useQuery<ApiResponse<Gear[]>, Error>({
     queryKey: [ "get-all-gears", filialId ],

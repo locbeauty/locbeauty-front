@@ -30,9 +30,9 @@ export function CreateCustomerForm() {
 
   const defaultFilialId =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
-      ? user?.sourceFilial.filialId
-      : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
-        ? user?.sourceFilial.filialId
+      ? user?.sourceFilialId
+      : accessibleFilialsIds?.includes(user?.sourceFilialId || "")
+        ? user?.sourceFilialId
         : accessibleFilialsIds?.[0];
 
   const createCustomerMethods = useForm<CreateCustomerFormSchemaType>({

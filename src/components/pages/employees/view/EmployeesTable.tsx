@@ -2,7 +2,7 @@
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { Button } from "@/components/ui/button";
 import { Employee } from "@/utils/@types/employee";
-import { Eye, Pencil , ChevronLeft, ChevronsLeft } from "lucide-react";
+import { Eye, Pencil, ChevronLeft, ChevronsLeft } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import { UpdateEmployeeDialog } from "../update/UpdateEmployeeDialog";
 import { EmployeeDetailsDialog } from "./EmployeeDetailsDialog";
@@ -122,7 +122,10 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             )}
             {allEmployees ? (
               allEmployees
-                .filter((employee) => employee.employeeId !== user?.sub)
+                .filter(
+                  (employee) =>
+                    employee.employeeId !== (user?.employeeId || user?.sub)
+                )
                 .map((employee) => (
                   <tr
                     key={ employee.employeeId }
@@ -259,7 +262,10 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
       </div>
 
       {allEmployees
-        ?.filter((employee) => employee.employeeId !== user?.sub)
+        ?.filter(
+          (employee) =>
+            employee.employeeId !== (user?.employeeId || user?.sub)
+        )
         .map((employee) => (
           <Fragment key={ employee.employeeId }>
             <ResponsiveCard

@@ -68,8 +68,6 @@ export function GearsTable() {
         );
       }
 
-      console.log("Gears API Request:", url.toString());
-
       const response = await fetchWithToken(url, { credentials: "include" });
 
       const { data } = await response.json();

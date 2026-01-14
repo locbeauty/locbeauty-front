@@ -43,14 +43,6 @@ export async function apiRequest<T = unknown>({
       ? `?${cleanQueryParams.toString()}`
       : "";
 
-  console.log(
-    "API Request:",
-    method,
-    endpoint,
-    queryString,
-    cleanQueryParams.toString()
-  );
-
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SERVER_URL}/${endpoint}${queryString}`,

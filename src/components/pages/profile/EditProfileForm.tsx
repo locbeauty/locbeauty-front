@@ -71,7 +71,8 @@ export function EditProfileForm() {
 
   useEffect(() => {
     async function fetchProfile() {
-      if (!user?.sub) return;
+      const userId = user?.employeeId || user?.sub;
+      if (!userId) return;
       try {
         // Since there isn't a direct /me full profile (usually), we might need to fetch by ID if /me doesn't return everything.
         // Assuming /employees endpoint or similar needs to be used?
@@ -83,18 +84,14 @@ export function EditProfileForm() {
         // Let's try to fetch specific employee by ID if possible, or just all.
         // The task description implies we should have this data.
 
-        // Inspecting EmployeesTable logic: GET /employees returns all.
-        // We'll use that for now to be safe, or check if there is a get by ID.
+        // Fetch full profile from /me endpoint
         const response = await fetchWithToken(
-          `${process.env.NEXT_PUBLIC_SERVER_URL}/employees`,
+          `${process.env.NEXT_PUBLIC_SERVER_URL}/me`,
           {
             credentials: "include",
           }
         );
-        const { data } = await response.json();
-        const currentEmployee = data.find(
-          (emp: Employee) => emp.employeeId === user.sub
-        );
+        const { user: currentEmployee } = await response.json();
 
         if (currentEmployee) {
           setEmployeeData(currentEmployee);
@@ -124,10 +121,11 @@ export function EditProfileForm() {
     }
 
     fetchProfile();
-  }, [ user?.sub, reset ]);
+  }, [ user?.employeeId, user?.sub, reset ]);
 
   async function onSubmit(data: ProfileFormValues) {
-    if (!user?.sub) return;
+    const userId = user?.employeeId || user?.sub;
+    if (!userId) return;
 
     if (data.password && data.password !== confirmPassword) {
       setError("password", { message: "Senhas não conferem" });
@@ -152,7 +150,7 @@ export function EditProfileForm() {
       };
 
       const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/update?employeeId=${user.sub}`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/update?employeeId=${userId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

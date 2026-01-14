@@ -91,7 +91,7 @@ export function FilialsTable() {
                   </td>
                   <td className="p-3 text-sm">{filial.CNPJ}</td>
                   <td className="p-3 text-sm">
-                    {filial.managerEmployee.fullname}
+                    {filial.managerEmployee?.fullname || "-"}
                   </td>
                   <td className="p-3 text-center text-sm truncate max-w-[200px]">
                     {filial.Address.Street.streetName},{" "}

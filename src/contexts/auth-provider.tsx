@@ -5,11 +5,27 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { redirect } from "next/navigation";
 
 type User = {
-  sub: string;
-  employeeName: string;
-  role: string;
+  employeeId: string;
+  fullname: string;
+  documentNumber: string;
+  cellphone: string;
   email: string | null;
-  sourceFilial: {
+  birthdate: string | null;
+  role: string;
+  sourceFilialId: string;
+  SourceFilial?: {
+    filialId: string;
+    filialName: string;
+    Address?: {
+      State: {
+        UF: string;
+      };
+    };
+  };
+  // Backward compatibility (optional)
+  sub?: string;
+  employeeName?: string;
+  sourceFilial?: {
     filialId: string;
     description: string;
   };

@@ -32,7 +32,13 @@ import { ApiResponse } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 
-export function SelectGear({ onSelect }: { onSelect: (gear: Gear) => void }) {
+export function SelectGear({
+  onSelect,
+  filialId,
+}: {
+  onSelect: (gear: Gear) => void;
+  filialId?: string;
+}) {
   const [ filteredGears, setFilteredGears ] = useState<Gear[] | undefined>([]);
   const { user } = useAuth();
   const isMounted = useMounted();
@@ -41,8 +47,6 @@ export function SelectGear({ onSelect }: { onSelect: (gear: Gear) => void }) {
 
   // const selectedGears = useMemo(() => watch("gears") || [], [ watch ]);
   const items = watch("gears");
-
-  const filialId = watch("filialId");
 
   const { data } = useQuery<ApiResponse<Gear[]>, Error>({
     queryKey: [ "get-all-gears", filialId ],

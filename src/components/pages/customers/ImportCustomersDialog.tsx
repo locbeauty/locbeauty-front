@@ -52,7 +52,7 @@ export function ImportCustomersDialog({
 
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
-      filialId: user?.sourceFilial.filialId,
+      filialId: user?.sourceFilialId,
     },
   });
 
@@ -162,7 +162,7 @@ export function ImportCustomersDialog({
               control={ control }
               name="filialId"
               accessibleFilials={ accessibleFilialsIds }
-              defaultFilial={ user?.sourceFilial.filialId }
+              defaultFilial={ user?.sourceFilialId }
             />
           </div>
 

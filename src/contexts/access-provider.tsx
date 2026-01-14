@@ -44,7 +44,9 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
   const [ isLoading, setIsLoading ] = useState(true);
 
   const fetchAccesses = useCallback(async () => {
-    if (!user?.sub) {
+    const userId = user?.employeeId || user?.sub;
+
+    if (!userId) {
       setAccesses([]);
       setIsLoading(false);
       return;
@@ -55,14 +57,15 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
       // For now, assuming RBAC via DB even for admins, or we can hardcode admin bypass here.
       // Let's stick to DB accesses.
 
-      const data = await getEmployeeAccesses(user.sub);
+      const data = await getEmployeeAccesses(userId);
+
       setAccesses(data);
     } catch (error) {
       console.error("Failed to load accesses", error);
     } finally {
       setIsLoading(false);
     }
-  }, [ user?.sub ]);
+  }, [ user?.employeeId, user?.sub ]);
 
   useEffect(() => {
     if (user) {

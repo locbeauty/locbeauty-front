@@ -436,7 +436,7 @@ export function BookingDetailsDialog({
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <h3 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
-                        Funcionário
+                        Funcionário responsável
                       </h3>
                     </div>
                   </CardHeader>

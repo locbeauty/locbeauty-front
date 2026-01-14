@@ -58,7 +58,7 @@ export function CreateTraineeDialog({
   const traineeForm = useForm<CreateTraineeFormDataType>({
     resolver: zodResolver(CreateTraineeSchema),
     defaultValues: {
-      filialId: user?.sourceFilial.filialId,
+      filialId: user?.sourceFilialId,
     },
   });
 
@@ -101,7 +101,7 @@ export function CreateTraineeDialog({
                 control={ traineeForm.control }
                 name="filialId"
                 accessibleFilials={ accessibleFilialsIds }
-                defaultFilial={ user?.sourceFilial.filialId }
+                defaultFilial={ user?.sourceFilialId }
               />
               {traineeForm.formState.errors.filialId && (
                 <p className="text-sm text-destructive">

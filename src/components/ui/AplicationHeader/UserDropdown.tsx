@@ -21,11 +21,12 @@ export function UserDropdown() {
   if (isLoading || !user) {
     return <LoaderCircle className="animate-spin" />;
   }
-  const nameInitials = user.employeeName
-    .split(" ")
-    .map((name) => name[0])
-    .join("")
-    .slice(0, 2);
+  const nameInitials =
+    user.fullname
+      ?.split(" ")
+      .map((name: string) => name[0])
+      .join("")
+      .slice(0, 2) || "-";
 
   return (
     <DropdownMenu>
@@ -41,7 +42,7 @@ export function UserDropdown() {
           </Avatar>
           <div className="flex flex-col items-start">
             <span className="text-sm font-medium leading-none">
-              {user.employeeName}
+              {user.fullname}
             </span>
             <span className="text-xs text-muted-foreground mt-1">
               {user.role}
@@ -56,7 +57,7 @@ export function UserDropdown() {
             {user.email || "antoniomarcelob12@gmail.com"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {user.sourceFilial.description || "Filial Recife"}
+            {user.SourceFilial?.filialName || "Filial Recife"}
           </p>
         </div>
         <DropdownMenuSeparator />

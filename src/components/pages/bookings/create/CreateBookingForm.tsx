@@ -69,6 +69,7 @@ export function GearsSection() {
   } = useFormContext<CreateCheckoutFormSchemaType>();
 
   const watchedGears = watch("gears");
+  const filialId = watch("filialId");
   const watchSelectedGears = useMemo(() => watchedGears || [], [ watchedGears ]);
 
   useEffect(() => {
@@ -145,7 +146,7 @@ export function GearsSection() {
         ))}
         {watchSelectedGears.length < 3 && (
           <div className="w-[200px]">
-            <SelectGear onSelect={ handleAddGear } />
+            <SelectGear onSelect={ handleAddGear } filialId={ filialId } />
           </div>
         )}
       </div>
@@ -178,9 +179,9 @@ export function CreateBookingForm() {
 
   const defaultFilialId =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
-      ? user?.sourceFilial.filialId
-      : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
-        ? user?.sourceFilial.filialId
+      ? user?.sourceFilialId
+      : accessibleFilialsIds?.includes(user?.sourceFilialId || "")
+        ? user?.sourceFilialId
         : accessibleFilialsIds?.[0];
 
   const createBookingFormMethods = useForm<CreateCheckoutFormSchemaType>({
@@ -207,7 +208,7 @@ export function CreateBookingForm() {
       consumption: 10,
       addressId: "",
       filialId: defaultFilialId || "",
-      accountableEmployeeId: user?.sub,
+      accountableEmployeeId: user?.employeeId || user?.sub,
     },
   });
 
@@ -226,10 +227,6 @@ export function CreateBookingForm() {
     formState: { errors },
     control,
   } = createBookingFormMethods;
-
-  useEffect(() => {
-    console.log("form errors: ", errors);
-  }, [ errors ]);
 
   const startHour = watch("startHourInMinutes");
   const watchTotalDurationInMinutes = watch("totalDurationInMinutes");
@@ -293,7 +290,7 @@ export function CreateBookingForm() {
   const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
     queryKey: [ "get-day-checkouts", params ],
     queryFn: () => getDayCheckouts({ body: params }),
-    enabled: !!watchFilialId && !!selectedDate,
+    enabled: !!watchFilialId && !!selectedDate && watchSelectedGears.length > 0,
     staleTime: 1000 * 60,
   });
   const checkoutSchedule = data?.data;
@@ -304,8 +301,8 @@ export function CreateBookingForm() {
       paymentStatus: "Pendente",
       totalPrice: "0",
       addressId: "",
-      filialId: user?.sourceFilial.filialId,
-      accountableEmployeeId: user?.sub,
+      filialId: user?.sourceFilialId,
+      accountableEmployeeId: user?.employeeId || user?.sub,
       customer: undefined,
       gears: [],
       date: undefined,
@@ -329,6 +326,7 @@ export function CreateBookingForm() {
     const parsed = {
       ...newCheckoutData,
       consumption: newCheckoutData.consumption || 10,
+      accountableEmployeeId: user?.employeeId || user?.sub || "",
 
       basePrice: parseStringToCents(newCheckoutData.basePrice || "0"),
       extraMachineCosts: parseStringToCents(
@@ -461,7 +459,7 @@ export function CreateBookingForm() {
                     filialId={
                       user?.role === USER_ROLES.GERENTE
                         ? undefined
-                        : user?.sourceFilial.filialId
+                        : user?.sourceFilialId
                     }
                   />
                   {errors.driverId && (
