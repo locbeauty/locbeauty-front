@@ -5,6 +5,7 @@ import {
   ForwardRefExoticComponent,
   RefAttributes,
   useEffect,
+  useState,
 } from "react";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
@@ -41,6 +42,7 @@ import {
 
 import { CreateGoalDialog } from "@/components/pages/goals/CreateGoalDialog";
 import { GoalCard } from "@/components/pages/goals/GoalCard";
+import { GoalDetailsDialog } from "@/components/pages/goals/GoalDetailsDialog";
 
 import {
   Select,
@@ -84,6 +86,17 @@ function EmptyState({
 
 export default function MetasMensaisPage() {
   const { user } = useAuth();
+  const [ selectedGoal, setSelectedGoal ] = useState<Goal | null>(null);
+  const [ detailsOpen, setDetailsOpen ] = useState(false);
+
+  const handleViewDetails = (goal: Goal) => {
+    setSelectedGoal(goal);
+    // setTimeout to ensure clean state transition if needed, though state lift often fixes it.
+    // Keeping it simple first.
+    setTimeout(() => {
+      setDetailsOpen(true);
+    }, 100);
+  };
 
   const filterMethods = useForm<FiltersForm>({
     defaultValues: {
@@ -106,9 +119,9 @@ export default function MetasMensaisPage() {
     queryFn: () =>
       GetAllGoals({
         filialId:
-          user?.role === USER_ROLES.GERENTE
+          filterFilial === "all_filials_placeholder" || !filterFilial
             ? undefined
-            : user?.sourceFilial.filialId,
+            : filterFilial,
       }),
     staleTime: 1000 * 60,
   });
@@ -390,7 +403,11 @@ export default function MetasMensaisPage() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {moneyGoals.map((meta) => (
-                    <GoalCard key={ meta.goalId } goal={ meta } />
+                    <GoalCard
+                      key={ meta.goalId }
+                      goal={ meta }
+                      onViewDetails={ handleViewDetails }
+                    />
                   ))}
                 </div>
               )}
@@ -404,13 +421,23 @@ export default function MetasMensaisPage() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {equipmentGoals.map((meta) => (
-                    <GoalCard key={ meta.goalId } goal={ meta } />
+                    <GoalCard
+                      key={ meta.goalId }
+                      goal={ meta }
+                      onViewDetails={ handleViewDetails }
+                    />
                   ))}
                 </div>
               )}
             </div>
           </TabsContent>
         </Tabs>
+
+        <GoalDetailsDialog
+          goal={ selectedGoal }
+          open={ detailsOpen }
+          onOpenChange={ setDetailsOpen }
+        />
       </div>
     </RouteGuard>
   );

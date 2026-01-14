@@ -76,8 +76,8 @@ import { GetDayCheckoutsResponse } from "../bookings/create/CreateBookingForm";
 interface CreateTrainingDialogProps {
   dialogNovoTreinamento: boolean;
   setDialogNovoTreinamento: (openStatus: boolean) => void;
-  volunteers: Volunteer[] | undefined;
-  trainees: Trainee[] | undefined;
+  // volunteers: Volunteer[] | undefined; // Removed
+  // trainees: Trainee[] | undefined; // Removed
   gears: Gear[] | undefined;
 }
 
@@ -91,15 +91,13 @@ const defaultPaymentInfoStructure: CreateTrainingDataType["traineePayment"]["pay
     firstPaymentStatus: "Pendente",
     secondPaymentAmount: "0",
     secondPaymentStatus: "Pendente",
-    firstPaymentMethod: "",
     secondPaymentMethod: "",
+    firstPaymentMethod: "",
   };
 
 export function CreateTrainingDialog({
   dialogNovoTreinamento,
   setDialogNovoTreinamento,
-  volunteers,
-  trainees,
 }: CreateTrainingDialogProps) {
   const { user } = useAuth();
   const { getAccessibleFilialsForCreate } = useAccess();
@@ -176,19 +174,7 @@ export function CreateTrainingDialog({
   const watchHour = watch("hourInMinutes");
 
   // --- Effects: Sync UI ---
-  useEffect(() => {
-    const trainee = trainees?.find(
-      (t) => t.traineeId === watchSelectedTraineeId
-    );
-    setSelectedTraineeName(trainee?.name);
-  }, [ watchSelectedTraineeId, trainees ]);
-
-  useEffect(() => {
-    const volunteer = volunteers?.find(
-      (v) => v.volunteerId === watchSelectedVolunteerId
-    );
-    setSelectedVolunteerName(volunteer?.name);
-  }, [ watchSelectedVolunteerId, volunteers ]);
+  // (Removed trainees/volunteers effects)
 
   // --- Helper de Formatação do Submit ---
   const formatPaymentPayload = (
@@ -372,18 +358,15 @@ export function CreateTrainingDialog({
                 <div className="space-y-2">
                   <Label>Aluno *</Label>
                   <SelectTrainee
-                    trainees={ trainees }
+                    disabled={ !watchFilialId }
+                    filialId={ watchFilialId }
                     selectedTrainee={ selectedTraineeName }
-                    onTraineeChange={ (traineeName) => {
-                      const trainee = trainees?.find(
-                        (s) => s.name === traineeName
-                      );
-                      if (trainee) {
-                        setValue("traineeId", trainee.traineeId);
-                        setSelectedTraineeName(traineeName);
-                      }
+                    onTraineeChange={ (trainee) => {
+                      setValue("traineeId", trainee.traineeId);
+                      setSelectedTraineeName(trainee.name);
                     } }
                   />
+
                   {errors.traineeId && (
                     <p className="text-sm text-red-600">
                       {errors.traineeId.message}
@@ -393,18 +376,15 @@ export function CreateTrainingDialog({
                 <div className="space-y-2">
                   <Label>Paciente modelo *</Label>
                   <SelectVolunteer
-                    volunteers={ volunteers }
+                    disabled={ !watchFilialId }
+                    filialId={ watchFilialId }
                     selectedVolunteer={ selectedVolunteerName }
-                    onVolunteerChange={ (volunteerName) => {
-                      const volunteer = volunteers?.find(
-                        (p) => p.name === volunteerName
-                      );
-                      if (volunteer) {
-                        setValue("volunteerId", volunteer.volunteerId);
-                        setSelectedVolunteerName(volunteerName);
-                      }
+                    onVolunteerChange={ (volunteer) => {
+                      setValue("volunteerId", volunteer.volunteerId);
+                      setSelectedVolunteerName(volunteer.name);
                     } }
                   />
+
                   {errors.volunteerId && (
                     <p className="text-sm text-red-600">
                       {errors.volunteerId.message}

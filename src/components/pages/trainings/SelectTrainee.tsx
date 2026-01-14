@@ -25,21 +25,35 @@ import { useMounted } from "@/hooks/useMounted";
 import { useState } from "react";
 import { Trainee } from "@/utils/@types/trainee";
 
+import { useQuery } from "@tanstack/react-query";
+import { GetAllTrainees } from "@/services/trainees.service";
+import { ApiResponse } from "@/lib/api";
+
 interface SelectTraineeProps {
   disabled?: boolean;
-  trainees: Trainee[] | undefined;
+  filialId: string | undefined;
+  // trainees: Trainee[] | undefined; // Removed
   selectedTrainee: string | undefined;
-  onTraineeChange: (traineeName: string) => void;
+  onTraineeChange: (trainee: Trainee) => void; // Changed to return object
 }
 
 export function SelectTrainee({
   disabled = false,
-  trainees,
+  filialId,
   selectedTrainee,
   onTraineeChange,
 }: SelectTraineeProps) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  const { data: traineesData } = useQuery<ApiResponse<Trainee[]>, Error>({
+    queryKey: [ "get-all-trainees", filialId ],
+    queryFn: () => GetAllTrainees({ filialId }),
+    enabled: !!filialId,
+    staleTime: 1000 * 60,
+  });
+
+  const trainees = traineesData?.data;
 
   if (!isMounted) {
     return <div className="h-10 w-full" />;
@@ -49,7 +63,7 @@ export function SelectTrainee({
     <div className="flex flex-col space-y-1 w-full">
       {isDesktop ? (
         <DesktopSelect
-          disabled={ disabled }
+          disabled={ disabled || !filialId }
           allTrainees={ trainees }
           selectedTrainee={ selectedTrainee }
           onTraineeChange={ onTraineeChange }
@@ -69,7 +83,7 @@ interface SelectProps {
   disabled?: boolean;
   allTrainees: Trainee[] | undefined;
   selectedTrainee: string | undefined;
-  onTraineeChange: (traineeName: string) => void;
+  onTraineeChange: (trainee: Trainee) => void;
 }
 
 function DesktopSelect({
@@ -153,7 +167,7 @@ function MobileSelect({
 
 interface TraineesListProps {
   setOpen: (_open: boolean) => void;
-  onTraineeChange: (traineeName: string) => void;
+  onTraineeChange: (trainee: Trainee) => void;
   allTrainees: Trainee[] | undefined;
 }
 
@@ -163,7 +177,7 @@ function TraineesList({
   allTrainees,
 }: TraineesListProps) {
   const handleSelect = (trainee: Trainee) => {
-    onTraineeChange(trainee.name);
+    onTraineeChange(trainee);
     setOpen(false);
   };
 

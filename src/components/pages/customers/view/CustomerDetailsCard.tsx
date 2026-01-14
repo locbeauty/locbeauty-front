@@ -1,4 +1,5 @@
 import {
+  Building,
   Clock,
   Ellipsis,
   FileText,
@@ -32,10 +33,19 @@ export function CustomerDetailsCard({
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
+            {
+              selectedCustomer?.companyName && (
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Nome da empresa</span>
+                  <span>{selectedCustomer?.companyName}</span>
+                </div>
+              )
+            }
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">Nome do Responsável</span>
-              <span>{selectedCustomer?.companyName}</span>
+              <span>{selectedCustomer?.fullname}</span>
             </div>
 
             <div className="flex items-center gap-2">

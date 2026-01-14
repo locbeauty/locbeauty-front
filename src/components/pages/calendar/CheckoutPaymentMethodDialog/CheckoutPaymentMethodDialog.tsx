@@ -439,7 +439,10 @@ export function CheckoutPaymentMethodDialog({
                 >
                   <SelectTrigger
                     disabled={
-                      selectedCheckout.CheckoutPayment.paymentStatus === "Pago"
+                      selectedCheckout.CheckoutPayment.paymentStatus ===
+                        "Pago" ||
+                      (paymentStatus === "Parcial" &&
+                        firstPaymentStatus === "Pago")
                     }
                     className={ errors.paymentStatus ? "border-red-500" : "" }
                   >
@@ -471,6 +474,9 @@ export function CheckoutPaymentMethodDialog({
                 <Checkbox
                   id="courtesy"
                   checked={ isCourtesy }
+                  disabled={
+                    paymentStatus === "Parcial" && firstPaymentStatus === "Pago"
+                  }
                   onCheckedChange={ (checked) =>
                     setIsCourtesy(checked as boolean)
                   }
@@ -487,6 +493,10 @@ export function CheckoutPaymentMethodDialog({
                 <Checkbox
                   id="refunded"
                   checked={ wasRefunded }
+                  disabled={
+                    firstPaymentStatus === "Pendente" &&
+                    secondPaymentStatus === "Pendente"
+                  }
                   onCheckedChange={ (checked) =>
                     setWasRefunded(checked as boolean)
                   }

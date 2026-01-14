@@ -23,6 +23,7 @@ import {
   Wallet,
   FileText,
   Pencil,
+  Building,
 } from "lucide-react";
 
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
@@ -39,6 +40,7 @@ import { CancelTrainingConfirmationDialog } from "./CancelTrainingConfirmationDi
 import { UpdateTraining } from "@/services/trainings.service";
 import { toast } from "sonner";
 import { FinishTrainingConfirmationDialog } from "./FinishTrainingConfirmationDialog";
+import { queryClient } from "@/app/(main)/layout";
 
 interface TrainingDetailsDialogProps {
   open: boolean;
@@ -73,6 +75,10 @@ export function TrainingDetailsDialog({
   const [ currentTrainingStatus, setCurrentTrainingStatus ] = useState(
     selectedTraining?.trainingStatus
   );
+
+  useEffect(() => {
+    setCurrentTrainingStatus(selectedTraining.trainingStatus);
+  }, [ selectedTraining ]);
 
   const [ isFinancialEditDialogOpen, setIsFinancialEditDialogOpen ] =
     useState(false);
@@ -186,6 +192,7 @@ export function TrainingDetailsDialog({
               : null
           );
         }
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
         // onOpenChange(false);
       }
     } catch (error) {
@@ -362,6 +369,22 @@ export function TrainingDetailsDialog({
 
             <Separator />
 
+            {/* 2.5 FILIAL */}
+            <div className="space-y-3">
+              <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <Building className="h-3 w-3" /> Unidade / Filial
+              </h4>
+              <div className="p-4 rounded-lg border bg-muted/20 text-sm">
+                <p className="font-medium">{selectedTraining.SourceFilial.filialName}</p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                  <FileText className="h-3 w-3" />
+                  CNPJ: {selectedTraining.SourceFilial.CNPJ}
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
             {/* 3. LOCALIZAÇÃO (Mantido) */}
             <div className="space-y-3">
               <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -516,11 +539,7 @@ export function TrainingDetailsDialog({
                   className="flex items-center justify-center gap-2 w-full"
                   disabled={
                     selectedTraining.trainingStatus === "Concluido" ||
-                                        selectedTraining.trainingStatus === "Cancelado" ||
-                                        (traineePayment?.paymentStatus !== "Pago" &&
-                                            !traineePayment?.isCourtesy) ||
-                                        (volunteerPayment?.paymentStatus !== "Pago" &&
-                                            !volunteerPayment?.isCourtesy)
+                    selectedTraining.trainingStatus === "Cancelado"
                   }
                   onClick={ () => setFinishTrainingConfirmationDialogOpen(true) }
                 >
@@ -535,6 +554,7 @@ export function TrainingDetailsDialog({
 
       {selectedPayerType && (
         <TrainingPaymentMethodDialog
+          key={ selectedPayerType }
           payerType={ selectedPayerType }
           isTrainingPaymentMethodDialogOpen={ isTrainingPaymentMethodDialogOpen }
           selectedTraining={ selectedTraining }

@@ -132,28 +132,34 @@ export function validateCheckoutForm({
     const currentSecondAmount = parseStringToCents(secondPaymentAmount);
 
     // Se há valor pendente, a segunda parcela deve bater com ele
+    // Se há valor pendente, a segunda parcela deve bater com ele
     if (pendingValue > 0) {
-      if (currentSecondAmount === 0 || currentSecondAmount !== pendingValue) {
-        // Nota: como o sistema auto-calcula, esse erro raramente deve aparecer, mas previne manipulação manual incorreta
-        newErrors.paymentInfo.secondPaymentAmount =
-          "A 2ª parcela precisa corresponder ao valor restante.";
-        isValid = false;
-      } else {
+      if (firstPaymentStatus === "Pendente") {
         newErrors.paymentInfo.secondPaymentAmount = "";
-      }
-
-      // Data é obrigatória apenas se a primeira parcela já foi paga (Status: Parcial)
-      // A regra do usuário é: "apenas se este [firstPaymentStatus] for 'Pago'"
-      if (firstPaymentStatus === "Pago") {
-        if (!secondPaymentDate || secondPaymentDate === "") {
-          newErrors.paymentInfo.secondPaymentDate =
-            "A data prevista é obrigatória.";
+        newErrors.paymentInfo.secondPaymentDate = "";
+      } else {
+        if (currentSecondAmount === 0 || currentSecondAmount !== pendingValue) {
+          // Nota: como o sistema auto-calcula, esse erro raramente deve aparecer, mas previne manipulação manual incorreta
+          newErrors.paymentInfo.secondPaymentAmount =
+            "A 2ª parcela precisa corresponder ao valor restante.";
           isValid = false;
+        } else {
+          newErrors.paymentInfo.secondPaymentAmount = "";
+        }
+
+        // Data é obrigatória apenas se a primeira parcela já foi paga (Status: Parcial)
+        // A regra do usuário é: "apenas se este [firstPaymentStatus] for 'Pago'"
+        if (firstPaymentStatus === "Pago") {
+          if (!secondPaymentDate || secondPaymentDate === "") {
+            newErrors.paymentInfo.secondPaymentDate =
+              "A data prevista é obrigatória.";
+            isValid = false;
+          } else {
+            newErrors.paymentInfo.secondPaymentDate = "";
+          }
         } else {
           newErrors.paymentInfo.secondPaymentDate = "";
         }
-      } else {
-        newErrors.paymentInfo.secondPaymentDate = "";
       }
     }
     // Se pendingValue for 0 (primeira parcela cobriu tudo), teoricamente não deveria estar aqui ou status seria Pago.

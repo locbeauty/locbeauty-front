@@ -606,7 +606,11 @@ export function TrainingPaymentMethodDialog({
                 >
                   <SelectTrigger
                     className={ errors.paymentStatus ? "border-red-500" : "" }
-                    disabled={ areDetailsDisabled }
+                    disabled={
+                      areDetailsDisabled ||
+                      (paymentStatus === "Parcial" &&
+                        firstPaymentStatus === "Pago")
+                    }
                   >
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>

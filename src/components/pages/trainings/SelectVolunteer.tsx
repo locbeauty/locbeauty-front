@@ -25,21 +25,35 @@ import { useMounted } from "@/hooks/useMounted";
 import { useState } from "react";
 import { Volunteer } from "@/utils/@types/volunteer";
 
+import { useQuery } from "@tanstack/react-query";
+import { GetAllVolunteers } from "@/services/volunteers.service";
+import { ApiResponse } from "@/lib/api";
+
 interface SelectVolunteerProps {
   disabled?: boolean;
-  volunteers: Volunteer[] | undefined;
+  filialId: string | undefined;
+  // volunteers: Volunteer[] | undefined; // Removed
   selectedVolunteer: string | undefined;
-  onVolunteerChange: (volunteerName: string) => void;
+  onVolunteerChange: (volunteer: Volunteer) => void;
 }
 
 export function SelectVolunteer({
   disabled = false,
-  volunteers,
+  filialId,
   selectedVolunteer,
   onVolunteerChange,
 }: SelectVolunteerProps) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  const { data: volunteersData } = useQuery<ApiResponse<Volunteer[]>, Error>({
+    queryKey: [ "get-all-volunteers", filialId ],
+    queryFn: () => GetAllVolunteers({ filialId }),
+    enabled: !!filialId,
+    staleTime: 1000 * 60,
+  });
+
+  const volunteers = volunteersData?.data;
 
   if (!isMounted) {
     return <div className="h-10 w-full" />;
@@ -49,7 +63,7 @@ export function SelectVolunteer({
     <div className="flex flex-col space-y-1 w-full">
       {isDesktop ? (
         <DesktopSelect
-          disabled={ disabled }
+          disabled={ disabled || !filialId }
           allVolunteers={ volunteers }
           selectedVolunteer={ selectedVolunteer }
           onVolunteerChange={ onVolunteerChange }
@@ -69,7 +83,7 @@ interface SelectProps {
   disabled?: boolean;
   allVolunteers: Volunteer[] | undefined;
   selectedVolunteer: string | undefined;
-  onVolunteerChange: (volunteerName: string) => void;
+  onVolunteerChange: (volunteer: Volunteer) => void;
 }
 
 function DesktopSelect({
@@ -153,7 +167,7 @@ function MobileSelect({
 
 interface VolunteersListProps {
   setOpen: (_open: boolean) => void;
-  onVolunteerChange: (volunteerName: string) => void;
+  onVolunteerChange: (volunteer: Volunteer) => void;
   allVolunteers: Volunteer[] | undefined;
 }
 
@@ -163,7 +177,7 @@ function VolunteersList({
   allVolunteers,
 }: VolunteersListProps) {
   const handleSelect = (volunteer: Volunteer) => {
-    onVolunteerChange(volunteer.name);
+    onVolunteerChange(volunteer);
     setOpen(false);
   };
 

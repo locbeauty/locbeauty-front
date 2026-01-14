@@ -105,6 +105,7 @@ export function CustomersTable() {
           value={ filters.email }
           onChange={ (e) => setFilters({ ...filters, email: e.target.value }) }
           className="max-w-xs"
+          type="text"
         />
         <Input
           placeholder="Filtrar por Documento"
