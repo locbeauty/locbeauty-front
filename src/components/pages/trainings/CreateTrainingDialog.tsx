@@ -262,6 +262,7 @@ export function CreateTrainingDialog({
         toast.warning(response.message, { style: { fontSize: "1rem" } });
       } else {
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
         toast.success(response.message, { style: { fontSize: "1rem" } });
         window.scroll({ top: 0 });
         reset();

@@ -8,6 +8,7 @@ interface BookingPaymentStatusBadgeProps {
     | "Pago"
     | "Reembolsado"
     | "Cancelado"
+    | "Cortesia"
     | null
     | undefined;
   shrink?: boolean;
@@ -19,9 +20,9 @@ export function BookingPaymentStatusBadge({
   status,
   shrink = false,
   isCourtesy = false,
-  wasRefunded = false
+  wasRefunded = false,
 }: BookingPaymentStatusBadgeProps) {
-  if (isCourtesy) {
+  if (isCourtesy || status === "Cortesia") {
     return (
       <Badge
         className={ cn(
@@ -60,6 +61,8 @@ export function BookingPaymentStatusBadge({
     Parcial:
       "border-1 border-yellow-800 bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
     Pago: "border-1 border-green-800 bg-green-100 text-green-800 hover:bg-green-200",
+    Cortesia:
+      "border-1 border-green-800 bg-green-100 text-green-800 hover:bg-green-200",
   };
 
   return (

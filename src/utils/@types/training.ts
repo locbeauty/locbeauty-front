@@ -24,5 +24,6 @@ export interface Training {
   Trainee: Trainee;
   TrainingPayment: TrainingPayment[];
   SourceFilial: Filial;
+  wasRefunded?: boolean;
   Address: Address;
 }

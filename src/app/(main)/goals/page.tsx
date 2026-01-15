@@ -203,24 +203,34 @@ export default function MetasMensaisPage() {
     iconColor?: string;
     description?: string;
   }) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={ `h-4 w-4 ${iconColor}` } />
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center h-8">
-            <LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <>
-            <div className={ `text-2xl font-bold ${textColor}` }>{value}</div>
-            {description && (
-              <p className="text-xs text-muted-foreground">{description}</p>
-            )}
-          </>
-        )}
+    <Card className="shadow-sm">
+      <CardContent className="p-4 flex flex-row items-center justify-between">
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            {title}
+          </p>
+          {isLoading ? (
+            <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground" />
+          ) : (
+            <div className="flex items-baseline gap-2">
+              <span className={ `text-2xl font-bold ${textColor}` }>{value}</span>
+              {description && (
+                <span className="text-[10px] text-muted-foreground hidden sm:inline-block">
+                  {description}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <div
+          className={ `p-2 rounded-full bg-muted/50 ${iconColor
+            .replace("text-", "bg-")
+            .replace("600", "100")}` }
+        >
+          {" "}
+          {/* Semi-hacky way to get bg color from text color, or just default */}
+          <Icon className={ `h-5 w-5 ${iconColor}` } />
+        </div>
       </CardContent>
     </Card>
   );
@@ -277,114 +287,107 @@ export default function MetasMensaisPage() {
           />
         </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-medium">Filtros</CardTitle>
-            <CardDescription>Refine a visualização das metas</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col md:flex-row gap-4 items-end">
-              <div className="w-full md:w-[200px] space-y-2">
-                <Label>Filial</Label>
-                <Controller
-                  control={ control }
-                  name="filialId"
-                  render={ ({ field }) => (
-                    <Select onValueChange={ field.onChange } value={ field.value }>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem
-                          value="all_filials_placeholder"
-                          disabled
-                          className="hidden"
-                        >
+        <div className="flex flex-col md:flex-row gap-4 items-end bg-muted/30 p-4 rounded-lg border">
+          <div className="w-full md:w-[200px] space-y-1">
+            <Label className="text-xs">Filial</Label>
+            <Controller
+              control={ control }
+              name="filialId"
+              render={ ({ field }) => (
+                <Select onValueChange={ field.onChange } value={ field.value }>
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      value="all_filials_placeholder"
+                      disabled
+                      className="hidden"
+                    >
                           Select...
-                        </SelectItem>
-                        {filiaisList.map((f) => (
-                          <SelectItem key={ f } value={ f }>
-                            {f}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) }
-                />
-              </div>
+                    </SelectItem>
+                    {filiaisList.map((f) => (
+                      <SelectItem key={ f } value={ f }>
+                        {f}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) }
+            />
+          </div>
 
-              <div className="w-full md:w-[200px] space-y-2">
-                <Label>Status</Label>
-                <Controller
-                  control={ control }
-                  name="status"
-                  render={ ({ field }) => (
-                    <Select onValueChange={ field.onChange } value={ field.value }>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="EM_ANDAMENTO">
+          <div className="w-full md:w-[200px] space-y-1">
+            <Label className="text-xs">Status</Label>
+            <Controller
+              control={ control }
+              name="status"
+              render={ ({ field }) => (
+                <Select onValueChange={ field.onChange } value={ field.value }>
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EM_ANDAMENTO">
                           Em andamento
-                        </SelectItem>
-                        <SelectItem value="Concluida">Atingida</SelectItem>
-                        <SelectItem value="NAO_ATINGIDA">
+                    </SelectItem>
+                    <SelectItem value="Concluida">Atingida</SelectItem>
+                    <SelectItem value="NAO_ATINGIDA">
                           Não atingida
-                        </SelectItem>
-                        <SelectItem value="PARCIALMENTE_CONCLUIDA">
+                    </SelectItem>
+                    <SelectItem value="PARCIALMENTE_CONCLUIDA">
                           Parcialmente atingida
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              ) }
+            />
+          </div>
+
+          {activeTab === "gear" && (
+            <div className="w-full md:w-[250px] space-y-1">
+              <Label className="text-xs">Equipamento</Label>
+              <Controller
+                control={ control }
+                name="gear"
+                render={ ({ field }) => (
+                  <Select
+                    value={ field.value ?? "" }
+                    onValueChange={ field.onChange }
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Todos os produtos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gears.map((g) => (
+                        <SelectItem key={ g.gearId } value={ g.gearId }>
+                          {g.gearName}
                         </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) }
-                />
-              </div>
-
-              {activeTab === "gear" && (
-                <div className="w-full md:w-[250px] space-y-2">
-                  <Label>Equipamento</Label>
-                  <Controller
-                    control={ control }
-                    name="gear"
-                    render={ ({ field }) => (
-                      <Select
-                        value={ field.value ?? "" }
-                        onValueChange={ field.onChange }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Todos os produtos" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {gears.map((g) => (
-                            <SelectItem key={ g.gearId } value={ g.gearId }>
-                              {g.gearName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) }
-                  />
-                </div>
-              )}
-
-              <Button
-                variant="secondary"
-                onClick={ () =>
-                  reset({
-                    filialId: undefined,
-                    status: undefined,
-                    gear: "",
-                    tab: activeTab,
-                  })
-                }
-                className="w-full md:w-auto"
-              >
-                <FilterX className="mr-2 h-4 w-4" />
-                Limpar
-              </Button>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) }
+              />
             </div>
-          </CardContent>
-        </Card>
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={ () =>
+              reset({
+                filialId: undefined,
+                status: undefined,
+                gear: "",
+                tab: activeTab,
+              })
+            }
+            className="w-full md:w-auto h-8"
+          >
+            <FilterX className="mr-2 h-3 w-3" />
+                Limpar
+          </Button>
+        </div>
 
         <Tabs
           defaultValue="money"

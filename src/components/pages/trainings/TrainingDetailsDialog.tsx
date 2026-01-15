@@ -121,30 +121,44 @@ export function TrainingDetailsDialog({
     trainingId: string,
     trainingStatus: "Concluido" | "Cancelado",
     wasRefunded?: boolean,
-    cancellationFee?: number | null
+    cancellationFee?: number | null,
+    canceledBy?: "TRAINEE" | "VOLUNTEER",
+    cancellationDate?: Date | null,
+    cancellationFeePaymentDate?: Date | null,
+    cancellationFeePaymentMethod?:
+      | "PIX"
+      | "Transferencia"
+      | "Debito"
+      | "Credito"
+      | "Dinheiro"
+      | null
   ) => {
     try {
-      const paymentData = traineePayment
+      const targetPayerType = canceledBy || "TRAINEE";
+      const targetPayment =
+        targetPayerType === "VOLUNTEER" ? volunteerPayment : traineePayment;
+
+      const paymentData = targetPayment
         ? {
-          totalPrice: traineePayment.totalPrice,
-          basePrice: traineePayment.basePrice,
-          paymentStatus: traineePayment.paymentStatus,
-          paymentMode: traineePayment.paymentMode,
-          firstPaymentAmount: traineePayment.firstPaymentAmount || 0,
-          firstPaymentDate: traineePayment.firstPaymentDate
-            ? new Date(traineePayment.firstPaymentDate)
+          totalPrice: targetPayment.totalPrice,
+          basePrice: targetPayment.basePrice,
+          paymentStatus: targetPayment.paymentStatus || "Pendente",
+          paymentMode: targetPayment.paymentMode,
+          firstPaymentAmount: targetPayment.firstPaymentAmount || 0,
+          firstPaymentDate: targetPayment.firstPaymentDate
+            ? new Date(targetPayment.firstPaymentDate)
             : null,
-          firstPaymentMethod: traineePayment.firstPaymentMethod,
-          firstPaymentStatus: traineePayment.firstPaymentStatus,
-          secondPaymentAmount: traineePayment.secondPaymentAmount || 0,
-          secondPaymentDate: traineePayment.secondPaymentDate
-            ? new Date(traineePayment.secondPaymentDate)
+          firstPaymentMethod: targetPayment.firstPaymentMethod,
+          firstPaymentStatus: targetPayment.firstPaymentStatus,
+          secondPaymentAmount: targetPayment.secondPaymentAmount || 0,
+          secondPaymentDate: targetPayment.secondPaymentDate
+            ? new Date(targetPayment.secondPaymentDate)
             : null,
-          secondPaymentMethod: traineePayment.secondPaymentMethod,
-          secondPaymentStatus: traineePayment.secondPaymentStatus,
-          additionalCost: traineePayment.additionalCost || 0,
+          secondPaymentMethod: targetPayment.secondPaymentMethod,
+          secondPaymentStatus: targetPayment.secondPaymentStatus,
+          additionalCost: targetPayment.additionalCost || 0,
           additionalCostDescription:
-              traineePayment.additionalCostDescription || "",
+              targetPayment.additionalCostDescription || "",
         }
         : {
           paymentStatus: "Pendente" as const,
@@ -165,16 +179,20 @@ export function TrainingDetailsDialog({
 
       const payload: UpdateTrainingPayload = {
         trainingStatus,
-        payerType: "TRAINEE",
+        payerType: canceledBy || "TRAINEE",
         TrainingPayment: paymentData,
         isCourtesy: traineePayment?.isCourtesy ?? false,
         wasRefunded: wasRefunded || false,
         cancellationFee: cancellationFee || undefined,
+        canceledBy: canceledBy,
+        cancellationDate: cancellationDate,
+        cancellationFeePaymentDate: cancellationFeePaymentDate,
+        cancellationFeePaymentMethod: cancellationFeePaymentMethod,
       };
 
       const response = await UpdateTraining({ trainingId, body: payload });
 
-      if (response) {
+      if (response && response.statusCode === 200) {
         toast.success(
           `Treinamento ${
             trainingStatus === "Cancelado" ? "cancelado" : "concluído"
@@ -187,13 +205,31 @@ export function TrainingDetailsDialog({
                 ...prev,
                 trainingStatus,
                 wasRefunded: wasRefunded || false,
-                cancellationFee: cancellationFee || null,
+                TrainingPayment: prev.TrainingPayment.map((p) => {
+                  if (p.payerType === (canceledBy || "TRAINEE")) {
+                    return {
+                      ...p,
+                      // We strictly update the fields that changed
+                      cancellationFee: cancellationFee || null,
+                      cancellationDate:
+                          cancellationDate?.toISOString() || null,
+                      cancellationFeePaymentDate:
+                          cancellationFeePaymentDate?.toISOString() || null,
+                      cancellationFeePaymentMethod:
+                          cancellationFeePaymentMethod || null,
+                    };
+                  }
+                  return p;
+                }),
               }
               : null
           );
         }
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
-        // onOpenChange(false);
+        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+        onOpenChange(false);
+      } else {
+        toast.warning(response.message || "Erro ao atualizar status.");
       }
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
@@ -306,6 +342,103 @@ export function TrainingDetailsDialog({
 
             <Separator />
 
+            {/* 4. RESUMO DO CANCELAMENTO */}
+            {selectedTraining.trainingStatus === "Cancelado" && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <h4 className="font-medium text-xs text-red-600 uppercase tracking-wider flex items-center gap-2">
+                    <Trash2 className="h-3 w-3" /> Detalhes do Cancelamento
+                  </h4>
+                  <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/10 text-sm space-y-2">
+                    {/* Data do Cancelamento */}
+                    {selectedTraining.TrainingPayment.find(
+                      (p) => p.cancellationDate
+                    )?.cancellationDate && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Data do Cancelamento:
+                        </span>
+                        <span className="font-medium">
+                          {new Date(
+                            selectedTraining.TrainingPayment.find(
+                              (p) => p.cancellationDate
+                            )!.cancellationDate!
+                          ).toLocaleDateString("pt-BR")}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Taxa de Cancelamento */}
+                    {selectedTraining.TrainingPayment.some(
+                      (p) => (p.cancellationFee || 0) > 0
+                    ) ? (
+                        selectedTraining.TrainingPayment.filter(
+                          (p) => (p.cancellationFee || 0) > 0
+                        ).map((p, index) => (
+                          <div key={ index } className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                              Taxa (
+                                {p.payerType === "TRAINEE" ? "Aluno" : "Modelo"}):
+                              </span>
+                              <span className="font-bold text-red-600">
+                                {formatCurrency(p.cancellationFee || 0)}
+                              </span>
+                            </div>
+
+                            {p.cancellationFeePaymentDate && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                Data Pagamento Taxa:
+                                </span>
+                                <span className="font-medium">
+                                  {new Date(
+                                    p.cancellationFeePaymentDate
+                                  ).toLocaleDateString("pt-BR")}
+                                </span>
+                              </div>
+                            )}
+
+                            {p.cancellationFeePaymentMethod && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                Método Pagamento Taxa:
+                                </span>
+                                <span className="font-medium">
+                                  {p.cancellationFeePaymentMethod}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                          Taxa de Cancelamento:
+                          </span>
+                          <span className="font-medium text-green-600">
+                          Isento / Não aplicada
+                          </span>
+                        </div>
+                      )}
+
+                    {/* Reembolso */}
+                    {selectedTraining.wasRefunded && (
+                      <div className="flex justify-between items-center pt-2 border-t border-red-200 dark:border-red-900/30">
+                        <span className="text-muted-foreground font-medium">
+                          Reembolso Efetuado
+                        </span>
+                        <Check className="h-4 w-4 text-green-600" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            <Separator />
+
             {/* 2. PARTICIPANTES (Mantido) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Aluno */}
@@ -375,7 +508,9 @@ export function TrainingDetailsDialog({
                 <Building className="h-3 w-3" /> Unidade / Filial
               </h4>
               <div className="p-4 rounded-lg border bg-muted/20 text-sm">
-                <p className="font-medium">{selectedTraining.SourceFilial.filialName}</p>
+                <p className="font-medium">
+                  {selectedTraining.SourceFilial.filialName}
+                </p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                   <FileText className="h-3 w-3" />
                   CNPJ: {selectedTraining.SourceFilial.CNPJ}
@@ -422,7 +557,8 @@ export function TrainingDetailsDialog({
                         wasRefunded={ traineePayment?.wasRefunded }
                       />
                     </div>
-                    {traineePayment?.paymentStatus === "Pendente" && (
+                    {traineePayment?.paymentStatus === "Pendente" &&
+                      currentTrainingStatus !== "Cancelado" && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -474,7 +610,8 @@ export function TrainingDetailsDialog({
                           wasRefunded={ volunteerPayment?.wasRefunded }
                         />
                       </div>
-                      {volunteerPayment?.paymentStatus === "Pendente" && (
+                      {volunteerPayment?.paymentStatus === "Pendente" &&
+                        currentTrainingStatus !== "Cancelado" && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -504,6 +641,7 @@ export function TrainingDetailsDialog({
               <Button
                 className="flex items-center justify-start gap-2 h-10 w-full"
                 variant="outline"
+                disabled={ currentTrainingStatus === "Cancelado" }
                 onClick={ () => handleOpenPaymentDialog("TRAINEE") }
               >
                 <DollarSign className="w-4 h-4 text-orange-600" />
@@ -514,6 +652,7 @@ export function TrainingDetailsDialog({
               <Button
                 className="flex items-center justify-start gap-2 h-10 w-full"
                 variant="outline"
+                disabled={ currentTrainingStatus === "Cancelado" }
                 onClick={ () => handleOpenPaymentDialog("VOLUNTEER") }
               >
                 <DollarSign className="w-4 h-4 text-blue-600" />

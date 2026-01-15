@@ -27,6 +27,7 @@ import { UpdateTrainingPayload } from "./TrainingPaymentMethodDialog";
 import { centsToString } from "@/utils/centsToString";
 import { PaymentModes, PaymentStatuses } from "@/utils/constants";
 import { toast } from "sonner";
+import { queryClient } from "@/app/(main)/layout";
 
 const formSchema = z.object({
   basePrice: z.number().min(0),
@@ -166,6 +167,8 @@ export default function EditTrainingFinancialsDialog({
       });
 
       if (response.data) {
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
         toast.success("Valores atualizados com sucesso.");
         onSuccess(response.data);
 

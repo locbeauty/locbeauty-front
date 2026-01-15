@@ -1,13 +1,14 @@
-"use client";
-
 import { useMemo, useState } from "react";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Filter, X } from "lucide-react";
 
 import { Trainee } from "@/utils/@types/trainee";
 import { Training } from "@/utils/@types/training";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { TraineeDetailsDialog } from "./TraineeDetailsDialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface TraineesTableProps {
   trainees: Trainee[] | undefined;
@@ -23,6 +24,10 @@ export function TraineesTable({
   const [ selectedTrainee, setSelectedTrainee ] = useState<Trainee | null>(null);
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
 
+  // Filters
+  const [ filterName, setFilterName ] = useState("");
+  const [ filterPending, setFilterPending ] = useState(false);
+
   const handleOpenDetails = (trainee: Trainee) => {
     setSelectedTrainee(trainee);
     setIsDetailsOpen(true);
@@ -31,10 +36,42 @@ export function TraineesTable({
     }
   };
 
+  const clearFilters = () => {
+    setFilterName("");
+    setFilterPending(false);
+  };
+
   const sortedTrainees = useMemo(() => {
     if (!trainees) return [];
-    return [ ...trainees ].sort((a, b) => a.name.localeCompare(b.name));
-  }, [ trainees ]);
+    let result = [ ...trainees ];
+
+    // Name Filter
+    if (filterName) {
+      result = result.filter((t) =>
+        t.name.toLowerCase().includes(filterName.toLowerCase())
+      );
+    }
+
+    // Pending Payment Filter
+    if (filterPending) {
+      // We need to check if this trainee has any training with pending payment.
+      // The `trainees` object itself might not have payment info directly attached in this view unless we cross-reference `allTrainings`.
+      // `allTrainings` contains the payment info linked to `traineeId`.
+      const traineesWithPending = new Set<string>();
+      allTrainings.forEach((training) => {
+        // Check trainee payments
+        if (
+          training.TrainingPayment?.some((p) => p.paymentStatus === "Pendente")
+        ) {
+          if (training.traineeId) traineesWithPending.add(training.traineeId);
+        }
+      });
+
+      result = result.filter((t) => traineesWithPending.has(t.traineeId));
+    }
+
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }, [ trainees, filterName, filterPending, allTrainings ]);
 
   const handleToggleDialog = (open: boolean, data: unknown) => {
     if (open && data) {
@@ -46,6 +83,48 @@ export function TraineesTable({
 
   return (
     <>
+      {/* Filters Toolbar */}
+      <div className="bg-muted/30 p-4 rounded-lg border mb-4 space-y-4">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+          <Filter className="h-4 w-4" />
+          Filtros
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="space-y-1 w-full sm:w-1/3">
+            <Label className="text-xs">Nome do Aluno</Label>
+            <Input
+              placeholder="Buscar por nome..."
+              value={ filterName }
+              onChange={ (e) => setFilterName(e.target.value) }
+              className="h-9 bg-background"
+            />
+          </div>
+          <div className="flex items-center space-x-2 border p-2 rounded-md h-9 bg-background px-3">
+            <Switch
+              id="pending-trainee"
+              checked={ filterPending }
+              onCheckedChange={ setFilterPending }
+            />
+            <Label
+              htmlFor="pending-trainee"
+              className="text-sm cursor-pointer whitespace-nowrap"
+            >
+              Com Pagamento Pendente
+            </Label>
+          </div>
+          <div className="flex-1 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={ clearFilters }
+              className="text-muted-foreground h-9"
+            >
+              <X className="h-3 w-3 mr-1" /> Limpar
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <div className="border rounded-lg w-full overflow-x-auto hidden md:block">
         <table className="min-w-[800px] w-full">
           <thead className="bg-muted">
@@ -58,10 +137,10 @@ export function TraineesTable({
             </tr>
           </thead>
           <tbody>
-            {(!trainees || trainees.length === 0) && (
+            {sortedTrainees.length === 0 && (
               <tr>
                 <td className="text-center p-4" colSpan={ 5 }>
-                  Nenhum aluno encontrado.
+                  {trainees ? "Nenhum aluno encontrado." : "Carregando..."}
                 </td>
               </tr>
             )}
@@ -110,9 +189,9 @@ export function TraineesTable({
             handleToggleDialog={ handleToggleDialog }
           />
         ))}
-        {(!trainees || trainees.length === 0) && (
+        {sortedTrainees.length === 0 && (
           <p className="text-center text-muted-foreground py-8">
-            Nenhum aluno encontrado.
+            {trainees ? "Nenhum aluno encontrado." : "Carregando..."}
           </p>
         )}
       </div>

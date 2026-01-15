@@ -1,15 +1,23 @@
-"use client";
-
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Eye, Clock, Calendar } from "lucide-react";
+import { Eye, Clock, Calendar, Filter, X } from "lucide-react";
+import { ptBR } from "date-fns/locale";
 
 import { Training } from "@/utils/@types/training";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { Badge } from "@/components/ui/badge";
-
-import { TrainingDetailsDialog } from "./TrainingDetailsDialog"; // Assuming we have this or similar for viewing details
+import { TrainingDetailsDialog } from "./TrainingDetailsDialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { Label } from "@/components/ui/label";
 
 interface TrainingsTableProps {
   trainings: Training[] | undefined;
@@ -21,17 +29,95 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
   );
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
 
+  // Filters state
+  const [ filterTrainee, setFilterTrainee ] = useState("");
+  const [ filterVolunteer, setFilterVolunteer ] = useState("");
+  const [ filterStatus, setFilterStatus ] = useState<"ALL" | string>("ALL");
+  const [ filterPaymentStatus, setFilterPaymentStatus ] = useState<
+    "ALL" | "PENDING" | "PAID"
+  >("ALL");
+  const [ filterDate, setFilterDate ] = useState<Date | undefined>(undefined);
+
   const handleOpenDetails = (training: Training) => {
     setSelectedTraining(training);
     setIsDetailsOpen(true);
   };
 
+  const clearFilters = () => {
+    setFilterTrainee("");
+    setFilterVolunteer("");
+    setFilterStatus("ALL");
+    setFilterPaymentStatus("ALL");
+    setFilterDate(undefined);
+  };
+
   const sortedTrainings = useMemo(() => {
     if (!trainings) return [];
-    return [ ...trainings ].sort(
+    let result = [ ...trainings ];
+
+    // Trainee Name Filter
+    if (filterTrainee) {
+      result = result.filter((t) =>
+        t.Trainee?.name.toLowerCase().includes(filterTrainee.toLowerCase())
+      );
+    }
+
+    // Volunteer Name Filter
+    if (filterVolunteer) {
+      result = result.filter((t) =>
+        t.Volunteer?.name.toLowerCase().includes(filterVolunteer.toLowerCase())
+      );
+    }
+
+    // Status Filter
+    if (filterStatus && filterStatus !== "ALL") {
+      result = result.filter((t) => t.trainingStatus === filterStatus);
+    }
+
+    // Payment Status Filter
+    if (filterPaymentStatus && filterPaymentStatus !== "ALL") {
+      if (filterPaymentStatus === "PENDING") {
+        result = result.filter((t) =>
+          t.TrainingPayment?.some((p) => p.paymentStatus === "Pendente")
+        );
+      } else if (filterPaymentStatus === "PAID") {
+        // Assuming "Paid" means all payments are paid or at least one is "Pago" and none "Pendente"?
+        // Or simply has "Pago" payments? The user request was "status de pagamento".
+        // Let's implement logical interpretations.
+        // "Pendente" usually means user wants to see what is missing money.
+        // "Pago" might mean fully paid.
+        // For now simple logic: Has any Paid payment? Or Strict?
+        // Let's go with: All payments are "Pago" OR (has "Pago" and no "Pendente").
+        // Actually, typically in grids: 'Pending' shows if ANY is pending. 'Paid' shows if ALL are paid.
+        result = result.filter(
+          (t) =>
+            t.TrainingPayment?.length > 0 &&
+            t.TrainingPayment.every(
+              (p) =>
+                p.paymentStatus === "Pago" || p.paymentStatus === "Confirmado"
+            )
+        );
+      }
+    }
+
+    // Date Filter
+    if (filterDate) {
+      // Comparison by Day
+      const filterDay = format(filterDate, "yyyy-MM-dd");
+      result = result.filter((t) => t.dueDate.startsWith(filterDay));
+    }
+
+    return result.sort(
       (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
     );
-  }, [ trainings ]);
+  }, [
+    trainings,
+    filterTrainee,
+    filterVolunteer,
+    filterStatus,
+    filterPaymentStatus,
+    filterDate,
+  ]);
 
   // Helper to format duration
   const formatDuration = (minutes: number) => {
@@ -42,10 +128,10 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
 
   const getStatusBadge = (status: string) => {
     let colorClass = "bg-gray-100 text-gray-800";
-    if (status === "Pago" || status === "Confirmado")
+    if (status === "Pago" || status === "Confirmado" || status === "Concluido")
       colorClass = "bg-green-100 text-green-800";
-    if (status === "Pendente")
-      colorClass = "bg-yellow-100 text-yellow-800 text-yellow-600";
+    if (status === "Pendente" || status === "Agendado")
+      colorClass = "bg-yellow-100 text-yellow-800";
     if (status === "Cancelado") colorClass = "bg-red-100 text-red-800";
 
     return (
@@ -65,6 +151,86 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
 
   return (
     <>
+      {/* Filters Toolbar */}
+      <div className="bg-muted/30 p-4 rounded-lg border mb-4 space-y-4">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+          <Filter className="h-4 w-4" />
+          Filtros
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Aluno</Label>
+            <Input
+              placeholder="Nome do Aluno"
+              value={ filterTrainee }
+              onChange={ (e) => setFilterTrainee(e.target.value) }
+              className="h-9 bg-background"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Modelo</Label>
+            <Input
+              placeholder="Nome do Modelo"
+              value={ filterVolunteer }
+              onChange={ (e) => setFilterVolunteer(e.target.value) }
+              className="h-9 bg-background"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Data</Label>
+            <DatePicker
+              value={ filterDate }
+              onChange={ setFilterDate }
+              placeholder="Selecione uma data"
+              className="h-9 w-full bg-background"
+              clearable
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Status Treinamento</Label>
+            <Select value={ filterStatus } onValueChange={ setFilterStatus }>
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos</SelectItem>
+                <SelectItem value="Agendado">Agendado</SelectItem>
+                <SelectItem value="Concluido">Concluído</SelectItem>
+                <SelectItem value="Cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Status Pagamento</Label>
+            <Select
+              value={ filterPaymentStatus }
+              onValueChange={ (v) =>
+                setFilterPaymentStatus(v as "ALL" | "PENDING" | "PAID")
+              }
+            >
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos</SelectItem>
+                <SelectItem value="PENDING">Pendente</SelectItem>
+                <SelectItem value="PAID">Pago</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={ clearFilters }
+              className="text-muted-foreground h-9 w-full sm:w-auto"
+            >
+              <X className="h-3 w-3 mr-1" /> Limpar filtros
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <div className="border rounded-lg w-full overflow-x-auto hidden md:block">
         <table className="min-w-[800px] w-full">
           <thead className="bg-muted">
@@ -79,10 +245,12 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
             </tr>
           </thead>
           <tbody>
-            {(!trainings || trainings.length === 0) && (
+            {sortedTrainings.length === 0 && (
               <tr>
                 <td className="text-center p-4" colSpan={ 7 }>
-                  Nenhum treinamento encontrado.
+                  {trainings
+                    ? "Nenhum treinamento encontrado."
+                    : "Carregando..."}
                 </td>
               </tr>
             )}
@@ -152,9 +320,9 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
             handleToggleDialog={ handleToggleDialog }
           />
         ))}
-        {(!trainings || trainings.length === 0) && (
+        {sortedTrainings.length === 0 && (
           <p className="text-center text-muted-foreground py-8">
-            Nenhum treinamento encontrado.
+            {trainings ? "Nenhum treinamento encontrado." : "Carregando..."}
           </p>
         )}
       </div>

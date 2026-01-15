@@ -75,6 +75,16 @@ export type UpdateTrainingPayload = {
   isCourtesy?: boolean;
   wasRefunded?: boolean;
   cancellationFee?: number;
+  canceledBy?: "TRAINEE" | "VOLUNTEER";
+  cancellationDate?: Date | null;
+  cancellationFeePaymentDate?: Date | null;
+  cancellationFeePaymentMethod?:
+    | "PIX"
+    | "Transferencia"
+    | "Debito"
+    | "Credito"
+    | "Dinheiro"
+    | null;
   TrainingPayment: {
     totalPrice: number;
     basePrice: number;
@@ -492,6 +502,7 @@ export function TrainingPaymentMethodDialog({
         toast.warning(response.message || "Erro ao atualizar pagamento.");
       } else {
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
         if (setSelectedTraining) {
           setSelectedTraining((prev) => {
             if (!prev) return prev;
