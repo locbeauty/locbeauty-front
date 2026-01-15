@@ -142,7 +142,10 @@ export function TrainingDetailsDialog({
         ? {
           totalPrice: targetPayment.totalPrice,
           basePrice: targetPayment.basePrice,
-          paymentStatus: targetPayment.paymentStatus || "Pendente",
+          paymentStatus:
+            trainingStatus === "Cancelado"
+              ? "Cancelado"
+              : targetPayment.paymentStatus || "Pendente",
           paymentMode: targetPayment.paymentMode,
           firstPaymentAmount: targetPayment.firstPaymentAmount || 0,
           firstPaymentDate: targetPayment.firstPaymentDate
@@ -158,7 +161,7 @@ export function TrainingDetailsDialog({
           secondPaymentStatus: targetPayment.secondPaymentStatus,
           additionalCost: targetPayment.additionalCost || 0,
           additionalCostDescription:
-              targetPayment.additionalCostDescription || "",
+            targetPayment.additionalCostDescription || "",
         }
         : {
           paymentStatus: "Pendente" as const,
@@ -206,10 +209,12 @@ export function TrainingDetailsDialog({
                 trainingStatus,
                 wasRefunded: wasRefunded || false,
                 TrainingPayment: prev.TrainingPayment.map((p) => {
+                  let updatedPayment = { ...p };
+
+                  // 1. Update cancellation specific fields if this is the payer
                   if (p.payerType === (canceledBy || "TRAINEE")) {
-                    return {
-                      ...p,
-                      // We strictly update the fields that changed
+                    updatedPayment = {
+                      ...updatedPayment,
                       cancellationFee: cancellationFee || null,
                       cancellationDate:
                           cancellationDate?.toISOString() || null,
@@ -219,7 +224,17 @@ export function TrainingDetailsDialog({
                           cancellationFeePaymentMethod || null,
                     };
                   }
-                  return p;
+
+                  // 2. If Training is Cancelado, ensure any pending payment becomes Cancelado
+                  if (
+                    trainingStatus === "Cancelado" &&
+                      (updatedPayment.paymentStatus === "Pendente" ||
+                        !updatedPayment.paymentStatus)
+                  ) {
+                    updatedPayment.paymentStatus = "Cancelado";
+                  }
+
+                  return updatedPayment;
                 }),
               }
               : null

@@ -9,22 +9,26 @@ export interface Goal {
   estimatedCents: number | null;
 
   Gear?: {
-    gearName: string,
-    gearId: string,
-  },
+    gearName: string;
+    gearId: string;
+  };
 
   targetQuantity: number | null;
   currentQuantity: number | null;
   estimatedQuantity: number | null;
 
-  status: "EM_ANDAMENTO" | "Concluida" | "NAO_ATINGIDA" | "PARCIALMENTE_CONCLUIDA";
+  status:
+    | "EM_ANDAMENTO"
+    | "Concluida"
+    | "NAO_ATINGIDA"
+    | "PARCIALMENTE_CONCLUIDA";
 
   remainingDays: number | null;
 
-  Filial: {
+  Filial?: {
     filialId: string;
     filialName: string;
-  }
+  };
 
   createdAt: Date;
   updatedAt: Date;

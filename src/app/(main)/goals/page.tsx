@@ -1,24 +1,10 @@
 "use client";
 
-import {
-  useMemo,
-  ForwardRefExoticComponent,
-  RefAttributes,
-  useEffect,
-  useState,
-} from "react";
+import { useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-provider";
-import { USER_ROLES } from "@/utils/constants";
 import { useQuery } from "@tanstack/react-query";
 
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
 import { Goal } from "@/utils/@types/goals";
@@ -34,15 +20,12 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
-  LoaderCircle,
-  LucideProps,
   FilterX,
   SearchX,
 } from "lucide-react";
 
 import { CreateGoalDialog } from "@/components/pages/goals/CreateGoalDialog";
 import { GoalCard } from "@/components/pages/goals/GoalCard";
-import { GoalDetailsDialog } from "@/components/pages/goals/GoalDetailsDialog";
 
 import {
   Select,
@@ -86,17 +69,7 @@ function EmptyState({
 
 export default function MetasMensaisPage() {
   const { user } = useAuth();
-  const [ selectedGoal, setSelectedGoal ] = useState<Goal | null>(null);
-  const [ detailsOpen, setDetailsOpen ] = useState(false);
-
-  const handleViewDetails = (goal: Goal) => {
-    setSelectedGoal(goal);
-    // setTimeout to ensure clean state transition if needed, though state lift often fixes it.
-    // Keeping it simple first.
-    setTimeout(() => {
-      setDetailsOpen(true);
-    }, 100);
-  };
+  // Removed unused ViewDetails state for now
 
   const filterMethods = useForm<FiltersForm>({
     defaultValues: {
@@ -129,7 +102,6 @@ export default function MetasMensaisPage() {
   const goals = data;
   useEffect(() => {
     if (goals) {
-      // Debugging or side effect if needed
       console.log("Goals loaded:", goals.length);
     }
   }, [ goals ]);
@@ -139,8 +111,13 @@ export default function MetasMensaisPage() {
 
     let filtered = [ ...goals ];
 
-    if (filterFilial)
-      filtered = filtered.filter((g) => g.Filial.filialName === filterFilial);
+    if (filterFilial) {
+      if (filterFilial === "GLOBAL") {
+        filtered = filtered.filter((g) => !g.Filial);
+      } else {
+        filtered = filtered.filter((g) => g.Filial?.filialId === filterFilial);
+      }
+    }
     if (filterStatus)
       filtered = filtered.filter((g) => g.status === filterStatus);
 
@@ -164,9 +141,9 @@ export default function MetasMensaisPage() {
     return Array.from(gearMap.values());
   }, [ filteredGoals ]);
 
-  const filiaisList = useMemo(() => {
-    return Array.from(new Set(goals?.map((g) => g.Filial.filialName) ?? []));
-  }, [ goals ]);
+  const filiaisList = Array.from(
+    new Set(goals?.map((g) => g.Filial?.filialName).filter(Boolean) ?? [])
+  );
 
   const estatisticas = useMemo(
     () => ({
@@ -186,58 +163,9 @@ export default function MetasMensaisPage() {
     [ filteredGoals ]
   );
 
-  const StatCard = ({
-    title,
-    value,
-    icon: Icon,
-    textColor = "text-foreground",
-    iconColor = "text-muted-foreground",
-    description,
-  }: {
-    title: string;
-    value: number | string | undefined;
-    icon: ForwardRefExoticComponent<
-      Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
-    >;
-    textColor?: string;
-    iconColor?: string;
-    description?: string;
-  }) => (
-    <Card className="shadow-sm">
-      <CardContent className="p-4 flex flex-row items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            {title}
-          </p>
-          {isLoading ? (
-            <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground" />
-          ) : (
-            <div className="flex items-baseline gap-2">
-              <span className={ `text-2xl font-bold ${textColor}` }>{value}</span>
-              {description && (
-                <span className="text-[10px] text-muted-foreground hidden sm:inline-block">
-                  {description}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-        <div
-          className={ `p-2 rounded-full bg-muted/50 ${iconColor
-            .replace("text-", "bg-")
-            .replace("600", "100")}` }
-        >
-          {" "}
-          {/* Semi-hacky way to get bg color from text color, or just default */}
-          <Icon className={ `h-5 w-5 ${iconColor}` } />
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <RouteGuard module={ SYSTEM_MODULES.GOALS }>
-      <div className="space-y-6 container mx-auto p-4 md:p-6 max-w-7xl">
+      <div className="space-y-6 container mx-auto md:p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Metas Mensais</h1>
@@ -250,44 +178,67 @@ export default function MetasMensaisPage() {
           </Can>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <StatCard
-            title="Total de Metas"
-            value={ estatisticas.total }
-            icon={ Target }
-          />
-          <StatCard
-            title="Em Andamento"
-            value={ estatisticas.emAndamento }
-            icon={ Clock }
-            textColor="text-blue-600"
-            iconColor="text-blue-600"
-          />
-          <StatCard
-            title="Atingidas"
-            value={ estatisticas.atingidas }
-            icon={ CheckCircle }
-            textColor="text-green-600"
-            iconColor="text-green-600"
-          />
-          <StatCard
-            title="Não Atingidas"
-            value={ estatisticas.naoAtingidas }
-            icon={ AlertTriangle }
-            textColor="text-destructive"
-            iconColor="text-destructive"
-          />
-          <StatCard
-            title="Taxa de Sucesso"
-            value={ `${estatisticas.mediaPercentual.toFixed(1)}%` }
-            icon={ TrendingUp }
-            textColor="text-primary"
-            iconColor="text-primary"
-            description="Metas concluídas vs total"
-          />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Card className="p-4 flex flex-col items-center justify-center text-center space-y-1">
+            <span className="text-xs text-muted-foreground uppercase font-medium">
+              Total
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">{estatisticas.total}</span>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </Card>
+
+          <Card className="p-4 flex flex-col items-center justify-center text-center space-y-1">
+            <span className="text-xs text-muted-foreground uppercase font-medium">
+              Em Andamento
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-blue-600">
+                {estatisticas.emAndamento}
+              </span>
+              <Clock className="h-4 w-4 text-blue-600" />
+            </div>
+          </Card>
+
+          <Card className="p-4 flex flex-col items-center justify-center text-center space-y-1">
+            <span className="text-xs text-muted-foreground uppercase font-medium">
+              Atingidas
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-green-600">
+                {estatisticas.atingidas}
+              </span>
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            </div>
+          </Card>
+
+          <Card className="p-4 flex flex-col items-center justify-center text-center space-y-1">
+            <span className="text-xs text-muted-foreground uppercase font-medium">
+              Não Atingidas
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-destructive">
+                {estatisticas.naoAtingidas}
+              </span>
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+            </div>
+          </Card>
+
+          <Card className="p-4 flex flex-col items-center justify-center text-center space-y-1">
+            <span className="text-xs text-muted-foreground uppercase font-medium">
+              Taxa de Sucesso
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-primary">
+                {estatisticas.mediaPercentual.toFixed(1)}%
+              </span>
+              <TrendingUp className="h-4 w-4 text-primary" />
+            </div>
+          </Card>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 items-end bg-muted/30 p-4 rounded-lg border">
+        <div className="flex flex-col md:flex-row gap-3 items-end bg-muted/40 p-3 rounded-lg border">
           <div className="w-full md:w-[200px] space-y-1">
             <Label className="text-xs">Filial</Label>
             <Controller
@@ -299,15 +250,11 @@ export default function MetasMensaisPage() {
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem
-                      value="all_filials_placeholder"
-                      disabled
-                      className="hidden"
-                    >
-                          Select...
+                    <SelectItem value="GLOBAL">
+                      Global (Todas as Filiais)
                     </SelectItem>
                     {filiaisList.map((f) => (
-                      <SelectItem key={ f } value={ f }>
+                      <SelectItem key={ f as string } value={ f as string }>
                         {f}
                       </SelectItem>
                     ))}
@@ -317,7 +264,7 @@ export default function MetasMensaisPage() {
             />
           </div>
 
-          <div className="w-full md:w-[200px] space-y-1">
+          <div className="w-full md:w-[150px] space-y-1">
             <Label className="text-xs">Status</Label>
             <Controller
               control={ control }
@@ -328,15 +275,11 @@ export default function MetasMensaisPage() {
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="EM_ANDAMENTO">
-                          Em andamento
-                    </SelectItem>
+                    <SelectItem value="EM_ANDAMENTO">Em andamento</SelectItem>
                     <SelectItem value="Concluida">Atingida</SelectItem>
-                    <SelectItem value="NAO_ATINGIDA">
-                          Não atingida
-                    </SelectItem>
+                    <SelectItem value="NAO_ATINGIDA">Não atingida</SelectItem>
                     <SelectItem value="PARCIALMENTE_CONCLUIDA">
-                          Parcialmente atingida
+                      Parcial
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -345,7 +288,7 @@ export default function MetasMensaisPage() {
           </div>
 
           {activeTab === "gear" && (
-            <div className="w-full md:w-[250px] space-y-1">
+            <div className="w-full md:w-[200px] space-y-1">
               <Label className="text-xs">Equipamento</Label>
               <Controller
                 control={ control }
@@ -382,10 +325,10 @@ export default function MetasMensaisPage() {
                 tab: activeTab,
               })
             }
-            className="w-full md:w-auto h-8"
+            className="h-8 px-2 text-muted-foreground hover:text-foreground"
+            title="Limpar Filtros"
           >
-            <FilterX className="mr-2 h-3 w-3" />
-                Limpar
+            <FilterX className="h-4 w-4" />
           </Button>
         </div>
 
@@ -406,11 +349,7 @@ export default function MetasMensaisPage() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {moneyGoals.map((meta) => (
-                    <GoalCard
-                      key={ meta.goalId }
-                      goal={ meta }
-                      onViewDetails={ handleViewDetails }
-                    />
+                    <GoalCard key={ meta.goalId } goal={ meta } />
                   ))}
                 </div>
               )}
@@ -424,23 +363,13 @@ export default function MetasMensaisPage() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {equipmentGoals.map((meta) => (
-                    <GoalCard
-                      key={ meta.goalId }
-                      goal={ meta }
-                      onViewDetails={ handleViewDetails }
-                    />
+                    <GoalCard key={ meta.goalId } goal={ meta } />
                   ))}
                 </div>
               )}
             </div>
           </TabsContent>
         </Tabs>
-
-        <GoalDetailsDialog
-          goal={ selectedGoal }
-          open={ detailsOpen }
-          onOpenChange={ setDetailsOpen }
-        />
       </div>
     </RouteGuard>
   );

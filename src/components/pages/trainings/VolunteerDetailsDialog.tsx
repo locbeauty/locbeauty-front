@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   X,
   Filter,
+  Hash,
 } from "lucide-react";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { Volunteer } from "@/utils/@types/volunteer";
@@ -58,6 +59,7 @@ export function VolunteerDetailsDialog({
   allTrainings,
 }: VolunteerDetailsDialogProps) {
   const [ filterDate, setFilterDate ] = useState<string>("");
+  const [ filterId, setFilterId ] = useState<string>("");
 
   const trainingsList = useMemo(() => {
     if (!volunteer || !allTrainings) return [];
@@ -65,22 +67,32 @@ export function VolunteerDetailsDialog({
   }, [ volunteer, allTrainings ]);
 
   const filteredTrainings = useMemo(() => {
-    if (!filterDate) return trainingsList;
+    let result = trainingsList;
 
-    return trainingsList.filter((training) => {
-      if (!training.dueDate) return false;
+    if (filterDate) {
+      result = result.filter((training) => {
+        if (!training.dueDate) return false;
+        const trainingDate = new Date(training.dueDate);
+        trainingDate.setHours(0, 0, 0, 0);
+        const selectedDate = new Date(filterDate + "T00:00:00");
+        selectedDate.setHours(0, 0, 0, 0);
+        return trainingDate.getTime() === selectedDate.getTime();
+      });
+    }
 
-      const trainingDate = new Date(training.dueDate);
-      trainingDate.setHours(0, 0, 0, 0);
+    if (filterId) {
+      result = result.filter((training) =>
+        training.trainingId.toString().includes(filterId)
+      );
+    }
 
-      const selectedDate = new Date(filterDate + "T00:00:00");
-      selectedDate.setHours(0, 0, 0, 0);
+    return result;
+  }, [ trainingsList, filterDate, filterId ]);
 
-      return trainingDate.getTime() === selectedDate.getTime();
-    });
-  }, [ trainingsList, filterDate ]);
-
-  const clearFilter = () => setFilterDate("");
+  const clearFilter = () => {
+    setFilterDate("");
+    setFilterId("");
+  };
 
   if (!volunteer) return null;
 
@@ -159,23 +171,48 @@ export function VolunteerDetailsDialog({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1 bg-background border rounded-md px-2 py-0.5 shadow-sm hover:border-primary/50 transition-colors">
-                  <Filter className="h-3 w-3 text-muted-foreground" />
-                  <input
-                    type="date"
-                    className="h-6 w-28 text-xs bg-transparent border-none focus:outline-none focus:ring-0 text-muted-foreground"
-                    value={ filterDate }
-                    onChange={ (e) => setFilterDate(e.target.value) }
-                  />
-                  {filterDate && (
-                    <button
-                      onClick={ clearFilter }
-                      className="ml-1 text-muted-foreground hover:text-red-500"
-                      title="Limpar data"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
+                <div className="flex items-center gap-2">
+                  {/* ID Filter */}
+                  <div className="flex items-center gap-1 bg-background border rounded-md px-2 py-0.5 shadow-sm hover:border-primary/50 transition-colors">
+                    <Hash className="h-3 w-3 text-muted-foreground ml-1" />{" "}
+                    {/* Added ml-1 to align icon */}
+                    <input
+                      type="text"
+                      className="h-6 w-16 text-xs bg-transparent border-none focus:outline-none focus:ring-0 text-muted-foreground placeholder:text-muted-foreground/50"
+                      placeholder="ID"
+                      value={ filterId }
+                      onChange={ (e) => setFilterId(e.target.value) }
+                    />
+                    {filterId && (
+                      <button
+                        onClick={ () => setFilterId("") }
+                        className="ml-1 text-muted-foreground hover:text-red-500"
+                        title="Limpar ID"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Date Filter */}
+                  <div className="flex items-center gap-1 bg-background border rounded-md px-2 py-0.5 shadow-sm hover:border-primary/50 transition-colors">
+                    <Filter className="h-3 w-3 text-muted-foreground" />
+                    <input
+                      type="date"
+                      className="h-6 w-28 text-xs bg-transparent border-none focus:outline-none focus:ring-0 text-muted-foreground"
+                      value={ filterDate }
+                      onChange={ (e) => setFilterDate(e.target.value) }
+                    />
+                    {filterDate && (
+                      <button
+                        onClick={ () => setFilterDate("") }
+                        className="ml-1 text-muted-foreground hover:text-red-500"
+                        title="Limpar data"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -214,6 +251,9 @@ export function VolunteerDetailsDialog({
                         <div className="flex justify-between items-start">
                           <div>
                             <div className="font-medium flex items-center gap-2 text-base">
+                              <span className="text-xs text-muted-foreground font-normal bg-muted px-1.5 rounded border">
+                                #{training.trainingId}
+                              </span>
                               {training.Gear?.gearName || "Treinamento"}
                             </div>
                             <div className="text-xs text-muted-foreground flex items-center gap-3 mt-1">

@@ -61,7 +61,9 @@ export function TraineesTable({
       allTrainings.forEach((training) => {
         // Check trainee payments
         if (
-          training.TrainingPayment?.some((p) => p.paymentStatus === "Pendente")
+          training.TrainingPayment?.some(
+            (p) => p.paymentStatus === "Pendente" && p.payerType === "TRAINEE"
+          )
         ) {
           if (training.traineeId) traineesWithPending.add(training.traineeId);
         }

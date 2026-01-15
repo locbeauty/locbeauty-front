@@ -76,7 +76,7 @@ export function GoalDetailsDialog({
 
   return (
     <Dialog open={ open } onOpenChange={ onOpenChange }>
-      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-[80%] max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Detalhes da Meta</DialogTitle>
         </DialogHeader>
@@ -90,7 +90,7 @@ export function GoalDetailsDialog({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-auto">ID</TableHead>
+                  <TableHead className="">ID</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Status</TableHead>
@@ -101,8 +101,8 @@ export function GoalDetailsDialog({
               <TableBody>
                 {data?.details.map((item: GoalDetailItem, index) => (
                   <TableRow key={ `${item.id}-${index}` }>
-                    <TableCell className="font-mono text-xs text-muted-foreground break-all">
-                      {item.id.slice(0, 8)}...
+                    <TableCell className="font-mono text-xs text-muted-foreground break-all w-fit">
+                      {item.id}
                     </TableCell>
                     <TableCell>
                       {format(new Date(item.date), "dd/MM/yyyy")}

@@ -30,11 +30,12 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
 
   // Filters state
+  const [ filterId, setFilterId ] = useState("");
   const [ filterTrainee, setFilterTrainee ] = useState("");
   const [ filterVolunteer, setFilterVolunteer ] = useState("");
   const [ filterStatus, setFilterStatus ] = useState<"ALL" | string>("ALL");
   const [ filterPaymentStatus, setFilterPaymentStatus ] = useState<
-    "ALL" | "PENDING" | "PAID"
+    "ALL" | "PENDING" | "PAID" | "CANCELED"
   >("ALL");
   const [ filterDate, setFilterDate ] = useState<Date | undefined>(undefined);
 
@@ -44,6 +45,7 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
   };
 
   const clearFilters = () => {
+    setFilterId("");
     setFilterTrainee("");
     setFilterVolunteer("");
     setFilterStatus("ALL");
@@ -54,6 +56,13 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
   const sortedTrainings = useMemo(() => {
     if (!trainings) return [];
     let result = [ ...trainings ];
+
+    // ID Filter
+    if (filterId) {
+      result = result.filter((t) =>
+        t.trainingId.toLowerCase().includes(filterId.toLowerCase())
+      );
+    }
 
     // Trainee Name Filter
     if (filterTrainee) {
@@ -94,8 +103,13 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
             t.TrainingPayment?.length > 0 &&
             t.TrainingPayment.every(
               (p) =>
-                p.paymentStatus === "Pago" || p.paymentStatus === "Confirmado"
+                p.paymentStatus === "Pago" ||
+                (p.paymentStatus as string) === "Confirmado"
             )
+        );
+      } else if (filterPaymentStatus === "CANCELED") {
+        result = result.filter((t) =>
+          t.TrainingPayment?.some((p) => p.paymentStatus === "Cancelado")
         );
       }
     }
@@ -112,6 +126,7 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
     );
   }, [
     trainings,
+    filterId,
     filterTrainee,
     filterVolunteer,
     filterStatus,
@@ -159,6 +174,15 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="space-y-1">
+            <Label className="text-xs">ID</Label>
+            <Input
+              placeholder="ID do Treinamento"
+              value={ filterId }
+              onChange={ (e) => setFilterId(e.target.value) }
+              className="h-9 bg-background"
+            />
+          </div>
+          <div className="space-y-1">
             <Label className="text-xs">Aluno</Label>
             <Input
               placeholder="Nome do Aluno"
@@ -179,8 +203,8 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
           <div className="space-y-1">
             <Label className="text-xs">Data</Label>
             <DatePicker
-              value={ filterDate }
-              onChange={ setFilterDate }
+              value={ filterDate || null }
+              onChange={ (date) => setFilterDate(date || undefined) }
               placeholder="Selecione uma data"
               className="h-9 w-full bg-background"
               clearable
@@ -205,7 +229,9 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
             <Select
               value={ filterPaymentStatus }
               onValueChange={ (v) =>
-                setFilterPaymentStatus(v as "ALL" | "PENDING" | "PAID")
+                setFilterPaymentStatus(
+                  v as "ALL" | "PENDING" | "PAID" | "CANCELED"
+                )
               }
             >
               <SelectTrigger className="h-9 bg-background">
@@ -215,6 +241,7 @@ export function TrainingsTable({ trainings }: TrainingsTableProps) {
                 <SelectItem value="ALL">Todos</SelectItem>
                 <SelectItem value="PENDING">Pendente</SelectItem>
                 <SelectItem value="PAID">Pago</SelectItem>
+                <SelectItem value="CANCELED">Cancelado</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -12,6 +12,7 @@ export const paymentStatuses = [
   "Parcial",
   "Reembolsado",
   "Cortesia",
+  "Cancelado",
 ] as const;
 export const checkoutStatuses = [ "Pendente", "Concluido", "Cancelado" ] as const;
 

@@ -19,14 +19,14 @@ export function VolunteersTable({
   volunteers,
   allTrainings,
 }: VolunteersTableProps) {
-  const [selectedVolunteer, setSelectedVolunteer] = useState<Volunteer | null>(
+  const [ selectedVolunteer, setSelectedVolunteer ] = useState<Volunteer | null>(
     null
   );
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
 
   // Filters
-  const [filterName, setFilterName] = useState("");
-  const [filterPending, setFilterPending] = useState(false);
+  const [ filterName, setFilterName ] = useState("");
+  const [ filterPending, setFilterPending ] = useState(false);
 
   const handleOpenDetails = (volunteer: Volunteer) => {
     setSelectedVolunteer(volunteer);
@@ -40,7 +40,7 @@ export function VolunteersTable({
 
   const sortedVolunteers = useMemo(() => {
     if (!volunteers) return [];
-    let result = [...volunteers];
+    let result = [ ...volunteers ];
 
     // Name Filter
     if (filterName) {
@@ -54,7 +54,9 @@ export function VolunteersTable({
       const volunteersWithPending = new Set<string>();
       allTrainings.forEach((training) => {
         if (
-          training.TrainingPayment?.some((p) => p.paymentStatus === "Pendente")
+          training.TrainingPayment?.some(
+            (p) => p.paymentStatus === "Pendente" && p.payerType === "VOLUNTEER"
+          )
         ) {
           // Assuming a training tracks volunteerId. Wait, `Training` type has `Volunteer` relation or `volunteerId`?
           // The `Training` type usually has `volunteerId` or `Volunteer`.
@@ -70,7 +72,7 @@ export function VolunteersTable({
     }
 
     return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [volunteers, filterName, filterPending, allTrainings]);
+  }, [ volunteers, filterName, filterPending, allTrainings ]);
 
   const handleToggleDialog = (open: boolean, data: unknown) => {
     if (open && data) {
@@ -93,16 +95,16 @@ export function VolunteersTable({
             <Label className="text-xs">Nome do Modelo</Label>
             <Input
               placeholder="Buscar por nome..."
-              value={filterName}
-              onChange={(e) => setFilterName(e.target.value)}
+              value={ filterName }
+              onChange={ (e) => setFilterName(e.target.value) }
               className="h-9 bg-background"
             />
           </div>
           <div className="flex items-center space-x-2 border p-2 rounded-md h-9 bg-background px-3">
             <Switch
               id="pending-volunteer"
-              checked={filterPending}
-              onCheckedChange={setFilterPending}
+              checked={ filterPending }
+              onCheckedChange={ setFilterPending }
             />
             <Label
               htmlFor="pending-volunteer"
@@ -115,7 +117,7 @@ export function VolunteersTable({
             <Button
               variant="ghost"
               size="sm"
-              onClick={clearFilters}
+              onClick={ clearFilters }
               className="text-muted-foreground h-9"
             >
               <X className="h-3 w-3 mr-1" /> Limpar
@@ -137,14 +139,14 @@ export function VolunteersTable({
           <tbody>
             {sortedVolunteers.length === 0 && (
               <tr>
-                <td className="text-center p-4" colSpan={4}>
+                <td className="text-center p-4" colSpan={ 4 }>
                   {volunteers ? "Nenhum modelo encontrado." : "Carregando..."}
                 </td>
               </tr>
             )}
             {sortedVolunteers.map((volunteer) => (
               <tr
-                key={volunteer.volunteerId}
+                key={ volunteer.volunteerId }
                 className="border-t hover:bg-muted/50"
               >
                 <td className="p-3 text-sm font-medium">{volunteer.name}</td>
@@ -156,7 +158,7 @@ export function VolunteersTable({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleOpenDetails(volunteer)}
+                    onClick={ () => handleOpenDetails(volunteer) }
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -171,8 +173,8 @@ export function VolunteersTable({
       <div className="md:hidden space-y-4">
         {sortedVolunteers.map((volunteer) => (
           <ResponsiveCard
-            key={volunteer.volunteerId}
-            cardData={{
+            key={ volunteer.volunteerId }
+            cardData={ {
               id: volunteer.volunteerId,
               title: volunteer.name,
               description: "Paciente Modelo",
@@ -183,9 +185,9 @@ export function VolunteersTable({
                 },
                 { itemLabel: "Tel: ", itemInfo: volunteer.cellphone },
               ],
-            }}
-            rawData={volunteer}
-            handleToggleDialog={handleToggleDialog}
+            } }
+            rawData={ volunteer }
+            handleToggleDialog={ handleToggleDialog }
           />
         ))}
         {sortedVolunteers.length === 0 && (
@@ -196,10 +198,10 @@ export function VolunteersTable({
       </div>
 
       <VolunteerDetailsDialog
-        isOpen={isDetailsOpen}
-        setIsOpen={setIsDetailsOpen}
-        volunteer={selectedVolunteer}
-        allTrainings={allTrainings}
+        isOpen={ isDetailsOpen }
+        setIsOpen={ setIsDetailsOpen }
+        volunteer={ selectedVolunteer }
+        allTrainings={ allTrainings }
       />
     </>
   );

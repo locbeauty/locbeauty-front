@@ -113,10 +113,8 @@ export function CancelTrainingConfirmationDialog({
       "Cancelado",
       somePaymentIsDone ? wasRefunded : undefined,
       feeInCents,
-      hasCancellationFee ? canceledBy : undefined,
-      hasCancellationFee && cancellationDate
-        ? new Date(cancellationDate + "T12:00:00")
-        : null,
+      canceledBy || "TRAINEE",
+      new Date(),
       hasCancellationFee && cancellationFeePaymentDate
         ? new Date(cancellationFeePaymentDate + "T12:00:00")
         : null,
@@ -191,23 +189,6 @@ export function CancelTrainingConfirmationDialog({
           {hasCancellationFee && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="canceled-by" className="text-sm font-medium">
-                  Quem está cancelando?
-                </Label>
-                <select
-                  id="canceled-by"
-                  value={ canceledBy }
-                  onChange={ (e) =>
-                    setCanceledBy(e.target.value as "VOLUNTEER" | "TRAINEE")
-                  }
-                  className="w-full px-3 py-2 border rounded-md bg-background"
-                >
-                  <option value="TRAINEE">Aluno</option>
-                  <option value="VOLUNTEER">Paciente modelo</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
                 <Label
                   htmlFor="cancellation-fee"
                   className="text-sm font-medium"
@@ -218,21 +199,6 @@ export function CancelTrainingConfirmationDialog({
                   withLabel={ false }
                   value={ cancellationFee }
                   onChange={ (value) => setCancellationFee(value) }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label
-                  htmlFor="cancellation-date"
-                  className="text-sm font-medium"
-                >
-                  Data do cancelamento
-                </Label>
-                <Input
-                  type="date"
-                  id="cancellation-date"
-                  value={ cancellationDate }
-                  onChange={ (e) => setCancellationDate(e.target.value) }
                 />
               </div>
 
