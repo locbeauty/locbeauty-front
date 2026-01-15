@@ -129,8 +129,61 @@ export const createCheckoutFormSchema = z
     paymentInfo: checkoutPaymentDataSchema, // Usa o esquema aninhado acima
 
     observations: z.string().trim().optional(),
+
+    // New fields for cross-day bookings
+    crossDays: z.boolean().optional(),
+    endDate: z.date().optional(),
+    endHourInMinutes: z.number().optional(),
   })
   .superRefine((data, ctx) => {
+    // Validate Cross Days Logic
+    if (data.crossDays) {
+      if (!data.endDate) {
+        ctx.addIssue({
+          path: [ "endDate" ],
+          code: z.ZodIssueCode.custom,
+          message:
+            "Data final é obrigatória quando 'Agendamento atravessa dias' está marcado.",
+        });
+      }
+
+      // We allow 0 (midnight) so check undefined
+      if (
+        data.endHourInMinutes === undefined ||
+        data.endHourInMinutes === null
+      ) {
+        ctx.addIssue({
+          path: [ "endHourInMinutes" ],
+          code: z.ZodIssueCode.custom,
+          message: "Horário final é obrigatório.",
+        });
+      }
+
+      if (
+        data.date &&
+        data.endDate &&
+        data.endHourInMinutes !== undefined &&
+        data.startHourInMinutes !== undefined
+      ) {
+        const start = new Date(data.date);
+        start.setHours(0, 0, 0, 0); // Reset time part of date just in case
+        // Add minutes
+        start.setMinutes(start.getMinutes() + data.startHourInMinutes);
+
+        const end = new Date(data.endDate);
+        end.setHours(0, 0, 0, 0);
+        end.setMinutes(end.getMinutes() + data.endHourInMinutes);
+
+        if (end <= start) {
+          ctx.addIssue({
+            path: [ "endDate" ],
+            code: z.ZodIssueCode.custom,
+            message: "A data/hora final deve ser posterior à inicial.",
+          });
+        }
+      }
+    }
+
     // 🎯 REGRA NOVA: Se "Parcial", o valor da 1ª parcela deve ser MENOR que o total.
     if (data.paymentStatus === "Parcial") {
       const totalCents = parseStringToCents(data.totalPrice);

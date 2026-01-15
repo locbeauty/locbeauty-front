@@ -95,6 +95,7 @@ export type UpdateCheckoutPayload = {
   isCourtesy?: boolean;
   wasRefunded?: boolean;
   cancellationFee?: number;
+  refundAmount?: number;
   CheckoutPayment: PaymentMethodData;
 };
 
@@ -139,6 +140,8 @@ function getStatusColor(status: string) {
     return "bg-yellow-500";
   case "Pendente":
     return "bg-red-500";
+  case "Cortesia":
+    return "bg-blue-500";
   default:
     return "bg-gray-500";
   }
@@ -168,9 +171,12 @@ export function CheckoutPaymentMethodDialog({
     useState<PaymentStatuses>("Pendente");
   const [ paymentMode, setPaymentMode ] = useState<PaymentModes>("AVista");
 
-  const [ isCourtesy, setIsCourtesy ] = useState(false);
-  const [ wasRefunded, setWasRefunded ] = useState(false);
-  const [ cancellationFee, setCancellationFee ] = useState<string>("0,00");
+  /* REMOVED: isCourtesy, wasRefunded (global), cancellationFee (global state used differently now) */
+  // We still need local state for tracking changes, but we will track per-parcel refund status visually
+  // Note: Persisted data only has `wasRefunded` and `cancellationFee`.
+  // Refactor: Unified refund state for "Parcial" status
+  const [ isRefunded, setIsRefunded ] = useState(false);
+  const [ refundAmount, setRefundAmount ] = useState("0,00");
 
   const [ firstPaymentAmount, setFirstPaymentAmount ] = useState("0,00");
   const [ firstPaymentDate, setFirstPaymentDate ] = useState("");
@@ -215,10 +221,7 @@ export function CheckoutPaymentMethodDialog({
     // Compara cada campo do estado atual com o valor original
     const isSame =
       checkoutStatus === selectedCheckout.checkoutStatus &&
-      isCourtesy === (selectedCheckout.isCourtesy || false) &&
-      wasRefunded === (selectedCheckout.wasRefunded || false) &&
-      cancellationFee ===
-        centsToString(selectedCheckout.cancellationFee || 0) &&
+      // Removed isCourtesy, wasRefunded, cancellationFee from strict comparison here as they are derived/computed now
       paymentStatus === payment.paymentStatus &&
       paymentMode === payment.paymentMode &&
       firstPaymentAmount === centsToString(payment.firstPaymentAmount || 0) &&
@@ -230,8 +233,12 @@ export function CheckoutPaymentMethodDialog({
       secondPaymentDate === formatDateForInput(payment.secondPaymentDate) &&
       secondPaymentMethod === payment.secondPaymentMethod &&
       // Use o valor original com o default correto
-      secondPaymentStatus === originalSecondPaymentStatus; // <--- CORRIGIDO
-
+      secondPaymentStatus === originalSecondPaymentStatus &&
+      // Check refund changes
+      isRefunded === selectedCheckout.wasRefunded &&
+      (isRefunded
+        ? refundAmount === centsToString(selectedCheckout.refundAmount || 0)
+        : true);
     // Retorna 'true' se for DIFERENTE (ou seja, se mudou)
     return !isSame;
   }, [
@@ -248,10 +255,12 @@ export function CheckoutPaymentMethodDialog({
     secondPaymentDate,
     secondPaymentMethod,
     secondPaymentStatus,
-    isCourtesy,
-    wasRefunded,
-    cancellationFee,
+    isRefunded,
+    refundAmount,
   ]);
+
+  const isRefundedStatus =
+    selectedCheckout?.CheckoutPayment.paymentStatus === "Reembolsado";
 
   useEffect(() => {
     if (selectedCheckout && isCheckoutPaymentMethodDialogOpen) {
@@ -261,11 +270,19 @@ export function CheckoutPaymentMethodDialog({
         selectedCheckout?.CheckoutPayment.firstPaymentAmount;
       setCheckoutStatus(selectedCheckout.checkoutStatus);
       setPaymentStatus(payment.paymentStatus);
-      setPaymentStatus(payment.paymentStatus);
       setPaymentMode(payment.paymentMode);
-      setIsCourtesy(selectedCheckout.isCourtesy || false);
-      setWasRefunded(selectedCheckout.wasRefunded || false);
-      setCancellationFee(centsToString(selectedCheckout.cancellationFee || 0));
+
+      // Initialize Refund State
+      // Simplified: If wasRefunded is true, we assume it complies with the current single refund input
+      const isGlobalRefunded = selectedCheckout.wasRefunded || false;
+
+      if (isGlobalRefunded) {
+        setIsRefunded(true);
+        setRefundAmount(centsToString(selectedCheckout.refundAmount || 0));
+      } else {
+        setIsRefunded(false);
+        setRefundAmount("0,00");
+      }
 
       setFirstPaymentAmount(centsToString(payment.firstPaymentAmount || 0));
       setFirstPaymentDate(formatDateForInput(payment.firstPaymentDate));
@@ -297,7 +314,29 @@ export function CheckoutPaymentMethodDialog({
     }
   }, [ setFirstPaymentAmount, selectedCheckout, paymentStatus, paymentMode ]);
 
+  // Auto-calculate second parcel amount when first amount changes
+  useEffect(() => {
+    if (
+      selectedCheckout &&
+      (paymentMode === "Parcelado" || paymentStatus === "Parcial")
+    ) {
+      const total = selectedCheckout.totalPrice;
+      const first = parseStringToCents(firstPaymentAmount);
+      const remaining = Math.max(0, total - first);
+      setSecondPaymentAmount(centsToString(remaining));
+    }
+  }, [
+    firstPaymentAmount,
+    paymentMode,
+    paymentStatus,
+    selectedCheckout,
+    setSecondPaymentAmount,
+  ]);
+
   async function handleSave() {
+    // Calculate total cancellation fee and wasRefunded status early for validation
+    const calculatedWasRefunded = isRefunded;
+
     const isValid = validateCheckoutForm({
       paymentStatus,
       paymentMode,
@@ -311,31 +350,61 @@ export function CheckoutPaymentMethodDialog({
       secondPaymentStatus,
       selectedCheckout,
       initialErrors,
+      isRefunded: calculatedWasRefunded,
       setErrors,
     });
     if (!selectedCheckout || !isValid) {
       return;
     }
 
-    if (wasRefunded) {
-      const cancellationFeeCents = parseStringToCents(cancellationFee);
-      if (cancellationFeeCents > selectedCheckout.totalPrice) {
+    // Calculate total cancellation fee
+    const calculatedRefundAmount = isRefunded
+      ? parseStringToCents(refundAmount)
+      : 0;
+
+    // Validate refund amounts locally
+    if (isRefunded) {
+      const paidAmount = parseStringToCents(firstPaymentAmount);
+      // Logic check: Refund usually shouldn't exceed what was paid.
+      // In "Parcial" mode, what was paid is the first parcel.
+      // In "Pago" mode, what was paid is everything.
+      // We'll check against firstPaymentAmount if Parcial, or Total if Pago?
+      // Actually, if status is Parcial, we only care about first parcel refund usually.
+      const refundVal = parseStringToCents(refundAmount);
+
+      const maxRefund =
+        paymentStatus === "Parcial" ? paidAmount : selectedCheckout.totalPrice; //Fallback or other logic for generic refund
+
+      if (refundVal > maxRefund) {
         toast.error(
-          "O valor do reembolso não pode ser maior que o valor total."
+          `O reembolso não pode ser maior que o valor pago (${centsToStringWithCurrencyMark(
+            maxRefund
+          )}).`
         );
         return;
       }
+    }
+
+    // Global cap check
+    if (calculatedRefundAmount > selectedCheckout.totalPrice) {
+      toast.error("O valor do reembolso não pode ser maior que o valor total.");
+      return;
     }
 
     setIsSubmitting(true);
 
     const payload: UpdateCheckoutPayload = {
       checkoutStatus,
-      isCourtesy,
-      wasRefunded,
-      cancellationFee: parseStringToCents(cancellationFee),
+      // isCourtesy removed from UI, so we keep existing or default (handled by other logic if needed, but here we just pass existing if possible?
+      // Actually per requirement 'isCourtesy' checkbox removed.
+      // If we don't send isCourtesy, backend might keep it? Or set to false/undefined?
+      // UpdateCheckoutPayload defines isCourtesy as optional.
+      // We should probably preserve the existing value if we aren't changing it.
+      isCourtesy: selectedCheckout.isCourtesy,
+      wasRefunded: calculatedWasRefunded,
+      refundAmount: calculatedRefundAmount,
       CheckoutPayment: {
-        paymentStatus,
+        paymentStatus: calculatedWasRefunded ? "Reembolsado" : paymentStatus,
         paymentMode,
 
         firstPaymentAmount: parseStringToCents(firstPaymentAmount),
@@ -367,6 +436,7 @@ export function CheckoutPaymentMethodDialog({
           isCourtesy: payload.isCourtesy ?? false,
           wasRefunded: payload.wasRefunded ?? false,
           cancellationFee: payload.cancellationFee ?? null,
+          refundAmount: payload.refundAmount ?? null,
           CheckoutPayment: {
             ...selectedCheckout.CheckoutPayment,
             ...payload.CheckoutPayment,
@@ -386,7 +456,9 @@ export function CheckoutPaymentMethodDialog({
                 : selectedCheckout.CheckoutPayment.secondPaymentStatus,
             paymentMode: paymentMode,
             paymentStatus:
-              secondPaymentMethod && secondPaymentDate ? "Pago" : paymentStatus,
+              secondPaymentMethod && secondPaymentDate
+                ? "Pago"
+                : payload.CheckoutPayment.paymentStatus,
           },
         };
 
@@ -432,13 +504,23 @@ export function CheckoutPaymentMethodDialog({
                 </Label>
                 <Select
                   disabled={ selectedCheckout.checkoutStatus === "Cancelado" }
-                  onValueChange={ (value: PaymentStatuses) =>
-                    setPaymentStatus(value)
-                  }
+                  onValueChange={ (value: PaymentStatuses) => {
+                    setPaymentStatus(value);
+                    if (value === "Parcial") {
+                      setPaymentMode("Parcelado");
+                      setFirstPaymentAmount("0,00");
+                      setFirstPaymentDate(
+                        new Date().toISOString().split("T")[0]
+                      );
+                    } else if (value === "Pago") {
+                      setPaymentMode("AVista");
+                    }
+                  } }
                   value={ paymentStatus }
                 >
                   <SelectTrigger
                     disabled={
+                      isRefundedStatus ||
                       selectedCheckout.CheckoutPayment.paymentStatus ===
                         "Pago" ||
                       (paymentStatus === "Parcial" &&
@@ -470,56 +552,7 @@ export function CheckoutPaymentMethodDialog({
             </div>
 
             <div className="flex flex-col gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="courtesy"
-                  checked={ isCourtesy }
-                  disabled={
-                    paymentStatus === "Parcial" && firstPaymentStatus === "Pago"
-                  }
-                  onCheckedChange={ (checked) =>
-                    setIsCourtesy(checked as boolean)
-                  }
-                />
-                <Label
-                  htmlFor="courtesy"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Cortesia
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="refunded"
-                  checked={ wasRefunded }
-                  disabled={
-                    firstPaymentStatus === "Pendente" &&
-                    secondPaymentStatus === "Pendente"
-                  }
-                  onCheckedChange={ (checked) =>
-                    setWasRefunded(checked as boolean)
-                  }
-                />
-                <Label
-                  htmlFor="refunded"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Foi Reembolsado?
-                </Label>
-              </div>
-
-              {wasRefunded && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">
-                    Taxa de Cancelamento / Reembolso
-                  </Label>
-                  <PriceInput
-                    value={ cancellationFee }
-                    onChange={ (value) => setCancellationFee(value) }
-                  />
-                </div>
-              )}
+              {/* Checkboxes removed as requested */}
             </div>
 
             {paymentStatus !== "Pendente" && (
@@ -533,7 +566,7 @@ export function CheckoutPaymentMethodDialog({
               </div>
             )}
           </div>
-          {paymentStatus !== "Pendente" && (
+          {paymentStatus !== "Pendente" && paymentStatus !== "Cortesia" && (
             <div className={ "bg-muted/30 p-4 rounded-lg border space-y-6" }>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -555,9 +588,11 @@ export function CheckoutPaymentMethodDialog({
                     </Label>
                     <PriceInput
                       disabled={
+                        isRefundedStatus ||
                         paymentStatus === "Pago" ||
                         selectedCheckout?.CheckoutPayment.paymentMode ===
-                          "Parcelado"
+                          "Parcelado" ||
+                        firstPaymentStatus === "Pago"
                       }
                       withLabel={ false }
                       value={ firstPaymentAmount || "0,00" }
@@ -576,10 +611,12 @@ export function CheckoutPaymentMethodDialog({
                     </Label>
                     <Input
                       disabled={
+                        isRefundedStatus ||
                         selectedCheckout.CheckoutPayment.paymentStatus ===
                           "Pago" ||
                         selectedCheckout?.CheckoutPayment.paymentMode ===
-                          "Parcelado"
+                          "Parcelado" ||
+                        firstPaymentStatus === "Pago"
                       }
                       type="date"
                       value={ firstPaymentDate }
@@ -602,10 +639,12 @@ export function CheckoutPaymentMethodDialog({
                     >
                       <SelectTrigger
                         disabled={
+                          isRefundedStatus ||
                           selectedCheckout.CheckoutPayment.paymentStatus ===
                             "Pago" ||
                           selectedCheckout?.CheckoutPayment.paymentMode ===
-                            "Parcelado"
+                            "Parcelado" ||
+                          firstPaymentStatus === "Pago"
                         }
                         className={
                           errors.paymentInfo?.firstPaymentMethod
@@ -676,6 +715,7 @@ export function CheckoutPaymentMethodDialog({
                         </Label>
                         <Input
                           disabled={
+                            isRefundedStatus ||
                             selectedCheckout.CheckoutPayment.paymentStatus ===
                               "Pendente" ||
                             selectedCheckout.CheckoutPayment
@@ -704,6 +744,7 @@ export function CheckoutPaymentMethodDialog({
                         >
                           <SelectTrigger
                             disabled={
+                              isRefundedStatus ||
                               selectedCheckout.CheckoutPayment.paymentStatus ===
                                 "Pendente" ||
                               selectedCheckout.CheckoutPayment
@@ -737,6 +778,54 @@ export function CheckoutPaymentMethodDialog({
                     </div>
                   </div>
                 </>
+              )}
+            </div>
+          )}
+
+          {/* Refund Section - Hide when Concluído unless already refunded */}
+          {(paymentStatus === "Pago" ||
+            firstPaymentStatus === "Pago" ||
+            secondPaymentStatus === "Pago" ||
+            selectedCheckout.CheckoutPayment.firstPaymentStatus === "Pago" ||
+            selectedCheckout.CheckoutPayment.secondPaymentStatus === "Pago") &&
+            (checkoutStatus !== "Concluido" ||
+              isRefunded ||
+              selectedCheckout.wasRefunded) && (
+            <div className="bg-red-50/50 p-4 rounded-lg border border-dashed border-red-200 mt-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <Checkbox
+                  id="refunded"
+                  checked={ isRefunded }
+                  disabled={
+                    selectedCheckout.CheckoutPayment.paymentStatus ===
+                      "Reembolsado"
+                  }
+                  onCheckedChange={ (checked) =>
+                    setIsRefunded(checked as boolean)
+                  }
+                />
+                <Label
+                  htmlFor="refunded"
+                  className="text-xs text-red-600 font-medium"
+                >
+                    Houve Reembolso?
+                </Label>
+              </div>
+
+              {isRefunded && (
+                <div className="pl-6 w-full sm:w-1/2">
+                  <Label className="text-xs text-muted-foreground">
+                      Valor do Reembolso
+                  </Label>
+                  <PriceInput
+                    disabled={
+                      selectedCheckout.CheckoutPayment.paymentStatus ===
+                        "Reembolsado"
+                    }
+                    value={ refundAmount }
+                    onChange={ (value) => setRefundAmount(value) }
+                  />
+                </div>
               )}
             </div>
           )}

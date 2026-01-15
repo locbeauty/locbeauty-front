@@ -97,6 +97,7 @@ export async function UpdateCheckout({
     isCourtesy?: boolean;
     wasRefunded?: boolean;
     cancellationFee?: number;
+    refundAmount?: number;
   };
   checkoutId: string;
 }) {

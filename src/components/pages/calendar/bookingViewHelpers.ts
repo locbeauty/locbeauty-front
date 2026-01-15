@@ -84,6 +84,23 @@ export function isToday(date: Date): boolean {
   return isSameDay(date, today);
 }
 
+export function isDateInRange(
+  targetDate: Date,
+  startDate: Date,
+  endDate: Date
+): boolean {
+  const target = new Date(targetDate);
+  target.setHours(0, 0, 0, 0);
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  return target >= start && target <= end;
+}
+
 export function getMonthDays(date: Date): Date[] {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -346,6 +363,7 @@ export function getEventBasicInfo(event: CalendarEvent) {
   let title = "";
   let durationInHours = 0;
   let startDate: Date;
+  let endDate: Date;
 
   if (isTraining) {
     const training = event as Training;
@@ -356,12 +374,17 @@ export function getEventBasicInfo(event: CalendarEvent) {
     startDate = new Date(training.dueDate);
     startDate.setHours(Math.floor(training.hourInMinutes / 60));
     startDate.setMinutes(training.hourInMinutes % 60);
+
+    endDate = new Date(startDate);
+    endDate.setHours(endDate.getHours() + durationInHours);
   } else if (isBirthday) {
     const birthday = event as BirthdayEvent;
     id = birthday.id;
     title = `${birthday.title} (${birthday.role})`;
     durationInHours = 1; // Arbitrary duration for birthday view
     startDate = new Date(birthday.date);
+    endDate = new Date(startDate);
+    endDate.setHours(endDate.getHours() + durationInHours);
   } else {
     const checkout = event as Checkout;
     id = checkout.checkoutId;
@@ -373,7 +396,18 @@ export function getEventBasicInfo(event: CalendarEvent) {
     startDate = new Date(checkout.date);
     startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
     startDate.setMinutes(checkout.startHourInMinutes % 60);
+
+    endDate = new Date(startDate);
+    endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
   }
 
-  return { isTraining, isBirthday, id, title, durationInHours, startDate };
+  return {
+    isTraining,
+    isBirthday,
+    id,
+    title,
+    durationInHours,
+    startDate,
+    endDate,
+  };
 }

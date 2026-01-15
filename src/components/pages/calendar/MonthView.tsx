@@ -8,6 +8,7 @@ import {
   isToday,
   CalendarEvent,
   getEventBasicInfo,
+  isDateInRange,
 } from "./bookingViewHelpers";
 import { CalendarMonthHeader } from "./CalendarMonthHeader";
 import { MobileMonthView } from "./MobileMonthView";
@@ -38,8 +39,8 @@ export function MonthView({
         <div className="grid grid-cols-7">
           {daysInCurrentMonth.map((day, index) => {
             const dayEvents = events.filter((event) => {
-              const { startDate } = getEventBasicInfo(event);
-              return isSameDay(startDate, day);
+              const { startDate, endDate } = getEventBasicInfo(event);
+              return isDateInRange(day, startDate, endDate);
             });
 
             const isCurrentMonth = day.getMonth() === currentDate.getMonth();

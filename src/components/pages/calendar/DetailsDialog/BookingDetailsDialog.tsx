@@ -389,22 +389,45 @@ export function BookingDetailsDialog({
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                      <Calendar className="h-3 w-3" /> Data
-                    </div>
-                    <div className="font-medium">
-                      {formatDate(selectedCheckout.date)}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                      <Clock className="h-3 w-3" /> Horário
-                    </div>
-                    <div className="font-medium">
-                      {formatTime(startDate)} - {formatTime(endDate)}
-                    </div>
-                  </div>
+                  {differenceInCalendarDays(endDate, startDate) > 0 ? (
+                    <>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                          <Calendar className="h-3 w-3" /> Início
+                        </div>
+                        <div className="font-medium">
+                          {formatDate(startDate)} às {formatTime(startDate)}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                          <Clock className="h-3 w-3" /> Fim
+                        </div>
+                        <div className="font-medium">
+                          {formatDate(endDate)} às {formatTime(endDate)}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                          <Calendar className="h-3 w-3" /> Data
+                        </div>
+                        <div className="font-medium">
+                          {formatDate(selectedCheckout.date)}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                          <Clock className="h-3 w-3" /> Horário
+                        </div>
+                        <div className="font-medium">
+                          {formatTime(startDate)} - {formatTime(endDate)}
+                        </div>
+                      </div>
+                    </>
+                  )}
                   <div className="col-span-2 space-y-1 border-t pt-3 mt-1">
                     <div className="flex items-center gap-2 text-muted-foreground text-xs">
                       <Clock className="h-3 w-3" /> Duração Total

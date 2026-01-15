@@ -5,9 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Controller,
   FormProvider,
+  SubmitHandler,
   useForm,
   useFormContext,
 } from "react-hook-form";
+// ... imports ...
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectGear } from "./SelectGear";
 import {
@@ -20,6 +23,8 @@ import {
   Truck,
   X,
   Copy,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
@@ -28,7 +33,17 @@ import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import CheckoutTimeSelector from "./CheckoutTimeSelector";
+import CheckoutEndTimeSelector from "./CheckoutEndTimeSelector";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/DatePicker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { Button } from "@/components/ui/button";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
@@ -209,6 +224,9 @@ export function CreateBookingForm() {
       addressId: "",
       filialId: defaultFilialId || "",
       accountableEmployeeId: user?.employeeId || user?.sub,
+      crossDays: false,
+      endDate: undefined,
+      endHourInMinutes: undefined,
     },
   });
 
@@ -245,7 +263,57 @@ export function CreateBookingForm() {
   const watchAdditionalTransportCost = watch("additionalTransportCost");
   const watchConsumption = watch("consumption");
 
+  const watchCrossDays = watch("crossDays");
+  const watchEndDate = watch("endDate");
+  const watchEndHourInMinutes = watch("endHourInMinutes");
+
   const isDateInPast = selectedDate && selectedDate < new Date();
+
+  // Generate 24h time options
+  const timeOptions = useMemo(() => {
+    const opts = [];
+    for (let i = 0; i < 24 * 60; i += 15) {
+      opts.push({
+        value: i,
+        label: minutesToHHMM(i),
+      });
+    }
+    return opts;
+  }, []);
+
+  // Update total duration when cross-days fields change
+  useEffect(() => {
+    if (
+      watchCrossDays &&
+      selectedDate &&
+      startHour !== undefined &&
+      watchEndDate &&
+      watchEndHourInMinutes !== undefined
+    ) {
+      const start = new Date(selectedDate);
+      start.setHours(0, 0, 0, 0); // Reset time part
+      // Create a new date object to avoid mutating selectedDate if it's reused elsewhere (though Date is ref type)
+      // Actually simpler:
+      const startTimeMs = start.getTime() + startHour * 60 * 1000;
+
+      const end = new Date(watchEndDate);
+      end.setHours(0, 0, 0, 0);
+      const endTimeMs = end.getTime() + watchEndHourInMinutes * 60 * 1000;
+
+      if (endTimeMs > startTimeMs) {
+        const diffMs = endTimeMs - startTimeMs;
+        const diffMins = Math.floor(diffMs / 60000);
+        setValue("totalDurationInMinutes", diffMins);
+      }
+    }
+  }, [
+    watchCrossDays,
+    selectedDate,
+    startHour,
+    watchEndDate,
+    watchEndHourInMinutes,
+    setValue,
+  ]);
 
   useEffect(() => {
     const base = parseStringToCents(watchBasePrice || "0");
@@ -317,12 +385,15 @@ export function CreateBookingForm() {
       foodCost: "0",
       fuelCost: "0",
       lodgingCost: "0",
+      crossDays: false,
+      endDate: undefined,
+      endHourInMinutes: undefined,
     });
   }
 
-  async function handleCreateNewCheckout(
-    newCheckoutData: CreateCheckoutFormSchemaType
-  ) {
+  const handleCreateNewCheckout: SubmitHandler<
+    CreateCheckoutFormSchemaType
+  > = async (newCheckoutData) => {
     const parsed = {
       ...newCheckoutData,
       consumption: newCheckoutData.consumption || 10,
@@ -379,23 +450,17 @@ export function CreateBookingForm() {
     } else {
       toast.warning(response.message);
     }
-  }
+  };
 
   return (
     <div>
       <div className="space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
         <div className="ml-auto mr-auto w-[50%]">
-          <Controller
+          <SelectFilial
             control={ control }
             name="filialId"
-            render={ ({ field }) => (
-              <SelectFilial
-                control={ control }
-                name={ field.name }
-                accessibleFilials={ accessibleFilialsIds }
-                defaultFilial={ defaultFilialId }
-              />
-            ) }
+            accessibleFilials={ accessibleFilialsIds }
+            defaultFilial={ defaultFilialId }
           />
         </div>
       </div>
@@ -478,6 +543,10 @@ export function CreateBookingForm() {
               control={ control }
               checkoutSchedule={ checkoutSchedule }
             />
+
+            {watchCrossDays && (
+              <CheckoutEndTimeSelector control={ control } name="endDate" />
+            )}
 
             {/* Observações */}
             <Card className="transition-all duration-200 hover:shadow-md">

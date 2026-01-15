@@ -19,6 +19,7 @@ export type Checkout = {
   isCourtesy: boolean;
   wasRefunded: boolean;
   cancellationFee: number | null;
+  refundAmount: number | null;
   CheckoutPayment: CheckoutPayment;
   driverId: string;
   AccountableEmployee: {
