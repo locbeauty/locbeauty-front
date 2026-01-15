@@ -19,7 +19,9 @@ import { parseStringToCents } from "@/utils/parseStringToCents";
 interface CancelTrainingConfirmationDialogProps {
   selectedTraining: Training | null;
   setSelectedTraining?: Dispatch<SetStateAction<Training | null>>;
-  setCurrentTrainingStatus: Dispatch<SetStateAction<"Pendente" | "Concluido" | "Cancelado">>
+  setCurrentTrainingStatus: Dispatch<
+    SetStateAction<"Pendente" | "Concluido" | "Cancelado">
+  >;
   setCancelTrainingConfirmationDialogOpen: Dispatch<SetStateAction<boolean>>;
   isCancelTrainingConfirmationDialogOpen: boolean;
   handleUpdateTrainingStatus: (
@@ -76,7 +78,7 @@ export function CancelTrainingConfirmationDialog({
       <DialogContent className="max-h-[90vh] w-[90vw] md:w-[500px] overflow-hidden dark:bg-gray-900">
         <DialogHeader className="space-y-2 text-center">
           <DialogTitle className="text-2xl font-semibold text-red-600">
-            Confirmar cancelamento
+            Confirmar cancelamentoasdasdasda
           </DialogTitle>
           <DialogDescription className="text-base text-gray-500 dark:text-gray-400 leading-relaxed">
             Este treinamento está previsto para acontecer{" "}
@@ -117,7 +119,7 @@ export function CancelTrainingConfirmationDialog({
             {selectedTraining.dueDate && (
               <p>
                 <span className="font-medium text-gray-700 dark:text-gray-200">
-                  Data do treinamento:
+                  Data do treinamento:asddasasd
                 </span>{" "}
                 {trainingDate.toLocaleDateString("pt-BR")}
               </p>

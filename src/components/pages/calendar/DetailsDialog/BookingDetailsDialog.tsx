@@ -174,28 +174,34 @@ export function BookingDetailsDialog({
   ) {
     let response;
 
-    if (wasRefunded && checkoutStatus === "Cancelado") {
+    // Use UpdateCheckout API if we need to set cancellation fee or mark as refunded
+    if (
+      (cancellationFee !== null && checkoutStatus === "Cancelado") ||
+      (wasRefunded && checkoutStatus === "Cancelado")
+    ) {
       const payment = selectedCheckout!.CheckoutPayment;
       response = await UpdateCheckout({
         checkoutId,
         body: {
           checkoutStatus: "Cancelado",
-          CheckoutPayment: {
-            paymentStatus: "Reembolsado",
-            paymentMode: payment.paymentMode,
-            firstPaymentAmount: payment.firstPaymentAmount,
-            firstPaymentDate: payment.firstPaymentDate
-              ? new Date(payment.firstPaymentDate)
-              : null,
-            firstPaymentMethod: payment.firstPaymentMethod,
-            firstPaymentStatus: payment.firstPaymentStatus,
-            secondPaymentAmount: payment.secondPaymentAmount,
-            secondPaymentDate: payment.secondPaymentDate
-              ? new Date(payment.secondPaymentDate)
-              : null,
-            secondPaymentMethod: payment.secondPaymentMethod,
-            secondPaymentStatus: payment.secondPaymentStatus,
-          },
+          CheckoutPayment: wasRefunded
+            ? {
+              paymentStatus: "Reembolsado",
+              paymentMode: payment.paymentMode,
+              firstPaymentAmount: payment.firstPaymentAmount,
+              firstPaymentDate: payment.firstPaymentDate
+                ? new Date(payment.firstPaymentDate)
+                : null,
+              firstPaymentMethod: payment.firstPaymentMethod,
+              firstPaymentStatus: payment.firstPaymentStatus,
+              secondPaymentAmount: payment.secondPaymentAmount,
+              secondPaymentDate: payment.secondPaymentDate
+                ? new Date(payment.secondPaymentDate)
+                : null,
+              secondPaymentMethod: payment.secondPaymentMethod,
+              secondPaymentStatus: payment.secondPaymentStatus,
+            }
+            : undefined,
           cancellationFee: cancellationFee ?? undefined,
         },
       });
