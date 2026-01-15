@@ -176,11 +176,16 @@ export function GoalCard({ goal }: { goal: Goal }) {
             )}
           </div>
 
-          <div className="text-muted-foreground">
-            {current < target ? (
-              <span>Faltam {formatValue(target - current)}</span>
-            ) : (
-              <span className="text-green-600 font-medium">Meta Batida!</span>
+          <div className="flex flex-col items-end">
+            {current < target && (
+              <span className="text-[10px] text-muted-foreground">
+                {formatValue(current)} / {formatValue(target)}
+              </span>
+            )}
+            {current >= target && (
+              <span className="text-green-600 font-medium text-[10px]">
+                Meta Batida!
+              </span>
             )}
           </div>
         </div>
