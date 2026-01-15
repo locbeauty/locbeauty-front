@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GetAllTrainees } from "@/services/trainees.service";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +21,11 @@ import { CreateVolunteerDialog } from "@/components/pages/trainings/CreateVolunt
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { findAllFilials } from "@/services/filials.service";
+import { Filial } from "@/utils/@types/filials";
+import { USER_ROLES } from "@/utils/constants";
+import { useAuth } from "@/contexts/auth-provider";
+import { useAccess } from "@/contexts/access-provider";
 
 export default function Treinamentos() {
   const [ activeTab, setActiveTab ] = useState("treinamentos");
@@ -52,10 +57,89 @@ export default function Treinamentos() {
     staleTime: 1000 * 60,
   });
 
+  const filialsData = useQuery<Filial[], Error>({
+    queryKey: [ "get-all-filials" ],
+    queryFn: () => findAllFilials(),
+    staleTime: 1000 * 60,
+  });
+
   const volunteers = volunteersData.data?.data;
   const trainees = traineesData.data?.data;
   const trainings = trainingsData.data?.data;
   const gears = gearsData.data?.data;
+  const { user } = useAuth();
+  const { accesses } = useAccess();
+
+  const filials = filialsData.data;
+
+  // Filtrar filiais baseado no acesso do usuário
+  const accessibleFilials = useMemo(() => {
+    if (!filials) return [];
+    if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER)
+      return filials;
+
+    const accessibleFilialIds = accesses
+      .filter((a) => a.module === SYSTEM_MODULES.TRAININGS && a.canView)
+      .map((a) => a.filialId);
+
+    return filials.filter((f) => accessibleFilialIds.includes(f.filialId));
+  }, [ filials, user, accesses ]);
+
+  // Filtrar dados baseado nas filiais acessíveis
+  const filteredData = useMemo(() => {
+    const accessibleFilialIds = accessibleFilials.map((f) => f.filialId);
+
+    // Se for ADMIN/MASTER, accessibleFilials já contém todas as filiais (ou a lógica acima retorna todas)
+    // Mas para garantir, se user é ADMIN/MASTER, retornamos tudo sem filtro adicional
+    if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
+      return {
+        trainings: trainings,
+        trainees: trainees,
+        volunteers: volunteers,
+      };
+    }
+
+    // Filtrar Treinamentos
+    const filteredTrainings = trainings?.filter((t) =>
+      accessibleFilialIds.includes(t.sourceFilialId)
+    );
+
+    // Filtrar Alunos (aqueles que tem pelo menos um treinamento em uma filial acessível)
+    // Precisamos cruzar com os treinamentos filtrados ou verificar todos os treinamentos do aluno?
+    // Se o aluno fez um curso na filial A (acessível) e B (não acessível), devo ver o aluno? Sim.
+    // Devo ver o curso da filial B? Não (já filtrado na lista de treinamentos).
+    // Mas na lista de alunos, ele deve aparecer.
+
+    // Set de IDs de alunos que tem treinamento nas filiais acessíveis
+    const visibleTraineeIds = new Set<string>();
+    trainings?.forEach((t) => {
+      if (accessibleFilialIds.includes(t.sourceFilialId) && t.traineeId) {
+        visibleTraineeIds.add(t.traineeId);
+      }
+    });
+
+    const filteredTrainees = trainees?.filter((t) =>
+      visibleTraineeIds.has(t.traineeId)
+    );
+
+    // Filtrar Voluntários (mesma lógica)
+    const visibleVolunteerIds = new Set<string>();
+    trainings?.forEach((t) => {
+      if (accessibleFilialIds.includes(t.sourceFilialId) && t.volunteerId) {
+        visibleVolunteerIds.add(t.volunteerId);
+      }
+    });
+
+    const filteredVolunteers = volunteers?.filter((v) =>
+      visibleVolunteerIds.has(v.volunteerId)
+    );
+
+    return {
+      trainings: filteredTrainings,
+      trainees: filteredTrainees,
+      volunteers: filteredVolunteers,
+    };
+  }, [ trainings, trainees, volunteers, accessibleFilials, user ]);
 
   // Filter Logic removed from here, to be handled in child components or similar if desired.
   // Actually, for cleaner Props drilling, we might want to keep the data passing simple.
@@ -75,7 +159,6 @@ export default function Treinamentos() {
           </div>
         </div>
 
-        {/* Tabs */}
         <Tabs
           value={ activeTab }
           onValueChange={ setActiveTab }
@@ -115,19 +198,27 @@ export default function Treinamentos() {
           </div>
           {/* Tab Treinamentos */}
           <TabsContent value="treinamentos" className="space-y-4">
-            <TrainingsTable trainings={ trainings } />
+            <TrainingsTable
+              trainings={ filteredData.trainings }
+              filials={ accessibleFilials }
+            />
           </TabsContent>
 
           {/* Tab Alunos */}
           <TabsContent value="alunos" className="space-y-4">
-            <TraineesTable trainees={ trainees } allTrainings={ trainings || [] } />
+            <TraineesTable
+              trainees={ filteredData.trainees }
+              allTrainings={ filteredData.trainings || [] }
+              filials={ accessibleFilials }
+            />
           </TabsContent>
 
           {/* Tab Volunteeres */}
           <TabsContent value="Volunteeres" className="space-y-4">
             <VolunteersTable
-              volunteers={ volunteers }
-              allTrainings={ trainings || [] }
+              volunteers={ filteredData.volunteers }
+              allTrainings={ filteredData.trainings || [] }
+              filials={ accessibleFilials }
             />
           </TabsContent>
         </Tabs>

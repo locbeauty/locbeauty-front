@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   X,
   Filter,
+  Building2,
 } from "lucide-react";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { Trainee } from "@/utils/@types/trainee";
@@ -337,6 +338,12 @@ export function TraineeDetailsDialog({
                                 )}
                               </span>
                             </div>
+                            {training.SourceFilial && (
+                              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                <Building2 className="h-3 w-3" />
+                                <span>{training.SourceFilial.filialName}</span>
+                              </div>
+                            )}
                           </div>
                           {payment && (
                             <Badge

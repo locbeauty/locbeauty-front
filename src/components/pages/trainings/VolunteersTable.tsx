@@ -3,21 +3,31 @@ import { Eye, Filter, X } from "lucide-react";
 
 import { Volunteer } from "@/utils/@types/volunteer";
 import { Training } from "@/utils/@types/training";
+import { Filial } from "@/utils/@types/filials";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { VolunteerDetailsDialog } from "./VolunteerDetailsDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface VolunteersTableProps {
   volunteers: Volunteer[] | undefined;
   allTrainings: Training[];
+  filials?: Filial[];
 }
 
 export function VolunteersTable({
   volunteers,
   allTrainings,
+  filials,
 }: VolunteersTableProps) {
   const [ selectedVolunteer, setSelectedVolunteer ] = useState<Volunteer | null>(
     null
@@ -27,6 +37,7 @@ export function VolunteersTable({
   // Filters
   const [ filterName, setFilterName ] = useState("");
   const [ filterPending, setFilterPending ] = useState(false);
+  const [ filterFilial, setFilterFilial ] = useState<string>("all");
 
   const handleOpenDetails = (volunteer: Volunteer) => {
     setSelectedVolunteer(volunteer);
@@ -36,6 +47,7 @@ export function VolunteersTable({
   const clearFilters = () => {
     setFilterName("");
     setFilterPending(false);
+    setFilterFilial("all");
   };
 
   const sortedVolunteers = useMemo(() => {
@@ -71,8 +83,20 @@ export function VolunteersTable({
       result = result.filter((v) => volunteersWithPending.has(v.volunteerId));
     }
 
+    // Filial Filter
+    if (filterFilial && filterFilial !== "all") {
+      const volunteersInFilial = new Set<string>();
+      allTrainings.forEach((training) => {
+        if (training.sourceFilialId === filterFilial) {
+          if (training.volunteerId)
+            volunteersInFilial.add(training.volunteerId);
+        }
+      });
+      result = result.filter((v) => volunteersInFilial.has(v.volunteerId));
+    }
+
     return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [ volunteers, filterName, filterPending, allTrainings ]);
+  }, [ volunteers, filterName, filterPending, filterFilial, allTrainings ]);
 
   const handleToggleDialog = (open: boolean, data: unknown) => {
     if (open && data) {
@@ -99,6 +123,22 @@ export function VolunteersTable({
               onChange={ (e) => setFilterName(e.target.value) }
               className="h-9 bg-background"
             />
+          </div>
+          <div className="space-y-1 w-full sm:w-[200px]">
+            <Label className="text-xs">Filial</Label>
+            <Select value={ filterFilial } onValueChange={ setFilterFilial }>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {filials?.map((filial) => (
+                  <SelectItem key={ filial.filialId } value={ filial.filialId }>
+                    {filial.filialName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center space-x-2 border p-2 rounded-md h-9 bg-background px-3">
             <Switch
@@ -131,6 +171,7 @@ export function VolunteersTable({
           <thead className="bg-muted">
             <tr>
               <th className="text-left p-3 font-medium">Nome</th>
+              <th className="text-left p-3 font-medium">Filiais</th>
               <th className="text-left p-3 font-medium">CPF</th>
               <th className="text-center p-3 font-medium">Telefone</th>
               <th className="text-center p-3 font-medium">Detalhes</th>
@@ -139,57 +180,82 @@ export function VolunteersTable({
           <tbody>
             {sortedVolunteers.length === 0 && (
               <tr>
-                <td className="text-center p-4" colSpan={ 4 }>
+                <td className="text-center p-4" colSpan={ 5 }>
                   {volunteers ? "Nenhum modelo encontrado." : "Carregando..."}
                 </td>
               </tr>
             )}
-            {sortedVolunteers.map((volunteer) => (
-              <tr
-                key={ volunteer.volunteerId }
-                className="border-t hover:bg-muted/50"
-              >
-                <td className="p-3 text-sm font-medium">{volunteer.name}</td>
-                <td className="p-3 text-sm">{volunteer.documentNumber}</td>
-                <td className="p-3 text-center text-sm">
-                  {volunteer.cellphone}
-                </td>
-                <td className="p-3 flex justify-center items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={ () => handleOpenDetails(volunteer) }
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
+            {sortedVolunteers.map((volunteer) => {
+              const volunteerFilials = Array.from(
+                new Set(
+                  allTrainings
+                    .filter((t) => t.volunteerId === volunteer.volunteerId)
+                    .map((t) => t.SourceFilial?.filialName)
+                    .filter(Boolean)
+                )
+              ).join(", ");
+              return (
+                <tr
+                  key={ volunteer.volunteerId }
+                  className="border-t hover:bg-muted/50"
+                >
+                  <td className="p-3 text-sm font-medium">{volunteer.name}</td>
+                  <td className="p-3 text-sm">{volunteerFilials || "N/A"}</td>
+                  <td className="p-3 text-sm">{volunteer.documentNumber}</td>
+                  <td className="p-3 text-center text-sm">
+                    {volunteer.cellphone}
+                  </td>
+                  <td className="p-3 flex justify-center items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={ () => handleOpenDetails(volunteer) }
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       {/* Mobile View */}
       <div className="md:hidden space-y-4">
-        {sortedVolunteers.map((volunteer) => (
-          <ResponsiveCard
-            key={ volunteer.volunteerId }
-            cardData={ {
-              id: volunteer.volunteerId,
-              title: volunteer.name,
-              description: "Paciente Modelo",
-              items: [
-                {
-                  itemLabel: "CPF: ",
-                  itemInfo: volunteer.documentNumber || "N/A",
-                },
-                { itemLabel: "Tel: ", itemInfo: volunteer.cellphone },
-              ],
-            } }
-            rawData={ volunteer }
-            handleToggleDialog={ handleToggleDialog }
-          />
-        ))}
+        {sortedVolunteers.map((volunteer) => {
+          const volunteerFilials = Array.from(
+            new Set(
+              allTrainings
+                .filter((t) => t.volunteerId === volunteer.volunteerId)
+                .map((t) => t.SourceFilial?.filialName)
+                .filter(Boolean)
+            )
+          ).join(", ");
+          return (
+            <ResponsiveCard
+              key={ volunteer.volunteerId }
+              cardData={ {
+                id: volunteer.volunteerId,
+                title: volunteer.name,
+                description: "Paciente Modelo",
+                items: [
+                  {
+                    itemLabel: "Filiais: ",
+                    itemInfo: volunteerFilials || "N/A",
+                  },
+                  {
+                    itemLabel: "CPF: ",
+                    itemInfo: volunteer.documentNumber || "N/A",
+                  },
+                  { itemLabel: "Tel: ", itemInfo: volunteer.cellphone },
+                ],
+              } }
+              rawData={ volunteer }
+              handleToggleDialog={ handleToggleDialog }
+            />
+          );
+        })}
         {sortedVolunteers.length === 0 && (
           <p className="text-center text-muted-foreground py-8">
             {volunteers ? "Nenhum modelo encontrado." : "Carregando..."}

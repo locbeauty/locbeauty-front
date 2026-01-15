@@ -20,6 +20,7 @@ import {
   X,
   Filter,
   Hash,
+  Building2,
 } from "lucide-react";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { Volunteer } from "@/utils/@types/volunteer";
@@ -275,6 +276,12 @@ export function VolunteerDetailsDialog({
                                 )}
                               </span>
                             </div>
+                            {training.SourceFilial && (
+                              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                <Building2 className="h-3 w-3" />
+                                <span>{training.SourceFilial.filialName}</span>
+                              </div>
+                            )}
                           </div>
                           <BookingStatusBadge
                             status={ training.trainingStatus }
