@@ -1,29 +1,37 @@
-import DocumentInput from "../../../shared/DocumentInput";
 import { SelectRole } from "@/components/shared/SelectRole";
+import { MaskedDateInput } from "./MaskedDateInput";
 import PhoneInput from "../../../shared/PhoneInput";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Controller, useFormContext } from "react-hook-form";
 import { CreateEmployeeFormSchemaType } from "@/lib/zod/CreateEmployeeValidation";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { SelectFilial } from "@/components/shared/SelectFilial";
 import { useAuth } from "@/contexts/auth-provider";
-import { useAccess } from "@/contexts/access-provider";
-import { SYSTEM_MODULES } from "@/utils/@types/access";
-import { USER_ROLES } from "@/utils/constants";
 import {
   User,
-  FileText,
   Calendar as CalendarIcon,
   Briefcase,
-  Building,
   Phone,
   Mail,
   Lock,
+  Loader2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDebounceValue } from "usehooks-ts";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
-export function EmployeeForm() {
+interface EmployeeFormProps {
+  isEditing?: boolean;
+  currentUsername?: string;
+}
+
+export function EmployeeForm({
+  isEditing = false,
+  currentUsername,
+}: EmployeeFormProps) {
   const {
     register,
     watch,
@@ -34,52 +42,82 @@ export function EmployeeForm() {
     trigger,
     formState: { errors },
   } = useFormContext<CreateEmployeeFormSchemaType>();
-  const [ confirmPassword, setConfirmPassword ] = useState("");
 
+  const [confirmPassword, setConfirmPassword] = useState("");
   const birthdate = watch("birthdate");
   const password = watch("password");
+  const username = watch("username");
+
+  const [debouncedUsername] = useDebounceValue(username, 500);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<
+    boolean | null
+  >(null);
+
+  useEffect(() => {
+    async function checkUsername() {
+      if (!debouncedUsername || debouncedUsername.length < 3) {
+        setIsUsernameAvailable(null);
+        return;
+      }
+
+      if (currentUsername && debouncedUsername === currentUsername) {
+        setIsUsernameAvailable(true);
+        clearErrors("username");
+        return;
+      }
+
+      // Don't check if there are already other errors on valid fields (optional optimization)
+
+      setIsCheckingUsername(true);
+      try {
+        const response = await fetchWithToken(
+          `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/check-availability?username=${debouncedUsername}`
+        );
+        const data = await response.json();
+
+        if (data.available) {
+          setIsUsernameAvailable(true);
+          clearErrors("username");
+        } else {
+          setIsUsernameAvailable(false);
+          setError("username", { message: "Username já está em uso." });
+        }
+      } catch (error) {
+        console.error("Error checking username availability:", error);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    }
+
+    checkUsername();
+  }, [debouncedUsername, setError, clearErrors, currentUsername]);
 
   useEffect(() => {
     if (password !== confirmPassword && confirmPassword.length > 0) {
       setError("password", { message: "Senhas não batem." });
     } else {
       clearErrors("password");
-      setConfirmPassword("");
     }
-  }, [ setError, clearErrors, password, confirmPassword ]);
-
-  const { user } = useAuth();
-  const { accesses } = useAccess();
-
-  const accessibleFilials = useMemo(() => {
-    if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
-      return undefined;
-    }
-    return accesses
-      .filter((a) => a.module === SYSTEM_MODULES.EMPLOYEES && a.canView)
-      .map((a) => a.filialId);
-  }, [ user, accesses ]);
+  }, [setError, clearErrors, password, confirmPassword]);
 
   return (
     <div className="space-y-6">
-      {/* Personal Information Section */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b">
-          <User className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-medium">Dados Pessoais</h3>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
+      {/* Dados Pessoais */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" /> Dados Pessoais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="fullname" className="flex items-center gap-2">
-              <User className="w-4 h-4 text-muted-foreground" />
-              Nome Completo
-            </Label>
+            <Label htmlFor="fullname">Nome Completo</Label>
             <Input
-              { ...register("fullname") }
+              {...register("fullname")}
               id="fullname"
               placeholder="Ex: Maria Silva"
-              className="placeholder:text-placeholder"
+              disabled={isEditing}
             />
             {errors.fullname && (
               <p className="text-xs font-medium text-destructive">
@@ -89,48 +127,44 @@ export function EmployeeForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="documentNumber" className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-muted-foreground" />
-              CPF
-            </Label>
-            <DocumentInput
-              isCPF={ true }
-              placeholder="000.000.000-00"
-              register={ register("documentNumber") }
-            />
-            {errors.documentNumber && (
+            <Label htmlFor="username">Username</Label>
+            <div className="relative">
+              <Input
+                {...register("username")}
+                id="username"
+                placeholder="Ex: mariasilva"
+              />
+              <div className="absolute right-3 top-2.5">
+                {isCheckingUsername ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : isUsernameAvailable === true ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : isUsernameAvailable === false ? (
+                  <XCircle className="h-4 w-4 text-destructive" />
+                ) : null}
+              </div>
+            </div>
+            {errors.username && (
               <p className="text-xs font-medium text-destructive">
-                {errors.documentNumber.message}
+                {errors.username.message}
               </p>
             )}
           </div>
-        </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="birthdate" className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-              Data de Nascimento
-            </Label>
+            <Label htmlFor="birthdate">Data de Nascimento</Label>
             <Controller
-              control={ control }
+              control={control}
               name="birthdate"
-              render={ () => (
-                <DatePicker
+              render={({ field: { value, onChange } }) => (
+                <MaskedDateInput
                   id="birthdate"
-                  placeholder="Selecione a data"
-                  value={ birthdate }
-                  onChange={ (date) => {
-                    setValue("birthdate", date!);
-                    trigger("birthdate");
-                  } }
-                  classNames={ {
-                    trigger:
-                      errors.birthdate &&
-                      "border-destructive focus-visible:ring-destructive",
-                  } }
+                  value={value}
+                  onChange={onChange}
+                  error={errors.birthdate?.message}
+                  disabled={isEditing}
                 />
-              ) }
+              )}
             />
             {errors.birthdate && (
               <p className="text-xs font-medium text-destructive">
@@ -140,52 +174,28 @@ export function EmployeeForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="role" className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-muted-foreground" />
-              Cargo
-            </Label>
-            <SelectRole control={ control } name="role" />
+            <Label htmlFor="role">Cargo</Label>
+            <SelectRole control={control} name="role" />
             {errors.role && (
               <p className="text-xs font-medium text-destructive">
                 {errors.role.message}
               </p>
             )}
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="space-y-2">
-          <Label htmlFor="sourceFilialId" className="flex items-center gap-2">
-            <Building className="w-4 h-4 text-muted-foreground" />
-            Filial de Origem
-          </Label>
-          <SelectFilial
-            control={ control }
-            name="sourceFilialId"
-            accessibleFilials={ accessibleFilials }
-            placeholder="Selecione a filial principal"
-          />
-          {errors.sourceFilialId && (
-            <p className="text-xs font-medium text-destructive">
-              {errors.sourceFilialId.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Contact Section */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b mt-6">
-          <Phone className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-medium">Contato</h3>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
+      {/* Contato */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="h-5 w-5" /> Contato
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="cellphone" className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-muted-foreground" />
-              Telefone
-            </Label>
-            <PhoneInput register={ register("cellphone") } />
+            <Label htmlFor="cellphone">Telefone</Label>
+            <PhoneInput register={register("cellphone")} />
             {errors.cellphone && (
               <p className="text-xs font-medium text-destructive">
                 {errors.cellphone.message}
@@ -194,16 +204,12 @@ export function EmployeeForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-muted-foreground" />
-              Email
-            </Label>
+            <Label htmlFor="email">Email</Label>
             <Input
-              { ...register("email") }
+              {...register("email")}
               id="email"
               type="email"
               placeholder="exemplo@email.com"
-              className="placeholder:text-placeholder"
             />
             {errors.email && (
               <p className="text-xs font-medium text-destructive">
@@ -211,47 +217,34 @@ export function EmployeeForm() {
               </p>
             )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Security Section */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b mt-6">
-          <Lock className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-medium">Segurança</h3>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
+      {/* Segurança */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5" /> Segurança
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="password" className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-muted-foreground" />
-              Senha
-            </Label>
+            <Label htmlFor="password">Senha</Label>
             <Input
-              { ...register("password") }
+              {...register("password")}
               id="password"
               type="password"
               placeholder="Senha de acesso"
-              className="placeholder:text-placeholder"
             />
-            {/* Note: Password error display depends on if it's required during edit.
-                Commonly only show if error exists. */}
           </div>
 
           <div className="space-y-2">
-            <Label
-              htmlFor="confirmPassword"
-              className="flex items-center gap-2"
-            >
-              <Lock className="w-4 h-4 text-muted-foreground" />
-              Confirmar Senha
-            </Label>
+            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
             <Input
-              onChange={ (e) => setConfirmPassword(e.target.value) }
+              onChange={(e) => setConfirmPassword(e.target.value)}
               id="confirmPassword"
               type="password"
               placeholder="Repita a senha"
-              className="placeholder:text-placeholder"
             />
             {errors.password && (
               <p className="text-xs font-medium text-destructive">
@@ -259,8 +252,8 @@ export function EmployeeForm() {
               </p>
             )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

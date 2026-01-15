@@ -25,8 +25,10 @@ export function UpdateEmployeeForm({
   const { user } = useAuth();
   return (
     <>
-      <EmployeeForm />
-      <FilialUpdateAddressForm />
+      <EmployeeForm
+        isEditing={true}
+        currentUsername={selectedEmployee.username}
+      />
 
       {user?.role === USER_ROLES.GERENTE && (
         <>
@@ -38,7 +40,7 @@ export function UpdateEmployeeForm({
               Gerencie as permissões de acesso deste funcionário por filial. As
               alterações são salvas automaticamente.
             </p>
-            <AccessControlDialog employee={ selectedEmployee } />
+            <AccessControlDialog employee={selectedEmployee} />
           </div>
         </>
       )}

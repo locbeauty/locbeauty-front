@@ -21,51 +21,35 @@ import { LoaderCircle } from "lucide-react";
 import DocumentInput from "@/components/shared/DocumentInput";
 
 const LoginSchema = z.object({
-  documentNumber: z.string(),
-  password: z.string()
+  username: z.string().min(1, "Username é obrigatório"),
+  password: z.string(),
 });
 
-type LoginSchemaType = z.infer<typeof LoginSchema>
+type LoginSchemaType = z.infer<typeof LoginSchema>;
 
 export default function LoginPage() {
   const [ errorMessage, setErrorMessage ] = useState("");
 
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<LoginSchemaType>({
-    resolver: zodResolver(LoginSchema)
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<LoginSchemaType>({
+    resolver: zodResolver(LoginSchema),
   });
 
-  // async function handleLogin({ documentNumber, password }: LoginSchemaType) {
-  //     const res = await fetch("https://locbeauty-fastify.onrender.com/api/signin", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ documentNumber, password }),
-  //     });
-
-  //     const loginResponse = await res.json();
-
-  //     if(res.status !== 200) {
-  //         setErrorMessage(loginResponse.error);
-  //     }
-
-  //     console.log("accessToken: ", loginResponse.accessToken);
-  //     localStorage.setItem("accessToken", loginResponse.accessToken);
-
-  //     if(loginResponse.success === true) {
-  //         redirect("/dashboard");
-  //     }
-  // }
   const router = useRouter();
 
-  async function handleLogin({ documentNumber, password }: LoginSchemaType) {
+  async function handleLogin({ username, password }: LoginSchemaType) {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/signin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ documentNumber, password }),
+      body: JSON.stringify({ username, password }),
     });
 
     const loginResponse = await res.json();
 
-    if(res.status !== 200) {
+    if (res.status !== 200) {
       setErrorMessage(loginResponse.error);
       return;
     }
@@ -76,14 +60,12 @@ export default function LoginPage() {
   }
 
   useEffect(() => {
-
     const token = localStorage.getItem("accessToken");
 
     if (token) {
       redirect("/dashboard");
       return;
     }
-
   }, []);
 
   return (
@@ -91,7 +73,13 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-6">
         <div className="flex flex-col items-center space-y-2 mb-6">
           <div className="size-36 bg-primary rounded-full flex items-center justify-center">
-            <Image src="/logo.png" alt="logo" width={ 100 } height={ 100 } className="text-green-500" />
+            <Image
+              src="/logo.png"
+              alt="logo"
+              width={ 100 }
+              height={ 100 }
+              className="text-green-500"
+            />
           </div>
           <h1 className="text-3xl font-bold text-primary">Sistema de Gestão</h1>
         </div>
@@ -107,20 +95,39 @@ export default function LoginPage() {
             <form id="login-form" onSubmit={ handleSubmit(handleLogin) }>
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="documentNumber">CPF</Label>
-                  <DocumentInput isCPF={ true } placeholder="000.000.000-00" register={ register("documentNumber") } />
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    placeholder="Digite seu username"
+                    { ...register("username") }
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="password">Senha</Label>
-                  <Input { ...register("password") } name="password" id="password" type="password" />
+                  <Input
+                    { ...register("password") }
+                    name="password"
+                    id="password"
+                    type="password"
+                  />
                 </div>
               </div>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <span className="text-red-600 text-sm font-medium">{errorMessage && errorMessage }</span>
-            <Button disabled={ isSubmitting } type="submit" form="login-form" className="w-full cursor-pointer">
-              { isSubmitting ? <LoaderCircle className="animate-spin" /> : "Entrar"}
+            <span className="text-red-600 text-sm font-medium">
+              {errorMessage && errorMessage}
+            </span>
+            <Button
+              disabled={ isSubmitting }
+              type="submit"
+              form="login-form"
+              className="w-full cursor-pointer"
+            >
+              {isSubmitting ? (
+                <LoaderCircle className="animate-spin" />
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </CardFooter>
         </Card>

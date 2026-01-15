@@ -36,9 +36,9 @@ export function CreateEmployeeForm() {
 
   const defaultFilialId =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
-      ? user?.sourceFilial.filialId
-      : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
-        ? user?.sourceFilial.filialId
+      ? user?.sourceFilial?.filialId
+      : accessibleFilialsIds?.includes(user?.sourceFilial?.filialId || "")
+        ? user?.sourceFilial?.filialId
         : accessibleFilialsIds?.[0];
 
   const CreateEmployeeMethods = useForm<CreateEmployeeFormSchemaType>({
@@ -71,7 +71,7 @@ export function CreateEmployeeForm() {
         toast.warning(data.message, { style: { fontSize: "1rem" } });
         window.scroll({ top: 0 });
         if (response.status === 409) {
-          setError("documentNumber", { message: "Documento já cadastrado." });
+          setError("username", { message: "Username já cadastrado." });
         }
       } else {
         toast.success("Funcionário criado com sucesso!", {
@@ -114,7 +114,6 @@ export function CreateEmployeeForm() {
             )}
           </div>
           <EmployeeForm />
-          <EmployeeAddressForm />
         </FormProvider>
       </form>
     </CardContent>

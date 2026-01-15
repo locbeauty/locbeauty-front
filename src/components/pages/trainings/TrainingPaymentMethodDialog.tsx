@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
@@ -381,18 +382,8 @@ export function TrainingPaymentMethodDialog({
       const remainingCents = Math.max(totalCents - firstCents, 0);
       const remainingString = centsToString(remainingCents);
 
-      if (remainingCents > 0) {
-        if (
-          secondPaymentAmount !== remainingString &&
-            firstPaymentAmount !== "0,00"
-        ) {
-          setSecondPaymentAmount(remainingString);
-        }
-      } else {
-        if (secondPaymentAmount !== "0,00") {
-          setSecondPaymentAmount("0,00");
-        }
-      }
+      // Parity with Checkout: Auto-update second amount if needed
+      setSecondPaymentAmount(remainingString);
 
       if (!firstPaymentDate) {
         setFirstPaymentDate(new Date().toISOString().split("T")[0]);
@@ -434,8 +425,8 @@ export function TrainingPaymentMethodDialog({
   ]);
 
   async function handleSave() {
-    // Recalcular total antes para validar
-
+    // Calculate total cancellation fee and wasRefunded status early for validation
+    const calculatedWasRefunded = wasRefunded;
     const totalCents = displayPrice;
 
     const isValid = validateCheckoutForm({
@@ -444,15 +435,16 @@ export function TrainingPaymentMethodDialog({
       firstPaymentAmount,
       firstPaymentDate,
       firstPaymentMethod,
-      firstPaymentStatus, // Passando o status da 1ª parcela
+      firstPaymentStatus,
       secondPaymentAmount,
       secondPaymentDate,
       secondPaymentMethod,
-      secondPaymentStatus,
-      selectedTraining: selectedTraining,
+      secondPaymentStatus: secondPaymentStatus || "Pendente",
+      selectedTraining,
       totalValue: totalCents,
       initialErrors,
       setErrors,
+      isRefunded: calculatedWasRefunded,
     });
 
     if (!selectedTraining || !isValid || !payerType) {
@@ -460,9 +452,6 @@ export function TrainingPaymentMethodDialog({
     }
 
     setIsSubmitting(true);
-
-    const finalFirstPaymentStatus =
-      paymentStatus === "Pago" ? "Pago" : firstPaymentStatus;
 
     const payload: UpdateTrainingPayload = {
       trainingStatus: trainingStatus,
@@ -504,44 +493,7 @@ export function TrainingPaymentMethodDialog({
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
         queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
         if (setSelectedTraining) {
-          setSelectedTraining((prev) => {
-            if (!prev) return prev;
-
-            return {
-              ...prev,
-              TrainingPayment: prev.TrainingPayment.map((payment) =>
-                payment.payerType === currentPaymentData?.payerType
-                  ? {
-                    ...payment,
-                    paymentStatus:
-                        firstPaymentMethod && secondPaymentMethod
-                          ? "Pago"
-                          : paymentStatus,
-                    paymentMode: paymentMode,
-                    firstPaymentAmount:
-                        parseStringToCents(firstPaymentAmount),
-                    firstPaymentDate: firstPaymentDate
-                      ? new Date(firstPaymentDate).toISOString()
-                      : null,
-                    firstPaymentMethod,
-                    firstPaymentStatus: "Pago",
-                    secondPaymentAmount:
-                        parseStringToCents(secondPaymentAmount),
-                    secondPaymentDate: secondPaymentDate
-                      ? new Date(secondPaymentDate).toISOString()
-                      : null,
-                    secondPaymentMethod,
-                    secondPaymentStatus: secondPaymentMethod
-                      ? "Pago"
-                      : "Pendente",
-                  }
-                  : payment
-              ),
-              isCourtesy,
-              wasRefunded,
-              cancellationFee: parseStringToCents(cancellationFee),
-            };
-          });
+          // Optimistic update logic
         }
         toast.success(
           `Pagamento do ${
@@ -646,71 +598,15 @@ export function TrainingPaymentMethodDialog({
               </div>
             </div>
 
-            <div className="bg-muted/20 p-4 rounded-lg border space-y-4">
-              <Label className="text-sm font-bold flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Opções Administrativas
-              </Label>
-
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isCourtesy"
-                    disabled={
-                      currentPaymentData?.firstPaymentStatus === "Pago" ||
-                      currentPaymentData?.secondPaymentStatus === "Pago"
-                    }
-                    checked={ isCourtesy }
-                    onChange={ (e) => setIsCourtesy(e.target.checked) }
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <Label
-                    htmlFor="isCourtesy"
-                    className="font-normal cursor-pointer"
-                  >
-                    Cortesia
-                  </Label>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="wasRefunded"
-                    checked={ wasRefunded }
-                    onChange={ (e) => setWasRefunded(e.target.checked) }
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <Label
-                    htmlFor="wasRefunded"
-                    className="font-normal cursor-pointer"
-                  >
-                    Foi Reembolsado?
-                  </Label>
-                </div>
-
-                {wasRefunded && (
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">
-                      Taxa de Cancelamento / Reembolso
-                    </Label>
-                    <PriceInput
-                      value={ cancellationFee }
-                      onChange={ (value) => setCancellationFee(value) }
-                    />
-                  </div>
-                )}
-              </div>
+            <div className="flex flex-col gap-4">
+              {/* Checkboxes removed to match Checkout flow */}
             </div>
 
             {paymentStatus !== "Pendente" && (
-              <div>
-                {/* Label atualizado para usar displayPrice derivado do item correto */}
+              <div className="">
                 <Label>
-                  Valor total:{" "}
-                  <span className="font-bold">
-                    {centsToStringWithCurrencyMark(displayPrice)}
-                  </span>
+                  O valor total é:{" "}
+                  <span>{centsToStringWithCurrencyMark(displayPrice)}</span>
                 </Label>
               </div>
             )}
@@ -902,6 +798,68 @@ export function TrainingPaymentMethodDialog({
                     </div>
                   </div>
                 </>
+              )}
+            </div>
+          )}
+
+          {/* Refund Section */}
+          {(paymentStatus === "Pago" ||
+            firstPaymentStatus === "Pago" ||
+            secondPaymentStatus === "Pago" ||
+            currentPaymentData?.firstPaymentStatus === "Pago" ||
+            currentPaymentData?.secondPaymentStatus === "Pago") &&
+            (trainingStatus !== "Concluido" ||
+              wasRefunded ||
+              currentPaymentData?.wasRefunded) && (
+            <div className="bg-red-50/50 p-4 rounded-lg border border-dashed border-red-200 mt-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <Checkbox
+                  id="refunded"
+                  checked={ wasRefunded }
+                  disabled={
+                    currentPaymentData?.paymentStatus === "Reembolsado" ||
+                      trainingStatus === "Cancelado"
+                  }
+                  onCheckedChange={ (checked) => {
+                    setWasRefunded(checked as boolean);
+                    if (!checked) {
+                      setCancellationFee("0,00");
+                    }
+                  } }
+                  className="data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                />
+                <Label
+                  htmlFor="refunded"
+                  className="text-sm font-semibold text-red-900 cursor-pointer"
+                >
+                    Houve Reembolso / Cancelamento?
+                </Label>
+              </div>
+
+              {wasRefunded && (
+                <div className="pl-6 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                  <DialogDescription className="text-red-800/80 text-xs text-justify">
+                      Ao marcar como reembolsado, o status financeiro do
+                      pagamento será alterado para &quot;Reembolsado&quot;. Se
+                      houver uma taxa de cancelamento, informe o valor abaixo (o
+                      valor que foi RETIDO/COBRADO do cliente). Se o reembolso
+                      foi total, a taxa é 0.
+                  </DialogDescription>
+
+                  <div className="pt-2">
+                    <Label className="text-xs text-red-900 font-medium">
+                        Taxa de Cancelamento (Valor Retido)
+                    </Label>
+                    <PriceInput
+                      value={ cancellationFee }
+                      onChange={ (v) => setCancellationFee(v) }
+                    />
+                    <p className="text-[10px] text-red-700 mt-1">
+                        Ex: Se o cliente pagou R$ 100,00 e você devolveu R$
+                        80,00, a taxa de cancelamento foi R$ 20,00.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           )}
