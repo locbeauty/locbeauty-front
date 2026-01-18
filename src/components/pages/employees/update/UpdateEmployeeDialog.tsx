@@ -25,7 +25,7 @@ interface UpdateEmployeeDialogProps {
   setSelectedEmployee: Dispatch<SetStateAction<Employee | null>>;
   handleToggleUpdateEmployeeDialog: (
     _openStatus: boolean,
-    _employee: Employee | null
+    _employee: Employee | null,
   ) => void;
 }
 
@@ -61,8 +61,13 @@ export function UpdateEmployeeDialog({
   }, [ reset, selectedEmployee, isUpdateEmployeeDialogOpen ]);
 
   async function handleUpdateEmployee(
-    updatedEmployeeData: UpdateEmployeeFormSchemaType
+    updatedEmployeeData: UpdateEmployeeFormSchemaType,
   ) {
+    const payload = { ...updatedEmployeeData };
+    if (!payload.password) {
+      delete payload.password;
+    }
+
     try {
       const response = await fetchWithToken(
         `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/update?employeeId=${selectedEmployee.employeeId}`,
@@ -72,8 +77,8 @@ export function UpdateEmployeeDialog({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(updatedEmployeeData),
-        }
+          body: JSON.stringify(payload),
+        },
       );
       const data = await response.json();
 

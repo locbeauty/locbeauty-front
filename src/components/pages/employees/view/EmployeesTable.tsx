@@ -24,7 +24,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
   const [ totalEmployees, setTotalEmployees ] = useState(0);
   const [ pagination, setPagination ] = useState({ page: 1, limit: 10 });
   const [ selectedEmployee, setSelectedEmployee ] = useState<Employee | null>(
-    null
+    null,
   );
 
   const [ isEmployeeDetailsDialogOpen, setIsEmployeeDetailsDialogOpen ] =
@@ -38,7 +38,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
 
   const handleToggleUpdateEmployeeDialog = (
     openStatus: boolean,
-    employee: Employee | null
+    employee: Employee | null,
   ) => {
     if (openStatus) {
       setSelectedEmployee(employee);
@@ -49,7 +49,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
 
   function handleToggleEmployeeDetailsDialog(
     openStatus: boolean,
-    employee: Employee | null
+    employee: Employee | null,
   ) {
     setSelectedEmployee(employee);
     setIsEmployeeDetailsDialogOpen(openStatus);
@@ -80,7 +80,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         }/employees?${queryParams.toString()}`,
         {
           credentials: "include",
-        }
+        },
       );
 
       const { data } = await response.json();
@@ -104,7 +104,6 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
           <thead className="bg-muted">
             <tr>
               <th className="text-left p-3 font-medium">Nome</th>
-              <th className="text-left p-3 font-medium">CPF</th>
               <th className="text-center p-3 font-medium">Cargo</th>
               <th className="text-center p-3 font-medium">Filial</th>
               <th className="text-center p-3 font-medium">Telefone</th>
@@ -115,7 +114,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
           <tbody>
             {allEmployees?.length === 0 && (
               <tr>
-                <td className="text-center p-4" colSpan={ 8 }>
+                <td className="text-center p-4" colSpan={ 6 }>
                   Nada a mostrar por aqui.
                 </td>
               </tr>
@@ -124,7 +123,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               allEmployees
                 .filter(
                   (employee) =>
-                    employee.employeeId !== (user?.employeeId || user?.sub)
+                    employee.employeeId !== (user?.employeeId || user?.sub),
                 )
                 .map((employee) => (
                   <tr
@@ -132,7 +131,6 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                     className="border-t hover:bg-muted/50"
                   >
                     <td className="p-3 text-sm">{employee.fullname}</td>
-                    <td className="p-3 text-sm">{employee.documentNumber}</td>
                     <td className="p-3 text-center text-sm">{employee.role}</td>
                     <td className="p-3 text-center text-sm">
                       {employee.SourceFilial.filialName}
@@ -212,11 +210,11 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               const pages = [];
               let startPage = Math.max(
                 1,
-                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2)
+                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2),
               );
               const endPage = Math.min(
                 totalPages,
-                startPage + MAX_VISIBLE_PAGES - 1
+                startPage + MAX_VISIBLE_PAGES - 1,
               );
 
               if (endPage - startPage + 1 < MAX_VISIBLE_PAGES) {
@@ -233,7 +231,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                     onClick={ () => handlePageChange(i) }
                   >
                     {i}
-                  </Button>
+                  </Button>,
                 );
               }
               return pages;
@@ -261,32 +259,34 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         </div>
       </div>
 
-      {allEmployees
-        ?.filter(
-          (employee) =>
-            employee.employeeId !== (user?.employeeId || user?.sub)
-        )
-        .map((employee) => (
-          <Fragment key={ employee.employeeId }>
-            <ResponsiveCard
-              cardData={ {
-                id: employee.employeeId,
-                title: employee.fullname,
-                description: "",
-                items: [
-                  { itemLabel: "Função: ", itemInfo: employee.role },
-                  { itemLabel: "Email: ", itemInfo: employee.email ?? "-" },
-                  {
-                    itemLabel: "Telefone: ",
-                    itemInfo: employee.cellphone ?? "-",
-                  },
-                ],
-              } }
-              rawData={ employee }
-              handleToggleDialog={ handleToggleEmployeeDetailsDialog }
-            />
-          </Fragment>
-        ))}
+      <div className="md:hidden flex flex-col gap-4">
+        {allEmployees
+          ?.filter(
+            (employee) =>
+              employee.employeeId !== (user?.employeeId || user?.sub),
+          )
+          .map((employee) => (
+            <Fragment key={ employee.employeeId }>
+              <ResponsiveCard
+                cardData={ {
+                  id: employee.employeeId,
+                  title: employee.fullname,
+                  description: "",
+                  items: [
+                    { itemLabel: "Função: ", itemInfo: employee.role },
+                    { itemLabel: "Email: ", itemInfo: employee.email ?? "-" },
+                    {
+                      itemLabel: "Telefone: ",
+                      itemInfo: employee.cellphone ?? "-",
+                    },
+                  ],
+                } }
+                rawData={ employee }
+                handleToggleDialog={ handleToggleEmployeeDetailsDialog }
+              />
+            </Fragment>
+          ))}
+      </div>
 
       {/* Pagination Controls Mobile */}
       <div className="flex flex-col items-center justify-center space-y-4 py-4 md:hidden">
@@ -320,11 +320,11 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               const pages = [];
               let startPage = Math.max(
                 1,
-                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2)
+                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2),
               );
               const endPage = Math.min(
                 totalPages,
-                startPage + MAX_VISIBLE_PAGES - 1
+                startPage + MAX_VISIBLE_PAGES - 1,
               );
 
               if (endPage - startPage + 1 < MAX_VISIBLE_PAGES) {
@@ -341,7 +341,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                     onClick={ () => handlePageChange(i) }
                   >
                     {i}
-                  </Button>
+                  </Button>,
                 );
               }
               return pages;

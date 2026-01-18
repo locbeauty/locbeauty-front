@@ -16,4 +16,5 @@ export const ROUTES = {
   // VIEW_CALENDAR: "/bookings",
   TRAININGS: "/trainings",
   BIRTHDAYS: "/birthdays",
+  NOTICES: "/notices",
 };

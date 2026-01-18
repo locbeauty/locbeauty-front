@@ -3,8 +3,10 @@ import {
   Mail,
   Phone,
   User,
-  MapPin, Calendar,
-  Award, TrendingUp
+  MapPin,
+  Calendar,
+  Award,
+  TrendingUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +21,6 @@ interface EmployeeDetailsCardProps {
 export function EmployeeDetailsCard({
   selectedEmployee,
 }: EmployeeDetailsCardProps) {
-
   if (!selectedEmployee) {
     return (
       <Card>
@@ -31,21 +32,10 @@ export function EmployeeDetailsCard({
   }
 
   // Cálculos de idade e tempo de empresa
-  const age = selectedEmployee.birthdate ?
-    (new Date().getFullYear() - new Date(selectedEmployee.birthdate).getFullYear()) : null;
-
-  // Endereço formatado
-  const fullAddress = selectedEmployee.Address
-    ? `${selectedEmployee.Address.Street.streetName}, ${
-      selectedEmployee.Address.buildingNumber
-    }${
-      selectedEmployee.Address.addressComplement
-        ? ` - ${selectedEmployee.Address.addressComplement}`
-        : ""
-    }, ${selectedEmployee.Address.Neighborhood.neighborhoodName}, ${
-      selectedEmployee.Address.City.cityName
-    }/${selectedEmployee.Address.State.UF}`
-    : "Endereço não informado";
+  const age = selectedEmployee.birthdate
+    ? new Date().getFullYear() -
+      new Date(selectedEmployee.birthdate).getFullYear()
+    : null;
 
   // Função para definir cor do badge do cargo
   const getRoleBadgeColor = (role: string) => {
@@ -95,28 +85,25 @@ export function EmployeeDetailsCard({
                   {selectedEmployee.employeeId}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">CPF:</Label>
-                <span className="font-mono text-sm">
-                  {selectedEmployee.documentNumber}
-                </span>
-              </div>
+
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">
                   Data de Nascimento:
                 </Label>
                 <span className="text-sm">
-                  {selectedEmployee.birthdate ? new Date(selectedEmployee.birthdate).toLocaleDateString("pt-BR") : "Não informado"}
+                  {selectedEmployee.birthdate
+                    ? new Date(selectedEmployee.birthdate).toLocaleDateString(
+                      "pt-BR",
+                    )
+                    : "Não informado"}
                 </span>
               </div>
-              {
-                age && (
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Idade:</Label>
-                    <span className="text-sm font-semibold">{age} anos</span>
-                  </div>
-                )
-              }
+              {age && (
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Idade:</Label>
+                  <span className="text-sm font-semibold">{age} anos</span>
+                </div>
+              )}
             </div>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -135,30 +122,13 @@ export function EmployeeDetailsCard({
             <div className="flex items-center gap-2">
               <Label className="text-sm font-medium">Filial de Origem: </Label>
               <span className="text-sm font-semibold">
-                {selectedEmployee.SourceFilial.filialName}/{selectedEmployee.SourceFilial.Address.State.UF}
+                {selectedEmployee.SourceFilial.filialName}/
+                {selectedEmployee.SourceFilial.Address.State.UF}
               </span>
             </div>
           </div>
         </div>
-
-        <Separator />
-
-        {/* Endereço */}
-        <div>
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            Endereço Residencial
-          </h4>
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <p className="text-sm leading-relaxed">
-              <MapPin className="h-4 w-4 inline mr-1 text-muted-foreground" />
-              {fullAddress}
-            </p>
-          </div>
-        </div>
-
-        <Separator />
-
+        <Separator /> <Separator />
         {/* Estatísticas de Performance */}
         <div>
           <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -180,9 +150,7 @@ export function EmployeeDetailsCard({
             </div>
           </div>
         </div>
-
         <Separator />
-
         {/* Informações Operacionais */}
         <div>
           <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -208,7 +176,6 @@ export function EmployeeDetailsCard({
                         </div> */}
           </div>
         </div>
-
         {/* Última Atualização */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
           <Clock className="h-3 w-3" />

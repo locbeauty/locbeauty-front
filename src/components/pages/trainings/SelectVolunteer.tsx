@@ -48,7 +48,7 @@ export function SelectVolunteer({
 
   const { data: volunteersData } = useQuery<ApiResponse<Volunteer[]>, Error>({
     queryKey: [ "get-all-volunteers", filialId ],
-    queryFn: () => GetAllVolunteers({ filialId }),
+    queryFn: () => GetAllVolunteers({ filialId: filialId ?? "" }),
     enabled: !!filialId,
     staleTime: 1000 * 60,
   });
@@ -204,7 +204,7 @@ function VolunteersList({
 
 function getDisplayValue(
   volunteerName: string | undefined,
-  allVolunteers: Volunteer[] | undefined
+  allVolunteers: Volunteer[] | undefined,
 ): { name: string; documentNumber: string } | null {
   if (!volunteerName || !allVolunteers) return null;
 

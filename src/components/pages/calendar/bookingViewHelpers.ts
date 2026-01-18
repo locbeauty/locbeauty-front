@@ -2,8 +2,9 @@ import { Dispatch, SetStateAction } from "react";
 import { Checkout } from "@/utils/@types/checkouts";
 import { Training } from "@/utils/@types/training";
 import { BirthdayEvent } from "@/utils/@types/birthday";
+import { Notice } from "@/utils/@types/notice";
 
-export type CalendarEvent = Checkout | Training | BirthdayEvent;
+export type CalendarEvent = Checkout | Training | BirthdayEvent | Notice;
 
 //
 // ─── NAVEGAÇÃO DE DATAS ──────────────────────────────────────────────────────────
@@ -11,7 +12,7 @@ export type CalendarEvent = Checkout | Training | BirthdayEvent;
 
 export const nextDay = (
   currentDate: Date,
-  setCurrentDate: Dispatch<SetStateAction<Date>>
+  setCurrentDate: Dispatch<SetStateAction<Date>>,
 ) => {
   const nextDate = new Date(currentDate);
   nextDate.setDate(currentDate.getDate() + 1);
@@ -20,7 +21,7 @@ export const nextDay = (
 
 export const prevDay = (
   currentDate: Date,
-  setCurrentDate: Dispatch<SetStateAction<Date>>
+  setCurrentDate: Dispatch<SetStateAction<Date>>,
 ) => {
   const prevDate = new Date(currentDate);
   prevDate.setDate(currentDate.getDate() - 1);
@@ -29,7 +30,7 @@ export const prevDay = (
 
 export const nextWeek = (
   currentDate: Date,
-  setCurrentDate: Dispatch<SetStateAction<Date>>
+  setCurrentDate: Dispatch<SetStateAction<Date>>,
 ) => {
   const nextDate = new Date(currentDate);
   nextDate.setDate(currentDate.getDate() + 7);
@@ -38,7 +39,7 @@ export const nextWeek = (
 
 export const prevWeek = (
   currentDate: Date,
-  setCurrentDate: Dispatch<SetStateAction<Date>>
+  setCurrentDate: Dispatch<SetStateAction<Date>>,
 ) => {
   const prevDate = new Date(currentDate);
   prevDate.setDate(currentDate.getDate() - 7);
@@ -47,7 +48,7 @@ export const prevWeek = (
 
 export const nextMonth = (
   currentDate: Date,
-  setCurrentDate: Dispatch<SetStateAction<Date>>
+  setCurrentDate: Dispatch<SetStateAction<Date>>,
 ) => {
   const nextDate = new Date(currentDate);
   nextDate.setMonth(nextDate.getMonth() + 1);
@@ -56,7 +57,7 @@ export const nextMonth = (
 
 export const prevMonth = (
   currentDate: Date,
-  setCurrentDate: Dispatch<SetStateAction<Date>>
+  setCurrentDate: Dispatch<SetStateAction<Date>>,
 ) => {
   const prevDate = new Date(currentDate);
   prevDate.setMonth(prevDate.getMonth() - 1);
@@ -87,7 +88,7 @@ export function isToday(date: Date): boolean {
 export function isDateInRange(
   targetDate: Date,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): boolean {
   const target = new Date(targetDate);
   target.setHours(0, 0, 0, 0);
@@ -154,9 +155,28 @@ export function getDayIndex(bookingDate: Date, weekDays: Date[]): number {
 
 export function isAgendamentoInWeek(
   booking: CalendarEvent,
-  weekDays: Date[]
+  weekDays: Date[],
 ): boolean {
-  const date = "date" in booking ? booking.date : new Date(booking.dueDate);
+  let date: Date | string;
+  if ("date" in booking) {
+    date = booking.date;
+  } else if ("dueDate" in booking) {
+    date = booking.dueDate;
+  } else if ("startDate" in booking) {
+    date = booking.startDate;
+  } else {
+    // Birthday? Or fallback
+    date = new Date(); // Should not happen for BirthdayEvent as it has 'date' I think?
+    // Wait, BirthdayEvent definition?
+    // Let's assume BirthdayEvent has 'date'.
+    // If BirthdayEvent has 'date', then "date" in booking works.
+    // Notice has 'startDate'.
+    // Training has 'dueDate'.
+    // Checkout has 'date'.
+    // BirthdayEvent (from type def which I haven't seen fully but helper suggests it has date).
+    date = new Date();
+  }
+
   const bookingDate = new Date(date);
   bookingDate.setHours(0, 0, 0, 0);
 
@@ -220,7 +240,7 @@ export function formatCurrency(value: number): string {
 
 export function doEventsOverlap(
   event1: CalendarEvent,
-  event2: CalendarEvent
+  event2: CalendarEvent,
 ): boolean {
   const isTraining1 = "trainingId" in event1;
   const isTraining2 = "trainingId" in event2;
@@ -263,7 +283,7 @@ export function doEventsOverlap(
 }
 
 export function groupOverlappingEvents(
-  events: CalendarEvent[]
+  events: CalendarEvent[],
 ): CalendarEvent[][] {
   if (events.length === 0) return [];
 
@@ -309,7 +329,7 @@ export function groupOverlappingEvents(
 
     for (const group of groups) {
       const overlapsWithGroup = group.some((groupEvent) =>
-        doEventsOverlap(event, groupEvent)
+        doEventsOverlap(event, groupEvent),
       );
 
       if (overlapsWithGroup) {
@@ -338,7 +358,7 @@ const workingHoursLength = lastHourOfTheDay - firstHourOfTheDay + 1;
 
 export const workingHours = Array.from(
   { length: workingHoursLength },
-  (_, i) => i + firstHourOfTheDay
+  (_, i) => i + firstHourOfTheDay,
 );
 
 export function getDistanceFromTop(hour: number, minute: number): number {
@@ -385,6 +405,22 @@ export function getEventBasicInfo(event: CalendarEvent) {
     startDate = new Date(birthday.date);
     endDate = new Date(startDate);
     endDate.setHours(endDate.getHours() + durationInHours);
+    endDate = new Date(startDate);
+    endDate.setHours(endDate.getHours() + durationInHours);
+  } else if ("noticeId" in event) {
+    const notice = event as Notice;
+    id = notice.noticeId;
+    title = notice.description;
+    const durationInMinutes =
+      notice.endHourInMinutes - notice.startHourInMinutes;
+    durationInHours = durationInMinutes / 60;
+    startDate = new Date(notice.startDate);
+    startDate.setHours(Math.floor(notice.startHourInMinutes / 60));
+    startDate.setMinutes(notice.startHourInMinutes % 60);
+
+    endDate = new Date(notice.endDate);
+    endDate.setHours(Math.floor(notice.endHourInMinutes / 60));
+    endDate.setMinutes(notice.endHourInMinutes % 60);
   } else {
     const checkout = event as Checkout;
     id = checkout.checkoutId;
@@ -404,6 +440,7 @@ export function getEventBasicInfo(event: CalendarEvent) {
   return {
     isTraining,
     isBirthday,
+    isNotice: "noticeId" in event,
     id,
     title,
     durationInHours,

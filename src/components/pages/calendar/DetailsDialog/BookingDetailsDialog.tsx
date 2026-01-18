@@ -129,7 +129,7 @@ export function BookingDetailsDialog({
   }
 
   async function handleRemoveGearFromCheckout(
-    booking: Checkout["Bookings"][number]
+    booking: Checkout["Bookings"][number],
   ) {
     if (!selectedCheckout) return;
     if (selectedCheckout.Bookings.length < 2) return;
@@ -170,7 +170,7 @@ export function BookingDetailsDialog({
     checkoutId: string,
     checkoutStatus: "Concluido" | "Cancelado",
     wasRefunded: boolean = false,
-    cancellationFee: number | null = null
+    cancellationFee: number | null = null,
   ) {
     let response;
 
@@ -218,14 +218,14 @@ export function BookingDetailsDialog({
         checkoutStatus === "Cancelado"
           ? "Erro ao cancelar agendamento."
           : "Erro ao marcar agendamento como concluído.",
-        { style: { fontSize: "1rem" } }
+        { style: { fontSize: "1rem" } },
       );
     } else {
       toast.success(
         checkoutStatus === "Cancelado"
           ? "Agendamento cancelado com sucesso."
           : "Agendamento marcado como concluído.",
-        { style: { fontSize: "1rem" } }
+        { style: { fontSize: "1rem" } },
       );
 
       setSelectedCheckout((prev) => {
@@ -255,7 +255,7 @@ export function BookingDetailsDialog({
 
   const endDate = new Date(startDate);
   endDate.setMinutes(
-    endDate.getMinutes() + selectedCheckout.totalDurationInMinutes
+    endDate.getMinutes() + selectedCheckout.totalDurationInMinutes,
   );
 
   return (
@@ -274,10 +274,10 @@ export function BookingDetailsDialog({
                     <Package className="h-5 w-5" />
                     <h2 className="text-xl font-bold leading-none tracking-tight">
                       {selectedCheckout.Bookings.filter(
-                        (booking) => booking.status === "ACTIVE"
+                        (booking) => booking.status === "ACTIVE",
                       )
                         .sort((a, b) =>
-                          a.Gear.gearName.localeCompare(b.Gear.gearName)
+                          a.Gear.gearName.localeCompare(b.Gear.gearName),
                         )
                         .map((item) => item.Gear.gearName)
                         .join(", ")}
@@ -502,11 +502,11 @@ export function BookingDetailsDialog({
                     </h3>
                   </div>
                   {selectedCheckout.Bookings.filter(
-                    (booking) => booking.status === "ACTIVE"
+                    (booking) => booking.status === "ACTIVE",
                   ).length < 3 &&
                     checkoutCanBeUpdated && (
                     <Button
-                      size="xs"
+                      size="sm"
                       variant="secondary"
                       onClick={ () => setIsAddGearDialogOpen(true) }
                       className="flex items-center gap-1 h-7 text-xs"
@@ -520,7 +520,7 @@ export function BookingDetailsDialog({
                   {/* Lista de Equipamentos e Custos Individuais */}
                   <div className="space-y-3">
                     {selectedCheckout.Bookings.sort((a, b) =>
-                      a.Gear.gearName.localeCompare(b.Gear.gearName)
+                      a.Gear.gearName.localeCompare(b.Gear.gearName),
                     ).map((booking) => {
                       if (booking.status === "INACTIVE") return null;
 
@@ -536,7 +536,7 @@ export function BookingDetailsDialog({
                             </span>
                             <span className="font-medium">
                               {centsToStringWithCurrencyMark(
-                                booking.individualPrice
+                                booking.individualPrice,
                               )}
                             </span>
                           </div>
@@ -546,7 +546,7 @@ export function BookingDetailsDialog({
                               <span>Extras:</span>
                               <span className="font-semibold">
                                 {centsToStringWithCurrencyMark(
-                                  booking.extraMachineCosts
+                                  booking.extraMachineCosts,
                                 )}
                               </span>
                               {booking.extraMachineCostsDescription && (
@@ -561,22 +561,22 @@ export function BookingDetailsDialog({
                             <div className="flex justify-end gap-2 pt-1">
                               <Button
                                 variant="ghost"
-                                size="xs"
+                                size="sm"
                                 className="h-6 w-6 p-0"
                                 onClick={ () =>
                                   setSelectedBookingIdForExtraCosts(
-                                    booking.bookingId
+                                    booking.bookingId,
                                   )
                                 }
                               >
                                 <Pencil className="h-3 w-3" />
                               </Button>
                               {selectedCheckout.Bookings.filter(
-                                (b) => b.status === "ACTIVE"
+                                (b) => b.status === "ACTIVE",
                               ).length > 1 && (
                                 <Button
                                   variant="ghost"
-                                  size="xs"
+                                  size="sm"
                                   className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                                   onClick={ () =>
                                     handleRemoveGearFromCheckout(booking)
@@ -600,7 +600,7 @@ export function BookingDetailsDialog({
                       <span>Preço Base</span>
                       <span>
                         {centsToStringWithCurrencyMark(
-                          selectedCheckout.basePrice
+                          selectedCheckout.basePrice,
                         )}
                       </span>
                     </div>
@@ -614,7 +614,7 @@ export function BookingDetailsDialog({
                       </span>
                       <span>
                         {centsToStringWithCurrencyMark(
-                          selectedCheckout.fuelCost
+                          selectedCheckout.fuelCost,
                         )}
                       </span>
                     </div>
@@ -628,7 +628,7 @@ export function BookingDetailsDialog({
                             <span>Hospedagem</span>
                             <span>
                               {centsToStringWithCurrencyMark(
-                                selectedCheckout.lodgingCost
+                                selectedCheckout.lodgingCost,
                               )}
                             </span>
                           </div>
@@ -638,7 +638,7 @@ export function BookingDetailsDialog({
                             <span>Alimentação</span>
                             <span>
                               {centsToStringWithCurrencyMark(
-                                selectedCheckout.foodCost
+                                selectedCheckout.foodCost,
                               )}
                             </span>
                           </div>
@@ -648,7 +648,7 @@ export function BookingDetailsDialog({
                             <span>Outros transportes</span>
                             <span>
                               {centsToStringWithCurrencyMark(
-                                selectedCheckout.additionalTransportCost
+                                selectedCheckout.additionalTransportCost,
                               )}
                             </span>
                           </div>
@@ -660,7 +660,7 @@ export function BookingDetailsDialog({
                       <div className="flex justify-end pt-2">
                         <Button
                           variant="outline"
-                          size="xs"
+                          size="sm"
                           className="flex items-center gap-1 h-7"
                           onClick={ () => setAdditionalCostsDialogOpen(true) }
                         >
@@ -677,7 +677,7 @@ export function BookingDetailsDialog({
                     <span className="font-bold text-lg">Total</span>
                     <span className="font-bold text-2xl text-primary">
                       {centsToStringWithCurrencyMark(
-                        selectedCheckout.totalPrice
+                        selectedCheckout.totalPrice,
                       )}
                     </span>
                   </div>
@@ -690,16 +690,16 @@ export function BookingDetailsDialog({
                       const lines = [
                         "*Resumo do Agendamento*",
                         `Máquina: ${selectedCheckout.Bookings.map(
-                          (b) => b.Gear.gearName
+                          (b) => b.Gear.gearName,
                         ).join(", ")}`,
                         `Data: ${new Date(
-                          selectedCheckout.date
+                          selectedCheckout.date,
                         ).toLocaleDateString("pt-BR")}`,
                         `Horário: ${formatTime(startDate)} - ${formatTime(
-                          endDate
+                          endDate,
                         )}`,
                         `Valor: ${centsToStringWithCurrencyMark(
-                          selectedCheckout.totalPrice
+                          selectedCheckout.totalPrice,
                         )}`,
                         "(Pagamento de locação somente por pix ou transferência bancária).",
                         `Cliente: ${selectedCheckout.Customer.fullname}`,
@@ -771,7 +771,7 @@ export function BookingDetailsDialog({
                 onClick={ () => {
                   handleChangeCheckoutStatus(
                     selectedCheckout.checkoutId,
-                    "Concluido"
+                    "Concluido",
                   );
                 } }
                 disabled={
@@ -856,7 +856,7 @@ interface CancelBookingConfirmationDialogProps {
     checkoutId: string,
     checkoutStatus: "Concluido" | "Cancelado",
     wasRefunded?: boolean,
-    cancellationFee?: number | null
+    cancellationFee?: number | null,
   ) => void;
 }
 
@@ -968,7 +968,7 @@ export function CancelBookingConfirmationDialog({
                 selectedCheckout.checkoutId,
                 "Cancelado",
                 wasRefunded,
-                parseStringToCents(cancellationFee)
+                parseStringToCents(cancellationFee),
               );
               setCancelBookingConfirmationDialogOpen(false);
             } }

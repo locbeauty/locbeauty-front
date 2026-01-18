@@ -32,7 +32,7 @@ export function CalendarControls({
     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
       <div className="flex items-center gap-2">
         <Button
-          variant="outlineMobile"
+          variant="outline"
           size="icon"
           onClick={ () => {
             if (viewType === "dia") {
@@ -46,14 +46,11 @@ export function CalendarControls({
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <Button
-          variant="outlineMobile"
-          onClick={ () => goToToday(setCurrentDate) }
-        >
+        <Button variant="outline" onClick={ () => goToToday(setCurrentDate) }>
           Hoje
         </Button>
         <Button
-          variant="outlineMobile"
+          variant="outline"
           size="icon"
           onClick={ () => {
             if (viewType === "dia") {

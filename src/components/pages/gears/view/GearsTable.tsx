@@ -1,6 +1,6 @@
 "use client";
 import { Check, Eye, Pencil, X } from "lucide-react";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { UpdateGearDialog } from "../update/UpdateGearDialog";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export function GearsTable() {
   const { user } = useAuth();
   const { accesses } = useAccess();
 
-  const accessibleFilialIds = (() => {
+  const accessibleFilialIds = useMemo(() => {
     // Admin/Master can see all
     if (user?.role === "ADMIN" || user?.role === "MASTER") {
       return undefined;
@@ -37,11 +37,11 @@ export function GearsTable() {
 
     // Fail-safe: if restricted user has no permissions, ensures NO_ACCESS
     return uniquePermissions.length > 0 ? uniquePermissions : [ "NO_ACCESS" ];
-  })();
+  }, [ user, accesses ]);
 
   const handleToggleUpdateGearDialog = (
     openStatus: boolean,
-    gear: Gear | null
+    gear: Gear | null,
   ) => {
     setIsUpdateGearDialogOpen(openStatus);
     setSelectedGear(gear);
@@ -49,7 +49,7 @@ export function GearsTable() {
 
   const handleToggleGearDetailsDialog = (
     openStatus: boolean,
-    gear: Gear | null
+    gear: Gear | null,
   ) => {
     if (openStatus) {
       setSelectedGear(gear);
@@ -64,7 +64,7 @@ export function GearsTable() {
       // If user is restricted (accessibleFilialIds is defined), add filters
       if (accessibleFilialIds) {
         accessibleFilialIds.forEach((id) =>
-          url.searchParams.append("filialIds", id)
+          url.searchParams.append("filialIds", id),
         );
       }
 
@@ -122,7 +122,7 @@ export function GearsTable() {
                   <td className="p-3 text-center text-sm">
                     {gear.acquisitionDate
                       ? new Date(gear.acquisitionDate).toLocaleDateString(
-                        "pt-BR"
+                        "pt-BR",
                       )
                       : "Não informado"}
                   </td>
@@ -166,43 +166,45 @@ export function GearsTable() {
           </tbody>
         </table>
       </div>
-      {gears &&
-        gears.map((gear) => (
-          <Fragment key={ gear.gearId }>
-            <ResponsiveCard
-              cardData={ {
-                id: gear.gearId,
-                title: gear.gearName,
-                transferableIndicator: true,
-                transferable: gear.transferable,
-                items: [
-                  {
-                    itemLabel: "Filial:",
-                    itemInfo: gear.SourceFilial.filialName,
-                  },
-                  {
-                    itemLabel: "Unidades disponíveis: ",
-                    itemInfo: gear.availableUnits,
-                  },
-                  {
-                    itemLabel: "Unidades totais:",
-                    itemInfo: gear.availableUnits,
-                  },
-                  {
-                    itemLabel: "Data da aquisição:",
-                    itemInfo: gear.acquisitionDate
-                      ? new Date(gear.acquisitionDate).toLocaleDateString(
-                        "pt-BR"
-                      )
-                      : "Não informado",
-                  },
-                ],
-              } }
-              rawData={ gear }
-              handleToggleDialog={ handleToggleGearDetailsDialog }
-            />
-          </Fragment>
-        ))}
+      <div className="md:hidden flex flex-col gap-4">
+        {gears &&
+          gears.map((gear) => (
+            <Fragment key={ gear.gearId }>
+              <ResponsiveCard
+                cardData={ {
+                  id: gear.gearId,
+                  title: gear.gearName,
+                  transferableIndicator: true,
+                  transferable: gear.transferable,
+                  items: [
+                    {
+                      itemLabel: "Filial:",
+                      itemInfo: gear.SourceFilial.filialName,
+                    },
+                    {
+                      itemLabel: "Unidades disponíveis: ",
+                      itemInfo: gear.availableUnits,
+                    },
+                    {
+                      itemLabel: "Unidades totais:",
+                      itemInfo: gear.availableUnits,
+                    },
+                    {
+                      itemLabel: "Data da aquisição:",
+                      itemInfo: gear.acquisitionDate
+                        ? new Date(gear.acquisitionDate).toLocaleDateString(
+                          "pt-BR",
+                        )
+                        : "Não informado",
+                    },
+                  ],
+                } }
+                rawData={ gear }
+                handleToggleDialog={ handleToggleGearDetailsDialog }
+              />
+            </Fragment>
+          ))}
+      </div>
       <GearDetailsDialog
         handleToggleUpdateGearDialog={ handleToggleUpdateGearDialog }
         handleToggleGearDetailsDialog={ handleToggleGearDetailsDialog }

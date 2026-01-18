@@ -55,10 +55,10 @@ export function SelectEmployee<T extends FieldValues>({
           onValueChange={ (value) => {
             field.onChange(value);
             const driverStr = allEmployees?.find(
-              (emplyee) => emplyee.employeeId === value
+              (emplyee) => emplyee.employeeId === value,
             );
             if (driverStr && setDriverString) {
-              const addressString = `${driverStr.fullname} - ${driverStr.documentNumber}`;
+              const addressString = `${driverStr.fullname}`;
               setDriverString(addressString);
             }
           } }
@@ -78,7 +78,7 @@ export function SelectEmployee<T extends FieldValues>({
                 key={ employee.employeeId }
                 value={ employee.employeeId }
               >
-                {employee.fullname} - {employee.documentNumber}
+                {employee.fullname}
               </SelectItem>
             ))}
           </SelectContent>

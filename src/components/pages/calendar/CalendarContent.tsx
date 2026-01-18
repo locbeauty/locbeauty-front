@@ -15,8 +15,11 @@ import { useState, useMemo } from "react";
 import { ApiResponse } from "@/lib/api";
 import { Training } from "@/utils/@types/training";
 import { GetAllTrainings } from "@/services/trainings.service";
-import { CalendarEvent } from "./bookingViewHelpers";
+import { CalendarEvent, getMonthDays, getWeekDays } from "./bookingViewHelpers";
 import { TrainingDetailsDialog } from "../trainings/TrainingDetailsDialog";
+import { GetNotices } from "@/services/notices.service";
+import { Notice } from "@/utils/@types/notice";
+import { NoticeDetailsDialog } from "./DetailsDialog/NoticeDetailsDialog";
 
 interface CalendarContentProps {
   viewType: "semana" | "dia" | "mes";
@@ -33,9 +36,13 @@ export function CalendarContent({
   const { accesses } = useAccess();
 
   const [ selectedTraining, setSelectedTraining ] = useState<Training | null>(
-    null
+    null,
   );
   const [ isTrainingDetailsDialogOpen, setIsTrainingDetailsDialogOpen ] =
+    useState(false);
+
+  const [ selectedNotice, setSelectedNotice ] = useState<Notice | null>(null);
+  const [ isNoticeDetailsDialogOpen, setIsNoticeDetailsDialogOpen ] =
     useState(false);
 
   const accessibleFilialIds = useMemo(() => {
@@ -60,64 +67,41 @@ export function CalendarContent({
     : {};
 
   // Calcula startDate e endDate conforme viewType
-  const startDate = (() => {
-    if (!currentDate) return undefined;
-    switch (viewType) {
-    case "dia":
-      return new Date(currentDate);
-    case "semana": {
-      const firstDay = new Date(currentDate);
-      firstDay.setDate(currentDate.getDate() - currentDate.getDay());
-      firstDay.setHours(0, 0, 0, 0);
-      return firstDay;
-    }
-    case "mes":
-      return new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1,
-        0,
-        0,
-        0,
-        0
-      );
-    default:
-      return undefined;
-    }
-  })();
+  const { startDate, endDate } = useMemo(() => {
+    if (!currentDate) return { startDate: undefined, endDate: undefined };
 
-  const endDate = (() => {
-    if (!currentDate) return undefined;
-    switch (viewType) {
-    case "dia":
-      return new Date(currentDate);
-    case "semana": {
-      const lastDay = new Date(currentDate);
-      lastDay.setDate(currentDate.getDate() + (6 - currentDate.getDay()));
-      lastDay.setHours(23, 59, 59, 999);
-      return lastDay;
+    let start: Date;
+    let end: Date;
+
+    if (viewType === "dia") {
+      start = new Date(currentDate);
+      start.setHours(0, 0, 0, 0);
+      end = new Date(currentDate);
+      end.setHours(23, 59, 59, 999);
+    } else if (viewType === "semana") {
+      const days = getWeekDays(currentDate);
+      start = days[0];
+      start.setHours(0, 0, 0, 0);
+      end = days[days.length - 1];
+      end.setHours(23, 59, 59, 999);
+    } else {
+      // mes
+      const days = getMonthDays(currentDate);
+      start = days[0];
+      start.setHours(0, 0, 0, 0);
+      end = days[days.length - 1];
+      end.setHours(23, 59, 59, 999);
     }
-    case "mes":
-      return new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        0,
-        23,
-        59,
-        59,
-        999
-      );
-    default:
-      return undefined;
-    }
-  })();
+
+    return { startDate: start, endDate: end };
+  }, [ viewType, currentDate ]);
 
   const params = Object.fromEntries(
     Object.entries({
       ...(queryParams || {}),
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
-    }).filter(([ _, v ]) => v !== undefined)
+    }).filter(([ _, v ]) => v !== undefined),
   ) as Record<string, string>;
 
   const { data, isLoading } = useQuery<
@@ -139,15 +123,30 @@ export function CalendarContent({
     staleTime: 1000 * 60, // 1 minuto de cache
   });
 
+  const noticesData = useQuery<ApiResponse<Notice[]>, Error>({
+    queryKey: [ "get-notices", startDate, endDate ],
+    queryFn: () =>
+      GetNotices({
+        startDate: startDate?.toISOString() || "",
+        endDate: endDate?.toISOString() || "",
+      }),
+    enabled: !!startDate && !!endDate,
+    staleTime: 1000 * 60,
+  });
+
   const checkouts = data?.data?.items || [];
   const trainings = trainingsData.data?.data || [];
+  const notices = noticesData.data?.data || [];
 
-  const allEvents: CalendarEvent[] = [ ...checkouts, ...trainings ];
+  const allEvents: CalendarEvent[] = [ ...checkouts, ...trainings, ...notices ];
 
   const openDetails = (event: CalendarEvent) => {
     if ("trainingId" in event) {
       setSelectedTraining(event as Training);
       setIsTrainingDetailsDialogOpen(true);
+    } else if ("noticeId" in event) {
+      setSelectedNotice(event as Notice);
+      setIsNoticeDetailsDialogOpen(true);
     } else {
       openCheckoutDetails(event as Checkout);
     }
@@ -188,6 +187,14 @@ export function CalendarContent({
             onOpenChange={ setIsTrainingDetailsDialogOpen }
             selectedTraining={ selectedTraining }
             setSelectedTraining={ setSelectedTraining }
+          />
+        )}
+
+        {selectedNotice && (
+          <NoticeDetailsDialog
+            open={ isNoticeDetailsDialogOpen }
+            onOpenChange={ setIsNoticeDetailsDialogOpen }
+            notice={ selectedNotice }
           />
         )}
       </CardContent>

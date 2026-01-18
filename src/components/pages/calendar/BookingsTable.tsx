@@ -11,6 +11,7 @@ import { GetAllCheckouts } from "@/services/checkouts.service";
 import { BookingDetailsDialog } from "./DetailsDialog/BookingDetailsDialog";
 import { ChevronLeft, ChevronsLeft, Eye, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
 
 interface BookingsTableProps {
@@ -39,7 +40,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
   const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] =
     useState(false);
   const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(
-    null
+    null,
   );
   const [ pagination, setPagination ] = useState({ page: 1, limit: 10 });
 
@@ -69,7 +70,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
       if (isRestricted && accessibleFilialIds) {
         // Intersect filter with permissions
         const filtered = filters.filialIds.filter((id) =>
-          accessibleFilialIds.includes(id)
+          accessibleFilialIds.includes(id),
         );
         return filtered.length > 0 ? filtered : [ "NO_ACCESS" ];
       }
@@ -132,86 +133,156 @@ export function BookingsTable({ filters }: BookingsTableProps) {
   };
 
   return (
-    <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto">
-      <table className="w-full">
-        <thead className="bg-muted">
-          <tr>
-            <th className="text-left p-3 font-medium text-sm">Cliente</th>
-            <th className="text-left p-3 font-medium text-sm">Equipamento</th>
-            <th className="text-center p-3 font-medium text-sm">Data</th>
-            <th className="text-center p-3 font-medium text-sm">
-              Horário inicial
-            </th>
-            <th className="text-center p-3 font-medium text-sm">
-              Horário final
-            </th>
-            <th className="p-3 font-medium text-center">Status</th>
-            <th className="p-3 font-medium text-center">Pagamento</th>
-            <th className="p-3 font-medium text-center">Detalhes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {isEmpty && (
+    <>
+      <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto hidden md:block">
+        <table className="w-full">
+          <thead className="bg-muted">
             <tr>
-              <td className="text-center p-4" colSpan={ 8 }>
-                Nada a mostrar por aqui.
-              </td>
+              <th className="text-left p-3 font-medium text-sm">Cliente</th>
+              <th className="text-left p-3 font-medium text-sm">Equipamento</th>
+              <th className="text-center p-3 font-medium text-sm">Data</th>
+              <th className="text-center p-3 font-medium text-sm">
+                Horário inicial
+              </th>
+              <th className="text-center p-3 font-medium text-sm">
+                Horário final
+              </th>
+              <th className="p-3 font-medium text-center">Status</th>
+              <th className="p-3 font-medium text-center">Pagamento</th>
+              <th className="p-3 font-medium text-center">Detalhes</th>
             </tr>
-          )}
-          {checkouts ? (
-            checkouts?.map((checkout) => {
-              return (
-                <tr
-                  key={ checkout?.checkoutId }
-                  className="border-t hover:bg-muted/50"
+          </thead>
+          <tbody>
+            {isEmpty && (
+              <tr>
+                <td className="text-center p-4" colSpan={ 8 }>
+                  Nada a mostrar por aqui.
+                </td>
+              </tr>
+            )}
+            {checkouts ? (
+              checkouts?.map((checkout) => {
+                return (
+                  <tr
+                    key={ checkout?.checkoutId }
+                    className="border-t hover:bg-muted/50"
+                  >
+                    <td className="p-3 text-sm">
+                      {checkout?.Customer.fullname}
+                    </td>
+                    <td className="p-3 text-sm">
+                      {checkout?.Bookings.map((b) => b.Gear.gearName).join(
+                        ", ",
+                      )}
+                    </td>
+                    <td className="p-3 text-center text-sm">
+                      {new Date(checkout.date).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="p-3 text-center text-sm">
+                      {minutesToHHMM(checkout.startHourInMinutes)}
+                    </td>
+                    <td className="p-3 text-center text-sm">
+                      {minutesToHHMM(
+                        checkout.startHourInMinutes +
+                          checkout.totalDurationInMinutes,
+                      )}
+                    </td>
+                    <td className="p-3 text-center text-sm">
+                      <BookingStatusBadge status={ checkout?.checkoutStatus } />
+                    </td>
+                    <td className="p-3 text-center">
+                      <BookingPaymentStatusBadge
+                        status={ checkout.CheckoutPayment.paymentStatus }
+                        wasRefunded={ checkout.wasRefunded }
+                        isCourtesy={ checkout.isCourtesy }
+                      />
+                    </td>
+                    <td className="p-3 text-center">
+                      <Button
+                        onClick={ () =>
+                          openCheckoutDetails({
+                            checkoutId: checkout.checkoutId,
+                          })
+                        }
+                      >
+                        <Eye />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan={ 8 }
+                  className="p-4 text-center text-muted-foreground"
                 >
-                  <td className="p-3 text-sm">{checkout?.Customer.fullname}</td>
-                  <td className="p-3 text-sm">
-                    {checkout?.Bookings.map((b) => b.Gear.gearName).join(", ")}
-                  </td>
-                  <td className="p-3 text-center text-sm">
-                    {new Date(checkout.date).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td className="p-3 text-center text-sm">
-                    {minutesToHHMM(checkout.startHourInMinutes)}
-                  </td>
-                  <td className="p-3 text-center text-sm">
-                    {minutesToHHMM(
-                      checkout.startHourInMinutes +
-                        checkout.totalDurationInMinutes
-                    )}
-                  </td>
-                  <td className="p-3 text-center text-sm">
-                    <BookingStatusBadge status={ checkout?.checkoutStatus } />
-                  </td>
-                  <td className="p-3 text-center">
+                  Carregando...
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile View */}
+      <div className="md:hidden space-y-4">
+        {isEmpty && (
+          <div className="text-center p-4 text-muted-foreground bg-white rounded-lg border">
+            Nada a mostrar por aqui.
+          </div>
+        )}
+        {checkouts?.map((checkout) => (
+          <ResponsiveCard
+            key={ checkout.checkoutId }
+            cardData={ {
+              id: checkout.checkoutId,
+              title: checkout.Customer.fullname,
+              items: [
+                {
+                  itemLabel: "Equipamento: ",
+                  itemInfo: checkout.Bookings.map((b) => b.Gear.gearName).join(
+                    ", ",
+                  ),
+                },
+                {
+                  itemLabel: "Data: ",
+                  itemInfo: new Date(checkout.date).toLocaleDateString("pt-BR"),
+                },
+                {
+                  itemLabel: "Horário: ",
+                  itemInfo: `${minutesToHHMM(
+                    checkout.startHourInMinutes,
+                  )} - ${minutesToHHMM(
+                    checkout.startHourInMinutes +
+                      checkout.totalDurationInMinutes,
+                  )}`,
+                },
+                {
+                  itemLabel: "Status: ",
+                  itemInfo: (
+                    <BookingStatusBadge status={ checkout.checkoutStatus } />
+                  ),
+                },
+                {
+                  itemLabel: "Pagamento: ",
+                  itemInfo: (
                     <BookingPaymentStatusBadge
                       status={ checkout.CheckoutPayment.paymentStatus }
                       wasRefunded={ checkout.wasRefunded }
                       isCourtesy={ checkout.isCourtesy }
                     />
-                  </td>
-                  <td className="p-3 text-center">
-                    <Button
-                      onClick={ () =>
-                        openCheckoutDetails({ checkoutId: checkout.checkoutId })
-                      }
-                    >
-                      <Eye />
-                    </Button>
-                  </td>
-                </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td colSpan={ 8 } className="p-4 text-center text-muted-foreground">
-                Carregando...
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                  ),
+                },
+              ],
+            } }
+            rawData={ checkout }
+            handleToggleDialog={ () =>
+              openCheckoutDetails({ checkoutId: checkout.checkoutId })
+            }
+          />
+        ))}
+      </div>
 
       {/* Pagination Controls */}
       <div className="flex items-center justify-end space-x-2 py-4 px-4 bg-white border-t">
@@ -245,11 +316,11 @@ export function BookingsTable({ filters }: BookingsTableProps) {
               const pages = [];
               let startPage = Math.max(
                 1,
-                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2)
+                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2),
               );
               const endPage = Math.min(
                 totalPages,
-                startPage + MAX_VISIBLE_PAGES - 1
+                startPage + MAX_VISIBLE_PAGES - 1,
               );
 
               if (endPage - startPage + 1 < MAX_VISIBLE_PAGES) {
@@ -266,7 +337,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                     onClick={ () => handlePageChange(i) }
                   >
                     {i}
-                  </Button>
+                  </Button>,
                 );
               }
               return pages;
@@ -300,6 +371,6 @@ export function BookingsTable({ filters }: BookingsTableProps) {
         selectedCheckout={ selectedCheckout }
         setSelectedCheckout={ setSelectedCheckout }
       />
-    </div>
+    </>
   );
 }

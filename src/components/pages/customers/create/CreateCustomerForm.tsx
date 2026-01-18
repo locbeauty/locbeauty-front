@@ -20,7 +20,7 @@ export function CreateCustomerForm() {
   const { getAccessibleFilialsForCreate } = useAccess();
 
   const accessibleFilials = getAccessibleFilialsForCreate(
-    SYSTEM_MODULES.CUSTOMERS
+    SYSTEM_MODULES.CUSTOMERS,
   );
 
   const accessibleFilialsIds =
@@ -52,7 +52,7 @@ export function CreateCustomerForm() {
   const { handleSubmit, reset, setError } = createCustomerMethods;
 
   async function handleCreateCustomer(
-    newCustomerData: CreateCustomerFormSchemaType
+    newCustomerData: CreateCustomerFormSchemaType,
   ) {
     const response = await CreateCustomer(newCustomerData);
 
@@ -73,14 +73,18 @@ export function CreateCustomerForm() {
     <form
       id="create-customer-form"
       onSubmit={ handleSubmit(handleCreateCustomer) }
-      className="flex flex-col gap-5"
+      className="grid grid-cols-1 lg:grid-cols-2 gap-6"
     >
       <FormProvider { ...createCustomerMethods }>
-        <CustomerGeneralInformationForm
-          accessibleFilialsIds={ accessibleFilialsIds }
-          defaultFilialId={ defaultFilialId }
-        />
-        <CustomerAddressForm />
+        <div className="space-y-6">
+          <CustomerGeneralInformationForm
+            accessibleFilialsIds={ accessibleFilialsIds }
+            defaultFilialId={ defaultFilialId }
+          />
+        </div>
+        <div className="space-y-6">
+          <CustomerAddressForm />
+        </div>
       </FormProvider>
     </form>
   );

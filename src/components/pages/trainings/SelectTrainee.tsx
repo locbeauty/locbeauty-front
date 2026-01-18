@@ -48,7 +48,7 @@ export function SelectTrainee({
 
   const { data: traineesData } = useQuery<ApiResponse<Trainee[]>, Error>({
     queryKey: [ "get-all-trainees", filialId ],
-    queryFn: () => GetAllTrainees({ filialId }),
+    queryFn: () => GetAllTrainees({ filialId: filialId ?? "" }),
     enabled: !!filialId,
     staleTime: 1000 * 60,
   });
@@ -204,7 +204,7 @@ function TraineesList({
 
 function getDisplayValue(
   traineeName: string | undefined,
-  allTrainees: Trainee[] | undefined
+  allTrainees: Trainee[] | undefined,
 ): { name: string; documentNumber: string } | null {
   if (!traineeName || !allTrainees) return null;
 

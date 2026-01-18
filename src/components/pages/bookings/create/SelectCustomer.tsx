@@ -26,7 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useMediaQuery } from "usehooks-ts";
+import { useDebounceValue, useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
 import { useEffect, useState } from "react";
 import { Customer } from "@/utils/@types/customer";
@@ -43,18 +43,25 @@ export function SelectCustomer({ disabled = false }: { disabled?: boolean }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const filialId = watch("filialId");
 
+  const [ searchTerm, setSearchTerm ] = useState("");
+  const [ debouncedSearchTerm ] = useDebounceValue(searchTerm, 500);
+
   const { data } = useQuery<
     ApiResponse<{ items: Customer[]; total: number }>,
     Error
   >({
-    queryKey: [ "get-all-customers", filialId ],
-    queryFn: () => GetAllCustomers({ filialId }, { page: 1, limit: 100 }),
+    queryKey: [ "get-all-customers", filialId, debouncedSearchTerm ],
+    queryFn: () =>
+      GetAllCustomers(
+        { filialId, name: debouncedSearchTerm },
+        { page: 1, limit: 100 },
+      ),
     staleTime: 1000 * 60, // 1 minuto de cache
     // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
   });
 
   const allCustomers = data?.data?.items;
-  if (!allCustomers) return;
+  // removed early return to allow rendering empty state/input even if loading or no data initially
 
   if (!isMounted) {
     return <div className="h-10 w-full" />;
@@ -69,11 +76,18 @@ export function SelectCustomer({ disabled = false }: { disabled?: boolean }) {
           isDesktop ? (
             <DesktopSelect
               disabled={ disabled }
-              allCustomers={ allCustomers }
+              allCustomers={ allCustomers || [] }
               field={ field }
+              searchTerm={ searchTerm }
+              setSearchTerm={ setSearchTerm }
             />
           ) : (
-            <MobileSelect allCustomers={ allCustomers } field={ field } />
+            <MobileSelect
+              allCustomers={ allCustomers || [] }
+              field={ field }
+              searchTerm={ searchTerm }
+              setSearchTerm={ setSearchTerm }
+            />
           )
         }
       />
@@ -85,10 +99,14 @@ function DesktopSelect({
   disabled,
   field,
   allCustomers,
+  searchTerm,
+  setSearchTerm,
 }: {
   disabled?: boolean;
   field: ControllerRenderProps<CreateCheckoutFormSchemaType, "customer">;
   allCustomers: Customer[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }) {
   const [ open, setOpen ] = useState(false);
 
@@ -120,6 +138,8 @@ function DesktopSelect({
           setOpen={ setOpen }
           onChange={ field.onChange }
           value={ field.value }
+          searchTerm={ searchTerm }
+          setSearchTerm={ setSearchTerm }
         />
       </PopoverContent>
     </Popover>
@@ -129,9 +149,13 @@ function DesktopSelect({
 function MobileSelect({
   field,
   allCustomers,
+  searchTerm,
+  setSearchTerm,
 }: {
   field: ControllerRenderProps<CreateCheckoutFormSchemaType, "customer">;
   allCustomers: Customer[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }) {
   const [ open, setOpen ] = useState(false);
 
@@ -158,6 +182,8 @@ function MobileSelect({
               setOpen={ setOpen }
               onChange={ field.onChange }
               value={ field.value }
+              searchTerm={ searchTerm }
+              setSearchTerm={ setSearchTerm }
             />
           </div>
         </DrawerTitle>
@@ -170,6 +196,8 @@ function CustomersList({
   setOpen,
   onChange,
   allCustomers,
+  searchTerm,
+  setSearchTerm,
 }: {
   setOpen: (_open: boolean) => void;
   onChange: (_value: {
@@ -187,10 +215,16 @@ function CustomersList({
       }
     | undefined;
   allCustomers: Customer[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }) {
   return (
-    <Command>
-      <CommandInput placeholder="Filtrar clientes..." />
+    <Command shouldFilter={ false }>
+      <CommandInput
+        placeholder="Filtrar clientes..."
+        value={ searchTerm }
+        onValueChange={ setSearchTerm }
+      />
       <CommandList>
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
         <CommandGroup>

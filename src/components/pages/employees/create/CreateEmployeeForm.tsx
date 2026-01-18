@@ -15,7 +15,6 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { EmployeeForm } from "../forms/EmployeeForm";
-import { EmployeeAddressForm } from "../forms/EmployeeAddressForm";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 
 export function CreateEmployeeForm() {
@@ -51,7 +50,7 @@ export function CreateEmployeeForm() {
   const { handleSubmit, reset, setError } = CreateEmployeeMethods;
 
   async function handleCreateEmployee(
-    newEmployeeData: CreateEmployeeFormSchemaType
+    newEmployeeData: CreateEmployeeFormSchemaType,
   ) {
     try {
       const response = await fetchWithToken(
@@ -63,7 +62,7 @@ export function CreateEmployeeForm() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(newEmployeeData),
-        }
+        },
       );
       const data = await response.json();
 
@@ -93,27 +92,10 @@ export function CreateEmployeeForm() {
         onSubmit={ handleSubmit(handleCreateEmployee) }
       >
         <FormProvider { ...CreateEmployeeMethods }>
-          <div className="space-y-2">
-            <Label>Filial *</Label>
-            <Controller
-              control={ CreateEmployeeMethods.control }
-              name="sourceFilialId"
-              render={ ({ field }) => (
-                <SelectFilial
-                  control={ CreateEmployeeMethods.control }
-                  name="sourceFilialId"
-                  accessibleFilials={ accessibleFilialsIds }
-                  defaultFilial={ defaultFilialId }
-                />
-              ) }
-            />
-            {CreateEmployeeMethods.formState.errors.sourceFilialId && (
-              <p className="text-sm text-destructive">
-                {CreateEmployeeMethods.formState.errors.sourceFilialId.message}
-              </p>
-            )}
-          </div>
-          <EmployeeForm />
+          <EmployeeForm
+            accessibleFilialsIds={ accessibleFilialsIds }
+            defaultFilialId={ defaultFilialId }
+          />
         </FormProvider>
       </form>
     </CardContent>

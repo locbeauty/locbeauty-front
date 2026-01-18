@@ -9,6 +9,7 @@ export enum SYSTEM_MODULES {
   GOALS = "GOALS",
   TRAININGS = "TRAININGS",
   BIRTHDAYS = "BIRTHDAYS",
+  NOTICES = "NOTICES",
 }
 
 export type AccessPermissions = {

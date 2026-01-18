@@ -13,6 +13,7 @@ import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
+import { MapPin } from "lucide-react";
 
 export function CustomerAddressForm() {
   const {
@@ -28,7 +29,10 @@ export function CustomerAddressForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Cadastrar endereço</CardTitle>
+        <div className="flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-primary" />
+          <CardTitle>Endereço</CardTitle>
+        </div>
         <CardDescription>
           Preencha os dados de endereço do cliente
         </CardDescription>
@@ -85,7 +89,7 @@ export function CustomerAddressForm() {
               placeholder="Nome da rua"
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 w-full md:w-[120px]">
             <Label htmlFor="number">Número</Label>
             <Input
               { ...register("address.buildingNumber") }
@@ -103,11 +107,11 @@ export function CustomerAddressForm() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="number">Complemento</Label>
-
+          <Label htmlFor="addressComplement">Complemento</Label>
           <Textarea
             { ...register("address.addressComplement") }
-            className="h-[100px] resize-none max-w-[80vw] placeholder:text-placeholder"
+            id="addressComplement"
+            className="h-[100px] resize-none w-full placeholder:text-placeholder"
             placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
           />
         </div>

@@ -40,9 +40,9 @@ export function CreateGearForm() {
 
   const defaultFilialId =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
-      ? user?.sourceFilial.filialId
-      : accessibleFilialsIds?.includes(user?.sourceFilial.filialId || "")
-        ? user?.sourceFilial.filialId
+      ? user?.sourceFilial?.filialId
+      : accessibleFilialsIds?.includes(user?.sourceFilial?.filialId || "")
+        ? user?.sourceFilial?.filialId
         : accessibleFilialsIds?.[0];
 
   const createGearMethods = useForm<CreateGearFormSchemaType>({
@@ -77,7 +77,7 @@ export function CreateGearForm() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(newGearData),
-        }
+        },
       );
       const data = await response.json();
 
@@ -127,7 +127,7 @@ export function CreateGearForm() {
                   control={ control }
                   name="sourceFilialId"
                   accessibleFilials={ accessibleFilialsIds }
-                  defaultFilial={ user?.sourceFilial.filialId }
+                  defaultFilial={ user?.sourceFilial?.filialId }
                 />
               </FormProvider>
               {errors.sourceFilialId && (
