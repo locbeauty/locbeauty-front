@@ -16,7 +16,7 @@ export function MaskedDateInput({
   error,
   disabled,
 }: MaskedDateInputProps) {
-  const [inputValue, setInputValue] = useState("");
+  const [ inputValue, setInputValue ] = useState("");
 
   // Sync with external value changes (e.g. initial load)
   useEffect(() => {
@@ -25,7 +25,7 @@ export function MaskedDateInput({
     } else if (!value) {
       setInputValue("");
     }
-  }, [value]);
+  }, [ value ]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let input = e.target.value.replace(/\D/g, "");
@@ -65,15 +65,15 @@ export function MaskedDateInput({
 
   return (
     <Input
-      id={id}
-      disabled={disabled}
+      id={ id }
+      disabled={ disabled }
       placeholder="DD/MM/AAAA"
-      value={inputValue}
-      onChange={handleChange}
-      maxLength={10}
-      className={`placeholder:text-muted-foreground/50 ${
+      value={ inputValue }
+      onChange={ handleChange }
+      maxLength={ 10 }
+      className={ `placeholder:text-muted-foreground/50 ${
         error ? "border-destructive focus-visible:ring-destructive" : ""
-      }`}
+      }` }
     />
   );
 }

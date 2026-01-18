@@ -58,7 +58,7 @@ export function UpdateEmployeeDialog({
         sourceFilialId: selectedEmployee.SourceFilial.filialId,
       });
     }
-  }, [reset, selectedEmployee, isUpdateEmployeeDialogOpen]);
+  }, [ reset, selectedEmployee, isUpdateEmployeeDialogOpen ]);
 
   async function handleUpdateEmployee(
     updatedEmployeeData: UpdateEmployeeFormSchemaType
@@ -94,15 +94,15 @@ export function UpdateEmployeeDialog({
 
   return (
     <Dialog
-      open={isUpdateEmployeeDialogOpen}
-      onOpenChange={(status) =>
+      open={ isUpdateEmployeeDialogOpen }
+      onOpenChange={ (status) =>
         handleToggleUpdateEmployeeDialog(status, selectedEmployee)
       }
     >
       <DialogContent
         className="max-w-[90%] md:w-[60%] max-h-[90%] overflow-y-scroll flex flex-col gap-0"
-        aria-describedby={undefined}
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        aria-describedby={ undefined }
+        onOpenAutoFocus={ (e) => e.preventDefault() }
       >
         <DialogTitle className="text-3xl font-bold">
           Edite o funcionário:
@@ -110,22 +110,22 @@ export function UpdateEmployeeDialog({
         <div className="space-y-6">
           <form
             id="update-customer-form"
-            onSubmit={handleSubmit(handleUpdateEmployee)}
+            onSubmit={ handleSubmit(handleUpdateEmployee) }
             className="flex flex-col gap-5 mt-5"
           >
-            <FormProvider {...updateEmployeeMethods}>
-              <UpdateEmployeeForm selectedEmployee={selectedEmployee} />
+            <FormProvider { ...updateEmployeeMethods }>
+              <UpdateEmployeeForm selectedEmployee={ selectedEmployee } />
 
               <DialogFooter>
                 <Button
                   variant="outline"
-                  onClick={() =>
+                  onClick={ () =>
                     handleToggleUpdateEmployeeDialog(false, selectedEmployee)
                   }
                 >
                   Cancelar
                 </Button>
-                <Button disabled={!isDirty}>
+                <Button disabled={ !isDirty }>
                   <Save className="mr-2 h-4 w-4" />
                   Salvar alterações
                 </Button>

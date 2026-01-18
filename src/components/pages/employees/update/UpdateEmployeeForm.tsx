@@ -26,8 +26,8 @@ export function UpdateEmployeeForm({
   return (
     <>
       <EmployeeForm
-        isEditing={true}
-        currentUsername={selectedEmployee.username}
+        isEditing={ true }
+        currentUsername={ selectedEmployee.username }
       />
 
       {user?.role === USER_ROLES.GERENTE && (
@@ -40,7 +40,7 @@ export function UpdateEmployeeForm({
               Gerencie as permissões de acesso deste funcionário por filial. As
               alterações são salvas automaticamente.
             </p>
-            <AccessControlDialog employee={selectedEmployee} />
+            <AccessControlDialog employee={ selectedEmployee } />
           </div>
         </>
       )}
