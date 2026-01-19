@@ -31,7 +31,7 @@ export function FilialFilter({
           next: {
             tags: [ "get-all-filials" ],
           },
-        }
+        },
       );
       const { data }: { data: Filial[] } = await response.json();
       setAllFilials(data);
@@ -46,10 +46,10 @@ export function FilialFilter({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="ALL">Todas as Filiais</SelectItem>
-        {allFilials
+        {(allFilials || [])
           .filter(
             (filial) =>
-              !accessibleFilials || accessibleFilials.includes(filial.filialId)
+              !accessibleFilials || accessibleFilials.includes(filial.filialId),
           )
           .map((filial) => {
             return (

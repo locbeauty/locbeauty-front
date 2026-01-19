@@ -20,9 +20,7 @@ interface FilialDetailsCardProps {
   selectedFilial: Filial | null;
 }
 
-export function FilialDetailsCard({
-  selectedFilial,
-}: FilialDetailsCardProps) {
+export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
   if (!selectedFilial) {
     return (
       <Card>
@@ -34,15 +32,15 @@ export function FilialDetailsCard({
   }
 
   // Endereço completo formatado
-  const fullAddress = `${selectedFilial.Address.Street.streetName}, ${
+  const fullAddress = `${selectedFilial.Address.street}, ${
     selectedFilial.Address.buildingNumber
   }${
     selectedFilial.Address.addressComplement
       ? ` - ${selectedFilial.Address.addressComplement}`
       : ""
-  }, ${selectedFilial.Address.Neighborhood.neighborhoodName}, ${
-    selectedFilial.Address.City.cityName
-  }/${selectedFilial.Address.State.UF}`;
+  }, ${selectedFilial.Address.neighborhood}, ${
+    selectedFilial.Address.city
+  }/${selectedFilial.Address.state}`;
 
   return (
     <Card>
@@ -69,9 +67,7 @@ export function FilialDetailsCard({
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">CNPJ:</Label>
-                <span className="font-mono text-sm">
-                  {selectedFilial.CNPJ}
-                </span>
+                <span className="font-mono text-sm">{selectedFilial.CNPJ}</span>
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Estado:</Label>
@@ -79,20 +75,19 @@ export function FilialDetailsCard({
                   variant="outline"
                   className="text-blue-600 border-blue-200"
                 >
-                  {selectedFilial.Address.State.UF} -{" "}
-                  {selectedFilial.Address.State.stateName}
+                  {selectedFilial.Address.state}
                 </Badge>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Cidade:</Label>
-                <span className="text-sm">{selectedFilial.Address.City.cityName}</span>
+                <span className="text-sm">{selectedFilial.Address.city}</span>
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Bairro:</Label>
                 <span className="text-sm">
-                  {selectedFilial.Address.Neighborhood.neighborhoodName}
+                  {selectedFilial.Address.neighborhood}
                 </span>
               </div>
             </div>

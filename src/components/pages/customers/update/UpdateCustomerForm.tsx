@@ -89,7 +89,7 @@ export function UpdateCustomerForm({
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome Completo</Label>
                 <Input
-                  className="placeholder:text-placeholder"
+                  className="placeholder:text-muted-foreground/50"
                   { ...register("fullname") }
                   id="nome"
                   placeholder="Nome completo"
@@ -105,7 +105,7 @@ export function UpdateCustomerForm({
               <div className="space-y-2">
                 <Label htmlFor="empresa">Empresa</Label>
                 <Input
-                  className="placeholder:text-placeholder"
+                  className="placeholder:text-muted-foreground/50"
                   { ...register("companyName") }
                   id="empresa"
                   placeholder="Nome da empresa"
@@ -143,6 +143,7 @@ export function UpdateCustomerForm({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Input
+                        className="placeholder:text-muted-foreground/50"
                         { ...register("email") }
                         placeholder="Email Principal"
                         type="email"
@@ -153,6 +154,7 @@ export function UpdateCustomerForm({
                     </div>
                     <div className="space-y-2">
                       <Input
+                        className="placeholder:text-muted-foreground/50"
                         { ...register("emailDescription") }
                         placeholder="Descrição (ex: Pessoal)"
                         onBlur={ (e) => {
@@ -165,6 +167,7 @@ export function UpdateCustomerForm({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Input
+                        className="placeholder:text-muted-foreground/50"
                         { ...register("secondaryEmail") }
                         placeholder="Email Secundário"
                         type="email"
@@ -181,6 +184,7 @@ export function UpdateCustomerForm({
                     </div>
                     <div className="space-y-2">
                       <Input
+                        className="placeholder:text-muted-foreground/50"
                         { ...register("secondaryEmailDescription") }
                         placeholder="Descrição (ex: Trabalho)"
                         onBlur={ (e) => {
@@ -208,6 +212,7 @@ export function UpdateCustomerForm({
                     </div>
                     <div className="space-y-2">
                       <Input
+                        className="placeholder:text-muted-foreground/50"
                         { ...register("cellphoneDescription") }
                         placeholder="Descrição (ex: WhatsApp)"
                         onBlur={ (e) => {
@@ -228,6 +233,7 @@ export function UpdateCustomerForm({
                     </div>
                     <div className="space-y-2">
                       <Input
+                        className="placeholder:text-muted-foreground/50"
                         { ...register("secondaryCellphoneDescription") }
                         placeholder="Descrição (ex: Casa)"
                         onBlur={ (e) => {
@@ -248,7 +254,7 @@ export function UpdateCustomerForm({
                   <Input
                     { ...register("instagram") }
                     id="instagram"
-                    className="pl-8 placeholder:text-placeholder"
+                    className="pl-8 placeholder:text-muted-foreground/50"
                     placeholder="usuario"
                     onBlur={ (e) => {
                       if (e.target.value === "") {

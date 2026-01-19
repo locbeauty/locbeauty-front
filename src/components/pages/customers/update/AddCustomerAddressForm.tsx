@@ -61,13 +61,17 @@ export function AddCustomerAddressForm({
             <Input
               { ...register("cityName") }
               placeholder="Cidade"
-              className=""
+              className="placeholder:text-muted-foreground/50"
               id="cidade"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="estado">Estado</Label>
-            <Input { ...register("stateName") } placeholder="Estado" />
+            <Input
+              { ...register("stateName") }
+              placeholder="Estado"
+              className="placeholder:text-muted-foreground/50"
+            />
           </div>
         </div>
 
@@ -76,7 +80,7 @@ export function AddCustomerAddressForm({
           <Input
             { ...register("neighborhoodName") }
             placeholder="Bairro"
-            className="placeholder:text-placeholder"
+            className="placeholder:text-muted-foreground/50"
             id="bairro"
           />
         </div>
@@ -86,7 +90,7 @@ export function AddCustomerAddressForm({
             <Input
               { ...register("streetName") }
               id="rua"
-              className="placeholder:text-placeholder"
+              className="placeholder:text-muted-foreground/50"
               placeholder="Nome da rua"
             />
           </div>
@@ -95,7 +99,7 @@ export function AddCustomerAddressForm({
             <Input
               { ...register("buildingNumber") }
               id="number"
-              className="placeholder:text-placeholder"
+              className="placeholder:text-muted-foreground/50"
               placeholder="Número"
             />
             <div className="min-h-[20px]">
@@ -112,7 +116,7 @@ export function AddCustomerAddressForm({
 
           <Textarea
             { ...register("addressComplement") }
-            className="h-[100px] resize-none max-w-[80vw] placeholder:text-placeholder"
+            className="h-[100px] resize-none max-w-[80vw] placeholder:text-muted-foreground/50"
             placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
           />
         </div>
@@ -129,7 +133,7 @@ export function AddCustomerAddressForm({
                     style: { fontSize: "1rem" },
                   });
                 }
-              }
+              },
             ) }
             className="ml-auto flex"
           >

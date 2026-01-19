@@ -366,12 +366,12 @@ export function BookingDetailsDialog({
                 </CardHeader>
                 <CardContent className="space-y-2 pt-0 text-sm">
                   <div className="font-medium">
-                    {selectedCheckout.Address.Street.streetName},{" "}
+                    {selectedCheckout.Address.street},{" "}
                     {selectedCheckout.Address.buildingNumber}
                   </div>
                   <div className="text-muted-foreground">
-                    {selectedCheckout.Address.Neighborhood.neighborhoodName},{" "}
-                    {selectedCheckout.Address.City.cityName}
+                    {selectedCheckout.Address.neighborhood},{" "}
+                    {selectedCheckout.Address.city}
                   </div>
                   {selectedCheckout.Address.addressComplement && (
                     <div className="flex items-center gap-1 text-muted-foreground bg-muted p-2 rounded-md mt-2">
@@ -704,8 +704,8 @@ export function BookingDetailsDialog({
                         "(Pagamento de locação somente por pix ou transferência bancária).",
                         `Cliente: ${selectedCheckout.Customer.fullname}`,
                         `Contato: ${selectedCheckout.Customer.cellphone}`,
-                        `Endereço: ${selectedCheckout.Address.Street.streetName}, ${selectedCheckout.Address.buildingNumber} - ${selectedCheckout.Address.Neighborhood.neighborhoodName}, ${selectedCheckout.Address.City.cityName}`,
-                        `Estado: ${selectedCheckout.Address.State.stateName}`,
+                        `Endereço: ${selectedCheckout.Address.street}, ${selectedCheckout.Address.buildingNumber} - ${selectedCheckout.Address.neighborhood}, ${selectedCheckout.Address.city}`,
+                        `Estado: ${selectedCheckout.Address.state}`,
                         `CPF/CNPJ: ${
                           selectedCheckout.Customer.documentNumber || "—"
                         }`,

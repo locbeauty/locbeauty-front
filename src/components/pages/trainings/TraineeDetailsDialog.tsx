@@ -85,7 +85,7 @@ export function TraineeDetailsDialog({
 
     if (filterId) {
       result = result.filter((training) =>
-        training.trainingId.toString().includes(filterId)
+        training.trainingId.toString().includes(filterId),
       );
     }
 
@@ -193,7 +193,7 @@ export function TraineeDetailsDialog({
                         </div>
                         <div className="text-sm">
                           <p className="font-medium leading-none mb-1">
-                            {addr.Street.streetName}, {addr.buildingNumber}
+                            {addr.street}, {addr.buildingNumber}
                           </p>
                           {addr.addressComplement && (
                             <p className="text-muted-foreground text-xs mb-1">
@@ -201,10 +201,10 @@ export function TraineeDetailsDialog({
                             </p>
                           )}
                           <p className="text-muted-foreground">
-                            {addr.Neighborhood.neighborhoodName}
+                            {addr.neighborhood}
                           </p>
                           <p className="text-muted-foreground">
-                            {addr.City.cityName} - {addr.State.stateName}
+                            {addr.city} - {addr.state}
                           </p>
                         </div>
                       </div>
@@ -303,7 +303,7 @@ export function TraineeDetailsDialog({
                   {filteredTrainings.map((training) => {
                     // Encontra o pagamento específico do aluno (TRAINEE)
                     const payment = training.TrainingPayment?.find(
-                      (p) => p.payerType === "TRAINEE"
+                      (p) => p.payerType === "TRAINEE",
                     );
 
                     return (
@@ -323,18 +323,18 @@ export function TraineeDetailsDialog({
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 {new Date(training.dueDate).toLocaleDateString(
-                                  "pt-BR"
+                                  "pt-BR",
                                 )}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {String(
-                                  Math.floor(training.hourInMinutes / 60)
+                                  Math.floor(training.hourInMinutes / 60),
                                 ).padStart(2, "0")}
                                 :
                                 {String(training.hourInMinutes % 60).padStart(
                                   2,
-                                  "0"
+                                  "0",
                                 )}
                               </span>
                             </div>
@@ -349,7 +349,7 @@ export function TraineeDetailsDialog({
                             <Badge
                               variant="outline"
                               className={ `${getStatusColorClass(
-                                payment.paymentStatus
+                                payment.paymentStatus,
                               )}` }
                             >
                               {payment.paymentStatus}
@@ -367,7 +367,7 @@ export function TraineeDetailsDialog({
                               <span className="text-xs font-bold text-primary/80">
                                 Total:{" "}
                                 {centsToStringWithCurrencyMark(
-                                  payment.totalPrice || 0
+                                  payment.totalPrice || 0,
                                 )}
                               </span>
                             </div>
@@ -393,7 +393,7 @@ export function TraineeDetailsDialog({
                                 )}
                                 <span className="font-medium">
                                   {centsToStringWithCurrencyMark(
-                                    payment.firstPaymentAmount
+                                    payment.firstPaymentAmount,
                                   )}
                                 </span>
                                 {payment.firstPaymentStatus === "Pago" && (
@@ -426,7 +426,7 @@ export function TraineeDetailsDialog({
                                     )}
                                     <span className="font-medium">
                                       {centsToStringWithCurrencyMark(
-                                        payment.secondPaymentAmount
+                                        payment.secondPaymentAmount,
                                       )}
                                     </span>
                                     {payment.secondPaymentStatus === "Pago" ? (

@@ -5,6 +5,7 @@ import {
   FileText,
   Instagram,
   Mail,
+  MapPin,
   Phone,
   User,
 } from "lucide-react";
@@ -30,69 +31,136 @@ export function CustomerDetailsCard({
           Informações Pessoais
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            {
-              selectedCustomer?.companyName && (
-                <div className="flex items-center gap-2">
-                  <Building className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Nome da empresa</span>
-                  <span>{selectedCustomer?.companyName}</span>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Identity Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Identificação
+            </h3>
+            <div className="space-y-3">
+              {selectedCustomer?.companyName && (
+                <div className="flex items-start gap-3">
+                  <Building className="h-4 w-4 text-primary mt-1 shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Nome da empresa
+                    </span>
+                    <span
+                      className="font-medium truncate"
+                      title={selectedCustomer.companyName}
+                    >
+                      {selectedCustomer.companyName}
+                    </span>
+                  </div>
                 </div>
-              )
-            }
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Nome do Responsável</span>
-              <span>{selectedCustomer?.fullname}</span>
-            </div>
+              )}
 
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Filial:</span>
-              <span>{selectedCustomer?.SourceFilial.filialName}</span>
-            </div>
+              <div className="flex items-start gap-3">
+                <User className="h-4 w-4 text-primary mt-1 shrink-0" />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Nome do Responsável
+                  </span>
+                  <span
+                    className="font-medium truncate"
+                    title={selectedCustomer?.fullname}
+                  >
+                    {selectedCustomer?.fullname}
+                  </span>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Número do documento:</span>
-              <span className="font-mono">
-                {selectedCustomer?.documentNumber}
-              </span>
-            </div>
+              <div className="flex items-start gap-3">
+                <Building className="h-4 w-4 text-primary mt-1 shrink-0" />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Filial
+                  </span>
+                  <span className="truncate">
+                    {selectedCustomer?.SourceFilial.filialName}
+                  </span>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Data de nascimento:</span>
-              <span className="font-mono">
-                {selectedCustomer?.birthdate
-                  ? format(new Date(selectedCustomer.birthdate), "dd/MM/yyyy")
-                  : "Não informado"}
-              </span>
+              <div className="flex items-start gap-3">
+                <FileText className="h-4 w-4 text-primary mt-1 shrink-0" />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Documento
+                  </span>
+                  <span className="font-mono truncate">
+                    {selectedCustomer?.documentNumber || "Não informado"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <Clock className="h-4 w-4 text-primary mt-1 shrink-0" />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Data de nascimento
+                  </span>
+                  <span className="font-mono">
+                    {selectedCustomer?.birthdate
+                      ? format(
+                          new Date(selectedCustomer.birthdate),
+                          "dd/MM/yyyy",
+                        )
+                      : "Não informado"}
+                  </span>
+                </div>
+              </div>
+
+              {selectedCustomer && (
+                <div className="flex items-start gap-3">
+                  <Ellipsis className="h-4 w-4 text-primary mt-1 shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Status
+                    </span>
+                    <div className="pt-1">
+                      <CustomerStatusBadge
+                        status={selectedCustomer.customerStatus}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-
-          <div className="space-y-2">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-start gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground mt-1" />
-                <div className="flex flex-col">
-                  <span className="font-medium">Email:</span>
-                  <div className="flex flex-col">
-                    <span className="text-blue-600">
-                      {selectedCustomer?.email}{" "}
+          {/* Contact Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Contato
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <Mail className="h-4 w-4 text-primary mt-1 shrink-0" />
+                <div className="flex flex-col min-w-0 w-full">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Email
+                  </span>
+                  <div className="flex flex-col min-w-0">
+                    <span
+                      className="text-blue-600 truncate block"
+                      title={selectedCustomer?.email || ""}
+                    >
+                      {selectedCustomer?.email}
                       {selectedCustomer?.emailDescription && (
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-muted-foreground text-xs ml-1 font-normal">
                           ({selectedCustomer.emailDescription})
                         </span>
                       )}
                     </span>
                     {selectedCustomer?.secondaryEmail && (
-                      <span className="text-blue-600 text-sm">
-                        {selectedCustomer.secondaryEmail}{" "}
+                      <span
+                        className="text-blue-600 text-sm truncate block mt-0.5"
+                        title={selectedCustomer.secondaryEmail}
+                      >
+                        {selectedCustomer.secondaryEmail}
                         {selectedCustomer?.secondaryEmailDescription && (
-                          <span className="text-muted-foreground text-xs">
+                          <span className="text-muted-foreground text-xs ml-1 font-normal">
                             ({selectedCustomer.secondaryEmailDescription})
                           </span>
                         )}
@@ -101,27 +169,27 @@ export function CustomerDetailsCard({
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex items-start gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground mt-1" />
-                <div className="flex flex-col">
-                  <span className="font-medium">Telefone:</span>
-                  <div className="flex flex-col">
-                    <span>
-                      {selectedCustomer?.cellphone}{" "}
+              <div className="flex items-start gap-3">
+                <Phone className="h-4 w-4 text-primary mt-1 shrink-0" />
+                <div className="flex flex-col min-w-0 w-full">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Telefone
+                  </span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate block">
+                      {selectedCustomer?.cellphone || "Não informado"}
                       {selectedCustomer?.cellphoneDescription && (
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-muted-foreground text-xs ml-1 font-normal">
                           ({selectedCustomer.cellphoneDescription})
                         </span>
                       )}
                     </span>
                     {selectedCustomer?.secondaryCellphone && (
-                      <span className="text-sm">
-                        {selectedCustomer.secondaryCellphone}{" "}
+                      <span className="text-sm truncate block mt-0.5">
+                        {selectedCustomer.secondaryCellphone}
                         {selectedCustomer?.secondaryCellphoneDescription && (
-                          <span className="text-muted-foreground text-xs">
+                          <span className="text-muted-foreground text-xs ml-1 font-normal">
                             ({selectedCustomer.secondaryCellphoneDescription})
                           </span>
                         )}
@@ -130,38 +198,74 @@ export function CustomerDetailsCard({
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Instagram className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Instagram:</span>
-              <span>
-                {selectedCustomer?.instagram
-                  ? selectedCustomer.instagram.startsWith("@")
-                    ? selectedCustomer.instagram
-                    : `@${selectedCustomer.instagram}`
-                  : ""}
-              </span>
-            </div>
 
-            {selectedCustomer && (
-              <div className="flex items-center gap-2">
-                <Ellipsis className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Status:</span>
-                <CustomerStatusBadge status={ selectedCustomer.customerStatus } />
-              </div>
-            )}
+              {selectedCustomer?.instagram && (
+                <div className="flex items-start gap-3">
+                  <Instagram className="h-4 w-4 text-primary mt-1 shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Instagram
+                    </span>
+                    <span className="truncate text-blue-600">
+                      {selectedCustomer.instagram.startsWith("@")
+                        ? selectedCustomer.instagram
+                        : `@${selectedCustomer.instagram}`}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
+        {selectedCustomer?.Addresses &&
+          selectedCustomer.Addresses.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Endereços
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedCustomer.Addresses.map((address) => (
+                    <div
+                      key={address.addressId}
+                      className="flex items-start gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm"
+                    >
+                      <MapPin className="h-4 w-4 text-primary mt-1 shrink-0" />
+                      <div className="flex flex-col min-w-0 text-sm">
+                        <span className="font-medium truncate">
+                          {address.street}, {address.buildingNumber}
+                        </span>
+                        {address.addressComplement && (
+                          <span className="text-muted-foreground truncate">
+                            {address.addressComplement}
+                          </span>
+                        )}
+                        <span className="text-muted-foreground truncate">
+                          {address.neighborhood} - {address.city}/
+                          {address.state}
+                        </span>
+                        <span className="text-xs text-muted-foreground mt-1">
+                          CEP: {address.zipCode}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
         <Separator />
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 p-2 rounded-md">
+          <Clock className="h-3 w-3" />
           <span>
-            Último registro:{" "}
+            Última atualização / registro no sistema:{" "}
             {selectedCustomer?.lastBooking
-              ? new Date(selectedCustomer?.lastBooking).toLocaleString()
-              : "Não informado"}
+              ? new Date(selectedCustomer.lastBooking).toLocaleString()
+              : "Nenhuma atividade recente"}
           </span>
         </div>
       </CardContent>

@@ -44,7 +44,7 @@ export function SelectFilial<T extends FieldValues = FieldValues>({
           next: {
             tags: [ "get-all-filials" ],
           },
-        }
+        },
       );
       const { data }: { data: Filial[] } = await response.json();
       setAllFilials(data);
@@ -52,14 +52,14 @@ export function SelectFilial<T extends FieldValues = FieldValues>({
     handleGetAllFilials();
   }, []);
 
-  const filteredFilials = allFilials.filter(
+  const filteredFilials = (allFilials || []).filter(
     (filial) =>
-      !accessibleFilials || accessibleFilials.includes(filial.filialId)
+      !accessibleFilials || accessibleFilials.includes(filial.filialId),
   );
 
   const renderSelect = (
     value: string,
-    onValueChange: (val: string) => void
+    onValueChange: (val: string) => void,
   ) => (
     <Select
       defaultValue={ defaultFilial }

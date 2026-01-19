@@ -1,20 +1,35 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
 import { useState } from "react";
 import { Address } from "@/utils/@types/address";
 
 interface SelectTrainingAddressProps {
-    disabled?: boolean;
-    addresses: Address[] | undefined;
-    selectedAddress: string | undefined;
-    onAddressChange: (addressId: string) => void;
+  disabled?: boolean;
+  addresses: Address[] | undefined;
+  selectedAddress: string | undefined;
+  onAddressChange: (addressId: string) => void;
 }
 
 export function SelectTrainingAddress({
@@ -51,13 +66,18 @@ export function SelectTrainingAddress({
 }
 
 interface SelectProps {
-    disabled?: boolean;
-    allAddresses: Address[] | undefined;
-    selectedAddress: string | undefined;
-    onAddressChange: (addressId: string) => void;
+  disabled?: boolean;
+  allAddresses: Address[] | undefined;
+  selectedAddress: string | undefined;
+  onAddressChange: (addressId: string) => void;
 }
 
-function DesktopSelect({ disabled, allAddresses, selectedAddress, onAddressChange }: SelectProps) {
+function DesktopSelect({
+  disabled,
+  allAddresses,
+  selectedAddress,
+  onAddressChange,
+}: SelectProps) {
   const [ open, setOpen ] = useState(false);
 
   const selectedValue = getDisplayValue(selectedAddress, allAddresses);
@@ -65,11 +85,17 @@ function DesktopSelect({ disabled, allAddresses, selectedAddress, onAddressChang
   return (
     <Popover modal={ true } open={ open } onOpenChange={ setOpen }>
       <PopoverTrigger asChild>
-        <Button disabled={ disabled } variant="outline" className="w-full justify-start group cursor-pointer">
+        <Button
+          disabled={ disabled }
+          variant="outline"
+          className="w-full justify-start group cursor-pointer"
+        >
           {selectedValue ? (
             <>{selectedValue}</>
           ) : (
-            <span className="text-placeholder group-hover:text-white">Selecione o endereço</span>
+            <span className="text-placeholder group-hover:text-white">
+              Selecione o endereço
+            </span>
           )}
         </Button>
       </PopoverTrigger>
@@ -84,7 +110,11 @@ function DesktopSelect({ disabled, allAddresses, selectedAddress, onAddressChang
   );
 }
 
-function MobileSelect({ allAddresses, selectedAddress, onAddressChange }: Omit<SelectProps, "disabled">) {
+function MobileSelect({
+  allAddresses,
+  selectedAddress,
+  onAddressChange,
+}: Omit<SelectProps, "disabled">) {
   const [ open, setOpen ] = useState(false);
 
   const selectedValue = getDisplayValue(selectedAddress, allAddresses);
@@ -116,12 +146,16 @@ function MobileSelect({ allAddresses, selectedAddress, onAddressChange }: Omit<S
 }
 
 interface AddressesListProps {
-    setOpen: (_open: boolean) => void;
-    onAddressChange: (addressId: string) => void;
-    allAddresses: Address[] | undefined;
+  setOpen: (_open: boolean) => void;
+  onAddressChange: (addressId: string) => void;
+  allAddresses: Address[] | undefined;
 }
 
-function AddressesList({ setOpen, onAddressChange, allAddresses }: AddressesListProps) {
+function AddressesList({
+  setOpen,
+  onAddressChange,
+  allAddresses,
+}: AddressesListProps) {
   const handleSelect = (address: Address) => {
     onAddressChange(address.addressId);
     setOpen(false);
@@ -148,10 +182,13 @@ function AddressesList({ setOpen, onAddressChange, allAddresses }: AddressesList
   );
 }
 
-function getDisplayValue(addressId: string | undefined, allAddresses: Address[] | undefined): string | null {
+function getDisplayValue(
+  addressId: string | undefined,
+  allAddresses: Address[] | undefined,
+): string | null {
   if (!addressId || !allAddresses) return null;
 
-  const address = allAddresses.find(a => a.addressId === addressId);
+  const address = allAddresses.find((a) => a.addressId === addressId);
   if (address) {
     return formatAddress(address);
   }
@@ -160,5 +197,5 @@ function getDisplayValue(addressId: string | undefined, allAddresses: Address[] 
 }
 
 function formatAddress(address: Address): string {
-  return `${address.Street.streetName}, ${address.Neighborhood.neighborhoodName}, ${address.addressComplement} - ${address.City.cityName}/${address.State.UF}`;
+  return `${address.street}, ${address.neighborhood}, ${address.addressComplement} - ${address.city}/${address.state}`;
 }

@@ -1,31 +1,46 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from "@/components/ui/card";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { Address } from "@/utils/@types/address";
 import { RegisterNewAddressDialog } from "./RegisterNewAddressDialog";
 import { useState } from "react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { queryClient } from "@/app/(main)/layout";
 import { useMutation } from "@tanstack/react-query";
 import { DeactivateCustomerAddress } from "@/services/addresses.service";
 
 interface ListCustomerAddressesCardProps {
-    customerAddresses: Address[] | null
-    customerId: string,
+  customerAddresses: Address[] | null;
+  customerId: string;
 }
-export function ListCustomerAddressesCard({ customerAddresses, customerId }: ListCustomerAddressesCardProps) {
-  const [ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen ] = useState(false);
+export function ListCustomerAddressesCard({
+  customerAddresses,
+  customerId,
+}: ListCustomerAddressesCardProps) {
+  const [ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen ] =
+    useState(false);
 
   const { mutateAsync: deactivateAddress, isPending } = useMutation({
     mutationFn: ({ addressId }: { addressId: string }) =>
       DeactivateCustomerAddress({ addressId }),
 
     onSuccess: (_, variables) => {
-      toast.success("Endereço desativado com sucesso!", { style: { fontSize: "1rem" } });
+      toast.success("Endereço desativado com sucesso!", {
+        style: { fontSize: "1rem" },
+      });
 
       // revalida os endereços do cliente específico
       queryClient.invalidateQueries({
@@ -46,20 +61,22 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
   return (
     <Card className="">
       <CardHeader>
-        <CardDescription className="text-xl font-bold">Endereços cadastrados:</CardDescription>
+        <CardDescription className="text-xl font-bold">
+          Endereços cadastrados:
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        {
-          customerAddresses?.sort((a, b) => a.Street.streetName.localeCompare(b.Street.streetName)).map(addr => {
+        {customerAddresses
+          ?.sort((a, b) => (a.street || "").localeCompare(b.street || ""))
+          .map((addr) => {
             return (
               <div
                 key={ addr.addressId }
                 className="flex justify-between items-center"
               >
                 <p>
-                  {addr.Street.streetName}, {addr.Neighborhood.neighborhoodName},{" "}
-                  {addr.buildingNumber}, {addr.addressComplement} -{" "}
-                  {addr.City.cityName}/{addr.State.UF}
+                  {addr.street}, {addr.neighborhood}, {addr.buildingNumber},{" "}
+                  {addr.addressComplement} - {addr.city}/{addr.state}
                 </p>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -67,7 +84,10 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
                       <Button
                         type="button"
                         variant="ghost"
-                        onClick={ () => addr.isActive && handleDeactivateAddress(addr.addressId) }
+                        onClick={ () =>
+                          addr.isActive &&
+                          handleDeactivateAddress(addr.addressId)
+                        }
                         className={
                           !addr.isActive
                             ? "pointer-events-none opacity-50 hover:bg-transparent"
@@ -88,8 +108,7 @@ export function ListCustomerAddressesCard({ customerAddresses, customerId }: Lis
                 </Tooltip>
               </div>
             );
-          })
-        }
+          })}
 
         <RegisterNewAddressDialog
           customerId={ customerId }

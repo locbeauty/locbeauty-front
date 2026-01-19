@@ -1,6 +1,15 @@
 "use client";
 
-import { Calendar, ChevronDown, Clock, DollarSign, FileText, Fingerprint, Loader2, MapPin } from "lucide-react";
+import {
+  Calendar,
+  ChevronDown,
+  Clock,
+  DollarSign,
+  FileText,
+  Fingerprint,
+  Loader2,
+  MapPin,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -16,11 +25,14 @@ import { fetchWithToken } from "@/utils/fetchWithToken";
 import { centsToString } from "@/utils/centsToString";
 
 interface BookingHistoryCardProps {
-  isCustomerDetailsModalOpen: boolean
-  selectedCustomer: Customer | null
+  isCustomerDetailsModalOpen: boolean;
+  selectedCustomer: Customer | null;
 }
 
-export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustomer }: BookingHistoryCardProps) {
+export function BookingHistoryCard({
+  isCustomerDetailsModalOpen,
+  selectedCustomer,
+}: BookingHistoryCardProps) {
   const BOOKINGS_PER_PAGE = 10;
 
   const [ visibleBookings, setVisibleBookings ] = useState(10);
@@ -69,17 +81,26 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
 
   const isSameCheckoutGroup = (currentIndex: number) => {
     if (currentIndex === 0) return false;
-    return displayedBookings[currentIndex].checkoutId === displayedBookings[currentIndex - 1].checkoutId;
+    return (
+      displayedBookings[currentIndex].checkoutId ===
+      displayedBookings[currentIndex - 1].checkoutId
+    );
   };
 
   const isFirstInGroup = (currentIndex: number) => {
     if (currentIndex === 0) return true;
-    return displayedBookings[currentIndex].checkoutId !== displayedBookings[currentIndex - 1].checkoutId;
+    return (
+      displayedBookings[currentIndex].checkoutId !==
+      displayedBookings[currentIndex - 1].checkoutId
+    );
   };
 
   const isLastInGroup = (currentIndex: number) => {
     if (currentIndex === displayedBookings?.length - 1) return true;
-    return displayedBookings[currentIndex].checkoutId !== displayedBookings[currentIndex + 1].checkoutId;
+    return (
+      displayedBookings[currentIndex].checkoutId !==
+      displayedBookings[currentIndex + 1].checkoutId
+    );
   };
 
   return (
@@ -114,7 +135,10 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
         ) : (
           <div className="space-y-4">
             {displayedBookings?.map((booking, index) => (
-              <div key={ booking.bookingId } className={ `relative ${isSameCheckoutGroup(index) ? "ml-6" : ""}` }>
+              <div
+                key={ booking.bookingId }
+                className={ `relative ${isSameCheckoutGroup(index) ? "ml-6" : ""}` }
+              >
                 {isSameCheckoutGroup(index) && (
                   <div
                     className="absolute left-[-12px] top-0 w-0.5 bg-border"
@@ -126,7 +150,8 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
 
                 {isFirstInGroup(index) &&
                   index > 0 &&
-                  displayedBookings[index + 1]?.checkoutId === booking.checkoutId && (
+                  displayedBookings[index + 1]?.checkoutId ===
+                    booking.checkoutId && (
                   <div
                     className="absolute left-[-12px] top-1/2 w-0.5 bg-border"
                     style={ {
@@ -152,19 +177,25 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">Local:</span>
-                          <span>{booking.address.City.cityName}</span>
+                          <span>{booking.address.city}</span>
                         </div>
 
                         <div className="flex items-center gap-2 text-sm">
                           <DollarSign className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">Valor:</span>
-                          <span className="font-semibold text-green-600">R$ {centsToString(booking.totalPrice)}</span>
+                          <span className="font-semibold text-green-600">
+                            R$ {centsToString(booking.totalPrice)}
+                          </span>
                         </div>
 
                         <div className="flex items-center gap-2 text-sm">
                           <Fingerprint className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">ID do agendamento:</span>
-                          <p className="text-muted-foreground mt-1">{booking.bookingId}</p>
+                          <span className="font-medium">
+                            ID do agendamento:
+                          </span>
+                          <p className="text-muted-foreground mt-1">
+                            {booking.bookingId}
+                          </p>
                         </div>
 
                         <div className="flex items-center gap-2 text-sm">
@@ -184,7 +215,9 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                               wasRefunded={ booking.wasRefunded }
                               isCourtesy={ booking.isCourtesy }
                             />
-                            <BookingStatusBadge status={ booking.checkoutStatus } />
+                            <BookingStatusBadge
+                              status={ booking.checkoutStatus }
+                            />
                           </div>
                         </div>
                       </div>
@@ -193,7 +226,9 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                         <div className="flex items-center gap-2 text-sm">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">Data:</span>
-                          <span>{format(new Date(booking.date), "dd/MM/yyyy")}</span>
+                          <span>
+                            {format(new Date(booking.date), "dd/MM/yyyy")}
+                          </span>
                         </div>
 
                         <div className="flex items-center gap-2 text-sm">
@@ -201,16 +236,20 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                           <span className="font-medium">Horário:</span>
                           <span>
                             {minutesToHHMM(booking.startHourInMinutes)} -{" "}
-                            {minutesToHHMM(booking.startHourInMinutes + booking.totalDurationInMinutes)} (
-                            {booking.totalDurationInMinutes / 60}h)
+                            {minutesToHHMM(
+                              booking.startHourInMinutes +
+                                booking.totalDurationInMinutes,
+                            )}{" "}
+                            ({booking.totalDurationInMinutes / 60}h)
                           </span>
                         </div>
 
                         <div className="text-sm">
                           <span className="font-medium">Endereço:</span>
                           <p className="text-muted-foreground mt-1">
-                            {booking.address.Street.streetName}, {booking.address.Neighborhood.neighborhoodName} -{" "}
-                            {booking.address.City.cityName}/{booking.address.State.UF}
+                            {booking.address.street},{" "}
+                            {booking.address.neighborhood} -{" "}
+                            {booking.address.city}/{booking.address.state}
                           </p>
                         </div>
                       </div>
@@ -222,7 +261,9 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                           <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
                           <div>
                             <span className="font-medium">Observações:</span>
-                            <p className="text-muted-foreground mt-1">{booking.observations}</p>
+                            <p className="text-muted-foreground mt-1">
+                              {booking.observations}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -253,7 +294,9 @@ export function BookingHistoryCard({ isCustomerDetailsModalOpen, selectedCustome
                   ) : (
                     <>
                       <ChevronDown className="h-4 w-4" />
-                      Carregar mais {Math.min(BOOKINGS_PER_PAGE, remainingBookings)} agendamentos
+                      Carregar mais{" "}
+                      {Math.min(BOOKINGS_PER_PAGE, remainingBookings)}{" "}
+                      agendamentos
                     </>
                   )}
                 </Button>

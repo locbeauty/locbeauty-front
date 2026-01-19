@@ -70,10 +70,10 @@ export function TrainingDetailsDialog({
     setFinishTrainingConfirmationDialogOpen,
   ] = useState(false);
   const [ selectedPayerType, setSelectedPayerType ] = useState<PayerType | null>(
-    null
+    null,
   );
   const [ currentTrainingStatus, setCurrentTrainingStatus ] = useState(
-    selectedTraining?.trainingStatus
+    selectedTraining?.trainingStatus,
   );
 
   useEffect(() => {
@@ -104,10 +104,10 @@ export function TrainingDetailsDialog({
 
     return {
       traineePayment: payments.find(
-        (p: TrainingPayment) => p.payerType === "TRAINEE"
+        (p: TrainingPayment) => p.payerType === "TRAINEE",
       ),
       volunteerPayment: payments.find(
-        (p: TrainingPayment) => p.payerType === "VOLUNTEER"
+        (p: TrainingPayment) => p.payerType === "VOLUNTEER",
       ),
     };
   }, [ selectedTraining ]);
@@ -131,7 +131,7 @@ export function TrainingDetailsDialog({
       | "Debito"
       | "Credito"
       | "Dinheiro"
-      | null
+      | null,
   ) => {
     try {
       const targetPayerType = canceledBy || "TRAINEE";
@@ -143,9 +143,9 @@ export function TrainingDetailsDialog({
           totalPrice: targetPayment.totalPrice,
           basePrice: targetPayment.basePrice,
           paymentStatus:
-            trainingStatus === "Cancelado"
-              ? "Cancelado"
-              : targetPayment.paymentStatus || "Pendente",
+              trainingStatus === "Cancelado"
+                ? "Cancelado"
+                : targetPayment.paymentStatus || "Pendente",
           paymentMode: targetPayment.paymentMode,
           firstPaymentAmount: targetPayment.firstPaymentAmount || 0,
           firstPaymentDate: targetPayment.firstPaymentDate
@@ -161,7 +161,7 @@ export function TrainingDetailsDialog({
           secondPaymentStatus: targetPayment.secondPaymentStatus,
           additionalCost: targetPayment.additionalCost || 0,
           additionalCostDescription:
-            targetPayment.additionalCostDescription || "",
+              targetPayment.additionalCostDescription || "",
         }
         : {
           paymentStatus: "Pendente" as const,
@@ -199,7 +199,7 @@ export function TrainingDetailsDialog({
         toast.success(
           `Treinamento ${
             trainingStatus === "Cancelado" ? "cancelado" : "concluído"
-          } com sucesso!`
+          } com sucesso!`,
         );
         if (setSelectedTraining) {
           setSelectedTraining((prev) =>
@@ -237,7 +237,7 @@ export function TrainingDetailsDialog({
                   return updatedPayment;
                 }),
               }
-              : null
+              : null,
           );
         }
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
@@ -268,7 +268,7 @@ export function TrainingDetailsDialog({
       setTraineeBasePrice(traineePayment.basePrice || 0);
       setTraineeAdditionalCost(traineePayment.additionalCost || 0);
       setTraineeAdditionalCostDescription(
-        traineePayment.additionalCostDescription || ""
+        traineePayment.additionalCostDescription || "",
       );
       setTraineeTotalPrice(traineePayment.totalPrice || 0);
     } else {
@@ -333,19 +333,19 @@ export function TrainingDetailsDialog({
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {String(
-                      Math.floor(selectedTraining.hourInMinutes / 60)
+                      Math.floor(selectedTraining.hourInMinutes / 60),
                     ).padStart(2, "0")}
                     :
                     {String(selectedTraining.hourInMinutes % 60).padStart(
                       2,
-                      "0"
+                      "0",
                     )}
                   </span>
                   <span>•</span>
                   <span>
                     {new Date(selectedTraining.dueDate).toLocaleDateString(
                       "pt-BR",
-                      { dateStyle: "long" }
+                      { dateStyle: "long" },
                     )}
                   </span>
                 </div>
@@ -368,7 +368,7 @@ export function TrainingDetailsDialog({
                   <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/10 text-sm space-y-2">
                     {/* Data do Cancelamento */}
                     {selectedTraining.TrainingPayment.find(
-                      (p) => p.cancellationDate
+                      (p) => p.cancellationDate,
                     )?.cancellationDate && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">
@@ -377,8 +377,8 @@ export function TrainingDetailsDialog({
                         <span className="font-medium">
                           {new Date(
                             selectedTraining.TrainingPayment.find(
-                              (p) => p.cancellationDate
-                            )!.cancellationDate!
+                              (p) => p.cancellationDate,
+                            )!.cancellationDate!,
                           ).toLocaleDateString("pt-BR")}
                         </span>
                       </div>
@@ -386,10 +386,10 @@ export function TrainingDetailsDialog({
 
                     {/* Taxa de Cancelamento */}
                     {selectedTraining.TrainingPayment.some(
-                      (p) => (p.cancellationFee || 0) > 0
+                      (p) => (p.cancellationFee || 0) > 0,
                     ) ? (
                         selectedTraining.TrainingPayment.filter(
-                          (p) => (p.cancellationFee || 0) > 0
+                          (p) => (p.cancellationFee || 0) > 0,
                         ).map((p, index) => (
                           <div key={ index } className="space-y-2">
                             <div className="flex justify-between">
@@ -409,7 +409,7 @@ export function TrainingDetailsDialog({
                                 </span>
                                 <span className="font-medium">
                                   {new Date(
-                                    p.cancellationFeePaymentDate
+                                    p.cancellationFeePaymentDate,
                                   ).toLocaleDateString("pt-BR")}
                                 </span>
                               </div>
@@ -542,13 +542,13 @@ export function TrainingDetailsDialog({
               </h4>
               <div className="p-4 rounded-lg border bg-muted/20 text-sm">
                 <p className="font-medium">
-                  {selectedTraining.Address.Street.streetName},{" "}
+                  {selectedTraining.Address.street},{" "}
                   {selectedTraining.Address.buildingNumber}
                 </p>
                 <p className="text-muted-foreground mt-1">
-                  {selectedTraining.Address.Neighborhood.neighborhoodName} -{" "}
-                  {selectedTraining.Address.City.cityName}/
-                  {selectedTraining.Address.State.UF}
+                  {selectedTraining.Address.neighborhood} -{" "}
+                  {selectedTraining.Address.city}/
+                  {selectedTraining.Address.state}
                 </p>
               </div>
             </div>

@@ -51,27 +51,14 @@ export interface BookingWithCheckout {
     addressId: string;
     zipCode: string;
     buildingNumber: string;
-    addressComplement: string;
+    addressComplement: string | null;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
-    State: {
-      stateId: string;
-      stateName: string;
-      UF: string;
-    };
-    City: {
-      cityId: string;
-      cityName: string;
-    };
-    Neighborhood: {
-      neighborhoodId: string;
-      neighborhoodName: string;
-    };
-    Street: {
-      streetId: string;
-      streetName: string;
-    };
+    city: string;
+    state: string;
+    neighborhood: string;
+    street: string;
   };
   hasMultipleBookingsInCheckout: boolean;
 }

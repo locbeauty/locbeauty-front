@@ -22,7 +22,7 @@ export function FilialsTable() {
 
   const handleToggleUpdateFilialDialog = (
     openStatus: boolean,
-    filial: Filial | null
+    filial: Filial | null,
   ) => {
     if (openStatus) {
       setSelectedFilial(filial);
@@ -33,7 +33,7 @@ export function FilialsTable() {
 
   const handleToggleFilialDetailsDialog = (
     openStatus: boolean,
-    filial: Filial | null
+    filial: Filial | null,
   ) => {
     setSelectedFilial(filial);
     setIsFilialDetailsDialogOpen(openStatus);
@@ -48,7 +48,7 @@ export function FilialsTable() {
           next: {
             tags: [ "get-all-filials" ],
           },
-        }
+        },
       );
       const { data }: { data: Filial[] } = await response.json();
       setAllFilials(data);
@@ -94,9 +94,8 @@ export function FilialsTable() {
                     {filial.managerEmployee?.fullname || "-"}
                   </td>
                   <td className="p-3 text-center text-sm truncate max-w-[200px]">
-                    {filial.Address.Street.streetName},{" "}
-                    {filial.Address.buildingNumber} -{" "}
-                    {filial.Address.City.cityName}/{filial.Address.State.UF}{" "}
+                    {filial.Address.street}, {filial.Address.buildingNumber} -{" "}
+                    {filial.Address.city}/{filial.Address.state}{" "}
                   </td>
                   <td className="p-3 text-center text-sm">
                     {filial.cellphone}
@@ -148,7 +147,7 @@ export function FilialsTable() {
               <ResponsiveCard
                 cardData={ {
                   id: filial.filialId,
-                  title: filial.Address.State.stateName,
+                  title: filial.Address.state || "",
                   items: [
                     { itemLabel: "Email: ", itemInfo: filial.email },
                     {

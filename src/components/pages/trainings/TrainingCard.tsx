@@ -6,7 +6,7 @@ import {
   Clock,
   MapPin,
   GraduationCap,
-  User
+  User,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,7 +43,11 @@ export function TrainingCard({ training }: TrainingCardProps) {
                   {/* Badge dinâmica baseada no status (exemplo) */}
                   <Badge
                     // variant="secondary"
-                    className={ training.trainingStatus === "Concluido" ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-blue-100 text-blue-800 hover:bg-blue-100" }
+                    className={
+                      training.trainingStatus === "Concluido"
+                        ? "bg-green-100 text-green-800 hover:bg-green-100"
+                        : "bg-blue-100 text-blue-800 hover:bg-blue-100"
+                    }
                   >
                     {training.trainingStatus || "Agendado"}
                   </Badge>
@@ -91,15 +95,19 @@ export function TrainingCard({ training }: TrainingCardProps) {
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {String(Math.floor(training.hourInMinutes / 60)).padStart(2, "0")}:
-                    {String(training.hourInMinutes % 60).padStart(2, "0")}
+                    {String(Math.floor(training.hourInMinutes / 60)).padStart(
+                      2,
+                      "0",
+                    )}
+                    :{String(training.hourInMinutes % 60).padStart(2, "0")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 md:col-span-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span className="truncate">
-                    {training.Address.Street.streetName}, {training.Address.Neighborhood.neighborhoodName}
-                    , {training.Address.addressComplement} - {training.Address.City.cityName}/{training.Address.State.UF}
+                    {training.Address.street}, {training.Address.neighborhood},{" "}
+                    {training.Address.addressComplement} -{" "}
+                    {training.Address.city}/{training.Address.state}
                   </span>
                 </div>
               </div>
