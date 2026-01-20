@@ -1,10 +1,10 @@
-import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
-import { BookingsPerMachineCard } from "../cards/BookingsPerMachineCard";
-import { TotalRevenueCard } from "../cards/TotalRevenueCard";
-import { FilialRankingsCard } from "../cards/FilialRankingsCard";
-import { CityRankingCard } from "../cards/CityRankingCard";
 import { useEffect, useState } from "react";
 import { getAvailableYears } from "@/services/dashboard.service";
+import { NewClientsCard } from "../cards/NewClientsCard";
+import { AverageTicketCard } from "../cards/AverageTicketCard";
+import { ClientsAtRiskCard } from "../cards/ClientsAtRiskCard";
+import { CustomerStatusCard } from "../cards/CustomerStatusCard";
+import { TopNeighborhoodsCard } from "../cards/TopNeighborhoodsCard";
 
 const MONTHS = [
   "Janeiro",
@@ -21,11 +21,7 @@ const MONTHS = [
   "Dezembro",
 ];
 
-export function OverviewTab() {
-  const currentMonthIndex = new Date().getMonth();
-  const [ selectedMonth, setSelectedMonth ] = useState<string>(
-    MONTHS[currentMonthIndex].toLowerCase(),
-  );
+export function InsightsTab() {
   const [ selectedYear, setSelectedYear ] = useState<string>(
     String(new Date().getFullYear()),
   );
@@ -45,7 +41,6 @@ export function OverviewTab() {
         }
       } catch (error) {
         console.error("Failed to fetch available years", error);
-        // Fallback to current year range or keep empty
         setAvailableYears([ String(new Date().getFullYear()) ]);
       }
     }
@@ -53,29 +48,33 @@ export function OverviewTab() {
   }, [ selectedYear ]);
 
   return (
-    <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <TotalRevenueCard
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="col-span-1 md:col-span-2 lg:col-span-2">
+        <ClientsAtRiskCard />
+      </div>
+      <div className="col-span-1 md:col-span-2 lg:col-span-2">
+        <CustomerStatusCard />
+      </div>
+      <div className="col-span-1 md:col-span-2 lg:col-span-2">
+        <NewClientsCard
           selectedYear={ selectedYear }
-          months={ MONTHS }
           availableYears={ availableYears }
-        />
-        <BookingsPerMachineCard
-          selectedMonth={ selectedMonth }
-          selectedYear={ selectedYear }
           months={ MONTHS }
         />
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <FilialRankingsCard
+      <div className="col-span-1 md:col-span-2 lg:col-span-2">
+        <AverageTicketCard
           selectedYear={ selectedYear }
           availableYears={ availableYears }
+          months={ MONTHS }
         />
-        <CityRankingCard
+      </div>
+      <div className="col-span-1 md:col-span-4 lg:col-span-4">
+        <TopNeighborhoodsCard
           selectedYear={ selectedYear }
           availableYears={ availableYears }
         />
       </div>
-    </>
+    </div>
   );
 }

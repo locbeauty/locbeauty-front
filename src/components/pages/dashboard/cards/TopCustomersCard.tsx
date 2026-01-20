@@ -15,22 +15,83 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { getTopCustomersMetric } from "@/services/dashboard.service";
+import {
+  getTopCustomersMetric,
+  getAvailableYears,
+} from "@/services/dashboard.service";
 import { useQuery } from "@tanstack/react-query";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
+import { apiRequest } from "@/lib/api";
+import { useEffect, useState } from "react";
+
+interface Filial {
+  filialId: string;
+  filialName: string;
+}
 
 interface TopCustomersCardProps {
   selectedYear: number;
   filialId?: string;
 }
 
-export function TopCustomersCard({
-  selectedYear,
-  filialId,
-}: TopCustomersCardProps) {
+export function TopCustomersCard() {
+  const [ selectedYear, setSelectedYear ] = useState<string>(
+    String(new Date().getFullYear()),
+  );
+  const [ filials, setFilials ] = useState<Filial[]>([]);
+  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
+  const [ availableYears, setAvailableYears ] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const years = await getAvailableYears();
+        const yearsString = years.map(String);
+        setAvailableYears(yearsString);
+
+        if (yearsString.length > 0 && !yearsString.includes(selectedYear)) {
+          if (!yearsString.includes(String(new Date().getFullYear()))) {
+            setSelectedYear(yearsString[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch available years", error);
+      }
+
+      try {
+        const { data } = await apiRequest<Filial[]>({
+          endpoint: "filials",
+          method: "GET",
+        });
+        if (data) {
+          setFilials(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch filials", error);
+      }
+    }
+    fetchData();
+  }, [ selectedYear ]);
+
   const { data, isLoading } = useQuery({
-    queryKey: [ "dashboard-top-customers", selectedYear, filialId ],
-    queryFn: () => getTopCustomersMetric({ year: selectedYear, filialId }),
+    queryKey: [
+      "dashboard-top-customers",
+      Number(selectedYear),
+      selectedFilialId === "all" ? undefined : selectedFilialId,
+    ],
+    queryFn: () =>
+      getTopCustomersMetric({
+        year: Number(selectedYear),
+        filialId: selectedFilialId === "all" ? undefined : selectedFilialId,
+      }),
   });
 
   const topCustomers = data?.topCustomers || [];
@@ -39,7 +100,34 @@ export function TopCustomersCard({
     <Card className="w-[89vw] md:w-auto">
       <CardHeader>
         <CardTitle>Clientes Principais</CardTitle>
-        <CardDescription>Clientes com maior número de locações</CardDescription>
+        <CardDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <span>Clientes com maior número de locações</span>
+          <div className="flex items-center gap-2">
+            <Select
+              value={ selectedFilialId }
+              onValueChange={ setSelectedFilialId }
+            >
+              <SelectTrigger className="w-[140px] h-8">
+                <SelectValue placeholder="Filial" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as filiais</SelectItem>
+                {filials.map((filial) => (
+                  <SelectItem key={ filial.filialId } value={ filial.filialId }>
+                    {filial.filialName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <CustomFilterSelect
+              items={ availableYears }
+              placeholder="Selecione o ano"
+              triggerProps={ { className: "w-[100px] h-8" } }
+              value={ selectedYear }
+              onValueChange={ setSelectedYear }
+            />
+          </div>
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -61,7 +149,7 @@ export function TopCustomersCard({
                 <TableRow key={ customer.customerId }>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
+                      {/* <Avatar className="h-8 w-8">
                         <AvatarFallback>
                           {customer.fullname
                             .split(" ")
@@ -70,7 +158,7 @@ export function TopCustomersCard({
                             .join("")
                             .toUpperCase()}
                         </AvatarFallback>
-                      </Avatar>
+                      </Avatar> */}
                       <div>
                         <div>{customer.fullname}</div>
                         <div className="text-xs text-muted-foreground">

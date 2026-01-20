@@ -365,3 +365,187 @@ export async function getTopCustomersMetric({
 
   return data;
 }
+
+export async function getNewClientsMetric({
+  year,
+  filialId,
+}: {
+  year: number;
+  filialId?: string;
+}): Promise<{
+  data: { month: number; count: number }[];
+}> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    data: { month: number; count: number }[];
+  }>({
+    endpoint: "dashboard/metrics/new-clients",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch new clients metric");
+  }
+
+  return data;
+}
+
+export async function getAverageTicketMetric({
+  year,
+  filialId,
+}: {
+  year: number;
+  filialId?: string;
+}): Promise<{
+  data: { month: number; average: number }[];
+}> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    data: { month: number; average: number }[];
+  }>({
+    endpoint: "dashboard/metrics/average-ticket",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch average ticket metric");
+  }
+
+  return data;
+}
+
+export async function getClientsAtRiskMetric({
+  filialId,
+}: {
+  filialId?: string;
+}): Promise<{
+  count: number;
+}> {
+  const queryParams: Record<string, string> = {};
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    count: number;
+  }>({
+    endpoint: "dashboard/metrics/clients-at-risk",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch clients at risk metric");
+  }
+
+  return data;
+}
+
+export async function getCustomerStatusMetric({
+  filialId,
+}: {
+  filialId?: string;
+}): Promise<{
+  data: { status: string; count: number }[];
+}> {
+  const queryParams: Record<string, string> = {};
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    data: { status: string; count: number }[];
+  }>({
+    endpoint: "dashboard/metrics/customer-status",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch customer status metric");
+  }
+
+  return data;
+}
+
+export async function getTopNeighborhoodsMetric({
+  year,
+  filialId,
+}: {
+  year: number;
+  filialId?: string;
+}): Promise<{
+  data: { neighborhood: string; count: number }[];
+}> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    data: { neighborhood: string; count: number }[];
+  }>({
+    endpoint: "dashboard/metrics/top-neighborhoods",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch top neighborhoods metric");
+  }
+
+  return data;
+}
+
+export async function getDefaultsOverTime({
+  year,
+  filialId,
+}: {
+  year: number;
+  filialId?: string;
+}): Promise<{
+  data: { month: number; count: number }[];
+}> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    data: { month: number; count: number }[];
+  }>({
+    endpoint: "dashboard/metrics/defaults/over-time",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch defaults over time");
+  }
+
+  return data;
+}

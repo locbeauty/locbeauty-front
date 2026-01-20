@@ -9,6 +9,7 @@ import { CustomersTab } from "@/components/pages/dashboard/tabs/CustomersTab";
 import { LocationsTab } from "@/components/pages/dashboard/tabs/LocationsTab";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { InsightsTab } from "@/components/pages/dashboard/tabs/InsightsTab";
 
 export default function DashboardPage() {
   return (
@@ -34,6 +35,12 @@ export default function DashboardPage() {
                   <TabsTrigger className="text-xs md:text-sm" value="analytics">
                     Análise Detalhada
                   </TabsTrigger>
+                  <TabsTrigger
+                    className="text-xs md:text-sm"
+                    value="new-insights"
+                  >
+                    Novos Insights
+                  </TabsTrigger>
                   <TabsTrigger className="text-xs md:text-sm" value="customers">
                     Clientes
                   </TabsTrigger>
@@ -44,11 +51,14 @@ export default function DashboardPage() {
                 <TabsContent value="overview" className="space-y-4">
                   <OverviewTab />
                 </TabsContent>
+                <TabsContent value="customers" className="space-y-4">
+                  <CustomersTab />
+                </TabsContent>
                 <TabsContent value="analytics" className="space-y-4">
                   <DetailsTab />
                 </TabsContent>
-                <TabsContent value="customers" className="space-y-4">
-                  <CustomersTab />
+                <TabsContent value="new-insights" className="space-y-4">
+                  <InsightsTab />
                 </TabsContent>
                 <TabsContent value="locations" className="space-y-4">
                   <LocationsTab />
