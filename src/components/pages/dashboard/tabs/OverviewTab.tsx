@@ -10,7 +10,12 @@ import { CustomAreaChart } from "../CustomAreaChart";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { BookingsPerMachineCard } from "../cards/BookingsPerMachineCard";
 import { TotalRevenueCard } from "../cards/TotalRevenueCard";
-import { CustomBarChart } from "../CustomBarChart";
+import { FilialRankingsCard } from "../cards/FilialRankingsCard";
+import { DefaultsCard } from "../cards/DefaultsCard";
+import { InactiveClientsCard } from "../cards/InactiveClientsCard";
+import { ActiveClientsCard } from "../cards/ActiveClientsCard";
+import { CityRankingCard } from "../cards/CityRankingCard";
+// import { CustomBarChart } from "../CustomBarChart";
 import { useEffect, useState } from "react";
 import { getAvailableYears } from "@/services/dashboard.service";
 
@@ -101,17 +106,6 @@ export function OverviewTab() {
     { name: "Rio Grande do Norte", value: 408 },
   ];
 
-  const CidadesData = [
-    { name: "Vitória de Santo Antão", value: 1423 },
-    { name: "Recife", value: 952 },
-    { name: "Xique-Xique", value: 687 },
-    { name: "Fortaleza", value: 532 },
-    { name: "João Pessoa", value: 408 },
-    { name: "Bangu", value: 408 },
-    { name: "Santo André", value: 408 },
-    { name: "Natal", value: 408 },
-  ];
-
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -125,54 +119,16 @@ export function OverviewTab() {
           selectedYear={ selectedYear }
           months={ MONTHS }
         />
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Número de inadimplências
-            </CardTitle>
-            <DollarSignIcon className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              <span className="text-destructive">+10%</span> em relação ao mês
-              anterior
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Clientes Ativos
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1.248</div>
-            <p className="text-sm text-muted-foreground mt-1">
-              <span className="text-green-500">+12%</span> em relação ao mês
-              anterior
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="w-[89vw] md:w-auto">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Clientes inativos
-            </CardTitle>
-            <Users className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">40</div>
-            <p className="text-sm text-muted-foreground mt-1">
-              <span className="text-green-500">-12%</span> em relação ao mês
-              anterior
-            </p>
-          </CardContent>
-        </Card>
+        <DefaultsCard
+          month={ selectedMonth }
+          year={ selectedYear }
+          months={ MONTHS }
+        />
+        <InactiveClientsCard />
+        <ActiveClientsCard />
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 pl-0 ml-0">
-        <Card className="lg:col-span-3 md:w-auto w-[89vw] pl-0 ml-0 h-fit">
+      {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 pl-0 ml-0"> */}
+      {/* <Card className="lg:col-span-3 md:w-auto w-[89vw] pl-0 ml-0 h-fit">
           <CardHeader>
             <CardTitle>Número de agendamentos/mês</CardTitle>
             <CardDescription className="flex items-center justify-between p-0">
@@ -233,71 +189,17 @@ export function OverviewTab() {
               valueFormatter={ (value) => `R$ ${value.toLocaleString()}` }
             />
           </CardContent>
-        </Card>
-      </div>
+        </Card> */}
+      {/* </div> */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-3 w-[89vw] md:w-auto">
-          <CardHeader>
-            <CardTitle>Ranking de filiais</CardTitle>
-            <CardDescription className="flex items-center justify-between">
-              Número de locações por filial
-              <CustomFilterSelect
-                items={ [
-                  "2020",
-                  "2021",
-                  "2022",
-                  "2023",
-                  "2024",
-                  "2025",
-                  "2026",
-                ].reverse() }
-                placeholder="Selecione o ano"
-                triggerProps={ { className: "w-[150px]" } }
-              />
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CustomBarChart
-              data={ FilialsData }
-              dataKey="value"
-              nameKey="name"
-              height={ 400 }
-              fill="#7f2b83"
-              valueFormatter={ (value) => `${value} locações` }
-            />
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-4 w-[89vw] md:w-auto">
-          <CardHeader>
-            <CardTitle>Ranking de cidades</CardTitle>
-            <CardDescription className="flex items-center justify-between">
-              Cidades com mais agendamentos
-              <CustomFilterSelect
-                items={ [
-                  "2020",
-                  "2021",
-                  "2022",
-                  "2023",
-                  "2024",
-                  "2025",
-                  "2026",
-                ].reverse() }
-                placeholder="Selecione o ano"
-                triggerProps={ { className: "w-[150px]" } }
-              />
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CustomBarChart
-              data={ CidadesData }
-              dataKey="value"
-              nameKey="name"
-              height={ 400 }
-              fill="#7f2b83"
-              valueFormatter={ (value) => `${value} locações` }
-            />
-          </CardContent>
-        </Card>
+        <FilialRankingsCard
+          selectedYear={ selectedYear }
+          availableYears={ availableYears }
+        />
+        <CityRankingCard
+          selectedYear={ selectedYear }
+          availableYears={ availableYears }
+        />
       </div>
     </>
   );

@@ -94,8 +94,8 @@ export function FilialsTable() {
                     {filial.managerEmployee?.fullname || "-"}
                   </td>
                   <td className="p-3 text-center text-sm truncate max-w-[200px]">
-                    {filial.Address.street}, {filial.Address.buildingNumber} -{" "}
-                    {filial.Address.city}/{filial.Address.state}{" "}
+                    {filial.Address?.street}, {filial.Address?.buildingNumber} -{" "}
+                    {filial.Address?.city}/{filial.Address?.state}{" "}
                   </td>
                   <td className="p-3 text-center text-sm">
                     {filial.cellphone}
@@ -147,7 +147,7 @@ export function FilialsTable() {
               <ResponsiveCard
                 cardData={ {
                   id: filial.filialId,
-                  title: filial.Address.state || "",
+                  title: filial.Address?.state || "",
                   items: [
                     { itemLabel: "Email: ", itemInfo: filial.email },
                     {

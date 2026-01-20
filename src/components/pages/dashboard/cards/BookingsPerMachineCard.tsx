@@ -33,16 +33,16 @@ export function BookingsPerMachineCard({
   selectedYear,
   months,
 }: BookingsPerMachineCardProps) {
-  const [filials, setFilials] = useState<Filial[]>([]);
-  const [gears, setGears] = useState<Gear[]>([]);
+  const [ filials, setFilials ] = useState<Filial[]>([]);
+  const [ gears, setGears ] = useState<Gear[]>([]);
 
-  const [selectedFilialId, setSelectedFilialId] = useState<string>("");
-  const [selectedGearId, setSelectedGearId] = useState<string>("");
+  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("");
+  const [ selectedGearId, setSelectedGearId ] = useState<string>("");
 
-  const [yearlyData, setYearlyData] = useState<
+  const [ yearlyData, setYearlyData ] = useState<
     { date: string; total: number }[]
   >([]);
-  const [loading, setLoading] = useState(false);
+  const [ loading, setLoading ] = useState(false);
 
   // Fetch Filials on mount
   useEffect(() => {
@@ -103,7 +103,7 @@ export function BookingsPerMachineCard({
       }
     }
     fetchGears();
-  }, [selectedFilialId]);
+  }, [ selectedFilialId ]);
 
   // Fetch Metrics when inputs change
   useEffect(() => {
@@ -135,7 +135,7 @@ export function BookingsPerMachineCard({
     }
 
     fetchMetrics();
-  }, [selectedGearId, selectedYear, months, selectedFilialId]);
+  }, [ selectedGearId, selectedYear, months, selectedFilialId ]);
 
   return (
     <Card className="col-span-1 md:col-span-2 relative h-fit">
@@ -145,15 +145,15 @@ export function BookingsPerMachineCard({
           Histórico anual de locações
           <div className="flex gap-2 flex-wrap">
             <Select
-              value={selectedFilialId}
-              onValueChange={setSelectedFilialId}
+              value={ selectedFilialId }
+              onValueChange={ setSelectedFilialId }
             >
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="Filial" />
               </SelectTrigger>
               <SelectContent>
                 {filials.map((filial) => (
-                  <SelectItem key={filial.filialId} value={filial.filialId}>
+                  <SelectItem key={ filial.filialId } value={ filial.filialId }>
                     {filial.filialName}
                   </SelectItem>
                 ))}
@@ -161,9 +161,9 @@ export function BookingsPerMachineCard({
             </Select>
 
             <Select
-              value={selectedGearId}
-              onValueChange={setSelectedGearId}
-              disabled={!selectedFilialId}
+              value={ selectedGearId }
+              onValueChange={ setSelectedGearId }
+              disabled={ !selectedFilialId }
             >
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="Máquina" />
@@ -171,7 +171,7 @@ export function BookingsPerMachineCard({
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 {gears.map((gear) => (
-                  <SelectItem key={gear.gearId} value={gear.gearId}>
+                  <SelectItem key={ gear.gearId } value={ gear.gearId }>
                     {gear.gearName}
                   </SelectItem>
                 ))}
@@ -182,12 +182,12 @@ export function BookingsPerMachineCard({
       </CardHeader>
       <CardContent className="pl-0 ml-0">
         <CustomAreaChart
-          data={yearlyData.length > 0 ? yearlyData : []}
+          data={ yearlyData.length > 0 ? yearlyData : [] }
           dataKey="total"
-          height={150}
+          height={ 150 }
           stroke="#7f2b83"
           fill="#7f2b83"
-          valueFormatter={(value) => `${value}`}
+          valueFormatter={ (value) => `${value}` }
         />
       </CardContent>
     </Card>

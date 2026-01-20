@@ -104,13 +104,43 @@ export async function getYearlyBookingsPerMachineMetric({
 
 export async function getYearlyRevenueMetric({
   year,
+  filialId,
 }: {
   year: number;
+  filialId?: string;
 }): Promise<{ revenueData: { month: number; total: number }[] }> {
+  const queryParams: Record<string, string | number> = {
+    year: String(year),
+  };
+
+  if (filialId) {
+    queryParams.filialId = filialId;
+  }
+
   const { data } = await apiRequest<{
     revenueData: { month: number; total: number }[];
   }>({
     endpoint: "dashboard/metrics/revenue/yearly",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch yearly revenue metric");
+  }
+
+  return data;
+}
+
+export async function getFilialBookingsRanking({
+  year,
+}: {
+  year: number;
+}): Promise<{ ranking: { filialName: string; count: number }[] }> {
+  const { data } = await apiRequest<{
+    ranking: { filialName: string; count: number }[];
+  }>({
+    endpoint: "dashboard/metrics/filial-bookings-ranking",
     method: "GET",
     queryParams: {
       year: String(year),
@@ -118,7 +148,113 @@ export async function getYearlyRevenueMetric({
   });
 
   if (!data) {
-    throw new Error("Failed to fetch yearly revenue metric");
+    throw new Error("Failed to fetch filial ranking");
+  }
+
+  return data;
+}
+
+export async function getDefaultsMetric({
+  month,
+  year,
+}: {
+  month: number;
+  year: number;
+}): Promise<{ count: number; percentageChange: number }> {
+  const { data } = await apiRequest<{
+    count: number;
+    percentageChange: number;
+  }>({
+    endpoint: "dashboard/metrics/defaults",
+    method: "GET",
+    queryParams: {
+      month: String(month),
+      year: String(year),
+    },
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch defaults metric");
+  }
+
+  return data;
+}
+
+export async function getInactiveClientsMetric(filialId?: string): Promise<{
+  count: number;
+  percentageChange: number;
+}> {
+  const queryParams: Record<string, string> = {};
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    count: number;
+    percentageChange: number;
+  }>({
+    endpoint: "dashboard/metrics/inactive-clients",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch inactive clients metric");
+  }
+
+  return data;
+}
+
+export async function getActiveClientsMetric(filialId?: string): Promise<{
+  count: number;
+  percentageChange: number;
+}> {
+  const queryParams: Record<string, string> = {};
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    count: number;
+    percentageChange: number;
+  }>({
+    endpoint: "dashboard/metrics/active-clients",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch active clients metric");
+  }
+
+  return data;
+}
+
+export async function getCityRankingMetric({
+  year,
+  filialId,
+}: {
+  year: number;
+  filialId?: string;
+}): Promise<{ ranking: { city: string; count: number }[] }> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    ranking: { city: string; count: number }[];
+  }>({
+    endpoint: "dashboard/metrics/city-ranking",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch city ranking metric");
   }
 
   return data;

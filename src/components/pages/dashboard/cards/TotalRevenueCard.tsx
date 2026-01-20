@@ -6,9 +6,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { apiRequest } from "@/lib/api";
 import { getYearlyRevenueMetric } from "@/services/dashboard.service";
 import { useEffect, useState } from "react";
 import { CustomAreaChart } from "../CustomAreaChart";
+
+interface Filial {
+  filialId: string;
+  filialName: string;
+}
 
 interface TotalRevenueCardProps {
   selectedYear: string;
@@ -25,6 +31,8 @@ export function TotalRevenueCard({
   const [ yearlyData, setYearlyData ] = useState<
     { date: string; total: number }[]
   >([]);
+  const [ filials, setFilials ] = useState<Filial[]>([]);
+  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
 
   const [ loading, setLoading ] = useState(false);
   const [ totalRevenue, setTotalRevenue ] = useState<number>(0);
@@ -35,6 +43,24 @@ export function TotalRevenueCard({
       setInternalYear(selectedYear);
     }
   }, [ selectedYear ]);
+
+  // Fetch Filials on mount
+  useEffect(() => {
+    async function fetchFilials() {
+      try {
+        const { data } = await apiRequest<Filial[]>({
+          endpoint: "filials",
+          method: "GET",
+        });
+        if (data) {
+          setFilials(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch filials", error);
+      }
+    }
+    fetchFilials();
+  }, []);
 
   // Fetch Metrics when year changes
   useEffect(() => {
@@ -48,6 +74,7 @@ export function TotalRevenueCard({
       try {
         const { revenueData: data } = await getYearlyRevenueMetric({
           year: Number(internalYear),
+          filialId: selectedFilialId === "all" ? undefined : selectedFilialId,
         });
 
         let total = 0;
@@ -68,7 +95,7 @@ export function TotalRevenueCard({
     }
 
     fetchMetrics();
-  }, [ internalYear, months ]);
+  }, [ internalYear, months, selectedFilialId ]);
 
   return (
     <Card className="col-span-1 md:col-span-2 relative h-fit">
@@ -76,6 +103,23 @@ export function TotalRevenueCard({
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
           <CardTitle>Receita Total</CardTitle>
           <div className="flex gap-2 flex-wrap">
+            <Select
+              value={ selectedFilialId }
+              onValueChange={ setSelectedFilialId }
+            >
+              <SelectTrigger className="w-[180px] h-8">
+                <SelectValue placeholder="Filial" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {filials.map((filial) => (
+                  <SelectItem key={ filial.filialId } value={ filial.filialId }>
+                    {filial.filialName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select value={ internalYear } onValueChange={ setInternalYear }>
               <SelectTrigger className="w-[100px] h-8">
                 <SelectValue placeholder="Ano" />
