@@ -47,7 +47,7 @@ export function OverviewTab() {
   useEffect(() => {
     async function fetchYears() {
       try {
-        const { years } = await getAvailableYears();
+        const years = await getAvailableYears();
         const yearsString = years.map(String);
         setAvailableYears(yearsString);
 

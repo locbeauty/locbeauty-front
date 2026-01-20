@@ -3,20 +3,26 @@ import {
   SelectTrigger,
   SelectValue,
   SelectContent,
-  SelectItem
+  SelectItem,
 } from "@/components/ui/select";
 import React from "react";
 
-interface CustomFilterSelectProps extends React.ComponentPropsWithoutRef<typeof Select> {
-    items: readonly string[];
-    placeholder?: string;
-    triggerProps?: React.ComponentPropsWithoutRef<typeof SelectTrigger>;
+type FilterItem = string | { value: string; label: string };
+
+interface CustomFilterSelectProps extends React.ComponentPropsWithoutRef<
+  typeof Select
+> {
+  items: readonly FilterItem[];
+  placeholder?: string;
+  triggerProps?: React.ComponentPropsWithoutRef<typeof SelectTrigger>;
+  showAllOption?: boolean;
 }
 
 export function CustomFilterSelect({
   items,
   placeholder,
   triggerProps,
+  showAllOption = false,
   ...selectProps
 }: CustomFilterSelectProps) {
   return (
@@ -25,11 +31,17 @@ export function CustomFilterSelect({
         <SelectValue placeholder={ placeholder } />
       </SelectTrigger>
       <SelectContent>
-        { items.map((item) => (
-          <SelectItem key={ item.toLowerCase() } value={ item.toLowerCase() }>
-            { item }
-          </SelectItem>
-        )) }
+        {showAllOption && <SelectItem value="all">Todas</SelectItem>}
+        {items.map((item) => {
+          const value = typeof item === "string" ? item : item.value;
+          const label = typeof item === "string" ? item : item.label;
+
+          return (
+            <SelectItem key={ value } value={ value }>
+              {label}
+            </SelectItem>
+          );
+        })}
       </SelectContent>
     </Select>
   );

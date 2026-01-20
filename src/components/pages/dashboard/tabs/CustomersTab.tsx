@@ -1,12 +1,72 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { CustomPieChart } from "../CustomPieChart";
 import { Clock, Star } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { TopCustomersCard } from "@/components/pages/dashboard/cards/TopCustomersCard";
+import { useEffect, useState } from "react";
+import { getAvailableYears } from "@/services/dashboard.service";
+import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
+import { apiRequest } from "@/lib/api";
+
+interface Filial {
+  filialId: string;
+  filialName: string;
+}
 
 export function CustomersTab() {
+  const [ selectedYear, setSelectedYear ] = useState<string>(
+    String(new Date().getFullYear()),
+  );
+  const [ availableYears, setAvailableYears ] = useState<string[]>([]);
+  const [ filials, setFilials ] = useState<Filial[]>([]);
+  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const years = await getAvailableYears();
+        const yearsString = years.map(String);
+        setAvailableYears(yearsString);
+
+        if (yearsString.length > 0 && !yearsString.includes(selectedYear)) {
+          if (!yearsString.includes(String(new Date().getFullYear()))) {
+            setSelectedYear(yearsString[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch available years", error);
+      }
+
+      try {
+        const { data } = await apiRequest<Filial[]>({
+          endpoint: "filials",
+          method: "GET",
+        });
+        if (data) {
+          setFilials(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch filials", error);
+      }
+    }
+    fetchData();
+  }, [ selectedYear ]);
 
   const satisfacaoData = [
     { name: "5 estrelas", value: 65 },
@@ -17,7 +77,27 @@ export function CustomersTab() {
   ];
 
   return (
-    <>
+    <div className="space-y-4">
+      <div className="flex items-center justify-end space-x-2">
+        <CustomFilterSelect
+          items={ filials.map((f) => ({
+            value: f.filialId,
+            label: f.filialName,
+          })) }
+          placeholder="Filial"
+          value={ selectedFilialId }
+          onValueChange={ setSelectedFilialId }
+          defaultValue="all"
+          showAllOption
+        />
+        <CustomFilterSelect
+          items={ availableYears }
+          placeholder="Ano"
+          value={ selectedYear }
+          onValueChange={ setSelectedYear }
+        />
+      </div>
+
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
         <Card className="w-[89vw] md:w-auto">
           <CardHeader>
@@ -27,7 +107,9 @@ export function CustomersTab() {
           <CardContent className="flex flex-col items-center">
             <div className="text-4xl font-bold mb-4">78%</div>
             <Progress value={ 78 } className="h-2 w-full" />
-            <p className="mt-2 text-sm text-muted-foreground">+5% em relação ao período anterior</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              +5% em relação ao período anterior
+            </p>
           </CardContent>
         </Card>
         <Card className="w-[89vw] md:w-auto">
@@ -62,7 +144,9 @@ export function CustomersTab() {
               <Clock className="h-8 w-8 text-primary" />
               <div className="text-3xl font-bold">2.4h</div>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">-15% em relação ao período anterior</p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              -15% em relação ao período anterior
+            </p>
             <div className="mt-4 w-full">
               <div className="flex items-center justify-between text-sm">
                 <span>Solicitações Urgentes</span>
@@ -79,168 +163,10 @@ export function CustomersTab() {
           </CardContent>
         </Card>
       </div>
-      <Card className="w-[89vw] md:w-auto">
-        <CardHeader>
-          <CardTitle>Clientes Principais</CardTitle>
-          <CardDescription>Clientes com maior número de locações</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Locações</TableHead>
-                <TableHead>Valor Total</TableHead>
-                <TableHead>Satisfação</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>CC</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div>Construtora Central</div>
-                      <div className="text-xs text-muted-foreground">São Paulo</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>48</TableCell>
-                <TableCell>R$ 245.800</TableCell>
-                <TableCell>
-                  <div className="flex">
-                    {[ 1, 2, 3, 4, 5 ].map((star) => (
-                      <Star
-                        key={ star }
-                        className={ `h-3 w-3 ${star <= 5 ? "fill-primary text-primary" : ""}` }
-                      />
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge className="bg-green-500">Ativo</Badge>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>ER</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div>Engenharia Rio</div>
-                      <div className="text-xs text-muted-foreground">Rio de Janeiro</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>36</TableCell>
-                <TableCell>R$ 187.400</TableCell>
-                <TableCell>
-                  <div className="flex">
-                    {[ 1, 2, 3, 4, 5 ].map((star) => (
-                      <Star
-                        key={ star }
-                        className={ `h-3 w-3 ${star <= 4 ? "fill-primary text-primary" : ""}` }
-                      />
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge className="bg-green-500">Ativo</Badge>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>MC</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div>Mineradora Curitiba</div>
-                      <div className="text-xs text-muted-foreground">Curitiba</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>29</TableCell>
-                <TableCell>R$ 156.200</TableCell>
-                <TableCell>
-                  <div className="flex">
-                    {[ 1, 2, 3, 4, 5 ].map((star) => (
-                      <Star
-                        key={ star }
-                        className={ `h-3 w-3 ${star <= 5 ? "fill-primary text-primary" : ""}` }
-                      />
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge className="bg-green-500">Ativo</Badge>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>PB</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div>Pavimentadora Brasília</div>
-                      <div className="text-xs text-muted-foreground">Brasília</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>24</TableCell>
-                <TableCell>R$ 132.800</TableCell>
-                <TableCell>
-                  <div className="flex">
-                    {[ 1, 2, 3, 4, 5 ].map((star) => (
-                      <Star
-                        key={ star }
-                        className={ `h-3 w-3 ${star <= 4 ? "fill-primary text-primary" : ""}` }
-                      />
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge className="bg-green-500">Ativo</Badge>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>CB</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div>Construtora BH</div>
-                      <div className="text-xs text-muted-foreground">Belo Horizonte</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>18</TableCell>
-                <TableCell>R$ 98.600</TableCell>
-                <TableCell>
-                  <div className="flex">
-                    {[ 1, 2, 3, 4 ].map((star) => (
-                      <Star
-                        key={ star }
-                        className={ `h-3 w-3 ${star <= 3 ? "fill-primary text-primary" : ""}` }
-                      />
-                    ))}
-                    <Star className="h-3 w-3" />
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge className="bg-yellow-500">Renovação</Badge>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </>
+      <TopCustomersCard
+        selectedYear={ Number(selectedYear) }
+        filialId={ selectedFilialId === "all" ? undefined : selectedFilialId }
+      />
+    </div>
   );
 }

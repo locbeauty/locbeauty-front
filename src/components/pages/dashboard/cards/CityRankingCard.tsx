@@ -69,12 +69,12 @@ export function CityRankingCard({
 
       setLoading(true);
       try {
-        const { ranking } = await getCityRankingMetric({
+        const { cityRanking } = await getCityRankingMetric({
           year: Number(localSelectedYear),
           filialId: selectedFilialId,
         });
 
-        const formattedData = ranking.map((item) => ({
+        const formattedData = (cityRanking || []).map((item) => ({
           name: item.city,
           value: item.count,
         }));

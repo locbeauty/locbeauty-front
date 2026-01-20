@@ -199,17 +199,18 @@ export function CheckoutPaymentMethodDialog({
     if (!selectedCheckout) return false;
 
     const payment = selectedCheckout.CheckoutPayment;
+    if (!payment) return false;
 
     // --- Início da Lógica Replicada ---
     // Recrie a lógica EXATA do seu useEffect para os valores de "original"
 
     // 1. Lógica do secondPaymentAmount
     const originalPendingValue =
-      selectedCheckout.totalPrice - (payment.firstPaymentAmount || 0);
+      selectedCheckout.totalPrice - (payment?.firstPaymentAmount || 0);
     const originalSecondPaymentAmountValue =
       payment.paymentMode === "Parcelado" ? originalPendingValue : 0;
     const originalSecondPaymentAmountString = centsToString(
-      originalSecondPaymentAmountValue
+      originalSecondPaymentAmountValue,
     );
 
     // 2. Lógica do secondPaymentStatus
@@ -260,14 +261,15 @@ export function CheckoutPaymentMethodDialog({
   ]);
 
   const isRefundedStatus =
-    selectedCheckout?.CheckoutPayment.paymentStatus === "Reembolsado";
+    selectedCheckout?.CheckoutPayment?.paymentStatus === "Reembolsado";
 
   useEffect(() => {
     if (selectedCheckout && isCheckoutPaymentMethodDialogOpen) {
       const payment = selectedCheckout.CheckoutPayment;
+      if (!payment) return;
       const pendingValue =
         selectedCheckout.totalPrice -
-        selectedCheckout?.CheckoutPayment.firstPaymentAmount;
+        (selectedCheckout?.CheckoutPayment?.firstPaymentAmount || 0);
       setCheckoutStatus(selectedCheckout.checkoutStatus);
       setPaymentStatus(payment.paymentStatus);
       setPaymentMode(payment.paymentMode);
@@ -293,12 +295,12 @@ export function CheckoutPaymentMethodDialog({
         payment.paymentMode === "Parcelado" ? pendingValue : 0;
 
       setSecondPaymentAmount(
-        centsToString(secondPaymentAmountInputDisplayValue)
+        centsToString(secondPaymentAmountInputDisplayValue),
       );
       setSecondPaymentDate(formatDateForInput(payment.secondPaymentDate));
       setSecondPaymentMethod(payment.secondPaymentMethod);
       setSecondPaymentStatus(
-        payment.secondPaymentStatus ? payment.secondPaymentStatus : "Pendente"
+        payment.secondPaymentStatus ? payment.secondPaymentStatus : "Pendente",
       );
     }
     setErrors({} as LocalErrorsType);
@@ -378,8 +380,8 @@ export function CheckoutPaymentMethodDialog({
       if (refundVal > maxRefund) {
         toast.error(
           `O reembolso não pode ser maior que o valor pago (${centsToStringWithCurrencyMark(
-            maxRefund
-          )}).`
+            maxRefund,
+          )}).`,
         );
         return;
       }
@@ -449,11 +451,13 @@ export function CheckoutPaymentMethodDialog({
             firstPaymentStatus:
               !secondPaymentMethod && !secondPaymentDate
                 ? "Pago"
-                : selectedCheckout.CheckoutPayment.firstPaymentStatus,
+                : selectedCheckout.CheckoutPayment?.firstPaymentStatus ||
+                  "Pendente",
             secondPaymentStatus:
               secondPaymentMethod && secondPaymentDate
                 ? "Pago"
-                : selectedCheckout.CheckoutPayment.secondPaymentStatus,
+                : selectedCheckout.CheckoutPayment?.secondPaymentStatus ||
+                  "Pendente",
             paymentMode: paymentMode,
             paymentStatus:
               secondPaymentMethod && secondPaymentDate
@@ -510,7 +514,7 @@ export function CheckoutPaymentMethodDialog({
                       setPaymentMode("Parcelado");
                       setFirstPaymentAmount("0,00");
                       setFirstPaymentDate(
-                        new Date().toISOString().split("T")[0]
+                        new Date().toISOString().split("T")[0],
                       );
                     } else if (value === "Pago") {
                       setPaymentMode("AVista");
@@ -521,7 +525,7 @@ export function CheckoutPaymentMethodDialog({
                   <SelectTrigger
                     disabled={
                       isRefundedStatus ||
-                      selectedCheckout.CheckoutPayment.paymentStatus ===
+                      selectedCheckout.CheckoutPayment?.paymentStatus ===
                         "Pago" ||
                       (paymentStatus === "Parcial" &&
                         firstPaymentStatus === "Pago")
@@ -536,7 +540,7 @@ export function CheckoutPaymentMethodDialog({
                         <div className="flex items-center gap-2">
                           <div
                             className={ `w-2 h-2 rounded-full ${getStatusColor(
-                              status
+                              status,
                             )}` }
                           />
                           {status}
@@ -577,7 +581,9 @@ export function CheckoutPaymentMethodDialog({
                     Primeira Parcela / Entrada
                   </Label>
                   <BookingPaymentStatusBadge
-                    status={ selectedCheckout.CheckoutPayment.firstPaymentStatus }
+                    status={
+                      selectedCheckout.CheckoutPayment?.firstPaymentStatus
+                    }
                   />
                 </div>
 
@@ -590,7 +596,7 @@ export function CheckoutPaymentMethodDialog({
                       disabled={
                         isRefundedStatus ||
                         paymentStatus === "Pago" ||
-                        selectedCheckout?.CheckoutPayment.paymentMode ===
+                        selectedCheckout?.CheckoutPayment?.paymentMode ===
                           "Parcelado" ||
                         firstPaymentStatus === "Pago"
                       }
@@ -612,9 +618,9 @@ export function CheckoutPaymentMethodDialog({
                     <Input
                       disabled={
                         isRefundedStatus ||
-                        selectedCheckout.CheckoutPayment.paymentStatus ===
+                        selectedCheckout.CheckoutPayment?.paymentStatus ===
                           "Pago" ||
-                        selectedCheckout?.CheckoutPayment.paymentMode ===
+                        selectedCheckout?.CheckoutPayment?.paymentMode ===
                           "Parcelado" ||
                         firstPaymentStatus === "Pago"
                       }
@@ -640,9 +646,9 @@ export function CheckoutPaymentMethodDialog({
                       <SelectTrigger
                         disabled={
                           isRefundedStatus ||
-                          selectedCheckout.CheckoutPayment.paymentStatus ===
+                          selectedCheckout.CheckoutPayment?.paymentStatus ===
                             "Pago" ||
-                          selectedCheckout?.CheckoutPayment.paymentMode ===
+                          selectedCheckout?.CheckoutPayment?.paymentMode ===
                             "Parcelado" ||
                           firstPaymentStatus === "Pago"
                         }
@@ -687,7 +693,7 @@ export function CheckoutPaymentMethodDialog({
                       </Label>
                       <BookingPaymentStatusBadge
                         status={
-                          selectedCheckout.CheckoutPayment.secondPaymentStatus
+                          selectedCheckout.CheckoutPayment?.secondPaymentStatus
                         }
                       />
                     </div>
@@ -716,10 +722,10 @@ export function CheckoutPaymentMethodDialog({
                         <Input
                           disabled={
                             isRefundedStatus ||
-                            selectedCheckout.CheckoutPayment.paymentStatus ===
+                            selectedCheckout.CheckoutPayment?.paymentStatus ===
                               "Pendente" ||
                             selectedCheckout.CheckoutPayment
-                              .secondPaymentStatus === "Pago"
+                              ?.secondPaymentStatus === "Pago"
                           }
                           type="date"
                           value={ secondPaymentDate }
@@ -745,10 +751,10 @@ export function CheckoutPaymentMethodDialog({
                           <SelectTrigger
                             disabled={
                               isRefundedStatus ||
-                              selectedCheckout.CheckoutPayment.paymentStatus ===
-                                "Pendente" ||
                               selectedCheckout.CheckoutPayment
-                                .secondPaymentStatus === "Pago"
+                                ?.paymentStatus === "Pendente" ||
+                              selectedCheckout.CheckoutPayment
+                                ?.secondPaymentStatus === "Pago"
                             }
                             className={
                               errors.paymentInfo?.secondPaymentMethod
@@ -786,8 +792,8 @@ export function CheckoutPaymentMethodDialog({
           {(paymentStatus === "Pago" ||
             firstPaymentStatus === "Pago" ||
             secondPaymentStatus === "Pago" ||
-            selectedCheckout.CheckoutPayment.firstPaymentStatus === "Pago" ||
-            selectedCheckout.CheckoutPayment.secondPaymentStatus === "Pago") &&
+            selectedCheckout.CheckoutPayment?.firstPaymentStatus === "Pago" ||
+            selectedCheckout.CheckoutPayment?.secondPaymentStatus === "Pago") &&
             (checkoutStatus !== "Concluido" ||
               isRefunded ||
               selectedCheckout.wasRefunded) && (
@@ -797,7 +803,7 @@ export function CheckoutPaymentMethodDialog({
                   id="refunded"
                   checked={ isRefunded }
                   disabled={
-                    selectedCheckout.CheckoutPayment.paymentStatus ===
+                    selectedCheckout.CheckoutPayment?.paymentStatus ===
                       "Reembolsado"
                   }
                   onCheckedChange={ (checked) =>
@@ -819,7 +825,7 @@ export function CheckoutPaymentMethodDialog({
                   </Label>
                   <PriceInput
                     disabled={
-                      selectedCheckout.CheckoutPayment.paymentStatus ===
+                      selectedCheckout.CheckoutPayment?.paymentStatus ===
                         "Reembolsado"
                     }
                     value={ refundAmount }

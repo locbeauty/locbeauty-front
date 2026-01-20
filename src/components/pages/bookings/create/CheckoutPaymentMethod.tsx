@@ -272,7 +272,7 @@ export function CheckoutPaymentMethod() {
                   control={ control }
                   render={ ({ field }) => (
                     <DatePicker
-                      value={ field.value }
+                      value={ field.value || null }
                       onChange={ field.onChange }
                       placeholder="Selecione a data"
                       clearable
@@ -376,7 +376,7 @@ export function CheckoutPaymentMethod() {
                       control={ control }
                       render={ ({ field }) => (
                         <DatePicker
-                          value={ field.value }
+                          value={ field.value || null }
                           onChange={ field.onChange }
                           placeholder="Selecione a data"
                           clearable

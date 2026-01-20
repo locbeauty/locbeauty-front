@@ -105,7 +105,7 @@ export function SingleEventBox({
         checkout &&
           durationInHours >= 8 &&
           durationInHours <= 12 &&
-          "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
+          "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
       ) }
       style={ {
         top: `${top}px`,
@@ -122,7 +122,9 @@ export function SingleEventBox({
           ? training!.Gear.gearName
           : isBirthday
             ? birthday!.title
-            : checkout!.Bookings.filter((booking) => booking.status === "ACTIVE")
+            : checkout!.Bookings.filter(
+              (booking) => booking.status === "ACTIVE",
+            )
               .sort((a, b) => a.Gear.gearName.localeCompare(b.Gear.gearName))
               .map((item) => item.Gear.gearName)
               .join(", ")}
@@ -143,8 +145,7 @@ export function SingleEventBox({
           ? training!.SourceFilial.filialName
           : isBirthday
             ? null
-            : checkout?.SourceFilial?.filialName ||
-            checkout?.Address?.City?.cityName}
+            : checkout?.SourceFilial?.filialName || checkout?.Address?.city}
       </div>
 
       {!isBirthday && (
@@ -170,7 +171,7 @@ export function SingleEventBox({
               ? "bg-green-500"
               : new Date(checkout.date) < new Date()
                 ? "bg-red-500"
-                : "bg-yellow-500"
+                : "bg-yellow-500",
           ) }
         />
       )}
@@ -182,7 +183,7 @@ export function SingleEventBox({
               ? "bg-green-500"
               : new Date(training.dueDate) < new Date()
                 ? "bg-red-500"
-                : "bg-yellow-500"
+                : "bg-yellow-500",
           ) }
         />
       )}

@@ -108,7 +108,7 @@ export function MultipleEventBox({
           checkout &&
             durationInHours >= 8 &&
             durationInHours <= 12 &&
-            "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
+            "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
         ) }
         style={ {
           top: `${top}px`,
@@ -127,7 +127,7 @@ export function MultipleEventBox({
             : isBirthday
               ? birthday!.title
               : checkout!.Bookings.filter(
-                (booking) => booking.status === "ACTIVE"
+                (booking) => booking.status === "ACTIVE",
               )
                 .map((item) => item.Gear.gearName)
                 .join(", ")}
@@ -148,8 +148,7 @@ export function MultipleEventBox({
             ? training!.SourceFilial.filialName
             : isBirthday
               ? null
-              : checkout?.SourceFilial?.filialName ||
-              checkout?.Address?.City?.cityName}
+              : checkout?.SourceFilial?.filialName || checkout?.Address?.city}
         </div>
 
         {!isBirthday && (

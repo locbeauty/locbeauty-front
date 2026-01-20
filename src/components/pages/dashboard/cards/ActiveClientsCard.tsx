@@ -18,8 +18,11 @@ interface Filial {
 
 export function ActiveClientsCard() {
   const [ metric, setMetric ] = useState<{
-    count: number;
-    percentageChange: number;
+    totalClients: number;
+    activeClients: number;
+    activePercentage: number;
+    newClients: number;
+    recurringClients: number;
   } | null>(null);
   const [ loading, setLoading ] = useState(true);
   const [ filials, setFilials ] = useState<Filial[]>([]);
@@ -46,7 +49,13 @@ export function ActiveClientsCard() {
     async function fetchMetric() {
       setLoading(true);
       try {
-        const data = await getActiveClientsMetric(selectedFilialId);
+        const now = new Date();
+        const data = await getActiveClientsMetric({
+          year: now.getFullYear(),
+          startMonth: 1,
+          endMonth: 12,
+          filialId: selectedFilialId,
+        });
         setMetric(data);
       } catch (error) {
         console.error(error);
@@ -61,7 +70,10 @@ export function ActiveClientsCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium flex gap-2 items-center"><Users className="h-4 w-4 text-muted-foreground" />Clientes Ativos</CardTitle>
+        <CardTitle className="text-sm font-medium flex gap-2 items-center">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          Clientes Ativos
+        </CardTitle>
         <div className="flex items-center gap-2">
           <Select value={ selectedFilialId } onValueChange={ setSelectedFilialId }>
             <SelectTrigger className="w-[140px] h-8">
@@ -85,21 +97,12 @@ export function ActiveClientsCard() {
           </div>
         ) : metric ? (
           <>
-            <div className="text-2xl font-bold">{metric.count}</div>
+            <div className="text-2xl font-bold">{metric.activeClients}</div>
             <p className="text-sm text-muted-foreground mt-1">
-              <span
-                className={
-                  metric.percentageChange > 0
-                    ? "text-green-500"
-                    : metric.percentageChange < 0
-                      ? "text-red-500"
-                      : "text-muted-foreground"
-                }
-              >
-                {metric.percentageChange > 0 ? "+" : ""}
-                {metric.percentageChange}%
+              <span className="text-muted-foreground">
+                {(metric.activePercentage ?? 0).toFixed(1)}%
               </span>{" "}
-              em relação ao mês anterior
+              da base de clientes
             </p>
           </>
         ) : (

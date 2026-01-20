@@ -94,7 +94,7 @@ export function BookingDetailsDialog({
   useEffect(() => {
     if (!selectedCheckout) return;
 
-    const isPaid = selectedCheckout.CheckoutPayment.paymentStatus === "Pago";
+    const isPaid = selectedCheckout.CheckoutPayment?.paymentStatus === "Pago";
     const isPast = selectedCheckout.date <= new Date();
     const isNotPending = selectedCheckout.checkoutStatus !== "Pendente";
 
@@ -173,13 +173,19 @@ export function BookingDetailsDialog({
     cancellationFee: number | null = null,
   ) {
     let response;
+    const payment = selectedCheckout!.CheckoutPayment;
 
     // Use UpdateCheckout API if we need to set cancellation fee or mark as refunded
     if (
       (cancellationFee !== null && checkoutStatus === "Cancelado") ||
       (wasRefunded && checkoutStatus === "Cancelado")
     ) {
-      const payment = selectedCheckout!.CheckoutPayment;
+      if (wasRefunded && !payment) {
+        toast.error("Pagamento não encontrado.", {
+          style: { fontSize: "1rem" },
+        });
+        return;
+      }
       response = await UpdateCheckout({
         checkoutId,
         body: {
@@ -187,19 +193,19 @@ export function BookingDetailsDialog({
           CheckoutPayment: wasRefunded
             ? {
               paymentStatus: "Reembolsado",
-              paymentMode: payment.paymentMode,
-              firstPaymentAmount: payment.firstPaymentAmount,
-              firstPaymentDate: payment.firstPaymentDate
-                ? new Date(payment.firstPaymentDate)
+              paymentMode: payment!.paymentMode,
+              firstPaymentAmount: payment!.firstPaymentAmount,
+              firstPaymentDate: payment!.firstPaymentDate
+                ? new Date(payment!.firstPaymentDate)
                 : null,
-              firstPaymentMethod: payment.firstPaymentMethod,
-              firstPaymentStatus: payment.firstPaymentStatus,
-              secondPaymentAmount: payment.secondPaymentAmount,
-              secondPaymentDate: payment.secondPaymentDate
-                ? new Date(payment.secondPaymentDate)
+              firstPaymentMethod: payment!.firstPaymentMethod,
+              firstPaymentStatus: payment!.firstPaymentStatus,
+              secondPaymentAmount: payment!.secondPaymentAmount,
+              secondPaymentDate: payment!.secondPaymentDate
+                ? new Date(payment!.secondPaymentDate)
                 : null,
-              secondPaymentMethod: payment.secondPaymentMethod,
-              secondPaymentStatus: payment.secondPaymentStatus,
+              secondPaymentMethod: payment!.secondPaymentMethod,
+              secondPaymentStatus: payment!.secondPaymentStatus,
             }
             : undefined,
           cancellationFee: cancellationFee ?? undefined,
@@ -235,7 +241,7 @@ export function BookingDetailsDialog({
           checkoutStatus,
           CheckoutPayment: wasRefunded
             ? {
-              ...prev.CheckoutPayment,
+              ...payment!,
               paymentStatus: "Reembolsado",
             }
             : prev.CheckoutPayment,
@@ -295,7 +301,7 @@ export function BookingDetailsDialog({
               <div className="flex items-center gap-2">
                 <BookingStatusBadge status={ selectedCheckout.checkoutStatus } />
                 <BookingPaymentStatusBadge
-                  status={ selectedCheckout.CheckoutPayment.paymentStatus }
+                  status={ selectedCheckout.CheckoutPayment?.paymentStatus }
                   isCourtesy={ selectedCheckout.isCourtesy }
                   wasRefunded={ selectedCheckout.wasRefunded }
                 />
@@ -877,8 +883,8 @@ export function CancelBookingConfirmationDialog({
   const daysUntilBooking = differenceInCalendarDays(bookingDate, today);
   const hasFee = daysUntilBooking < 7;
   const somePaymentIsDone =
-    selectedCheckout.CheckoutPayment.firstPaymentStatus === "Pago" ||
-    selectedCheckout.CheckoutPayment.secondPaymentStatus === "Pago";
+    selectedCheckout.CheckoutPayment?.firstPaymentStatus === "Pago" ||
+    selectedCheckout.CheckoutPayment?.secondPaymentStatus === "Pago";
 
   return (
     <Dialog
