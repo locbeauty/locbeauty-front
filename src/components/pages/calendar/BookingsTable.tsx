@@ -192,7 +192,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                     </td>
                     <td className="p-3 text-center">
                       <BookingPaymentStatusBadge
-                        status={ checkout.CheckoutPayment.paymentStatus }
+                        status={ checkout.CheckoutPayment?.paymentStatus }
                         wasRefunded={ checkout.wasRefunded }
                         isCourtesy={ checkout.isCourtesy }
                       />
@@ -268,7 +268,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                   itemLabel: "Pagamento: ",
                   itemInfo: (
                     <BookingPaymentStatusBadge
-                      status={ checkout.CheckoutPayment.paymentStatus }
+                      status={ checkout.CheckoutPayment?.paymentStatus }
                       wasRefunded={ checkout.wasRefunded }
                       isCourtesy={ checkout.isCourtesy }
                     />

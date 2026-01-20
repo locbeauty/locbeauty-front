@@ -69,16 +69,7 @@ export const createCheckoutFormSchema = z
     // ... (todos os campos mantidos: filialId, date, customer, gears, etc.) ...
     filialId: z.string(),
 
-    date: z.date({ message: "Data é obrigatória." }).refine(
-      (val) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return val.getTime() >= today.getTime();
-      },
-      {
-        message: "Data não pode ser no passado.",
-      }
-    ),
+    date: z.date({ message: "Data é obrigatória." }),
     startHourInMinutes: z.number(),
     totalDurationInMinutes: z.number(),
 
@@ -104,7 +95,7 @@ export const createCheckoutFormSchema = z
           .refine((value) => parseStringToCents(value) > 0, {
             message: "Valor deve ser maior que R$ 0,00.",
           }),
-      })
+      }),
     ),
 
     basePrice: z.string().min(1, { message: "Preço base é obrigatório." }),
@@ -188,7 +179,7 @@ export const createCheckoutFormSchema = z
     if (data.paymentStatus === "Parcial") {
       const totalCents = parseStringToCents(data.totalPrice);
       const firstPaymentCents = parseStringToCents(
-        data.paymentInfo.firstPaymentAmount
+        data.paymentInfo.firstPaymentAmount,
       );
 
       // A validação de (firstPaymentCents === 0) já é feita pelo esquema aninhado.
@@ -234,7 +225,7 @@ export const createCheckoutFormSchema = z
         message: `O preço total (${
           data.totalPrice
         }) não bate com a soma (${centsToString(
-          computedTotal
+          computedTotal,
         )}). Verifique os custos.`,
       });
     }

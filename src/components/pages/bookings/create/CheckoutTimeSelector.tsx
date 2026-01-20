@@ -32,7 +32,8 @@ export default function CheckoutTimeSelector<T extends FieldValues>({
   const watchDate = watch("date");
   const watchSelectedGears = watch("gears");
 
-  const isDateInPast = watchDate && watchDate < new Date();
+  // const isDateInPast = watchDate && watchDate < new Date();
+  const isDateInPast = false;
 
   return (
     <div className="space-y-10">

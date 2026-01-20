@@ -20,6 +20,7 @@ export interface Customer {
   secondaryCellphone?: string | null;
   secondaryCellphoneDescription?: string | null;
   instagram: string | null;
+  observations?: string | null;
   birthdate: Date | null;
   customerStatus: CUSTOMER_STATUSES;
   lastBooking: Date | null;

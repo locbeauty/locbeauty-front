@@ -4,6 +4,7 @@ export const PaymentMethods = [
   "Débito",
   "Crédito",
   "Dinheiro",
+  "NaoInformado",
 ] as const;
 export const paymentModes = [ "Parcelado", "AVista" ] as const;
 export const paymentStatuses = [

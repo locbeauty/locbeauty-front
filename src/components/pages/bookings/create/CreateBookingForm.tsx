@@ -90,7 +90,7 @@ export function GearsSection() {
   useEffect(() => {
     const selectedGearsCost = watchSelectedGears.reduce(
       (acc, item) => acc + parseStringToCents(item.individualPrice),
-      0
+      0,
     );
     setValue("basePrice", centsToString(selectedGearsCost));
   }, [ watchSelectedGears, setValue ]);
@@ -109,7 +109,7 @@ export function GearsSection() {
   function handleRemoveGear(gearId: string) {
     setValue(
       "gears",
-      watchSelectedGears.filter((g) => g.gearId !== gearId)
+      watchSelectedGears.filter((g) => g.gearId !== gearId),
     );
   }
 
@@ -267,7 +267,8 @@ export function CreateBookingForm() {
   const watchEndDate = watch("endDate");
   const watchEndHourInMinutes = watch("endHourInMinutes");
 
-  const isDateInPast = selectedDate && selectedDate < new Date();
+  // const isDateInPast = selectedDate && selectedDate < new Date();
+  const isDateInPast = false;
 
   // Generate 24h time options
   const timeOptions = useMemo(() => {
@@ -321,7 +322,7 @@ export function CreateBookingForm() {
     const lodging = parseStringToCents(watchLodgingCost || "0");
     const food = parseStringToCents(watchFoodCost || "0");
     const addTransport = parseStringToCents(
-      watchAdditionalTransportCost || "0"
+      watchAdditionalTransportCost || "0",
     );
 
     const fuelCents = parseStringToCents(watchFuelCost || "0"); // custo por litro
@@ -401,13 +402,13 @@ export function CreateBookingForm() {
 
       basePrice: parseStringToCents(newCheckoutData.basePrice || "0"),
       extraMachineCosts: parseStringToCents(
-        newCheckoutData.extraMachineCosts || "0"
+        newCheckoutData.extraMachineCosts || "0",
       ),
       lodgingCost: parseStringToCents(newCheckoutData.lodgingCost || "0"),
       foodCost: parseStringToCents(newCheckoutData.foodCost || "0"),
       fuelCost: parseStringToCents(newCheckoutData.fuelCost || "0"),
       additionalTransportCost: parseStringToCents(
-        newCheckoutData.additionalTransportCost || "0"
+        newCheckoutData.additionalTransportCost || "0",
       ),
       totalPrice: parseStringToCents(newCheckoutData.totalPrice || "0"),
 
@@ -588,7 +589,7 @@ Equipamento${watchSelectedGears.length > 1 ? "s" : ""}: ${watchSelectedGears
                 .join(", ")}
 Data: ${selectedDate.toLocaleDateString("pt-BR")}
 Horário: ${minutesToHHMM(startHour)} - ${minutesToHHMM(
-                startHour + watchTotalDurationInMinutes
+                startHour + watchTotalDurationInMinutes,
               )}
 Duração: ${watchTotalDurationInMinutes / 60}h
 Preço: R$ ${watchTotalPrice}
@@ -602,7 +603,7 @@ Motorista: ${driverString || "A definir"}
 
                         navigator.clipboard.writeText(textToCopy);
                         toast.success(
-                          "Resumo copiado para a área de transferência."
+                          "Resumo copiado para a área de transferência.",
                         );
                       } }
                     >

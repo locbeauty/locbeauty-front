@@ -28,8 +28,9 @@ export default function CheckoutEndTimeSelector<T extends FieldValues>({
   const watchEndDate = watch("endDate");
   const watchStartDate = watch("date");
 
-  const isDateInPast =
-    watchEndDate && watchEndDate < new Date(new Date().setHours(0, 0, 0, 0));
+  // const isDateInPast =
+  //   watchEndDate && watchEndDate < new Date(new Date().setHours(0, 0, 0, 0));
+  const isDateInPast = false;
   const isBeforeStartDate =
     watchEndDate && watchStartDate && watchEndDate < watchStartDate;
 

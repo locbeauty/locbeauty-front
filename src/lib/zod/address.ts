@@ -2,8 +2,8 @@ import { z } from "zod";
 
 // Schema para Address
 export const addressSchema = z.object({
-  zipCode: z.string({ message: "CEP é obrigatório" }).trim().min(9, { message: "CEP precisa ter 7 caracteres." }),
-  stateName: z.string(),
+  zipCode: z.string().optional(),
+  stateName: z.string().min(1, { message: "Estado é obrigatório" }),
   cityName: z
     .string()
     .trim()
@@ -12,18 +12,18 @@ export const addressSchema = z.object({
   neighborhoodName: z
     .string()
     .trim()
-    .min(1, { message: "Bairro é obrigatório" })
-    .max(100, { message: "Bairro deve ter no máximo 100 caracteres" }),
+    .max(100, { message: "Bairro deve ter no máximo 100 caracteres" })
+    .optional(),
   streetName: z
     .string()
     .trim()
-    .min(1, { message: "Rua é obrigatória" })
-    .max(200, { message: "Rua deve ter no máximo 200 caracteres" }),
+    .max(200, { message: "Rua deve ter no máximo 200 caracteres" })
+    .optional(),
   buildingNumber: z
     .string()
     .trim()
-    .min(1, { message: "Número é obrigatório" })
-    .max(20, { message: "Número deve ter no máximo 20 caracteres" }),
+    .max(20, { message: "Número deve ter no máximo 20 caracteres" })
+    .optional(),
   addressComplement: z
     .string()
     .trim()
@@ -32,4 +32,4 @@ export const addressSchema = z.object({
     .nullable(),
 });
 
-export type AddressTypeSchema = z.infer<typeof addressSchema>
+export type AddressTypeSchema = z.infer<typeof addressSchema>;

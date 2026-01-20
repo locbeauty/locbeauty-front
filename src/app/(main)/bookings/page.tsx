@@ -12,7 +12,7 @@ import {
   FilterBookingStatusTypes,
 } from "@/utils/filterOptions";
 import { ROUTES } from "@/utils/routes";
-import { Eye, Plus, Search, X } from "lucide-react";
+import { Eye, Plus, Search, X, FileUp } from "lucide-react";
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -21,10 +21,12 @@ import { SelectFilial } from "@/components/shared/SelectFilial";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
 import { useAccess } from "@/contexts/access-provider";
+import { ImportBookingsDialog } from "@/components/pages/bookings/ImportBookingsDialog";
 
 export default function BookingsPage() {
   const { user } = useAuth();
   const { accesses } = useAccess();
+  const [ isImportDialogOpen, setIsImportDialogOpen ] = useState(false);
   const [ customerName, setCustomerName ] = useState("");
   const [ status, setStatus ] = useState<string | undefined>();
   const [ paymentStatus, setPaymentStatus ] = useState<string | undefined>();
@@ -80,6 +82,14 @@ export default function BookingsPage() {
           </div>
           <div className="flex gap-4">
             <Can module={ SYSTEM_MODULES.BOOKINGS } action="canCreate">
+              <Button
+                variant="outline"
+                className="flex justify-center items-center"
+                onClick={ () => setIsImportDialogOpen(true) }
+              >
+                <FileUp className="mr-2 h-4 w-4" />
+                <span className="hidden md:inline">Importar</span>
+              </Button>
               <Button className="flex justify-center items-center" asChild>
                 <Link
                   className="flex justify-center items-center"
@@ -105,6 +115,11 @@ export default function BookingsPage() {
             </Button>
           </div>
         </div>
+
+        <ImportBookingsDialog
+          open={ isImportDialogOpen }
+          onOpenChange={ setIsImportDialogOpen }
+        />
 
         <div className="flex flex-col gap-4">
           <div className="flex md:flex-row flex-col md:items-center gap-4 flex-wrap">
