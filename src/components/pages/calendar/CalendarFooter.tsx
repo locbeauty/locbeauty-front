@@ -13,6 +13,10 @@ export function CalendarFooter() {
         <div className="w-4 h-4 rounded-full bg-8h-12h-duration-background border border-8h-12h-duration-border"></div>
         <span className="text-sm">8-12 horas</span>
       </div>
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 rounded-full bg-gray-400 border border-gray-400"></div>
+        <span className="text-sm">Outras durações</span>
+      </div>
     </div>
   );
 }

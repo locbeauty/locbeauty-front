@@ -325,7 +325,7 @@ export function MobileWeekView({
       </div>
 
       {/* Legenda */}
-      <div className="mt-4 px-4 py-3 bg-white border border-gray-200 rounded-lg">
+      {/* <div className="mt-4 px-4 py-3 bg-white border border-gray-200 rounded-lg">
         <div className="text-xs font-medium text-gray-700 mb-2">
           Legenda de Duração:
         </div>
@@ -351,7 +351,7 @@ export function MobileWeekView({
             <span className="text-gray-600">Outras durações</span>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

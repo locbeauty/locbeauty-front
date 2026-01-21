@@ -292,7 +292,7 @@ export function groupOverlappingEvents(
 ): CalendarEvent[][] {
   if (events.length === 0) return [];
 
-  const sortedEvents = [ ...events ].sort((a, b) => {
+  const sortedEvents = [...events].sort((a, b) => {
     const isTrainingA = "trainingId" in a;
     const isTrainingB = "trainingId" in b;
 
@@ -345,7 +345,7 @@ export function groupOverlappingEvents(
     }
 
     if (!foundGroup) {
-      groups.push([ event ]);
+      groups.push([event]);
     }
   });
 
@@ -393,7 +393,7 @@ export function getEventBasicInfo(event: CalendarEvent) {
   if (isTraining) {
     const training = event as Training;
     id = training.trainingId;
-    title = training.Gear.gearName;
+    title = `Treinamento - ${training.Gear.gearName}`;
     // Default duration 2h for training as per existing logic
     durationInHours = 2;
     startDate = new Date(training.dueDate);
@@ -410,7 +410,7 @@ export function getEventBasicInfo(event: CalendarEvent) {
 
     // Parse date safely as local date to avoid timezone shifts
     const dateStr = String(birthday.date);
-    const [ year, month, day ] = dateStr.split("T")[0].split("-").map(Number);
+    const [year, month, day] = dateStr.split("T")[0].split("-").map(Number);
     startDate = new Date(year, month - 1, day);
 
     endDate = new Date(startDate);
@@ -432,10 +432,11 @@ export function getEventBasicInfo(event: CalendarEvent) {
   } else {
     const checkout = event as Checkout;
     id = checkout.checkoutId;
-    title = checkout.Bookings.filter((b) => b.status === "ACTIVE")
+    const equipment = checkout.Bookings.filter((b) => b.status === "ACTIVE")
       .sort((a, b) => a.Gear.gearName.localeCompare(b.Gear.gearName))
       .map((b) => b.Gear.gearName)
       .join(", ");
+    title = `${equipment} - ${checkout.Customer.fullname}`;
     durationInHours = checkout.totalDurationInMinutes / 60;
     startDate = new Date(checkout.date);
     startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
@@ -443,6 +444,18 @@ export function getEventBasicInfo(event: CalendarEvent) {
 
     endDate = new Date(startDate);
     endDate.setMinutes(endDate.getMinutes() + checkout.totalDurationInMinutes);
+  }
+
+  const now = new Date();
+  const isPast = endDate < now;
+
+  let paymentStatus: string | undefined | null = null;
+  if ("CheckoutPayment" in event) {
+    const checkout = event as Checkout;
+    paymentStatus = checkout.CheckoutPayment?.paymentStatus;
+  } else if ("TrainingPayment" in event) {
+    const training = event as Training;
+    paymentStatus = training.TrainingPayment?.[0]?.paymentStatus;
   }
 
   return {
@@ -454,5 +467,7 @@ export function getEventBasicInfo(event: CalendarEvent) {
     durationInHours,
     startDate,
     endDate,
+    paymentStatus,
+    isPast,
   };
 }

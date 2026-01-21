@@ -42,14 +42,14 @@ export function MobileMonthView({
               className={ cn(
                 "bg-white min-h-[80px] p-1 relative flex flex-col",
                 isToday(day) && "bg-primary/5",
-                !isCurrentMonth && "bg-gray-50 text-gray-400"
+                !isCurrentMonth && "bg-gray-50 text-gray-400",
               ) }
             >
               <div
                 className={ cn(
                   "text-xs font-medium mb-1 text-center",
                   isToday(day) && "text-primary font-bold",
-                  !isCurrentMonth && "text-gray-400"
+                  !isCurrentMonth && "text-gray-400",
                 ) }
               >
                 {day.getDate()}
@@ -62,11 +62,37 @@ export function MobileMonthView({
                       const {
                         isTraining,
                         isBirthday,
+                        isNotice,
                         id,
                         title,
                         durationInHours,
                         startDate,
+                        paymentStatus,
+                        isPast,
                       } = getEventBasicInfo(event);
+
+                      const isCheckout =
+                        !isTraining && !isBirthday && !isNotice;
+                      const isPaid = paymentStatus === "Pago";
+                      const isOverdue = isPast && !isPaid;
+
+                      let barClass = "bg-gray-400";
+
+                      if (isCheckout) {
+                        if (durationInHours >= 8 && durationInHours <= 12) {
+                          barClass = "bg-green-500";
+                        } else if (durationInHours === 4) {
+                          barClass = "bg-yellow-300";
+                        } else if (
+                          durationInHours >= 5 &&
+                          durationInHours <= 6
+                        ) {
+                          barClass = "bg-yellow-600";
+                        }
+
+                        if (isPaid) barClass = "bg-green-800";
+                        if (isOverdue) barClass = "bg-red-800";
+                      }
 
                       return (
                         <div
@@ -75,17 +101,12 @@ export function MobileMonthView({
                             "h-1.5 rounded-full transition-all hover:h-2",
                             !isBirthday && "cursor-pointer",
                             isTraining
-                              ? "bg-blue-400"
-                              : isBirthday
-                                ? "bg-green-400"
-                                : cn(
-                                  "bg-gray-400",
-                                  durationInHours === 4 && "bg-blue-400",
-                                  durationInHours === 6 && "bg-green-400",
-                                  durationInHours >= 8 &&
-                                    durationInHours <= 12 &&
-                                    "bg-purple-400"
-                                )
+                              ? "bg-purple-500"
+                              : isNotice
+                                ? "bg-blue-800"
+                                : isBirthday
+                                  ? "bg-green-400"
+                                  : barClass,
                           ) }
                           onClick={ () => openDetails(event) }
                           title={ `${
@@ -113,7 +134,7 @@ export function MobileMonthView({
                           key={ i }
                           className={ cn(
                             "w-1 h-1 rounded-full",
-                            dayEvents[i] ? "bg-primary" : "bg-gray-300"
+                            dayEvents[i] ? "bg-primary" : "bg-gray-300",
                           ) }
                         />
                       ))}
@@ -127,28 +148,6 @@ export function MobileMonthView({
             </div>
           );
         })}
-      </div>
-
-      <div className="mt-4 px-4 py-2 bg-gray-50 rounded-lg">
-        <div className="text-xs font-medium text-gray-700 mb-2">Legenda:</div>
-        <div className="flex flex-wrap gap-3 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-1.5 bg-blue-400 rounded-full"></div>
-            <span className="text-gray-600">Treinamento / 4h</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-1.5 bg-green-400 rounded-full"></div>
-            <span className="text-gray-600">6h</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-1.5 bg-purple-400 rounded-full"></div>
-            <span className="text-gray-600">8-12h</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-1.5 bg-gray-400 rounded-full"></div>
-            <span className="text-gray-600">Outros</span>
-          </div>
-        </div>
       </div>
     </div>
   );

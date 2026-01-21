@@ -49,7 +49,7 @@ export function MonthView({
               <div
                 key={ index }
                 className={ cn(
-                  "min-h-[150px] border-r border-b p-1 relative max-h-[300px] overflow-y-auto",
+                  "min-h-[200px] border-r border-b p-1 relative",
                   isToday(day) ? "bg-primary/90" : "",
                   !isCurrentMonth ? "bg-gray-100 text-red-300" : "",
                 ) }
@@ -74,42 +74,85 @@ export function MonthView({
                       const {
                         isTraining,
                         isBirthday,
+                        isNotice,
                         id,
                         title,
                         durationInHours,
                         startDate,
+                        paymentStatus,
+                        isPast,
                       } = getEventBasicInfo(event);
+
+                      const isCheckout =
+                        !isTraining && !isBirthday && !isNotice;
+                      const isPaid = paymentStatus === "Pago";
+                      const isOverdue = isPast && !isPaid;
+
+                      let dotClass = "bg-gray-400";
+                      let containerClass =
+                        "bg-gray-100 text-gray-700 border-gray-400";
+
+                      if (isCheckout) {
+                        if (durationInHours >= 8 && durationInHours <= 12) {
+                          dotClass = "bg-green-500";
+                          containerClass =
+                            "bg-green-100 text-green-700 border-green-300";
+                        } else if (durationInHours === 4) {
+                          dotClass = "bg-yellow-300"; // Light Yellow
+                          containerClass =
+                            "bg-yellow-50 text-yellow-900 border-yellow-200";
+                        } else if (
+                          durationInHours >= 5 &&
+                          durationInHours <= 6
+                        ) {
+                          dotClass = "bg-yellow-600"; // Dark Yellow
+                          containerClass =
+                            "bg-yellow-200 text-yellow-900 border-yellow-400";
+                        }
+
+                        // Override background if Paid or Overdue
+                        if (isPaid) {
+                          containerClass =
+                            "bg-green-800 text-white border-green-900";
+                        } else if (isOverdue) {
+                          containerClass =
+                            "bg-red-800 text-white border-red-900";
+                        }
+                      }
 
                       return (
                         <div
                           key={ id }
                           className={ cn(
                             "p-1 rounded border-l-2",
-                            isBirthday
-                              ? "text-sm font-semibold whitespace-normal h-auto"
-                              : "text-xs truncate cursor-pointer",
                             isTraining
-                              ? "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-500"
-                              : isBirthday
-                                ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-500"
-                                : cn(
-                                  "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
-                                  durationInHours === 4 &&
-                                      "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
-                                  durationInHours === 6 &&
-                                      "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
-                                  durationInHours >= 8 &&
-                                      durationInHours <= 12 &&
-                                      "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
-                                ),
+                              ? "bg-purple-500 dark:bg-purple-900/20 text-white dark:text-purple-300 border-purple-500 text-sm truncate cursor-pointer"
+                              : isNotice
+                                ? "bg-blue-800 text-white border-blue-900 text-sm truncate cursor-pointer"
+                                : isBirthday
+                                  ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-500 text-sm font-semibold whitespace-normal h-auto"
+                                  : cn(
+                                    containerClass,
+                                    "flex items-center gap-1 text-sm cursor-pointer truncate",
+                                  ),
                           ) }
                           onClick={ () => openDetails(event) }
                           title={ `${
                             !isBirthday ? formatTime(startDate) + " - " : ""
                           }${title}` }
                         >
-                          {!isBirthday && <>{formatTime(startDate)} - </>}
-                          {title}
+                          {isCheckout && (
+                            <div
+                              className={ cn(
+                                "w-2 h-2 rounded-full shrink-0",
+                                dotClass,
+                              ) }
+                            />
+                          )}
+                          <div className={ cn(isCheckout ? "truncate" : "") }>
+                            {!isBirthday && <>{formatTime(startDate)} - </>}
+                            {title}
+                          </div>
                         </div>
                       );
                     })}
