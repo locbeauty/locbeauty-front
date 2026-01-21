@@ -597,3 +597,141 @@ export async function getTopBookedGearsRanking({
 
   return data;
 }
+
+export async function getTopTraineesMetric({
+  year,
+  filialId,
+  limit,
+}: {
+  year: number;
+  filialId?: string;
+  limit?: number;
+}): Promise<{
+  topTrainees: {
+    traineeId: string;
+    name: string;
+    count: number;
+  }[];
+}> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  if (limit) {
+    queryParams.limit = String(limit);
+  }
+
+  const { data } = await apiRequest<{
+    topTrainees: {
+      traineeId: string;
+      name: string;
+      count: number;
+    }[];
+  }>({
+    endpoint: "dashboard/metrics/trainings/top-trainees",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch top trainees metric");
+  }
+
+  return data;
+}
+
+export async function getTopVolunteersMetric({
+  year,
+  filialId,
+  limit,
+}: {
+  year: number;
+  filialId?: string;
+  limit?: number;
+}): Promise<{
+  topVolunteers: {
+    volunteerId: string;
+    name: string;
+    count: number;
+  }[];
+}> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  if (limit) {
+    queryParams.limit = String(limit);
+  }
+
+  const { data } = await apiRequest<{
+    topVolunteers: {
+      volunteerId: string;
+      name: string;
+      count: number;
+    }[];
+  }>({
+    endpoint: "dashboard/metrics/trainings/top-volunteers",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch top volunteers metric");
+  }
+
+  return data;
+}
+
+export async function getTopTrainingEquipmentsMetric({
+  year,
+  filialId,
+  limit,
+}: {
+  year: number;
+  filialId?: string;
+  limit?: number;
+}): Promise<{
+  topEquipments: {
+    gearId: string;
+    name: string;
+    count: number;
+  }[];
+}> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  if (limit) {
+    queryParams.limit = String(limit);
+  }
+
+  const { data } = await apiRequest<{
+    topEquipments: {
+      gearId: string;
+      name: string;
+      count: number;
+    }[];
+  }>({
+    endpoint: "dashboard/metrics/trainings/top-equipments",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch top training equipments metric");
+  }
+
+  return data;
+}

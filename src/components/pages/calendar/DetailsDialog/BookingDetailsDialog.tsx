@@ -32,6 +32,15 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PaymentMethods } from "@/utils/constants";
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 import { toast } from "sonner";
 import { MachineExtraCostsDialog } from "../MachineExtraCostsDialog/MachineExtraCostsDialog";
@@ -171,6 +180,9 @@ export function BookingDetailsDialog({
     checkoutStatus: "Concluido" | "Cancelado",
     wasRefunded: boolean = false,
     cancellationFee: number | null = null,
+    cancellationDate: Date | null = null,
+    cancellationFeePaymentDate: Date | null = null,
+    cancellationFeePaymentMethod: PaymentMethods | null = null,
   ) {
     let response;
     const payment = selectedCheckout!.CheckoutPayment;
@@ -209,6 +221,9 @@ export function BookingDetailsDialog({
             }
             : undefined,
           cancellationFee: cancellationFee ?? undefined,
+          cancellationDate,
+          cancellationFeePaymentDate,
+          cancellationFeePaymentMethod,
         },
       });
     } else {
@@ -242,9 +257,16 @@ export function BookingDetailsDialog({
           CheckoutPayment: wasRefunded
             ? {
               ...payment!,
-              paymentStatus: "Reembolsado",
+              ymentStatus: "Reembolsado",
             }
-            : prev.CheckoutPayment,
+            : checkoutStatus === "Cancelado" &&
+                prev.CheckoutPayment?.paymentStatus === "Pendente"
+              ? {
+                ...prev.CheckoutPayment,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                paymentStatus: "Cancelado" as any,
+              }
+              : prev.CheckoutPayment,
         };
       });
 
@@ -863,6 +885,9 @@ interface CancelBookingConfirmationDialogProps {
     checkoutStatus: "Concluido" | "Cancelado",
     wasRefunded?: boolean,
     cancellationFee?: number | null,
+    cancellationDate?: Date | null,
+    cancellationFeePaymentDate?: Date | null,
+    cancellationFeePaymentMethod?: (typeof PaymentMethods)[number] | null,
   ) => void;
 }
 
@@ -874,7 +899,15 @@ export function CancelBookingConfirmationDialog({
   handleChangeCheckoutStatus,
 }: CancelBookingConfirmationDialogProps) {
   const [ wasRefunded, setWasRefunded ] = useState(false);
+  const [ hasCancellationFee, setHasCancellationFee ] = useState(false);
   const [ cancellationFee, setCancellationFee ] = useState<string>("0,00");
+  const [ cancellationFeeDate, setCancellationFeeDate ] = useState<string>(
+    new Date().toISOString().split("T")[0],
+  );
+  const [ cancellationFeePaymentDate, setCancellationFeePaymentDate ] =
+    useState<string>(new Date().toISOString().split("T")[0]);
+  const [ cancellationFeePaymentMethod, setCancellationFeePaymentMethod ] =
+    useState<PaymentMethods>("PIX");
 
   if (!selectedCheckout) return null;
 
@@ -903,24 +936,7 @@ export function CancelBookingConfirmationDialog({
               : daysUntilBooking === 1
                 ? "amanhã"
                 : `daqui a ${daysUntilBooking} dias`}
-            . Cancelamentos realizados com{" "}
-            <span className="font-semibold text-red-500">menos de 7 dias</span>{" "}
-            de antecedência{" "}
-            {hasFee ? (
-              <>
-                <span className="font-semibold">
-                  geram uma taxa de cancelamento
-                </span>
-                . Deseja prosseguir mesmo assim?
-              </>
-            ) : (
-              <>
-                <span className="font-semibold text-green-600">
-                  não geram taxa
-                </span>
-                . Deseja confirmar o cancelamento?
-              </>
-            )}
+            .
           </DialogDescription>
         </DialogHeader>
 
@@ -946,16 +962,75 @@ export function CancelBookingConfirmationDialog({
             )}
           </div>
 
-          {hasFee && (
-            <div className="flex flex-col gap-2 mt-4 w-full px-10">
-              <Label className="text-sm font-medium">
-                Taxa de cancelamento
-              </Label>
-              <PriceInput
-                withLabel={ false }
-                value={ cancellationFee }
-                onChange={ (value) => setCancellationFee(value) }
-              />
+          <div className="flex items-center space-x-2 mt-4">
+            <Checkbox
+              id="hasCancellationFee"
+              checked={ hasCancellationFee }
+              onCheckedChange={ (checked) =>
+                setHasCancellationFee(checked as boolean)
+              }
+            />
+            <Label
+              htmlFor="hasCancellationFee"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Gerou taxa de cancelamento?
+            </Label>
+          </div>
+
+          {hasCancellationFee && (
+            <div className="flex flex-col gap-3 mt-4 w-full px-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Valor da Taxa</Label>
+                  <PriceInput
+                    withLabel={ false }
+                    value={ cancellationFee }
+                    onChange={ (value) => setCancellationFee(value) }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Data do Cancelamento</Label>
+                  <Input
+                    type="date"
+                    value={ cancellationFeeDate }
+                    onChange={ (e) => setCancellationFeeDate(e.target.value) }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Data do Pagamento</Label>
+                  <Input
+                    type="date"
+                    value={ cancellationFeePaymentDate }
+                    onChange={ (e) =>
+                      setCancellationFeePaymentDate(e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Forma de Pagamento</Label>
+                  <Select
+                    value={ cancellationFeePaymentMethod }
+                    onValueChange={ (value) =>
+                      setCancellationFeePaymentMethod(value as PaymentMethods)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PaymentMethods.map((method) => (
+                        <SelectItem key={ method } value={ method }>
+                          {method}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
@@ -974,12 +1049,17 @@ export function CancelBookingConfirmationDialog({
                 selectedCheckout.checkoutId,
                 "Cancelado",
                 wasRefunded,
-                parseStringToCents(cancellationFee),
+                hasCancellationFee ? parseStringToCents(cancellationFee) : null,
+                hasCancellationFee ? new Date(cancellationFeeDate) : null,
+                hasCancellationFee
+                  ? new Date(cancellationFeePaymentDate)
+                  : null,
+                hasCancellationFee ? cancellationFeePaymentMethod : null,
               );
               setCancelBookingConfirmationDialogOpen(false);
             } }
           >
-            {hasFee ? "Cancelar mesmo assim" : "Confirmar cancelamento"}
+            Confirmar cancelamento
           </Button>
         </DialogFooter>
       </DialogContent>

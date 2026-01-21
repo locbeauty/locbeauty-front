@@ -110,7 +110,9 @@ export function MobileMonthView({
                           ) }
                           onClick={ () => openDetails(event) }
                           title={ `${
-                            !isBirthday ? formatTime(startDate) + " - " : ""
+                            !isBirthday && !isNotice
+                              ? formatTime(startDate) + " - "
+                              : ""
                           }${title}` }
                         />
                       );

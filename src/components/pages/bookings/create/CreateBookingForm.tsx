@@ -245,7 +245,9 @@ export function CreateBookingForm() {
     formState: { errors },
     control,
   } = createBookingFormMethods;
-
+  useEffect(() => {
+    console.log("errors: ", errors);
+  }, [ errors ]);
   const startHour = watch("startHourInMinutes");
   const watchTotalDurationInMinutes = watch("totalDurationInMinutes");
   const selectedDate = watch("date");

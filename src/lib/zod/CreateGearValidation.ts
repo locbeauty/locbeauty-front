@@ -12,17 +12,12 @@ export const createGearFormSchema = z.object({
     .string({ message: "Filial é obrigatória" })
     .trim()
     .min(1, { message: "Filial é obrigatória" }),
-  transferable: z.boolean(),
-  // outOfServiceUnits: z.number().default(0),
-  // availableUnits: z.number().default(0),
-  totalUnits: z.number({
-    message: "Número de unidades disponíveis é obrigatório",
-  }),
-  acquisitionDate: z
-    .date({ message: "Data de aquisição é obrigatória" })
-    .refine((date) => !date || date <= new Date(), {
-      message: "Data de aquisição não pode ser no futuro",
-    }),
+  availableUnits: z
+    .number({ message: "Número de unidades disponíveis é obrigatório" })
+    .min(0, { message: "O número de unidades deve ser maior ou igual a 0" }),
+  outOfServiceUnits: z
+    .number({ message: "Número de unidades fora de serviço é obrigatório" })
+    .min(0, { message: "O número de unidades deve ser maior ou igual a 0" }),
 });
 
 export type CreateGearFormSchemaType = z.infer<typeof createGearFormSchema>;

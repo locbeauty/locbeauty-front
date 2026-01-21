@@ -9,6 +9,7 @@ import { LocationsTab } from "@/components/pages/dashboard/tabs/LocationsTab";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { EquipmentsTab } from "@/components/pages/dashboard/tabs/EquipmentsTab";
+import { TrainingsTab } from "@/components/pages/dashboard/tabs/TrainingsTab";
 
 export default function DashboardPage() {
   return (
@@ -43,6 +44,9 @@ export default function DashboardPage() {
                   <TabsTrigger className="text-xs md:text-sm" value="locations">
                     Localidades
                   </TabsTrigger>
+                  <TabsTrigger className="text-xs md:text-sm" value="trainings">
+                    Treinamentos
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview" className="space-y-4">
                   <OverviewTab />
@@ -55,6 +59,9 @@ export default function DashboardPage() {
                 </TabsContent>
                 <TabsContent value="locations" className="space-y-4">
                   <LocationsTab />
+                </TabsContent>
+                <TabsContent value="trainings" className="space-y-4">
+                  <TrainingsTab />
                 </TabsContent>
               </Tabs>
             </div>

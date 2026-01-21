@@ -60,7 +60,6 @@ export function UpdateGearDialog({
   useEffect(() => {
     if (selectedGear) {
       reset({
-        transferable: selectedGear?.transferable,
         sourceFilialId: selectedGear?.SourceFilial.filialId,
         // acquisitionDate: new Date(selectedGear.acquisitionDate),
         availableUnits: selectedGear?.availableUnits,
@@ -82,7 +81,7 @@ export function UpdateGearDialog({
             "Content-Type": "application/json",
           },
           body: JSON.stringify(targetGearData),
-        }
+        },
       );
       const data = await response.json();
 
@@ -144,67 +143,11 @@ export function UpdateGearDialog({
                   </div>
                 )}
               </div>
-
-              {/* <div className="flex flex-col gap-6 mt-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="acquisitionDate">Data de aquisição</Label>
-                                    <Controller
-                                        control={ control }
-                                        name="acquisitionDate"
-                                        render={ ({ field }) => (
-                                            <DatePicker
-                                                placeholder="Selecione a data de aquisição"
-                                                value={ field.value }
-                                                onChange={ (date) => {
-                                                    setValue("acquisitionDate", date!);
-                                                    trigger("acquisitionDate");
-                                                } }
-                                                classNames={ {
-                                                    trigger:
-                                                  errors.acquisitionDate &&
-                                                  "border-destructive focus-visible:ring-destructive",
-                                                } }
-                                            />
-                                        ) }
-                                    />
-                                    {errors.acquisitionDate && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.acquisitionDate.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div> */}
-              <div>
-                <TransferableCheckbox
-                  control={ control }
-                  errors={ errors }
-                  name="transferable"
-                />
-              </div>
             </div>
 
             <div className="flex flex-col gap-3 max-w-[90%] md:max-w-[40%]">
               <div className="space-y-2 flex-1 mt-4">
-                <Label htmlFor="totalUnits">Estoque</Label>
-                <Controller
-                  control={ control }
-                  name="totalUnits"
-                  render={ ({ field }) => (
-                    <AmountControlButton
-                      value={ field.value || 0 }
-                      onChange={ field.onChange }
-                      error={ !!errors.totalUnits }
-                    />
-                  ) }
-                />
-                {errors.totalUnits && (
-                  <p className="text-sm text-destructive mt-2">
-                    {errors.totalUnits.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2 flex-1 mt-4">
-                <Label htmlFor="totalUnits">Unidades disponíveis</Label>
+                <Label htmlFor="availableUnits">Unidades disponíveis</Label>
                 <Controller
                   control={ control }
                   name="availableUnits"
@@ -212,7 +155,7 @@ export function UpdateGearDialog({
                     <AmountControlButton
                       value={ field.value || 0 }
                       onChange={ field.onChange }
-                      error={ !!errors.totalUnits }
+                      error={ !!errors.availableUnits }
                     />
                   ) }
                 />
@@ -224,7 +167,7 @@ export function UpdateGearDialog({
               </div>
 
               <div className="space-y-2 flex-1 mt-4">
-                <Label htmlFor="totalUnits">Unidades defeituosas</Label>
+                <Label htmlFor="outOfServiceUnits">Unidades defeituosas</Label>
                 <Controller
                   control={ control }
                   name="outOfServiceUnits"
@@ -232,7 +175,7 @@ export function UpdateGearDialog({
                     <AmountControlButton
                       value={ field.value || 0 }
                       onChange={ field.onChange }
-                      error={ !!errors.totalUnits }
+                      error={ !!errors.outOfServiceUnits }
                     />
                   ) }
                 />

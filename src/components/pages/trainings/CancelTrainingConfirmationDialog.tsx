@@ -253,7 +253,7 @@ export function CancelTrainingConfirmationDialog({
           )}
 
           {/* Refund checkbox - only show when applicable */}
-          {somePaymentIsDone && (
+          {/* {somePaymentIsDone && (
             <div className="flex items-center space-x-2 mt-4 pt-4 border-t">
               <Checkbox
                 id="refund"
@@ -269,7 +269,7 @@ export function CancelTrainingConfirmationDialog({
                 Reembolsar valor pago
               </Label>
             </div>
-          )}
+          )} */}
         </CardContent>
 
         <DialogFooter className="flex justify-end gap-3 mt-4">

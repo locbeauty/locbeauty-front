@@ -32,9 +32,7 @@ export function NoticesTable() {
   const { user } = useAuth();
   const { accesses } = useAccess();
 
-  const [ startDate, setStartDate ] = useState<Date | undefined>(
-    startOfMonth(new Date()),
-  );
+  const [ startDate, setStartDate ] = useState<Date | undefined>(undefined);
 
   const [ filialId, setFilialId ] = useState<string | undefined>();
 
@@ -63,7 +61,6 @@ export function NoticesTable() {
         filterByStartDateOnly: true,
       });
     },
-    enabled: !!startDate,
   });
 
   const notices = data?.data || [];

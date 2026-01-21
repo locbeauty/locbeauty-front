@@ -292,7 +292,7 @@ export function groupOverlappingEvents(
 ): CalendarEvent[][] {
   if (events.length === 0) return [];
 
-  const sortedEvents = [...events].sort((a, b) => {
+  const sortedEvents = [ ...events ].sort((a, b) => {
     const isTrainingA = "trainingId" in a;
     const isTrainingB = "trainingId" in b;
 
@@ -345,7 +345,7 @@ export function groupOverlappingEvents(
     }
 
     if (!foundGroup) {
-      groups.push([event]);
+      groups.push([ event ]);
     }
   });
 
@@ -410,7 +410,7 @@ export function getEventBasicInfo(event: CalendarEvent) {
 
     // Parse date safely as local date to avoid timezone shifts
     const dateStr = String(birthday.date);
-    const [year, month, day] = dateStr.split("T")[0].split("-").map(Number);
+    const [ year, month, day ] = dateStr.split("T")[0].split("-").map(Number);
     startDate = new Date(year, month - 1, day);
 
     endDate = new Date(startDate);

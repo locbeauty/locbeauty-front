@@ -150,7 +150,9 @@ export function MonthView({
                             />
                           )}
                           <div className={ cn(isCheckout ? "truncate" : "") }>
-                            {!isBirthday && <>{formatTime(startDate)} - </>}
+                            {!isBirthday && !isNotice && (
+                              <>{formatTime(startDate)} - </>
+                            )}
                             {title}
                           </div>
                         </div>

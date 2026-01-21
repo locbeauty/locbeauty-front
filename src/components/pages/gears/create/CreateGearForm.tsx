@@ -48,8 +48,9 @@ export function CreateGearForm() {
   const createGearMethods = useForm<CreateGearFormSchemaType>({
     resolver: zodResolver(createGearFormSchema),
     defaultValues: {
-      transferable: false,
       sourceFilialId: defaultFilialId,
+      availableUnits: 0,
+      outOfServiceUnits: 0,
     },
   });
 
@@ -57,14 +58,8 @@ export function CreateGearForm() {
     control,
     register,
     handleSubmit,
-    setValue,
-    watch,
-    trigger,
-    reset,
     formState: { errors },
   } = createGearMethods;
-
-  const acquisitionDate = watch("acquisitionDate");
 
   async function handleCreateGear(newGearData: CreateGearFormSchemaType) {
     try {
@@ -138,60 +133,44 @@ export function CreateGearForm() {
             </div>
           </div>
         </div>
-        <div className="space-y-2 flex-1 mt-4">
-          <Label htmlFor="totalUnits">Estoque</Label>
-          <Controller
-            control={ control }
-            name="totalUnits"
-            render={ ({ field }) => (
-              <AmountControlButton
-                value={ field.value || 0 }
-                onChange={ field.onChange }
-                error={ !!errors.totalUnits }
-              />
-            ) }
-          />
-          {errors.totalUnits && (
-            <p className="text-sm text-destructive mt-2">
-              {errors.totalUnits.message}
-            </p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="acquisitionDate">Data de aquisição</Label>
+        <div className="flex flex-col md:flex-row gap-4 mt-4">
+          <div className="space-y-2 flex-1">
+            <Label htmlFor="availableUnits">Unidades disponiveis</Label>
             <Controller
               control={ control }
-              name="acquisitionDate"
-              render={ () => (
-                <DatePicker
-                  placeholder="Selecione a data de aquisição"
-                  value={ acquisitionDate }
-                  onChange={ (date) => {
-                    setValue("acquisitionDate", date!);
-                    trigger("acquisitionDate");
-                  } }
-                  classNames={ {
-                    trigger:
-                      errors.acquisitionDate &&
-                      "border-destructive focus-visible:ring-destructive",
-                  } }
+              name="availableUnits"
+              render={ ({ field }) => (
+                <AmountControlButton
+                  value={ field.value || 0 }
+                  onChange={ field.onChange }
+                  error={ !!errors.availableUnits }
                 />
               ) }
             />
-            {errors.acquisitionDate && (
-              <p className="text-sm text-destructive">
-                {errors.acquisitionDate.message}
+            {errors.availableUnits && (
+              <p className="text-sm text-destructive mt-2">
+                {errors.availableUnits.message}
               </p>
             )}
           </div>
-          <div>
-            <TransferableCheckbox
+          <div className="space-y-2 flex-1">
+            <Label htmlFor="outOfServiceUnits">Unidades não funcionais</Label>
+            <Controller
               control={ control }
-              errors={ errors }
-              name="transferable"
+              name="outOfServiceUnits"
+              render={ ({ field }) => (
+                <AmountControlButton
+                  value={ field.value || 0 }
+                  onChange={ field.onChange }
+                  error={ !!errors.outOfServiceUnits }
+                />
+              ) }
             />
+            {errors.outOfServiceUnits && (
+              <p className="text-sm text-destructive mt-2">
+                {errors.outOfServiceUnits.message}
+              </p>
+            )}
           </div>
         </div>
       </form>

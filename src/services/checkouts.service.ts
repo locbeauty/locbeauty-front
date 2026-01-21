@@ -14,10 +14,10 @@ import { Checkout } from "@/utils/@types/checkouts";
 import { Customer } from "@/utils/@types/customer";
 import { Employee } from "@/utils/@types/employee";
 import { ROLES } from "@/utils/@types/roles";
-import { CheckoutStatuses } from "@/utils/constants";
+import { CheckoutStatuses, PaymentMethods } from "@/utils/constants";
 
 export async function CreateCheckout(
-  body: CreateCheckoutValidationWithMoneyInCents
+  body: CreateCheckoutValidationWithMoneyInCents,
 ) {
   const response = await apiRequest({
     endpoint: "bookings/create",
@@ -98,6 +98,9 @@ export async function UpdateCheckout({
     wasRefunded?: boolean;
     cancellationFee?: number;
     refundAmount?: number;
+    cancellationDate?: Date | null;
+    cancellationFeePaymentDate?: Date | null;
+    cancellationFeePaymentMethod?: PaymentMethods | null;
   };
   checkoutId: string;
 }) {
