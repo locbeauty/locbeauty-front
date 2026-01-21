@@ -101,7 +101,7 @@ export default function Treinamentos() {
 
     // Filtrar Treinamentos
     const filteredTrainings = trainings?.filter((t) =>
-      accessibleFilialIds.includes(t.sourceFilialId)
+      accessibleFilialIds.includes(t.sourceFilialId),
     );
 
     // Filtrar Alunos (aqueles que tem pelo menos um treinamento em uma filial acessível)
@@ -111,6 +111,7 @@ export default function Treinamentos() {
     // Mas na lista de alunos, ele deve aparecer.
 
     // Set de IDs de alunos que tem treinamento nas filiais acessíveis
+    // Filtrar Alunos
     const visibleTraineeIds = new Set<string>();
     trainings?.forEach((t) => {
       if (accessibleFilialIds.includes(t.sourceFilialId) && t.traineeId) {
@@ -118,11 +119,13 @@ export default function Treinamentos() {
       }
     });
 
-    const filteredTrainees = trainees?.filter((t) =>
-      visibleTraineeIds.has(t.traineeId)
+    const filteredTrainees = trainees?.filter(
+      (t) =>
+        (t.sourceFilialId && accessibleFilialIds.includes(t.sourceFilialId)) ||
+        visibleTraineeIds.has(t.traineeId),
     );
 
-    // Filtrar Voluntários (mesma lógica)
+    // Filtrar Voluntários
     const visibleVolunteerIds = new Set<string>();
     trainings?.forEach((t) => {
       if (accessibleFilialIds.includes(t.sourceFilialId) && t.volunteerId) {
@@ -130,8 +133,10 @@ export default function Treinamentos() {
       }
     });
 
-    const filteredVolunteers = volunteers?.filter((v) =>
-      visibleVolunteerIds.has(v.volunteerId)
+    const filteredVolunteers = volunteers?.filter(
+      (v) =>
+        (v.sourceFilialId && accessibleFilialIds.includes(v.sourceFilialId)) ||
+        visibleVolunteerIds.has(v.volunteerId),
     );
 
     return {

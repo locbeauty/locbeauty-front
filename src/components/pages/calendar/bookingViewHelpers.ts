@@ -124,8 +124,13 @@ export function getMonthDays(date: Date): Date[] {
   const days: Date[] = [];
   const current = new Date(startDate);
 
-  // Always generate exactly 6 weeks (42 days) for consistent layout
-  for (let i = 0; i < 42; i++) {
+  // Calculate total slots needed (days in month + padding from prev month)
+  // Round up to nearest multiple of 7 to complete the last row
+  const lastDayOfMonth = new Date(year, month + 1, 0);
+  const totalDaysNeeded = daysFromPrevMonth + lastDayOfMonth.getDate();
+  const totalCells = Math.ceil(totalDaysNeeded / 7) * 7;
+
+  for (let i = 0; i < totalCells; i++) {
     days.push(new Date(current));
     current.setDate(current.getDate() + 1);
   }
@@ -402,9 +407,12 @@ export function getEventBasicInfo(event: CalendarEvent) {
     id = birthday.id;
     title = `${birthday.title} (${birthday.role})`;
     durationInHours = 1; // Arbitrary duration for birthday view
-    startDate = new Date(birthday.date);
-    endDate = new Date(startDate);
-    endDate.setHours(endDate.getHours() + durationInHours);
+
+    // Parse date safely as local date to avoid timezone shifts
+    const dateStr = String(birthday.date);
+    const [ year, month, day ] = dateStr.split("T")[0].split("-").map(Number);
+    startDate = new Date(year, month - 1, day);
+
     endDate = new Date(startDate);
     endDate.setHours(endDate.getHours() + durationInHours);
   } else if ("noticeId" in event) {

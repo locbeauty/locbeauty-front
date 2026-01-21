@@ -549,3 +549,51 @@ export async function getDefaultsOverTime({
 
   return data;
 }
+
+export async function getTopBookedGearsRanking({
+  year,
+  filialId,
+  limit,
+}: {
+  year: number;
+  filialId?: string;
+  limit?: number;
+}): Promise<{
+  ranking: {
+    gearName: string;
+    count: number;
+    totalRevenue: number;
+    occupancyRate: number;
+  }[];
+}> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  if (limit) {
+    queryParams.limit = String(limit);
+  }
+
+  const { data } = await apiRequest<{
+    ranking: {
+      gearName: string;
+      count: number;
+      totalRevenue: number;
+      occupancyRate: number;
+    }[];
+  }>({
+    endpoint: "dashboard/metrics/top-gears",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch top gears metric");
+  }
+
+  return data;
+}

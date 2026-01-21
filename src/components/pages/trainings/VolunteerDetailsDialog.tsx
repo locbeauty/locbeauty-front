@@ -83,7 +83,7 @@ export function VolunteerDetailsDialog({
 
     if (filterId) {
       result = result.filter((training) =>
-        training.trainingId.toString().includes(filterId)
+        training.trainingId.toString().includes(filterId),
       );
     }
 
@@ -139,6 +139,14 @@ export function VolunteerDetailsDialog({
                     CPF:
                   </span>
                   <span>{volunteer.documentNumber || "Não informado"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-muted-foreground">
+                    Filial:
+                  </span>
+                  <span>
+                    {volunteer.SourceFilial?.filialName || "Não informada"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -241,7 +249,7 @@ export function VolunteerDetailsDialog({
                   {filteredTrainings.map((training) => {
                     // Encontra o pagamento específico do modelo (VOLUNTEER)
                     const payment = training.TrainingPayment?.find(
-                      (p) => p.payerType === "VOLUNTEER"
+                      (p) => p.payerType === "VOLUNTEER",
                     );
 
                     return (
@@ -261,18 +269,18 @@ export function VolunteerDetailsDialog({
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 {new Date(training.dueDate).toLocaleDateString(
-                                  "pt-BR"
+                                  "pt-BR",
                                 )}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {String(
-                                  Math.floor(training.hourInMinutes / 60)
+                                  Math.floor(training.hourInMinutes / 60),
                                 ).padStart(2, "0")}
                                 :
                                 {String(training.hourInMinutes % 60).padStart(
                                   2,
-                                  "0"
+                                  "0",
                                 )}
                               </span>
                             </div>
@@ -297,7 +305,7 @@ export function VolunteerDetailsDialog({
                               <span className="text-xs font-bold text-primary/80">
                                 Total:{" "}
                                 {centsToStringWithCurrencyMark(
-                                  payment.totalPrice || 0
+                                  payment.totalPrice || 0,
                                 )}
                               </span>
                             </div>
@@ -323,7 +331,7 @@ export function VolunteerDetailsDialog({
                                 )}
                                 <span className="font-medium">
                                   {centsToStringWithCurrencyMark(
-                                    payment.firstPaymentAmount
+                                    payment.firstPaymentAmount,
                                   )}
                                 </span>
                                 {payment.firstPaymentStatus === "Pago" && (
@@ -356,7 +364,7 @@ export function VolunteerDetailsDialog({
                                     )}
                                     <span className="font-medium">
                                       {centsToStringWithCurrencyMark(
-                                        payment.secondPaymentAmount
+                                        payment.secondPaymentAmount,
                                       )}
                                     </span>
                                     {payment.secondPaymentStatus === "Pago" ? (

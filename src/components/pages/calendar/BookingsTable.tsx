@@ -139,6 +139,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
           <thead className="bg-muted">
             <tr>
               <th className="text-left p-3 font-medium text-sm">Cliente</th>
+              <th className="text-left p-3 font-medium text-sm">Filial</th>
               <th className="text-left p-3 font-medium text-sm">Equipamento</th>
               <th className="text-center p-3 font-medium text-sm">Data</th>
               <th className="text-center p-3 font-medium text-sm">
@@ -155,7 +156,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
           <tbody>
             {isEmpty && (
               <tr>
-                <td className="text-center p-4" colSpan={ 8 }>
+                <td className="text-center p-4" colSpan={ 9 }>
                   Nada a mostrar por aqui.
                 </td>
               </tr>
@@ -169,6 +170,9 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                   >
                     <td className="p-3 text-sm">
                       {checkout?.Customer.fullname}
+                    </td>
+                    <td className="p-3 text-sm">
+                      {checkout?.SourceFilial?.filialName || "N/A"}
                     </td>
                     <td className="p-3 text-sm">
                       {checkout?.Bookings.map((b) => b.Gear.gearName).join(
@@ -214,7 +218,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
             ) : (
               <tr>
                 <td
-                  colSpan={ 8 }
+                  colSpan={ 9 }
                   className="p-4 text-center text-muted-foreground"
                 >
                   Carregando...
@@ -244,6 +248,10 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                   itemInfo: checkout.Bookings.map((b) => b.Gear.gearName).join(
                     ", ",
                   ),
+                },
+                {
+                  itemLabel: "Filial: ",
+                  itemInfo: checkout.SourceFilial?.filialName || "N/A",
                 },
                 {
                   itemLabel: "Data: ",

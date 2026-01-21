@@ -10,6 +10,11 @@ export interface Trainee {
   email: string;
   Addresses: Address[];
   Trainings: Training[];
+  sourceFilialId?: string;
+  SourceFilial?: {
+    filialName: string;
+    filialId: string;
+  };
 }
 
 // export interface Training {

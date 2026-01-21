@@ -136,6 +136,7 @@ export function CityRankingCard({
             height={ 400 }
             fill="#7f2b83"
             valueFormatter={ (value) => `${value} locações` }
+            allowDecimals={ false }
           />
         )}
       </CardContent>

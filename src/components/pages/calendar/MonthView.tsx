@@ -49,16 +49,15 @@ export function MonthView({
               <div
                 key={ index }
                 className={ cn(
-                  "min-h-[120px] border-r border-b p-1 relative max-h-[100px]",
-                  dayEvents.length > 3 && "overflow-y-scroll",
+                  "min-h-[150px] border-r border-b p-1 relative max-h-[300px] overflow-y-auto",
                   isToday(day) ? "bg-primary/90" : "",
-                  !isCurrentMonth ? "bg-gray-100 text-red-300" : ""
+                  !isCurrentMonth ? "bg-gray-100 text-red-300" : "",
                 ) }
               >
                 <div
                   className={ cn(
                     "text-right p-1 font-medium text-sm",
-                    isToday(day) ? "text-white font-extrabold" : ""
+                    isToday(day) ? "text-white font-extrabold" : "",
                   ) }
                 >
                   {day.getDate()}
@@ -85,8 +84,10 @@ export function MonthView({
                         <div
                           key={ id }
                           className={ cn(
-                            "text-xs p-1 rounded border-l-2 truncate",
-                            !isBirthday && "cursor-pointer",
+                            "p-1 rounded border-l-2",
+                            isBirthday
+                              ? "text-sm font-semibold whitespace-normal h-auto"
+                              : "text-xs truncate cursor-pointer",
                             isTraining
                               ? "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-500"
                               : isBirthday
@@ -94,13 +95,13 @@ export function MonthView({
                                 : cn(
                                   "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
                                   durationInHours === 4 &&
-                                    "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
+                                      "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
                                   durationInHours === 6 &&
-                                    "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
+                                      "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
                                   durationInHours >= 8 &&
-                                    durationInHours <= 12 &&
-                                    "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
-                                )
+                                      durationInHours <= 12 &&
+                                      "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
+                                ),
                           ) }
                           onClick={ () => openDetails(event) }
                           title={ `${

@@ -14,6 +14,7 @@ import {
 } from "@/lib/zod/CreateCustomerValidation";
 import { toast } from "sonner";
 import { CreateCustomer } from "@/services/customers.service";
+import { queryClient } from "@/app/(main)/layout";
 
 export function CreateCustomerForm() {
   const { user } = useAuth();
@@ -63,6 +64,10 @@ export function CreateCustomerForm() {
         setError("documentNumber", { message: "Documento já cadastrado." });
       }
     } else {
+      queryClient.invalidateQueries({ queryKey: [ "get-birthdays" ] });
+      // Invalidate other relevant queries if needed, e.g., customer list
+      // queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+
       toast.success(response.message, { style: { fontSize: "1rem" } });
       window.scroll({ top: 0 });
       reset();

@@ -104,7 +104,13 @@ export function CustomerDetailsCard({
                   <span className="font-mono">
                     {selectedCustomer?.birthdate
                       ? format(
-                        new Date(selectedCustomer.birthdate),
+                        new Date(
+                          new Date(selectedCustomer.birthdate).getTime() +
+                              new Date(
+                                selectedCustomer.birthdate,
+                              ).getTimezoneOffset() *
+                                60000,
+                        ),
                         "dd/MM/yyyy",
                       )
                       : "Não informado"}

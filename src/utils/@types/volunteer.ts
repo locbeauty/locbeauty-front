@@ -1,4 +1,5 @@
 import { Training } from "./training";
+import { Filial } from "./filials";
 
 export interface Volunteer {
   volunteerId: string;
@@ -6,4 +7,6 @@ export interface Volunteer {
   documentNumber: string;
   cellphone: string;
   Training: Training[];
+  sourceFilialId?: string;
+  SourceFilial?: Filial;
 }

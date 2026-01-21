@@ -1,5 +1,3 @@
-import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
-import { BookingsPerMachineCard } from "../cards/BookingsPerMachineCard";
 import { TotalRevenueCard } from "../cards/TotalRevenueCard";
 import { FilialRankingsCard } from "../cards/FilialRankingsCard";
 import { CityRankingCard } from "../cards/CityRankingCard";
@@ -54,18 +52,6 @@ export function OverviewTab() {
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <TotalRevenueCard
-          selectedYear={ selectedYear }
-          months={ MONTHS }
-          availableYears={ availableYears }
-        />
-        <BookingsPerMachineCard
-          selectedMonth={ selectedMonth }
-          selectedYear={ selectedYear }
-          months={ MONTHS }
-        />
-      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <FilialRankingsCard
           selectedYear={ selectedYear }
@@ -73,6 +59,13 @@ export function OverviewTab() {
         />
         <CityRankingCard
           selectedYear={ selectedYear }
+          availableYears={ availableYears }
+        />
+      </div>
+      <div className="grid gap-4 grid-cols-1">
+        <TotalRevenueCard
+          selectedYear={ selectedYear }
+          months={ MONTHS }
           availableYears={ availableYears }
         />
       </div>

@@ -140,6 +140,14 @@ export function TraineeDetailsDialog({
                   </span>
                   <span>{trainee.documentNumber || "Não informado"}</span>
                 </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-muted-foreground">
+                    Filial:
+                  </span>
+                  <span>
+                    {trainee.SourceFilial?.filialName || "Não informada"}
+                  </span>
+                </div>
               </div>
             </div>
 

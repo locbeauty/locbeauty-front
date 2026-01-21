@@ -789,9 +789,7 @@ export function CheckoutPaymentMethodDialog({
           )}
 
           {/* Refund Section - Hide when Concluído unless already refunded */}
-          {(paymentStatus === "Pago" ||
-            firstPaymentStatus === "Pago" ||
-            secondPaymentStatus === "Pago" ||
+          {(selectedCheckout.CheckoutPayment?.paymentStatus === "Pago" ||
             selectedCheckout.CheckoutPayment?.firstPaymentStatus === "Pago" ||
             selectedCheckout.CheckoutPayment?.secondPaymentStatus === "Pago") &&
             (checkoutStatus !== "Concluido" ||

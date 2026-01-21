@@ -6,7 +6,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getYearlyBookingsPerMachineMetric } from "@/services/dashboard.service";
+import {
+  getAvailableYears,
+  getYearlyBookingsPerMachineMetric,
+} from "@/services/dashboard.service";
 import { apiRequest } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { CustomAreaChart } from "../CustomAreaChart";
@@ -23,46 +26,64 @@ interface Gear {
   filialId?: string;
 }
 
-interface BookingsPerMachineCardProps {
-  selectedMonth?: string;
-  selectedYear: string;
-  months: string[];
-}
+const ABBR_MONTHS = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+  "Jan",
+];
 
-export function BookingsPerMachineCard({
-  selectedYear,
-  months,
-}: BookingsPerMachineCardProps) {
+export function BookingsPerMachineCard() {
   const [ filials, setFilials ] = useState<Filial[]>([]);
   const [ gears, setGears ] = useState<Gear[]>([]);
 
   const [ selectedFilialId, setSelectedFilialId ] = useState<string>("");
   const [ selectedGearId, setSelectedGearId ] = useState<string>("");
 
+  const [ selectedYear, setSelectedYear ] = useState<number>(
+    new Date().getFullYear(),
+  );
+  const [ availableYears, setAvailableYears ] = useState<number[]>([]);
+
   const [ yearlyData, setYearlyData ] = useState<
     { date: string; total: number }[]
   >([]);
   const [ loading, setLoading ] = useState(false);
 
-  // Fetch Filials on mount
+  // Fetch Filials and Available Years on mount
   useEffect(() => {
-    async function fetchFilials() {
+    async function fetchFilterOptions() {
       try {
-        const { data } = await apiRequest<Filial[]>({
-          endpoint: "filials",
-          method: "GET",
-        });
-        if (data) {
-          setFilials(data);
-          if (data.length > 0) {
-            setSelectedFilialId(data[0].filialId);
+        const [ filialsData, yearsData ] = await Promise.all([
+          apiRequest<Filial[]>({
+            endpoint: "filials",
+            method: "GET",
+          }),
+          getAvailableYears(),
+        ]);
+
+        if (filialsData.data) {
+          setFilials(filialsData.data);
+          if (filialsData.data.length > 0) {
+            setSelectedFilialId(filialsData.data[0].filialId);
           }
         }
+
+        setAvailableYears(yearsData.map(Number));
       } catch (error) {
-        console.error("Failed to fetch filials", error);
+        console.error("Failed to fetch filter options", error);
       }
     }
-    fetchFilials();
+    fetchFilterOptions();
   }, []);
 
   // Fetch Gears when Filial changes
@@ -123,7 +144,7 @@ export function BookingsPerMachineCard({
         });
 
         const formattedData = data.map((item) => ({
-          date: months[item.month - 1].substring(0, 3), // "Jan", "Feb" etc
+          date: ABBR_MONTHS[item.month - 1],
           total: item.count,
         }));
         setYearlyData(formattedData);
@@ -135,15 +156,31 @@ export function BookingsPerMachineCard({
     }
 
     fetchMetrics();
-  }, [ selectedGearId, selectedYear, months, selectedFilialId ]);
+  }, [ selectedGearId, selectedYear, selectedFilialId ]);
 
   return (
     <Card className="col-span-1 md:col-span-2 relative h-fit">
       <CardHeader>
         <CardTitle>Agendamentos por Máquina</CardTitle>
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
-          Histórico anual de locações
+          Hitórico anual de locações
           <div className="flex gap-2 flex-wrap">
+            <Select
+              value={ String(selectedYear) }
+              onValueChange={ (value) => setSelectedYear(Number(value)) }
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableYears.map((year) => (
+                  <SelectItem key={ year } value={ String(year) }>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select
               value={ selectedFilialId }
               onValueChange={ setSelectedFilialId }

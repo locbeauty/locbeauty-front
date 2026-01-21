@@ -4,12 +4,11 @@ import { Download } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { OverviewTab } from "@/components/pages/dashboard/tabs/OverviewTab";
-import { DetailsTab } from "@/components/pages/dashboard/tabs/DetailsTab";
 import { CustomersTab } from "@/components/pages/dashboard/tabs/CustomersTab";
 import { LocationsTab } from "@/components/pages/dashboard/tabs/LocationsTab";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
-import { InsightsTab } from "@/components/pages/dashboard/tabs/InsightsTab";
+import { EquipmentsTab } from "@/components/pages/dashboard/tabs/EquipmentsTab";
 
 export default function DashboardPage() {
   return (
@@ -32,17 +31,14 @@ export default function DashboardPage() {
                   <TabsTrigger className="text-xs md:text-sm" value="overview">
                     Visão Geral
                   </TabsTrigger>
-                  <TabsTrigger className="text-xs md:text-sm" value="analytics">
-                    Análise Detalhada
+                  <TabsTrigger className="text-xs md:text-sm" value="customers">
+                    Clientes
                   </TabsTrigger>
                   <TabsTrigger
                     className="text-xs md:text-sm"
-                    value="new-insights"
+                    value="equipments"
                   >
-                    Novos Insights
-                  </TabsTrigger>
-                  <TabsTrigger className="text-xs md:text-sm" value="customers">
-                    Clientes
+                    Equipamentos
                   </TabsTrigger>
                   <TabsTrigger className="text-xs md:text-sm" value="locations">
                     Localidades
@@ -54,11 +50,8 @@ export default function DashboardPage() {
                 <TabsContent value="customers" className="space-y-4">
                   <CustomersTab />
                 </TabsContent>
-                <TabsContent value="analytics" className="space-y-4">
-                  <DetailsTab />
-                </TabsContent>
-                <TabsContent value="new-insights" className="space-y-4">
-                  <InsightsTab />
+                <TabsContent value="equipments" className="space-y-4">
+                  <EquipmentsTab />
                 </TabsContent>
                 <TabsContent value="locations" className="space-y-4">
                   <LocationsTab />

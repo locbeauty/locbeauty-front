@@ -143,7 +143,9 @@ export default function BookingsPage() {
                 onChange={ (e) => setCustomerName(e.target.value) }
               />
             </div>
-            {user?.role === USER_ROLES.GERENTE && (
+            {(user?.role === USER_ROLES.ADMIN ||
+              user?.role === USER_ROLES.MASTER ||
+              (accessibleFilialIds && accessibleFilialIds.length > 0)) && (
               <div className="w-full md:w-[200px]">
                 <SelectFilial
                   value={ filialId }
