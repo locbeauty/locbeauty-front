@@ -6,7 +6,7 @@ export const PaymentMethods = [
   "Dinheiro",
   "NaoInformado",
 ] as const;
-export const paymentModes = ["Parcelado", "AVista"] as const;
+export const paymentModes = [ "Parcelado", "AVista" ] as const;
 export const paymentStatuses = [
   "Pendente",
   "Pago",
@@ -15,7 +15,7 @@ export const paymentStatuses = [
   "Cortesia",
   "Cancelado",
 ] as const;
-export const checkoutStatuses = ["Pendente", "Concluido", "Cancelado"] as const;
+export const checkoutStatuses = [ "Pendente", "Concluido", "Cancelado" ] as const;
 
 export type CheckoutStatuses = (typeof checkoutStatuses)[number];
 export type PaymentStatuses = (typeof paymentStatuses)[number];
