@@ -8,36 +8,36 @@ import { useState } from "react";
 import { Toaster } from "sonner";
 
 export default function PageWithAuth({
-    children,
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const [ sidebarOpen, setSidebarOpen ] = useState(false);
-    const { user } = useAuth();
+  const [ sidebarOpen, setSidebarOpen ] = useState(false);
+  const { user } = useAuth();
 
-    if(!user) {
-        return null;
-    }
+  if(!user) {
+    return null;
+  }
 
-    return (
-        <div className="max-h-screen flex bg-background">
-            <Sidebar
-                className={ cn(sidebarOpen ? "translate-x-0" : "-translate-x-full") }
-            />
+  return (
+    <div className="max-h-screen flex bg-background">
+      <Sidebar
+        className={ cn(sidebarOpen ? "translate-x-0" : "-translate-x-full") }
+      />
 
-            <div className="flex-1 md:ml-48">
-                <DashboardHeader setSidebarOpen={ setSidebarOpen } />
-                <main className="p-6">{children}</main>
-            </div>
+      <div className="flex-1 md:ml-48">
+        <DashboardHeader setSidebarOpen={ setSidebarOpen } />
+        <main className="p-6">{children}</main>
+      </div>
 
-            {/* Overlay for mobile */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-black/50 md:hidden"
-                    onClick={ () => setSidebarOpen(false) }
-                />
-            )}
-            <Toaster />
-        </div>
-    );
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={ () => setSidebarOpen(false) }
+        />
+      )}
+      <Toaster />
+    </div>
+  );
 }

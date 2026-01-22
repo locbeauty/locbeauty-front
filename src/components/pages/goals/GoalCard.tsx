@@ -3,179 +3,211 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Goal } from "@/utils/@types/goals";
 import { GoalStatuses } from "@/utils/constants";
 import { getMonthName } from "@/utils/getMonthName";
-import { Building2, Calendar, DollarSign, Clock, Cog } from "lucide-react";
+import {
+  Building2,
+  Calendar,
+  Clock,
+  Cog,
+  DollarSign,
+  MoreVertical,
+  Eye,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { GoalDetailsDialog } from "./GoalDetailsDialog";
 
 export function GoalCard({ goal }: { goal: Goal }) {
-    const isMoney = goal.targetCents !== null;
-    const target = isMoney ? goal.targetCents! : goal.targetQuantity!;
-    const current = isMoney ? goal.currentCents ?? 0 : goal.currentQuantity ?? 0;
-    const estimated = isMoney ? goal.estimatedCents ?? 0 : goal.estimatedQuantity ?? 0;
+  const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
+  const isMoney = goal.targetCents !== null;
+  const target = isMoney ? goal.targetCents! : goal.targetQuantity!;
+  const current = isMoney ? goal.currentCents ?? 0 : goal.currentQuantity ?? 0;
+  const estimated = isMoney
+    ? goal.estimatedCents ?? 0
+    : goal.estimatedQuantity ?? 0;
 
-    const formatValue = (v: number) =>
-        isMoney
-            ? (v / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-            : v.toLocaleString("pt-BR");
+  const formatValue = (v: number) =>
+    isMoney
+      ? (v / 100).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+      })
+      : v.toLocaleString("pt-BR");
 
-    const statusColor = (status: GoalStatuses) => {
-        switch (status) {
-        case "Concluida":
-            return "bg-green-200 text-green-900";
-        case "PARCIALMENTE_CONCLUIDA":
-            return "bg-yellow-200 text-yellow-900";
-        case "EM_ANDAMENTO":
-            return "bg-blue-200 text-blue-900";
-        case "NAO_ATINGIDA":
-            return "bg-red-200 text-red-900";
-        }
-    };
+  const statusColor = (status: GoalStatuses) => {
+    switch (status) {
+    case "Concluida":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "PARCIALMENTE_CONCLUIDA":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    case "EM_ANDAMENTO":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "NAO_ATINGIDA":
+      return "bg-red-100 text-red-800 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
 
-    const confirmedPct = target > 0 ? (current / target) * 100 : 0;
-    const estimatedPct = target > 0 ? (estimated / target) * 100 : 0;
+  const confirmedPct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
+  const estimatedPct =
+    target > 0 ? Math.min((estimated / target) * 100, 100 - confirmedPct) : 0;
 
-    return (
-        <Card key={ goal.goalId } className="overflow-hidden w-full">
-            <CardContent className="p-4 sm:p-6">
+  return (
+    <Card
+      key={ goal.goalId }
+      className="overflow-hidden w-full hover:shadow-md transition-shadow"
+    >
+      <CardContent className="p-4">
+        {/* Header: Month | Filial | Status */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex flex-col mr-2">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-base">
+                {getMonthName(goal.monthIndex)}/{goal.year}
+              </span>
+              <Badge
+                variant="outline"
+                className={ `${statusColor(
+                  goal.status
+                )} text-[10px] px-1.5 py-0 h-5 whitespace-nowrap` }
+              >
+                {goal.status === "EM_ANDAMENTO"
+                  ? "Em Andamento"
+                  : goal.status === "Concluida"
+                    ? "Atingida"
+                    : goal.status === "NAO_ATINGIDA"
+                      ? "Não Atingida"
+                      : "Parcial"}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+              {goal.Filial ? (
+                <>
+                  <Building2 className="h-3 w-3" />
+                  <span className="truncate max-w-[150px]">
+                    {goal.Filial.filialName}
+                  </span>
+                </>
+              ) : (
+                "Global"
+              )}
+              {goal.Gear && (
+                <>
+                  <span className="mx-1">•</span>
+                  <Cog className="h-3 w-3" />
+                  <span className="truncate max-w-[100px]">
+                    {goal.Gear.gearName}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
 
-                {/* Cabeçalho */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4 w-full">
+          <div className="flex items-start gap-2">
+            <div className="text-right">
+              <div className="text-sm font-bold text-foreground opacity-90">
+                {formatValue(target)}
+              </div>
+              <div className="text-[10px] text-muted-foreground uppercase">
+                Meta
+              </div>
+            </div>
 
-                    {/* Infos da meta */}
-                    <div className="flex items-start gap-3 min-w-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0 -mt-1 -mr-2">
+                  <span className="sr-only">Abrir menu</span>
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={ () => {
+                    setTimeout(() => setIsDetailsOpen(true), 0);
+                  } }
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Ver Detalhes
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
 
-                        <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
-                            <DollarSign className="h-5 w-5" />
-                        </div>
+        {/* Progress Bar */}
+        <div className="relative h-4 w-full rounded-full overflow-hidden bg-muted/20 border border-muted-foreground/20 mb-3">
+          <div
+            className="absolute left-0 top-0 h-full bg-primary transition-all duration-300"
+            style={ { width: `${confirmedPct}%` } }
+          />
+          <div
+            className="absolute top-0 h-full bg-green-500/50 transition-all duration-300"
+            style={ {
+              left: `${confirmedPct}%`,
+              width: `${estimatedPct}%`,
+            } }
+          />
+        </div>
 
-                        <div className="min-w-0">
-                            <h3 className="font-semibold text-lg truncate">
-                                {getMonthName(goal.monthIndex)}/{goal.year}
-                            </h3>
+        {/* Footer Info */}
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5" title="Confirmado">
+              <div className="w-2 h-2 rounded-full bg-primary" />
+              <span className="font-medium">{confirmedPct.toFixed(0)}%</span>
+            </div>
+            {estimated > 0 && (
+              <div
+                className="flex items-center gap-1.5"
+                title="Estimado (Pendente)"
+              >
+                <div className="w-2 h-2 rounded-full bg-green-500/50" />
+                <span className="text-muted-foreground">
+                  {estimatedPct.toFixed(0)}%
+                </span>
+              </div>
+            )}
+          </div>
 
-                            <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
+          <div className="flex flex-col items-end">
+            {current < target && (
+              <span className="text-[10px] text-muted-foreground">
+                {formatValue(current)} / {formatValue(target)}
+              </span>
+            )}
+            {current >= target && (
+              <span className="text-green-600 font-medium text-[10px]">
+                Meta Batida!
+              </span>
+            )}
+          </div>
+        </div>
 
-                                <div className="flex items-center gap-1">
-                                    <Building2 className="h-3 w-3" />
-                                    Filial {goal.Filial.filialName}
-                                </div>
+        {/* Legend */}
+        <div className="mt-3 pt-2 border-t flex flex-wrap gap-x-3 gap-y-1 justify-center text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-primary" />
+            <span>Confirmado</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-green-500/50" />
+            <span>Pendente</span>
+          </div>
+        </div>
 
-                                <div className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    Meta Mensal
-                                </div>
-
-                                {goal.status === "EM_ANDAMENTO" && goal.remainingDays !== null && (
-                                    <div className="flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        {goal.remainingDays} dias restantes
-                                    </div>
-                                )}
-
-                                {/* Equipamento associado */}
-                                {goal.Gear && (
-                                    <div className="flex items-center gap-1">
-                                        <Cog className="h-3 w-3" />
-                                        {goal.Gear.gearName}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Status */}
-                    <div className="flex sm:block">
-                        <Badge variant="outline" className={ `${statusColor(goal.status)} whitespace-nowrap` }>
-                            {goal.status}
-                        </Badge>
-                    </div>
-                </div>
-
-                {/* Conteúdo principal */}
-                <div className="space-y-4 max-w-full">
-
-                    {/* Progresso Total */}
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium">Progresso Total</span>
-                            <span className="text-sm text-muted-foreground">
-                                {formatValue(current)} / {formatValue(target)}
-                            </span>
-                        </div>
-
-                        <div className="relative h-3 w-full rounded-full overflow-hidden bg-gray-200">
-                            <div
-                                className="absolute left-0 top-0 h-3 bg-primary transition-all duration-300"
-                                style={ { width: `${confirmedPct}%` } }
-                            />
-                            <div
-                                className="absolute top-0 h-3 bg-green-500 transition-all duration-300"
-                                style={ {
-                                    left: `${confirmedPct}%`,
-                                    width: `${estimatedPct}%`,
-                                } }
-                            />
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm gap-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <div className="flex items-center gap-1">
-                                    <div className="w-3 h-3 bg-primary rounded-full" />
-                                    {confirmedPct.toFixed(1)}% confirmado
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <div className="w-3 h-3 bg-green-500 rounded-full" />
-                                    {estimatedPct.toFixed(1)}% estimado
-                                </div>
-                            </div>
-
-                            <span className="text-muted-foreground">
-                                Faltam: {formatValue(Math.max(target - current, 0))}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Detalhes */}
-                    <div className="grid grid-cols-1 gap-3 pt-3 border-t text-sm">
-
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-primary rounded-full"></div>
-                                <span className="font-medium">Confirmado</span>
-                            </div>
-                            <div className="text-right">
-                                <div className="font-semibold">{formatValue(current)}</div>
-                                <div className="text-xs text-muted-foreground">{confirmedPct.toFixed(1)}%</div>
-                            </div>
-                        </div>
-
-                        {estimated > 0 && (
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                    <span className="font-medium">Pendente</span>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-semibold">{formatValue(estimated)}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                        {((estimated / target) * 100).toFixed(1)}%
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex items-center justify-between pt-2 border-t">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                                <span className="font-medium">Meta Total</span>
-                            </div>
-                            <div className="text-right">
-                                <div className="font-semibold">{formatValue(target)}</div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-            </CardContent>
-        </Card>
-    );
+        <GoalDetailsDialog
+          open={ isDetailsOpen }
+          onOpenChange={ setIsDetailsOpen }
+          goal={ goal }
+        />
+      </CardContent>
+    </Card>
+  );
 }

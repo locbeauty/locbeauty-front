@@ -118,12 +118,12 @@
 // }
 
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import { useEffect, useState } from "react";
 
@@ -134,161 +134,182 @@ type CityOption = {
   distance: number;
 };
 
-export function CityInput({ distanceInKM, setDistanceInKM }: {distanceInKM: number, setDistanceInKM: (value: number) => void}) {
+export function CityInput({
+  distanceInKM,
+  setDistanceInKM,
+}: {
+  distanceInKM: number;
+  setDistanceInKM: (value: number) => void;
+}) {
+  // const [ distanceInKM, setDistanceInKM ] = useState(0);
+  const [ cityQuery, setCityQuery ] = useState("");
+  const [ cityOptions, setCityOptions ] = useState<CityOption[]>([]);
+  const [ isLoadingCities, setIsLoadingCities ] = useState(false);
 
-    // const [ distanceInKM, setDistanceInKM ] = useState(0);
-    const [ cityQuery, setCityQuery ] = useState("");
-    const [ cityOptions, setCityOptions ] = useState<CityOption[]>([]);
-    const [ isLoadingCities, setIsLoadingCities ] = useState(false);
-
-    useEffect(() => {
+  useEffect(() => {
     // AbortController cancela requisições anteriores se o usuário continuar digitando
-        const controller = new AbortController();
-        const { signal } = controller;
+    const controller = new AbortController();
+    const { signal } = controller;
 
-        const fetchCities = async () => {
-            try {
-                setIsLoadingCities(true);
+    const fetchCities = async () => {
+      try {
+        setIsLoadingCities(true);
 
-                const res = await fetch(
-                    `https://nominatim.openstreetmap.org/search?format=json&countrycodes=br&limit=2&addressdetails=1&q=${cityQuery}`,
-                    { signal }
-                );
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&countrycodes=br&limit=2&addressdetails=1&q=${cityQuery}`,
+          { signal }
+        );
 
-                if (!res.ok) throw new Error("Falha na requisição");
+        if (!res.ok) throw new Error("Falha na requisição");
 
-                const data = await res.json();
+        const data = await res.json();
 
-                // Coordenadas de referência (Recife)
-                const baseCity = { lat: -8.0476, lon: -34.877 };
+        // Coordenadas de referência (Recife)
+        const baseCity = { lat: -8.0476, lon: -34.877 };
 
-                const results = data.map((item: any) => {
-                    const lat = Number(item.lat);
-                    const lon = Number(item.lon);
+        const results = data.map(
+          (item: {
+            lat: string;
+            lon: string;
+            place_id: number;
+            address?: {
+              city?: string;
+              town?: string;
+              village?: string;
+              municipality?: string;
+            };
+            display_name: string;
+          }) => {
+            const lat = Number(item.lat);
+            const lon = Number(item.lon);
 
-                    const distance = getDistanceInKm(
-                        baseCity.lat,
-                        baseCity.lon,
-                        lat,
-                        lon
-                    );
+            const distance = getDistanceInKm(
+              baseCity.lat,
+              baseCity.lon,
+              lat,
+              lon
+            );
 
-                    // CORREÇÃO LÓGICA: Usar 'item' em vez de 'data[0]'
-                    const cityName =
-            item.address?.city ||
-            item.address?.town ||
-            item.address?.village ||
-            item.address?.municipality ||
-            item.display_name.split(",")[0]; // Fallback para o nome principal
+            // CORREÇÃO LÓGICA: Usar 'item' em vez de 'data[0]'
+            const cityName =
+              item.address?.city ||
+              item.address?.town ||
+              item.address?.village ||
+              item.address?.municipality ||
+              item.display_name.split(",")[0]; // Fallback para o nome principal
 
-                    return {
-                        // CORREÇÃO: Usar ID único da API (place_id ou osm_id) em vez do index
-                        id: item.place_id,
-                        name: cityName,
-                        distance: Math.round(distance),
-                    };
-                });
+            return {
+              // CORREÇÃO: Usar ID único da API (place_id ou osm_id) em vez do index
+              id: item.place_id,
+              name: cityName,
+              distance: Math.round(distance),
+            };
+          }
+        );
 
-                // Remove duplicatas baseadas no nome da cidade para limpar a UI
-                const uniqueResults = results.filter(
-                    (city: CityOption, index: number, self: CityOption[]) =>
-                        index === self.findIndex((c) => c.name === city.name)
-                );
+        // Remove duplicatas baseadas no nome da cidade para limpar a UI
+        const uniqueResults = results.filter(
+          (city: CityOption, index: number, self: CityOption[]) =>
+            index === self.findIndex((c) => c.name === city.name)
+        );
 
-                setCityOptions(uniqueResults);
-            } catch (error: any) {
-                if (error.name !== "AbortError") {
-                    console.error("Erro ao buscar cidades:", error);
-                    setCityOptions([]);
-                }
-            } finally {
-                if (!signal.aborted) {
-                    setIsLoadingCities(false);
-                }
-            }
-        };
+        setCityOptions(uniqueResults);
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name !== "AbortError") {
+          console.error("Erro ao buscar cidades:", error);
+          setCityOptions([]);
+        }
+      } finally {
+        if (!signal.aborted) {
+          setIsLoadingCities(false);
+        }
+      }
+    };
 
-        const delay = setTimeout(() => {
-            if (cityQuery.trim().length > 0) {
-                fetchCities();
-            } else {
-                setCityOptions([]);
-            }
-        }, 500);
+    const delay = setTimeout(() => {
+      if (cityQuery.trim().length > 0) {
+        fetchCities();
+      } else {
+        setCityOptions([]);
+      }
+    }, 500);
 
-        return () => {
-            clearTimeout(delay);
-            controller.abort(); // Cancela a requisição pendente ao desmontar ou re-executar
-        };
-    }, [ cityQuery ]); // Dependência única: cityQuery
+    return () => {
+      clearTimeout(delay);
+      controller.abort(); // Cancela a requisição pendente ao desmontar ou re-executar
+    };
+  }, [ cityQuery ]); // Dependência única: cityQuery
 
-    useEffect(() => {
-        setDistanceInKM(0);
-    }, [ setDistanceInKM ]);
+  useEffect(() => {
+    setDistanceInKM(0);
+  }, [ setDistanceInKM ]);
 
-    return (
-        <div className="w-full">
-            {/* shouldFilter={false} é crucial para buscas remotas (server-side) */}
-            <Command className="border rounded-md" shouldFilter={ false }>
-                <CommandInput
-                    placeholder="Digite a cidade"
-                    value={ cityQuery }
-                    onValueChange={ setCityQuery }
-                />
-                <CommandList>
-                    {isLoadingCities && <CommandEmpty>Buscando cidades...</CommandEmpty>}
+  return (
+    <div className="w-full">
+      {/* shouldFilter={false} é crucial para buscas remotas (server-side) */}
+      <Command className="border rounded-md" shouldFilter={ false }>
+        <CommandInput
+          placeholder="Digite a cidade"
+          value={ cityQuery }
+          onValueChange={ setCityQuery }
+        />
+        <CommandList>
+          {isLoadingCities && <CommandEmpty>Buscando cidades...</CommandEmpty>}
 
-                    {!isLoadingCities && cityQuery.length > 0 && cityOptions.length === 0 && (
-                        <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
-                    )}
+          {!isLoadingCities &&
+            cityQuery.length > 0 &&
+            cityOptions.length === 0 && (
+            <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
+          )}
 
-                    <CommandGroup>
-                        {cityOptions.map((city) => (
-                            <CommandItem
-                                key={ city.id }
-                                value={ city.name } // Importante: O valor deve bater com o texto exibido para seleção funcionar bem
-                                onSelect={ (currentValue) => {
-                                    setCityQuery(currentValue);
-                                    setDistanceInKM(city.distance);
-                                    // Opcional: fechar sugestões aqui se desejar
-                                } }
-                            >
-                                <div className="flex flex-col w-full">
-                                    <span className="font-medium">{city.name}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {city.distance} km de distância
-                                    </span>
-                                </div>
-                            </CommandItem>
-                        ))}
-                    </CommandGroup>
-                </CommandList>
-            </Command>
+          <CommandGroup>
+            {cityOptions.map((city) => (
+              <CommandItem
+                key={ city.id }
+                value={ city.name } // Importante: O valor deve bater com o texto exibido para seleção funcionar bem
+                onSelect={ (currentValue) => {
+                  setCityQuery(currentValue);
+                  setDistanceInKM(city.distance);
+                  // Opcional: fechar sugestões aqui se desejar
+                } }
+              >
+                <div className="flex flex-col w-full">
+                  <span className="font-medium">{city.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {city.distance} km de distância
+                  </span>
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </Command>
 
-            <p className="text-sm mt-4 text-center">
-        Distância selecionada: <strong className="text-primary">{distanceInKM} km</strong>
-            </p>
-        </div>
-    );
+      <p className="text-sm mt-4 text-center">
+        Distância selecionada:{" "}
+        <strong className="text-primary">{distanceInKM} km</strong>
+      </p>
+    </div>
+  );
 }
 
 // Função utilitária movida para fora do componente (não precisa ser recriada a cada render)
 function getDistanceInKm(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
 ) {
-    const R = 6371; // Raio da Terra em km
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const R = 6371; // Raio da Terra em km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
 
-    const a =
+  const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) ** 2;
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }

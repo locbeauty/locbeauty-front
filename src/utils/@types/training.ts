@@ -10,8 +10,7 @@ export interface Training {
   trainingId: string;
   trainingStatus: CheckoutStatuses;
   hourInMinutes: number;
-  additionalCost: number;
-  additionalCostDescription: string;
+
   gearId: string;
   volunteerId: string;
   traineeId: string;
@@ -25,5 +24,6 @@ export interface Training {
   Trainee: Trainee;
   TrainingPayment: TrainingPayment[];
   SourceFilial: Filial;
+  wasRefunded?: boolean;
   Address: Address;
 }

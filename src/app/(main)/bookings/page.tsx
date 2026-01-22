@@ -1,111 +1,219 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { BookingsTable } from "@/components/pages/calendar/BookingsTable";
+import { RouteGuard } from "@/components/auth/RouteGuard";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft, Table } from "lucide-react";
-import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import {
+  FilterBookingPaymentStatusTypes,
+  FilterBookingStatusTypes,
+} from "@/utils/filterOptions";
 import { ROUTES } from "@/utils/routes";
-import { useRouter } from "next/navigation";
-import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
-import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
-import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
-// import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
-import { FlattenedBooking } from "@/components/pages/bookings/view/WeekView";
-import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
-import { Checkout } from "@/utils/@types/checkouts";
+import { Eye, Plus, Search, X, FileUp } from "lucide-react";
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { GearFilterSelect } from "@/components/pages/bookings/GearFilterSelect";
+import { SelectFilial } from "@/components/shared/SelectFilial";
+import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
+import { useAccess } from "@/contexts/access-provider";
+import { ImportBookingsDialog } from "@/components/pages/bookings/ImportBookingsDialog";
 
-export default function AgendamentosPage() {
-    // Estado para controlar a semana atual
-    const [ currentDate, setCurrentDate ] = useState(new Date());
-    const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(null);
-    const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] = useState(false);
-    const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("semana");
-    const [ isMobile, setIsMobile ] = useState(false);
+export default function BookingsPage() {
+  const { user } = useAuth();
+  const { accesses } = useAccess();
+  const [ isImportDialogOpen, setIsImportDialogOpen ] = useState(false);
+  const [ customerName, setCustomerName ] = useState("");
+  const [ status, setStatus ] = useState<string | undefined>();
+  const [ paymentStatus, setPaymentStatus ] = useState<string | undefined>();
+  const [ date, setDate ] = useState<Date | null>(null);
+  const [ checkoutId, setCheckoutId ] = useState("");
+  const [ gearId, setGearId ] = useState<string | undefined>();
+  const [ filialId, setFilialId ] = useState<string | undefined>();
 
-    useEffect(() => {
-        const checkIfMobile = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
+  const accessibleFilialIds = useMemo(() => {
+    // Admin/Master can see all
+    if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
+      return undefined;
+    }
 
-        checkIfMobile();
+    // Managers Restricted List (same logic as Table)
+    const permissions = accesses
+      .filter((a) => a.module === SYSTEM_MODULES.BOOKINGS && a.canView)
+      .map((a) => a.filialId);
 
-        window.addEventListener("resize", checkIfMobile);
+    // Removed implicit sourceFilial access to match strict RBAC.
 
-        return () => window.removeEventListener("resize", checkIfMobile);
-    }, []);
+    return Array.from(new Set(permissions));
+  }, [ user, accesses ]);
 
-    useEffect(() => {
-        if (isMobile) {
-            setViewType("mes");
-        } else {
-            setViewType("semana");
-        }
-    }, [ isMobile ]);
+  const clearFilters = () => {
+    setCustomerName("");
+    setStatus(undefined);
+    setPaymentStatus(undefined);
+    setDate(null);
+    setCheckoutId("");
+    setGearId(undefined);
+    setFilialId(undefined);
+  };
 
-    const router = useRouter();
+  const hasActiveFilters =
+    customerName ||
+    status ||
+    paymentStatus ||
+    date ||
+    checkoutId ||
+    gearId ||
+    filialId;
 
-    const openCheckoutDetails = (booking: Checkout) => {
-        setSelectedCheckout(booking);
-        setBookingDetailsDialogOpen(true);
-    };
-
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                    <Button onClick={ () => router.back() } variant="outline" size="icon">
-                        <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Voltar</span>
-                    </Button>
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
-                        <p className="text-muted-foreground">
-              Visualize os agendamentos de locações
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex gap-4 justify-center">
-                    <Button className="flex justify-center items-center" asChild>
-                        <Link
-                            className="flex justify-center items-center"
-                            href={ ROUTES.CREATE_BOOKING }
-                        >
-                            <Plus className="" />
-                            <span className="hidden md:inline">Novo Agendamento</span>
-                        </Link>
-                    </Button>
-                    <Button className="flex justify-center items-center" variant="outline" asChild>
-                        <Link
-                            className="flex justify-center items-center"
-                            href={ ROUTES.BOOKING_TABLE }
-                        >
-                            <Table className="" />
-                            {/* <span className="hidden md:inline">Tabela de agendamentos</span> */}
-                        </Link>
-                    </Button>
-                </div>
-            </div>
-
-            <CalendarControls
-                currentDate={ currentDate }
-                setCurrentDate={ setCurrentDate }
-                viewType={ viewType }
-                setViewType={ setViewType }
-            />
-            <CalendarContent
-                currentDate={ currentDate }
-                openCheckoutDetails={ openCheckoutDetails }
-                viewType={ viewType }
-            />
-            <CalendarFooter />
-
-            <BookingDetailsDialog
-                isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen }
-                setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
-                selectedCheckout={ selectedCheckout }
-                setSelectedCheckout={ setSelectedCheckout }
-            />
+  return (
+    <RouteGuard module={ SYSTEM_MODULES.BOOKINGS }>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Agendamentos</h1>
+            <p className="text-muted-foreground">
+              Gerencie os agendamentos de locações de equipamentos
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <Can module={ SYSTEM_MODULES.BOOKINGS } action="canCreate">
+              <Button
+                variant="outline"
+                className="flex justify-center items-center"
+                onClick={ () => setIsImportDialogOpen(true) }
+              >
+                <FileUp className="mr-2 h-4 w-4" />
+                <span className="hidden md:inline">Importar</span>
+              </Button>
+              <Button className="flex justify-center items-center" asChild>
+                <Link
+                  className="flex justify-center items-center"
+                  href={ ROUTES.CREATE_BOOKING }
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span className="hidden md:inline">Novo Agendamento</span>
+                </Link>
+              </Button>
+            </Can>
+            <Button
+              variant="outline"
+              className="flex justify-center items-center"
+              asChild
+            >
+              <Link
+                className="flex justify-center items-center"
+                href={ ROUTES.CALENDAR }
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                <span className="hidden md:inline">Visualizar Agenda</span>
+              </Link>
+            </Button>
+          </div>
         </div>
-    );
+
+        <ImportBookingsDialog
+          open={ isImportDialogOpen }
+          onOpenChange={ setIsImportDialogOpen }
+        />
+
+        <div className="flex flex-col gap-4">
+          <div className="flex md:flex-row flex-col md:items-center gap-4 flex-wrap">
+            <div className="relative w-full md:w-[200px]">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="ID do agendamento"
+                className="pl-8"
+                value={ checkoutId }
+                onChange={ (e) => setCheckoutId(e.target.value) }
+              />
+            </div>
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Buscar por cliente..."
+                className="pl-8"
+                value={ customerName }
+                onChange={ (e) => setCustomerName(e.target.value) }
+              />
+            </div>
+            {(user?.role === USER_ROLES.ADMIN ||
+              user?.role === USER_ROLES.MASTER ||
+              (accessibleFilialIds && accessibleFilialIds.length > 0)) && (
+              <div className="w-full md:w-[200px]">
+                <SelectFilial
+                  value={ filialId }
+                  onValueChange={ setFilialId }
+                  placeholder="Filtrar por filial"
+                  accessibleFilials={ accessibleFilialIds }
+                />
+              </div>
+            )}
+            <GearFilterSelect
+              value={ gearId }
+              onSelect={ setGearId }
+              filialId={ filialId || user?.sourceFilial?.filialId }
+            />
+            <DatePicker
+              value={ date }
+              onChange={ (d) => setDate(d || null) }
+              placeholder="Filtrar por data"
+              clearable
+              classNames={ { trigger: "w-full md:w-[180px]" } }
+            />
+            <CustomFilterSelect
+              items={ FilterBookingStatusTypes }
+              placeholder="Status do agendamento"
+              value={ status }
+              onValueChange={ setStatus }
+              triggerProps={ {
+                className: "w-full md:w-[200px]",
+                disabled: false,
+              } }
+            />
+            <CustomFilterSelect
+              items={ FilterBookingPaymentStatusTypes }
+              placeholder="Status do pagamento"
+              value={ paymentStatus }
+              onValueChange={ setPaymentStatus }
+              triggerProps={ {
+                className: "w-full md:w-[200px]",
+                disabled: false,
+              } }
+            />
+          </div>
+          {hasActiveFilters && (
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                onClick={ clearFilters }
+                className="h-8 px-2 lg:px-3"
+              >
+                Limpar filtros
+                <X className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <BookingsTable
+          filters={ {
+            customerName,
+            status,
+            paymentStatus,
+            date: date || undefined,
+            checkoutId,
+            gearId,
+            filialIds: filialId ? [ filialId ] : undefined,
+          } }
+        />
+      </div>
+    </RouteGuard>
+  );
 }

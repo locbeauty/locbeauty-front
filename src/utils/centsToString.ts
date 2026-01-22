@@ -1,7 +1,13 @@
 export function centsToString(cents: number) {
-    return `${(cents / 100).toFixed(2).replace(".", ",")}`;
+  return new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
 }
 
 export function centsToStringWithCurrencyMark(cents: number) {
-    return `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(cents / 100);
 }

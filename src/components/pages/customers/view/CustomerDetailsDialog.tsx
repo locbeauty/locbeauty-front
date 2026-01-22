@@ -1,14 +1,16 @@
 import { Pencil } from "lucide-react";
 import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { BookingHistoryCard } from "./BookingHistoryCard";
 import { CustomerDetailsCard } from "./CustomerDetailsCard";
 import { Customer } from "@/utils/@types/customer";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 interface CustomerDetailsDialogProps {
   handleToggleCustomerDetailsDialog: (
@@ -24,57 +26,62 @@ interface CustomerDetailsDialogProps {
 }
 
 export function CustomerDetailsDialog({
-    handleToggleCustomerDetailsDialog,
-    handleToggleUpdateCustomerDialog,
-    isCustomerDetailsModalOpen,
-    selectedCustomer,
+  handleToggleCustomerDetailsDialog,
+  handleToggleUpdateCustomerDialog,
+  isCustomerDetailsModalOpen,
+  selectedCustomer,
 }: CustomerDetailsDialogProps) {
-    function handleOpenUpdateCustomerDialog() {
-        handleToggleCustomerDetailsDialog(false, null);
-        handleToggleUpdateCustomerDialog(true, selectedCustomer);
-    }
+  function handleOpenUpdateCustomerDialog() {
+    handleToggleCustomerDetailsDialog(false, null);
+    handleToggleUpdateCustomerDialog(true, selectedCustomer);
+  }
 
-    return (
-        <Dialog
-            open={ isCustomerDetailsModalOpen }
-            onOpenChange={ (status) =>
-                handleToggleCustomerDetailsDialog(status, selectedCustomer)
-            }
-        >
-            <DialogContent
-                className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
-                aria-describedby={ undefined }
-                onOpenAutoFocus={ (e) => e.preventDefault() }
-            >
-                <div className="flex items-center justify-between">
-                    <DialogTitle className="text-3xl font-bold">
+  return (
+    <Dialog
+      open={ isCustomerDetailsModalOpen }
+      onOpenChange={ (status) =>
+        handleToggleCustomerDetailsDialog(status, selectedCustomer)
+      }
+    >
+      <DialogContent
+        className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        aria-describedby={ undefined }
+        onOpenAutoFocus={ (e) => e.preventDefault() }
+      >
+        <div className="flex items-center justify-between">
+          <DialogTitle className="text-3xl font-bold">
             Detalhes do Cliente:
-                    </DialogTitle>
-                </div>
+          </DialogTitle>
+        </div>
 
-                <div className="flex-1 overflow-y-auto space-y-6">
-                    <CustomerDetailsCard selectedCustomer={ selectedCustomer } />
+        <div className="flex-1 overflow-y-auto space-y-6">
+          <CustomerDetailsCard selectedCustomer={ selectedCustomer } />
 
-                    <BookingHistoryCard
-                        isCustomerDetailsModalOpen={ isCustomerDetailsModalOpen }
-                        selectedCustomer={ selectedCustomer }
-                    />
-                    <DialogFooter className="pt-4">
-                        <Button onClick={ handleOpenUpdateCustomerDialog } className="gap-2">
-                            <Pencil className="h-4 w-4" />
-              Editar Cliente
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={ () =>
-                                handleToggleCustomerDetailsDialog(false, selectedCustomer)
-                            }
-                        >
+          <BookingHistoryCard
+            isCustomerDetailsModalOpen={ isCustomerDetailsModalOpen }
+            selectedCustomer={ selectedCustomer }
+          />
+          <DialogFooter className="pt-4">
+            <Can module={ SYSTEM_MODULES.CUSTOMERS } action="canEdit">
+              <Button
+                onClick={ handleOpenUpdateCustomerDialog }
+                className="gap-2"
+              >
+                <Pencil className="h-4 w-4" />
+                Editar Cliente
+              </Button>
+            </Can>
+            <Button
+              variant="outline"
+              onClick={ () =>
+                handleToggleCustomerDetailsDialog(false, selectedCustomer)
+              }
+            >
               Fechar
-                        </Button>
-                    </DialogFooter>
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
+            </Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
