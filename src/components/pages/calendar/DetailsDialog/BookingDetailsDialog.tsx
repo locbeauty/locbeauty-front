@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PaymentMethods } from "@/utils/constants";
+import { PaymentMethods, PaymentMethodsType } from "@/utils/constants";
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 import { toast } from "sonner";
 import { MachineExtraCostsDialog } from "../MachineExtraCostsDialog/MachineExtraCostsDialog";
@@ -182,7 +182,7 @@ export function BookingDetailsDialog({
     cancellationFee: number | null = null,
     cancellationDate: Date | null = null,
     cancellationFeePaymentDate: Date | null = null,
-    cancellationFeePaymentMethod: PaymentMethods | null = null,
+    cancellationFeePaymentMethod: PaymentMethodsType | null = null,
   ) {
     let response;
     const payment = selectedCheckout!.CheckoutPayment;
