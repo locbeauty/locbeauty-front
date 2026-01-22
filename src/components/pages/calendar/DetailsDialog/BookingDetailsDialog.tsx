@@ -907,7 +907,7 @@ export function CancelBookingConfirmationDialog({
   const [ cancellationFeePaymentDate, setCancellationFeePaymentDate ] =
     useState<string>(new Date().toISOString().split("T")[0]);
   const [ cancellationFeePaymentMethod, setCancellationFeePaymentMethod ] =
-    useState<PaymentMethods>("PIX");
+    useState<PaymentMethodsType>("PIX");
 
   if (!selectedCheckout) return null;
 

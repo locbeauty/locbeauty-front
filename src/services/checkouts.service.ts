@@ -14,7 +14,7 @@ import { Checkout } from "@/utils/@types/checkouts";
 import { Customer } from "@/utils/@types/customer";
 import { Employee } from "@/utils/@types/employee";
 import { ROLES } from "@/utils/@types/roles";
-import { CheckoutStatuses, PaymentMethods } from "@/utils/constants";
+import { CheckoutStatuses, PaymentMethods, PaymentMethodsType } from "@/utils/constants";
 
 export async function CreateCheckout(
   body: CreateCheckoutValidationWithMoneyInCents,
@@ -100,7 +100,7 @@ export async function UpdateCheckout({
     refundAmount?: number;
     cancellationDate?: Date | null;
     cancellationFeePaymentDate?: Date | null;
-    cancellationFeePaymentMethod?: PaymentMethods | null;
+    cancellationFeePaymentMethod?: PaymentMethodsType | null;
   };
   checkoutId: string;
 }) {
