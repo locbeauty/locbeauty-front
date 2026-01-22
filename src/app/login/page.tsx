@@ -126,7 +126,7 @@ export default function LoginPage() {
                 <div className="grid gap-2">
                   <Label htmlFor="username">Username</Label>
                   <Input
-                    className="placeholder:t ext-placeholder"
+                    className="placeholder:text-placeholder"
                     placeholder="Digite seu username"
                     { ...register("username") }
                   />
