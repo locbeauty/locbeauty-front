@@ -1015,7 +1015,7 @@ export function CancelBookingConfirmationDialog({
                   <Select
                     value={ cancellationFeePaymentMethod }
                     onValueChange={ (value) =>
-                      setCancellationFeePaymentMethod(value as PaymentMethods)
+                      setCancellationFeePaymentMethod(value as PaymentMethodsType)
                     }
                   >
                     <SelectTrigger>
