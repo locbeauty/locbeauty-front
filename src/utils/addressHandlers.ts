@@ -9,40 +9,57 @@ import {
 } from "react-hook-form";
 
 export interface GetViaCepAddressDetailsResponse {
-    cep: string;
-    logradouro: string;
-    complemento: string;
-    unidade: string;
-    bairro: string;
-    localidade: string;
-    uf: string;
-    estado: string;
-    regiao: string;
-    ibge: string;
-    gia: string;
-    ddd: string;
-    siafi: string;
+  cep: string;
+  logradouro: string;
+  complemento: string;
+  unidade: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  estado: string;
+  regiao: string;
+  ibge: string;
+  gia: string;
+  ddd: string;
+  siafi: string;
 }
 
 interface HandleZipCodeChangeParams<T extends FieldValues> {
-    e: React.ChangeEvent<HTMLInputElement>;
-    setValue: UseFormSetValue<T>;
-    trigger: UseFormTrigger<T>;
-    setError: UseFormSetError<T>
-    isUpdateForm?: boolean
-    setIsLoadingZipCode: (_value: boolean) => void;
-    clearErrors: UseFormClearErrors<T>
+  e: React.ChangeEvent<HTMLInputElement>;
+  setValue: UseFormSetValue<T>;
+  trigger: UseFormTrigger<T>;
+  setError: UseFormSetError<T>;
+  isUpdateForm?: boolean;
+  setIsLoadingZipCode: (_value: boolean) => void;
+  clearErrors: UseFormClearErrors<T>;
 }
 
-export async function handleCepChange<T extends FieldValues>({ e, setValue, trigger, setIsLoadingZipCode, setError, clearErrors, isUpdateForm = false }: HandleZipCodeChangeParams<T>) {
-
+export async function handleCepChange<T extends FieldValues>({
+  e,
+  setValue,
+  trigger,
+  setIsLoadingZipCode,
+  setError,
+  clearErrors,
+  isUpdateForm = false,
+}: HandleZipCodeChangeParams<T>) {
   const zipCodeParsed = e.target.value.replace(/\D/g, "");
 
-  const zipCode: Path<T> = (isUpdateForm ? "zipCode" : "address.zipCode") as Path<T>;
-  const city: Path<T> = (isUpdateForm ? "cityName" : "address.cityName") as Path<T>;
-  const state: Path<T> = (isUpdateForm ? "stateName" : "address.stateName") as Path<T>;
-  const neighborhood: Path<T> = (isUpdateForm ? "neighborhoodName" : "address.neighborhoodName") as Path<T>;
-  const street: Path<T> = (isUpdateForm ? "streetName" : "address.streetName") as Path<T>;
+  const zipCode: Path<T> = (
+    isUpdateForm ? "zipCode" : "address.zipCode"
+  ) as Path<T>;
+  const city: Path<T> = (
+    isUpdateForm ? "cityName" : "address.cityName"
+  ) as Path<T>;
+  const state: Path<T> = (
+    isUpdateForm ? "stateName" : "address.stateName"
+  ) as Path<T>;
+  const neighborhood: Path<T> = (
+    isUpdateForm ? "neighborhoodName" : "address.neighborhoodName"
+  ) as Path<T>;
+  const street: Path<T> = (
+    isUpdateForm ? "streetName" : "address.streetName"
+  ) as Path<T>;
 
   const zipCodeValue = e.target.value.replace(/\D/g, "");
 
@@ -61,14 +78,17 @@ export async function handleCepChange<T extends FieldValues>({ e, setValue, trig
       setValue(city, "" as PathValue<T, typeof city>);
       setValue(neighborhood, "" as PathValue<T, typeof neighborhood>);
       setValue(street, "" as PathValue<T, typeof street>);
-      setValue(state, { UF: "", title: "" } as PathValue<T, typeof state>);
+      setValue(state, "" as PathValue<T, typeof state>);
       return;
     }
 
     setValue(city, response.localidade as PathValue<T, typeof city>);
-    setValue(neighborhood, response.bairro as PathValue<T, typeof neighborhood>);
+    setValue(
+      neighborhood,
+      response.bairro as PathValue<T, typeof neighborhood>,
+    );
     setValue(street, response.logradouro as PathValue<T, typeof street>);
-    setValue(state, response.estado as PathValue<T, typeof state>);
+    setValue(state, response.uf as PathValue<T, typeof state>);
 
     trigger([ city, neighborhood, street, state ]);
   } catch (error) {
@@ -79,7 +99,9 @@ export async function handleCepChange<T extends FieldValues>({ e, setValue, trig
   }
 }
 
-export async function getAddressDetails(zipCode: string): Promise<GetViaCepAddressDetailsResponse | null> {
+export async function getAddressDetails(
+  zipCode: string,
+): Promise<GetViaCepAddressDetailsResponse | null> {
   const response = await fetch(`https://viacep.com.br/ws/${zipCode}/json/`);
 
   if (!response.ok) {
