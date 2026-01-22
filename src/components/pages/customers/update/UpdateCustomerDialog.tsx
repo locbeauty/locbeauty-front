@@ -26,7 +26,7 @@ interface UpdateCustomerDialogProps {
   setSelectedCustomer: Dispatch<SetStateAction<Customer | null>>;
   handleToggleUpdateCustomerDialog: (
     _openStatus: boolean,
-    _customer: Customer | null
+    _customer: Customer | null,
   ) => void;
 }
 
@@ -58,6 +58,7 @@ export function UpdateCustomerDialog({
           selectedCustomer.secondaryCellphoneDescription,
         documentNumber: selectedCustomer.documentNumber,
         companyName: selectedCustomer.companyName,
+        customerStatus: selectedCustomer.customerStatus,
         fullname: selectedCustomer.fullname,
         email: selectedCustomer.email,
         emailDescription: selectedCustomer.emailDescription,
@@ -69,7 +70,7 @@ export function UpdateCustomerDialog({
   }, [ selectedCustomer, reset ]);
 
   const handleSaveUpdatedCustomer = async (
-    customerData: UpdateCustomerFormSchemaType
+    customerData: UpdateCustomerFormSchemaType,
   ) => {
     if (selectedCustomer) {
       const response = await UpdateCustomer({

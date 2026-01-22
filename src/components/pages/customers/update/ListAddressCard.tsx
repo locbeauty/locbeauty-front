@@ -65,56 +65,92 @@ export function ListCustomerAddressesCard({
           Endereços cadastrados:
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {customerAddresses
-          ?.sort((a, b) => (a.street || "").localeCompare(b.street || ""))
-          .map((addr) => {
-            return (
-              <div
-                key={ addr.addressId }
-                className="flex justify-between items-center"
-              >
-                <p>
-                  {addr.street}, {addr.neighborhood}, {addr.buildingNumber},{" "}
-                  {addr.addressComplement} - {addr.city}/{addr.state}
-                </p>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
+      <CardContent className="space-y-4">
+        {customerAddresses && customerAddresses.length > 0 ? (
+          <div className="space-y-3">
+            {customerAddresses
+              .sort((a, b) => {
+                // First sort by active status (active first), then by street name
+                if (a.isActive === b.isActive) {
+                  return (a.street || "").localeCompare(b.street || "");
+                }
+                return a.isActive ? -1 : 1;
+              })
+              .map((addr) => (
+                <div
+                  key={ addr.addressId }
+                  className={ `flex justify-between items-start p-3 rounded-lg border ${
+                    !addr.isActive
+                      ? "bg-muted/50 text-muted-foreground border-dashed"
+                      : "bg-card border-border"
+                  }` }
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h4
+                        className={ `font-semibold ${!addr.isActive ? "line-through" : ""}` }
+                      >
+                        {addr.street}, {addr.buildingNumber}
+                      </h4>
+                      {!addr.isActive && (
+                        <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-muted-foreground/20 text-muted-foreground">
+                          Inativo
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-sm">
+                      {addr.neighborhood}
+                      {addr.addressComplement && ` - ${addr.addressComplement}`}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {addr.city} / {addr.state}
+                    </p>
+                  </div>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
                         type="button"
                         variant="ghost"
+                        size="icon"
                         onClick={ () =>
                           addr.isActive &&
                           handleDeactivateAddress(addr.addressId)
                         }
                         className={
                           !addr.isActive
-                            ? "pointer-events-none opacity-50 hover:bg-transparent"
-                            : ""
+                            ? "pointer-events-none opacity-0"
+                            : "tex t-destructive  hover:text-destructive hover:bg-destructive/10"
                         }
+                        disabled={ !addr.isActive }
                       >
-                        <X className="size-5" />
+                        <X className="size-4" />
+                        <span className="sr-only">Desativar endereço</span>
                       </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {addr.isActive ? (
+                    </TooltipTrigger>
+                    <TooltipContent>
                       <p>Desativar endereço</p>
-                    ) : (
-                      <p>Endereço já desativado</p>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            );
-          })}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-muted-foreground border border-dashed rounded-lg bg-muted/20">
+            <p className="text-sm">Nenhum endereço cadastrado.</p>
+          </div>
+        )}
 
-        <RegisterNewAddressDialog
-          customerId={ customerId }
-          isRegisterNewAddressDialogOpen={ isRegisterNewAddressDialogOpen }
-          setIsRegisterNewAddressDialogOpen={ setIsRegisterNewAddressDialogOpen }
-        />
+        <div className=" flex justi fy-end pt-2">
+          <RegisterNewAddressDialog
+            customerId={ customerId }
+            isRegisterNewAddressDialogOpen={ isRegisterNewAddressDialogOpen }
+            setIsRegisterNewAddressDialogOpen={
+              setIsRegisterNewAddressDialogOpen
+            }
+          />
+        </div>
       </CardContent>
     </Card>
   );

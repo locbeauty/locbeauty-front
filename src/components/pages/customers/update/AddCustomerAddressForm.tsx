@@ -7,9 +7,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Controller, useFormContext } from "react-hook-form";
+import { BRAZILIAN_STATES } from "@/utils/constants";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
 import { Button } from "@/components/ui/button";
@@ -67,10 +75,23 @@ export function AddCustomerAddressForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="estado">Estado</Label>
-            <Input
-              { ...register("stateName") }
-              placeholder="Estado"
-              className="placeholder:text-muted-foreground/50"
+            <Controller
+              name="stateName"
+              control={ control }
+              render={ ({ field }) => (
+                <Select onValueChange={ field.onChange } value={ field.value }>
+                  <SelectTrigger id="estado" className="w-full">
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BRAZILIAN_STATES.map((state) => (
+                      <SelectItem key={ state } value={ state }>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) }
             />
           </div>
         </div>

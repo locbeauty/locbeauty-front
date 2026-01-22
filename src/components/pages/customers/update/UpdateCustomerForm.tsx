@@ -7,11 +7,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Controller, useFormContext } from "react-hook-form";
+import { CUSTOMER_STATUSES } from "@/utils/constants";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
-import { useFormContext } from "react-hook-form";
 import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
 import { toast } from "sonner";
 import { Customer } from "@/utils/@types/customer";
@@ -82,7 +90,7 @@ export function UpdateCustomerForm({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="border p-4 rounded-md md:h-[300px] h-[400px]">
+          <div className="border p-4 rounded-md ">
             <h3 className="text-lg font-medium mb-4">Informações do Cliente</h3>
 
             <div className="space-y-4">
@@ -129,6 +137,28 @@ export function UpdateCustomerForm({
                     </p>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Controller
+                  name="customerStatus"
+                  control={ control }
+                  render={ ({ field }) => (
+                    <Select onValueChange={ field.onChange } value={ field.value }>
+                      <SelectTrigger id="status" className="w-full">
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CUSTOMER_STATUSES.map((status) => (
+                          <SelectItem key={ status } value={ status }>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) }
+                />
               </div>
             </div>
           </div>
