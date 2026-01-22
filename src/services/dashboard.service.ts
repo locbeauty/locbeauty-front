@@ -735,3 +735,45 @@ export async function getTopTrainingEquipmentsMetric({
 
   return data;
 }
+
+export async function getCityGrowthMetric({
+  year,
+  filialId,
+}: {
+  year: number;
+  filialId?: string;
+}): Promise<{
+  metrics: {
+    city: string;
+    totalBookings: number;
+    growthRate: number;
+    trend: "up" | "down" | "neutral";
+  }[];
+}> {
+  const queryParams: Record<string, string> = {
+    year: String(year),
+  };
+
+  if (filialId && filialId !== "all") {
+    queryParams.filialId = filialId;
+  }
+
+  const { data } = await apiRequest<{
+    metrics: {
+      city: string;
+      totalBookings: number;
+      growthRate: number;
+      trend: "up" | "down" | "neutral";
+    }[];
+  }>({
+    endpoint: "dashboard/metrics/city-growth",
+    method: "GET",
+    queryParams,
+  });
+
+  if (!data) {
+    throw new Error("Failed to fetch city growth metric");
+  }
+
+  return data;
+}

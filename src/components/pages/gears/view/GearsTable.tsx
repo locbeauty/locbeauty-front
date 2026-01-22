@@ -76,6 +76,10 @@ export function GearsTable() {
     getGears();
   }, [ user, accessibleFilialIds ]);
 
+  useEffect(() => {
+    console.log(gears);
+  }, [ gears ]);
+
   return (
     <>
       <div className="border rounded-lg max-h-[70vh] w-full overflow-x-auto hidden md:block">
@@ -85,14 +89,10 @@ export function GearsTable() {
               <th className="text-left p-3 font-medium">Nome</th>
               <th className="text-center p-3 font-medium">Filial</th>
               <th className="text-center p-3 font-medium">
-                Unidades disponíveis
-              </th>
-              <th className="text-center p-3 font-medium">
                 Unidades operacionais
               </th>
-              <th className="text-center p-3 font-medium">Data da aquisição</th>
               <th className="text-center p-3 font-medium">
-                Pode ser transferido?
+                Unidades fora de serviço
               </th>
               <th className="text-center p-3 font-medium">Ações</th>
             </tr>
@@ -118,23 +118,7 @@ export function GearsTable() {
                   <td className="p-3 text-center text-sm">
                     {gear.availableUnits}
                   </td>
-                  <td className="p-3 text-center text-sm">{gear.totalUnits}</td>
-                  <td className="p-3 text-center text-sm">
-                    {gear.acquisitionDate
-                      ? new Date(gear.acquisitionDate).toLocaleDateString(
-                        "pt-BR",
-                      )
-                      : "Não informado"}
-                  </td>
-                  <td className="p-0 h-full">
-                    <div className="h-full flex justify-center items-center">
-                      {gear.transferable ? (
-                        <Check className="text-green-500" />
-                      ) : (
-                        <X className="text-red-500" />
-                      )}
-                    </div>
-                  </td>
+                  <td className="p-3 text-center text-sm">{gear.outOfServiceUnits}</td>
                   <td className="p-3 justify-center flex items-center gap-4">
                     <Button
                       onClick={ () => handleToggleGearDetailsDialog(true, gear) }
@@ -174,8 +158,8 @@ export function GearsTable() {
                 cardData={ {
                   id: gear.gearId,
                   title: gear.gearName,
-                  transferableIndicator: true,
-                  transferable: gear.transferable,
+                  transferableIndicator: false,
+                  transferable: false,
                   items: [
                     {
                       itemLabel: "Filial:",
@@ -187,15 +171,7 @@ export function GearsTable() {
                     },
                     {
                       itemLabel: "Unidades totais:",
-                      itemInfo: gear.availableUnits,
-                    },
-                    {
-                      itemLabel: "Data da aquisição:",
-                      itemInfo: gear.acquisitionDate
-                        ? new Date(gear.acquisitionDate).toLocaleDateString(
-                          "pt-BR",
-                        )
-                        : "Não informado",
+                      itemInfo: gear.totalUnits,
                     },
                   ],
                 } }

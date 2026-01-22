@@ -74,9 +74,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
             </div>
           </div>
         </div>
-
         <Separator />
-
         <div>
           <h4 className="font-semibold mb-3 flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -99,19 +97,9 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">
-                  Unidades Não Funcionais:
-                </Label>
-                <span className="font-mono text-sm font-semibold text-red-600">
-                  {selectedGear.outOfServiceUnits}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Unidades em Uso:</Label>
                 <span className="font-mono text-sm font-semibold text-orange-600">
-                  {selectedGear.totalUnits -
-                    selectedGear.availableUnits -
-                    selectedGear.outOfServiceUnits}
+                  {selectedGear.totalUnits - selectedGear.availableUnits}
                 </span>
               </div>
             </div>
@@ -122,7 +110,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
                     Taxa de Disponibilidade
                   </Label>
                   <span className="text-sm font-medium">
-                    {availabilityPercentage.toFixed(1)}%
+                    {availabilityPercentage}%
                   </span>
                 </div>
                 <Progress value={ availabilityPercentage } className="h-2" />
@@ -133,7 +121,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
                     Taxa de Utilização
                   </Label>
                   <span className="text-sm font-medium">
-                    {utilizationPercentage.toFixed(1)}%
+                    {utilizationPercentage}%
                   </span>
                 </div>
                 <Progress value={ utilizationPercentage } className="h-2" />
@@ -141,9 +129,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
             </div>
           </div>
         </div>
-
         <Separator />
-
         {/* Estatísticas de Uso */}
         <div>
           <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -153,7 +139,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">
-                {utilizationPercentage.toFixed(1)}%
+                {utilizationPercentage}%
               </div>
               <div className="text-sm text-muted-foreground">
                 Taxa de Utilização
@@ -161,7 +147,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">
-                {availabilityPercentage.toFixed(1)}%
+                {availabilityPercentage}%
               </div>
               <div className="text-sm text-muted-foreground">
                 Disponibilidade
@@ -175,9 +161,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
             </div>
           </div>
         </div>
-
         <Separator />
-
         {/* Informações Operacionais */}
         <div>
           <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -210,8 +194,7 @@ export function GearDetailsCard({ selectedGear }: GearDetailsCardProps) {
               </div>
             </div>
           </div>
-        </div>
-
+        </div>{" "}
         {/* Status do Equipamento */}
         <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center gap-2">

@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { Gear } from "@/utils/@types/gears";
 import { useAuth } from "@/contexts/auth-provider";
@@ -20,10 +21,11 @@ import {
 } from "@/lib/zod/UpdateGearValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SelectFilial } from "@/components/shared/SelectFilial";
-import { TransferableCheckbox } from "../shared/canBeTransferredCheckbox";
+
 import { AmountControlButton } from "@/components/shared/AmountControlButton";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { toast } from "sonner";
+import { queryClient } from "@/app/(main)/layout";
 
 interface UpdateGearDialogProps {
   isUpdateGearDialogOpen: boolean;
@@ -57,11 +59,17 @@ export function UpdateGearDialog({
     formState: { errors, isDirty },
   } = updateGearMethods;
 
+  const availableUnits = watch("availableUnits") || 0;
+  const outOfServiceUnits = watch("outOfServiceUnits") || 0;
+
+  useEffect(() => {
+    setValue("totalUnits", availableUnits + outOfServiceUnits);
+  }, [ availableUnits, outOfServiceUnits, setValue ]);
+
   useEffect(() => {
     if (selectedGear) {
       reset({
         sourceFilialId: selectedGear?.SourceFilial.filialId,
-        // acquisitionDate: new Date(selectedGear.acquisitionDate),
         availableUnits: selectedGear?.availableUnits,
         gearName: selectedGear?.gearName,
         outOfServiceUnits: selectedGear?.outOfServiceUnits,
@@ -92,6 +100,20 @@ export function UpdateGearDialog({
           style: { fontSize: "1rem" },
         });
 
+        if (setGears) {
+          setGears((prevGears) => {
+            if (!prevGears) return [ data.gear ];
+            return prevGears.map((g) =>
+              g.gearId === data.gear.gearId ? data.gear : g,
+            );
+          });
+        }
+
+        await queryClient.invalidateQueries({ queryKey: [ "get-all-gears" ] });
+        await queryClient.invalidateQueries({
+          queryKey: [ "get-day-checkouts" ],
+        });
+
         reset();
         setIsUpdateGearDialogOpen(false);
       }
@@ -119,71 +141,95 @@ export function UpdateGearDialog({
             onSubmit={ handleSubmit(handleSaveGear) }
             className="grid gap-6 py-4"
           >
-            <div className="grid grid-cols-1 gap-3">
-              <Label>Nome</Label>
-              <Input { ...register("gearName") } />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid grid-cols-1 gap-3">
-                {user?.role === USER_ROLES.GERENTE && (
-                  <div className="space-y-2">
-                    <Label>Filial</Label>
-                    <FormProvider { ...updateGearMethods }>
-                      <SelectFilial<UpdateGearFormSchemaType>
-                        control={ control }
-                        name="sourceFilialId"
-                      />
-                    </FormProvider>
-                    {errors.sourceFilialId && (
-                      <p className="text-sm text-destructive mt-2">
-                        {errors.sourceFilialId.message}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 max-w-[90%] md:max-w-[40%]">
-              <div className="space-y-2 flex-1 mt-4">
-                <Label htmlFor="availableUnits">Unidades disponíveis</Label>
-                <Controller
-                  control={ control }
-                  name="availableUnits"
-                  render={ ({ field }) => (
-                    <AmountControlButton
-                      value={ field.value || 0 }
-                      onChange={ field.onChange }
-                      error={ !!errors.availableUnits }
-                    />
-                  ) }
-                />
-                {errors.availableUnits && (
-                  <p className="text-sm text-destructive mt-2">
-                    {errors.availableUnits.message}
-                  </p>
-                )}
+            {/* Informações Gerais */}
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <Label>Nome</Label>
+                <Input { ...register("gearName") } />
               </div>
 
-              <div className="space-y-2 flex-1 mt-4">
-                <Label htmlFor="outOfServiceUnits">Unidades defeituosas</Label>
-                <Controller
-                  control={ control }
-                  name="outOfServiceUnits"
-                  render={ ({ field }) => (
-                    <AmountControlButton
-                      value={ field.value || 0 }
-                      onChange={ field.onChange }
-                      error={ !!errors.outOfServiceUnits }
+              {user?.role === USER_ROLES.GERENTE && (
+                <div className="space-y-2">
+                  <Label>Filial</Label>
+                  <FormProvider { ...updateGearMethods }>
+                    <SelectFilial<UpdateGearFormSchemaType>
+                      control={ control }
+                      name="sourceFilialId"
                     />
-                  ) }
-                />
-                {errors.outOfServiceUnits && (
-                  <p className="text-sm text-destructive mt-2">
-                    {errors.outOfServiceUnits.message}
-                  </p>
-                )}
+                  </FormProvider>
+                  {errors.sourceFilialId && (
+                    <p className="text-sm text-destructive mt-1">
+                      {errors.sourceFilialId.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Gestão de Estoque */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Gestão de Estoque
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <Label
+                    htmlFor="availableUnits"
+                    className="text-muted-foreground font-normal"
+                  >
+                    Disponíveis
+                  </Label>
+                  <Controller
+                    control={ control }
+                    name="availableUnits"
+                    render={ ({ field }) => (
+                      <div className="flex justify-start">
+                        <AmountControlButton
+                          value={ field.value || 0 }
+                          onChange={ field.onChange }
+                          error={ !!errors.availableUnits }
+                        />
+                      </div>
+                    ) }
+                  />
+                  {errors.availableUnits && (
+                    <p className="text-sm text-destructive">
+                      {errors.availableUnits.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <Label
+                    htmlFor="outOfServiceUnits"
+                    className="text-muted-foreground font-normal"
+                  >
+                    Defeituosas
+                  </Label>
+                  <Controller
+                    control={ control }
+                    name="outOfServiceUnits"
+                    render={ ({ field }) => (
+                      <div className="flex justify-start">
+                        <AmountControlButton
+                          value={ field.value || 0 }
+                          onChange={ field.onChange }
+                          error={ !!errors.outOfServiceUnits }
+                        />
+                      </div>
+                    ) }
+                  />
+                  {errors.outOfServiceUnits && (
+                    <p className="text-sm text-destructive">
+                      {errors.outOfServiceUnits.message}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 

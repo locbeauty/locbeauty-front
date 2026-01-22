@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,6 @@ import {
   CreateGearFormSchemaType,
 } from "@/lib/zod/CreateGearValidation";
 import { toast } from "sonner";
-import { TransferableCheckbox } from "../shared/canBeTransferredCheckbox";
 import { useAuth } from "@/contexts/auth-provider";
 import { useAccess } from "@/contexts/access-provider";
 import { USER_ROLES } from "@/utils/constants";
@@ -58,8 +58,20 @@ export function CreateGearForm() {
     control,
     register,
     handleSubmit,
+    setValue,
+    watch,
+    trigger,
+    reset,
     formState: { errors },
   } = createGearMethods;
+
+  const availableUnits = watch("availableUnits") || 0;
+  const outOfServiceUnits = watch("outOfServiceUnits") || 0;
+
+  // Update totalUnits when available or outOfService changes
+  React.useEffect(() => {
+    setValue("totalUnits", availableUnits + outOfServiceUnits);
+  }, [ availableUnits, outOfServiceUnits, setValue ]);
 
   async function handleCreateGear(newGearData: CreateGearFormSchemaType) {
     try {
@@ -133,9 +145,10 @@ export function CreateGearForm() {
             </div>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row gap-4 mt-4">
-          <div className="space-y-2 flex-1">
-            <Label htmlFor="availableUnits">Unidades disponiveis</Label>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="availableUnits">Unidades Disponíveis</Label>
             <Controller
               control={ control }
               name="availableUnits"
@@ -153,8 +166,9 @@ export function CreateGearForm() {
               </p>
             )}
           </div>
-          <div className="space-y-2 flex-1">
-            <Label htmlFor="outOfServiceUnits">Unidades não funcionais</Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="outOfServiceUnits">Unidades Fora de Serviço</Label>
             <Controller
               control={ control }
               name="outOfServiceUnits"
@@ -173,6 +187,7 @@ export function CreateGearForm() {
             )}
           </div>
         </div>
+        <input type="hidden" { ...register("totalUnits") } />
       </form>
     </CardContent>
   );
