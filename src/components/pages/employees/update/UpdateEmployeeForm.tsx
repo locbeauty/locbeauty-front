@@ -30,7 +30,8 @@ export function UpdateEmployeeForm({
         currentUsername={ selectedEmployee.username }
       />
 
-      {user?.role === USER_ROLES.GERENTE && (
+      {(user?.role === USER_ROLES.GERENTE ||
+        user?.role === USER_ROLES.MASTER) && (
         <>
           <Separator className="my-6" />
 

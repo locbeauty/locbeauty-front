@@ -2,17 +2,23 @@ import {
   Clock,
   Mail,
   Phone,
-  User,
   MapPin,
+  User,
   Calendar,
   Award,
   TrendingUp,
+  Map,
+  Shield,
+  Briefcase,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Employee } from "@/utils/@types/employee";
 import { Label } from "@/components/ui/label";
+import { useState, useEffect } from "react";
+import { fetchWithToken } from "@/utils/fetchWithToken";
 
 interface EmployeeDetailsCardProps {
   selectedEmployee: Employee | null;
@@ -21,6 +27,27 @@ interface EmployeeDetailsCardProps {
 export function EmployeeDetailsCard({
   selectedEmployee,
 }: EmployeeDetailsCardProps) {
+  const [ averageBookings, setAverageBookings ] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchAverageBookings() {
+      if (selectedEmployee?.employeeId) {
+        try {
+          const response = await fetchWithToken(
+            `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/${selectedEmployee.employeeId}/metrics/average-bookings`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setAverageBookings(data.average);
+          }
+        } catch (error) {
+          console.error("Failed to fetch average bookings", error);
+        }
+      }
+    }
+    fetchAverageBookings();
+  }, [ selectedEmployee ]);
+
   if (!selectedEmployee) {
     return (
       <Card>
@@ -30,7 +57,6 @@ export function EmployeeDetailsCard({
       </Card>
     );
   }
-
   // Cálculos de idade e tempo de empresa
   const age = selectedEmployee.birthdate
     ? new Date().getFullYear() -
@@ -122,8 +148,8 @@ export function EmployeeDetailsCard({
             <div className="flex items-center gap-2">
               <Label className="text-sm font-medium">Filial de Origem: </Label>
               <span className="text-sm font-semibold">
-                {selectedEmployee.SourceFilial.filialName}/
-                {selectedEmployee.SourceFilial.Address.State.UF}
+                {selectedEmployee.SourceFilial?.filialName}/
+                {selectedEmployee.SourceFilial?.Address?.State?.UF || "N/A"}
               </span>
             </div>
           </div>
@@ -136,20 +162,17 @@ export function EmployeeDetailsCard({
             Performance e Estatísticas
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">2.5</div>
-              <div className="text-xs text-muted-foreground">
-                Anos na Empresa
-              </div>
-            </div>
             <div className="text-center p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">28</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {averageBookings !== null ? averageBookings : "-"}
+              </div>
               <div className="text-xs text-muted-foreground">
                 Atendimentos/Mês
               </div>
             </div>
           </div>
         </div>
+        {/* ... remaining code ... */}
         <Separator />
         {/* Informações Operacionais */}
         <div>

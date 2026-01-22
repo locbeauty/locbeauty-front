@@ -118,7 +118,7 @@ export function UpdateFilialDialog({
       }
     >
       <DialogContent
-        className="max-w-[ 90%] md:w -[60%] max-h-[90%] overflow-y-scroll flex flex-col gap-0"
+        className="max-w-[90%] md:w-[60%] max-h-[90%] overflow-y-scroll flex flex-col gap-0"
         aria-describedby={ undefined }
         onOpenAutoFocus={ (e) => e.preventDefault() }
       >
