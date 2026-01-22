@@ -12,8 +12,8 @@ interface CreateNoticeInput {
 
 interface GetNoticesInput {
   filialId?: string;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   filterByStartDateOnly?: boolean;
 }
 
@@ -28,17 +28,21 @@ export async function CreateNotice(
   return response;
 }
 
-// Fixed: cast params correctly for queryParams
 export async function GetNotices({
   filialId,
   startDate,
   endDate,
   filterByStartDateOnly,
 }: GetNoticesInput): Promise<ApiResponse<Notice[]>> {
-  const queryParams: Record<string, string> = {
-    startDate,
-    endDate,
-  };
+  const queryParams: Record<string, string> = {};
+
+  if (startDate) {
+    queryParams.startDate = startDate;
+  }
+
+  if (endDate) {
+    queryParams.endDate = endDate;
+  }
 
   if (filialId) {
     queryParams.filialId = filialId;

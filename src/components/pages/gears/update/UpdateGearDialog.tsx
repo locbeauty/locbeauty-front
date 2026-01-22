@@ -236,6 +236,7 @@ export function UpdateGearDialog({
             <DialogFooter>
               <Button
                 variant="outline"
+                type="button"
                 onClick={ () => setIsUpdateGearDialogOpen(false) }
               >
                 Cancelar

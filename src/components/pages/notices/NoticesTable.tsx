@@ -55,8 +55,8 @@ export function NoticesTable() {
     queryFn: () => {
       const computedEndDate = startDate ? endOfMonth(startDate) : undefined;
       return GetNotices({
-        startDate: startDate?.toISOString() || "",
-        endDate: computedEndDate?.toISOString() || "",
+        startDate: startDate ? startDate.toISOString() : undefined,
+        endDate: computedEndDate ? computedEndDate.toISOString() : undefined,
         filialId,
         filterByStartDateOnly: true,
       });
