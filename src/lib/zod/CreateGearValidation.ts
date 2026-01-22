@@ -12,8 +12,8 @@ export const createGearFormSchema = z.object({
     .string({ message: "Filial é obrigatória" })
     .trim()
     .min(1, { message: "Filial é obrigatória" }),
-  outOfServiceUnits: z.number().default(0),
-  availableUnits: z.number().default(0),
+  outOfServiceUnits: z.number(),
+  availableUnits: z.number(),
   totalUnits: z.number({
     message: "Número de unidades disponíveis é obrigatório",
   }),
