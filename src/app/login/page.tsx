@@ -19,6 +19,10 @@ import { redirect, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import DocumentInput from "@/components/shared/DocumentInput";
+import {
+  getFirstAccessibleRoute,
+  UserAccess,
+} from "@/utils/get-first-accessible-route";
 
 const LoginSchema = z.object({
   username: z.string().min(1, "Username é obrigatório"),
@@ -55,18 +59,43 @@ export default function LoginPage() {
     }
     // console.log("loginResponse: ", loginResponse);
 
-    localStorage.setItem("accessToken", loginResponse.data);
-    router.push("/dashboard");
-  }
+    const token = loginResponse.data;
+    localStorage.setItem("accessToken", token);
 
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
+    // Decode JWT to extract employeeId (sub claim)
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const employeeId = payload.sub;
 
-    if (token) {
-      redirect("/dashboard");
-      return;
+      // Fetch user permissions to determine first accessible route
+      const permissionsRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/access/${employeeId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (permissionsRes.ok) {
+        const response = await permissionsRes.json();
+        // Backend might return { data: [...] } or just [...]
+        const permissions: UserAccess[] = Array.isArray(response)
+          ? response
+          : response.data || [];
+        const targetRoute = getFirstAccessibleRoute(permissions);
+        router.push(targetRoute);
+      } else {
+        // If permissions fetch fails, default to dashboard
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Failed to fetch permissions:", error);
+      // Fallback to dashboard if permission fetch fails
+      router.push("/dashboard");
     }
-  }, []);
+  }
 
   return (
     <div className="h-dvh flex items-center justify-center bg-background">
@@ -75,7 +104,7 @@ export default function LoginPage() {
           <div className="size-36 bg-primary rounded-full flex items-center justify-center">
             <Image
               src="/logo.png"
-              alt="logo"
+              alt="log o"
               width={ 100 }
               height={ 100 }
               className="text-green-500"
@@ -97,14 +126,17 @@ export default function LoginPage() {
                 <div className="grid gap-2">
                   <Label htmlFor="username">Username</Label>
                   <Input
+                    className="placeholder:t ext-placeholder"
                     placeholder="Digite seu username"
                     { ...register("username") }
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password">Senha</Label>
+                  <Label htmlFor="password"> Senha</Label>
                   <Input
                     { ...register("password") }
+                    className="placeholder:text-placeholder"
+                    placeholder="******"
                     name="password"
                     id="password"
                     type="password"
