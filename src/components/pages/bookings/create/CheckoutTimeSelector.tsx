@@ -13,8 +13,9 @@ import {
   Path,
   useFormContext,
 } from "react-hook-form";
-import { GetDayCheckoutsResponse } from "./CreateBookingForm";
+// import { GetDayCheckoutsResponse } from "./CreateBookingForm";
 import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { GetDayCheckoutsResponse } from "@/services/checkouts.service";
 
 interface CheckoutTimeSelectorProps<T extends FieldValues> {
   control: Control<T>;
