@@ -119,7 +119,6 @@ export function BookingDetailsDialog({
     setCheckoutObservations(selectedCheckout?.observations || "");
     setValue("driverId", selectedCheckout?.driverId || "");
     setValue("addressId", selectedCheckout?.addressId || "");
-    // @ts-ignore
     setValue("customer", selectedCheckout?.Customer);
   }, [ selectedCheckout, setValue ]);
 
