@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { differenceInCalendarDays } from "date-fns";
+import { differenceInCalendarDays, addMinutes } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,19 +18,22 @@ import {
   MapPin,
   DollarSign,
   User,
-  Calendar,
   Package,
   Building,
   Phone,
   Mail,
   Trash2,
-  CircleEllipsis,
-  FileText,
+  CalendarDays,
+  Timer,
+  X,
+  Calendar,
   Pencil,
+  Save,
+  CircleEllipsis,
   Copy,
   Check,
-  X,
-  Save,
+  FileText,
+  CheckCircle2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,9 +45,13 @@ import {
 } from "@/components/ui/select";
 import { PaymentMethods, PaymentMethodsType } from "@/utils/constants";
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { MachineExtraCostsDialog } from "../MachineExtraCostsDialog/MachineExtraCostsDialog";
-import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
+import {
+  centsToStringWithCurrencyMark,
+  centsToString,
+} from "@/utils/centsToString";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Checkout } from "@/utils/@types/checkouts";
@@ -53,18 +60,22 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   UpdateCheckout,
   UpdateCheckoutStatus,
+  getDayCheckouts,
+  GetDayCheckoutsResponse,
 } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { CheckoutPaymentMethodDialog } from "../CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 import { AddGearToCheckoutDialog } from "./AddGearToCheckoutDialog";
 import { RemoveBookingFromCheckout } from "@/services/bookings.service";
 import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentStatusBadge";
-import { formatDate, formatTime } from "../bookingViewHelpers";
-import PriceInput from "@/components/shared/PriceInput";
+import { formatDate, formatTime, workingHours } from "../bookingViewHelpers";
 import { parseStringToCents } from "@/utils/parseStringToCents";
+import { minutesToHHMM } from "@/utils/minutesToHHMM";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { FormProvider, useForm } from "react-hook-form";
 import { SelectEmployee } from "@/components/shared/SelectEmployee";
 import { SelectAddress } from "../../bookings/create/SelectAddress";
+import PriceInput from "@/components/shared/PriceInput";
 import { Address } from "@/utils/@types/address";
 import { Employee } from "@/utils/@types/employee";
 
@@ -104,6 +115,26 @@ export function BookingDetailsDialog({
   const [ selectedAddressString, setSelectedAddressString ] = useState("");
   const [ selectedAddressData, setSelectedAddressData ] =
     useState<Address | null>(null);
+  const [ isEditingDateTime, setIsEditingDateTime ] = useState(false);
+  const [ editingDate, setEditingDate ] = useState<Date | undefined>(undefined);
+  const [ editingStartHour, setEditingStartHour ] = useState<number | undefined>(
+    undefined,
+  );
+  const [ editingDuration, setEditingDuration ] = useState<number | undefined>(
+    undefined,
+  );
+
+  const [ availableSchedules, setAvailableSchedules ] = useState<
+    GetDayCheckoutsResponse[]
+  >([]);
+  const [ isLoadingSchedules, setIsLoadingSchedules ] = useState(false);
+  const [ crossDays, setCrossDays ] = useState(false);
+  const [ editingEndDate, setEditingEndDate ] = useState<Date | undefined>(
+    undefined,
+  );
+  const [ editingEndHour, setEditingEndHour ] = useState<number | undefined>(
+    undefined,
+  );
 
   const methods = useForm({
     defaultValues: {
@@ -113,7 +144,7 @@ export function BookingDetailsDialog({
     },
   });
 
-  const { control, handleSubmit, setValue } = methods;
+  const { control, handleSubmit, setValue, reset } = methods;
 
   useEffect(() => {
     setCheckoutObservations(selectedCheckout?.observations || "");
@@ -130,19 +161,81 @@ export function BookingDetailsDialog({
     const isNotPending = selectedCheckout.checkoutStatus !== "Pendente";
 
     setCheckoutCanBeUpdated(!(isPaid || isPast || isNotPending));
+
+    setEditingDate(new Date(selectedCheckout.date));
+    setEditingStartHour(selectedCheckout.startHourInMinutes);
+    setEditingDuration(selectedCheckout.totalDurationInMinutes);
+
+    const isCross =
+      selectedCheckout.totalDurationInMinutes >
+      1440 - selectedCheckout.startHourInMinutes;
+    setCrossDays(isCross);
+
+    if (isCross) {
+      const start = new Date(selectedCheckout.date);
+      start.setHours(0, 0, 0, 0);
+      const endMs =
+        start.getTime() +
+        (selectedCheckout.startHourInMinutes +
+          selectedCheckout.totalDurationInMinutes) *
+          60000;
+      const end = new Date(endMs);
+      setEditingEndHour(end.getHours() * 60 + end.getMinutes());
+      const endDay = new Date(end);
+      endDay.setHours(0, 0, 0, 0);
+      setEditingEndDate(endDay);
+    }
   }, [ selectedCheckout ]);
 
+  useEffect(() => {
+    async function fetchSchedules() {
+      if (!editingDate || !selectedCheckout) return;
+
+      setIsLoadingSchedules(true);
+      try {
+        const gears = selectedCheckout.Bookings.filter(
+          (b) => b.status === "ACTIVE",
+        ).map((b) => ({
+          gearId: b.Gear.gearId,
+          gearName: b.Gear.gearName,
+          individualPrice: "0",
+        }));
+
+        const response = await getDayCheckouts({
+          body: {
+            filialId: selectedCheckout.SourceFilial.filialId,
+            gears,
+            date: editingDate,
+            excludeCheckoutId: selectedCheckout.checkoutId,
+          },
+        });
+
+        if (response.statusCode === 200) {
+          setAvailableSchedules(response.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching schedules:", error);
+      } finally {
+        setIsLoadingSchedules(false);
+      }
+    }
+
+    if (isEditingDateTime) {
+      fetchSchedules();
+    }
+  }, [ editingDate, isEditingDateTime, selectedCheckout ]);
+
   async function handleUpdateCheckoutObservations() {
+    if (!selectedCheckout) return;
     const response = await UpdateCheckout({
       body: {
         observations: checkoutObservations,
       },
-      checkoutId: selectedCheckout!.checkoutId,
+      checkoutId: selectedCheckout.checkoutId,
     });
 
     if (response.statusCode !== 200) {
       toast.warning(response.message, { style: { fontSize: "1rem" } });
-      window.scroll({ top: 0 });
       return;
     }
 
@@ -168,13 +261,12 @@ export function BookingDetailsDialog({
     const bookingId = booking.bookingId;
 
     const response = await RemoveBookingFromCheckout({
-      checkoutId: selectedCheckout!.checkoutId,
+      checkoutId: selectedCheckout.checkoutId,
       bookingId,
     });
 
     if (response.statusCode !== 200) {
       toast.warning(response.message, { style: { fontSize: "1rem" } });
-      window.scroll({ top: 0 });
       return;
     }
 
@@ -184,7 +276,6 @@ export function BookingDetailsDialog({
       if (!prev) return prev;
       return {
         ...prev,
-        observations: checkoutObservations,
         Bookings: prev.Bookings?.filter((b) => b.bookingId !== bookingId) ?? [],
         basePrice: selectedCheckout.basePrice - booking.individualPrice,
         totalPrice:
@@ -269,6 +360,78 @@ export function BookingDetailsDialog({
     queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
   }
 
+  async function handleUpdateDateTime() {
+    if (
+      !selectedCheckout ||
+      !editingDate ||
+      editingStartHour === undefined ||
+      (crossDays &&
+        (editingEndDate === undefined || editingEndHour === undefined)) ||
+      (!crossDays && editingDuration === undefined)
+    )
+      return;
+
+    let finalDuration = editingDuration;
+
+    if (
+      crossDays &&
+      editingDate &&
+      editingEndDate &&
+      editingStartHour !== undefined &&
+      editingEndHour !== undefined
+    ) {
+      const start = new Date(editingDate);
+      start.setHours(0, 0, 0, 0);
+      const startTimeMs = start.getTime() + editingStartHour * 60 * 1000;
+
+      const end = new Date(editingEndDate);
+      end.setHours(0, 0, 0, 0);
+      const endTimeMs = end.getTime() + editingEndHour * 60 * 1000;
+
+      if (endTimeMs > startTimeMs) {
+        finalDuration = Math.floor((endTimeMs - startTimeMs) / 60000);
+      } else {
+        toast.warning(
+          "A data/hora de término deve ser posterior à de início.",
+          { style: { fontSize: "1rem" } },
+        );
+        return;
+      }
+    }
+
+    const response = await UpdateCheckout({
+      checkoutId: selectedCheckout.checkoutId,
+      body: {
+        date: editingDate,
+        startHourInMinutes: editingStartHour,
+        totalDurationInMinutes: finalDuration,
+      },
+    });
+
+    if (response.statusCode !== 200) {
+      toast.warning(response.message, { style: { fontSize: "1rem" } });
+      return;
+    }
+
+    toast.success("Agendamento atualizado com sucesso.", {
+      style: { fontSize: "1rem" },
+    });
+
+    setSelectedCheckout((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        date: editingDate,
+        startHourInMinutes: editingStartHour,
+        totalDurationInMinutes: finalDuration || 0,
+      };
+    });
+
+    setIsEditingDateTime(false);
+    queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+    queryClient.invalidateQueries({ queryKey: [ "get-day-checkouts" ] });
+  }
+
   async function handleChangeCheckoutStatus(
     checkoutId: string,
     checkoutStatus: "Concluido" | "Cancelado",
@@ -278,10 +441,10 @@ export function BookingDetailsDialog({
     cancellationFeePaymentDate: Date | null = null,
     cancellationFeePaymentMethod: PaymentMethodsType | null = null,
   ) {
+    if (!selectedCheckout) return;
     let response;
-    const payment = selectedCheckout!.CheckoutPayment;
+    const payment = selectedCheckout.CheckoutPayment;
 
-    // Use UpdateCheckout API if we need to set cancellation fee or mark as refunded
     if (
       (cancellationFee !== null && checkoutStatus === "Cancelado") ||
       (wasRefunded && checkoutStatus === "Cancelado")
@@ -323,7 +486,7 @@ export function BookingDetailsDialog({
     } else {
       response = await UpdateCheckoutStatus({
         checkoutId,
-        date: selectedCheckout!.date.toString(),
+        date: selectedCheckout.date.toString(),
         checkoutStatus,
       });
     }
@@ -357,8 +520,7 @@ export function BookingDetailsDialog({
                 prev.CheckoutPayment?.paymentStatus === "Pendente"
               ? {
                 ...prev.CheckoutPayment,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                paymentStatus: "Cancelado" as any,
+                paymentStatus: "Cancelado",
               }
               : prev.CheckoutPayment,
         };
@@ -369,7 +531,6 @@ export function BookingDetailsDialog({
     }
   }
 
-  // Stable mount logic: removed early return to keep the Dialog structure constant
   const startDate = selectedCheckout
     ? new Date(selectedCheckout.date)
     : new Date();
@@ -394,7 +555,6 @@ export function BookingDetailsDialog({
         <DialogContent className="max-h-[95vh] w-full max-w-5xl overflow-y-auto dark:bg-gray-900 p-0 gap-0">
           {selectedCheckout ? (
             <>
-              {/* Header Sticked */}
               <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between">
                 <div className="flex flex-col gap-1">
                   <DialogTitle>
@@ -440,7 +600,6 @@ export function BookingDetailsDialog({
               </div>
 
               <div className="p-6 space-y-6 bg-muted/10">
-                {/* Cliente */}
                 <Card className="shadow-sm border-l-4 border-l-primary/50">
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
@@ -473,10 +632,11 @@ export function BookingDetailsDialog({
                     <Separator />
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
-                        <span className="block text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           Documento
                         </span>
-                        <span>
+                        <span className="flex items-center gap-1">
+                          <FileText className="h-3.5 w-3.5" />
                           {selectedCheckout.Customer.documentNumber || "—"}
                         </span>
                       </div>
@@ -484,7 +644,6 @@ export function BookingDetailsDialog({
                   </CardContent>
                 </Card>
 
-                {/* Localizacao */}
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
@@ -499,7 +658,16 @@ export function BookingDetailsDialog({
                           size="icon"
                           variant="ghost"
                           className="h-6 w-6"
-                          onClick={ () => setIsEditingAddress(!isEditingAddress) }
+                          onClick={ () => {
+                            if (!isEditingAddress) {
+                              reset({
+                                driverId: selectedCheckout?.driverId || "",
+                                addressId: selectedCheckout?.addressId || "",
+                                customer: selectedCheckout?.Customer,
+                              });
+                            }
+                            setIsEditingAddress(!isEditingAddress);
+                          } }
                         >
                           {isEditingAddress ? (
                             <X className="h-3 w-3" />
@@ -516,8 +684,14 @@ export function BookingDetailsDialog({
                         <div className="flex flex-col gap-2">
                           <SelectAddress
                             setAddressString={ setSelectedAddressString }
-                            onAddressSelect={ (address) => setSelectedAddressData(address) }
+                            onAddressSelect={ (address) =>
+                              setSelectedAddressData(address)
+                            }
                           />
+                          <div className="text-xs text-muted-foreground mb-4">
+                            <CalendarDays className="h-3 w-3 inline mr-1" />
+                            Previsão de retorno para a filial
+                          </div>
                           <Button
                             size="sm"
                             className="w-full h-8 gap-1"
@@ -551,68 +725,326 @@ export function BookingDetailsDialog({
                   </CardContent>
                 </Card>
 
-                {/* Data e Hora */}
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <h3 className="font-semibold text-sm uppercase tracking-wide">
-                        Agendamento
-                      </h3>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        <h3 className="font-semibold text-sm uppercase tracking-wide">
+                          Agendamento
+                        </h3>
+                      </div>
+                      {checkoutCanBeUpdated && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6"
+                          onClick={ () => {
+                            if (!isEditingDateTime) {
+                              setEditingDate(new Date(selectedCheckout.date));
+                              setEditingStartHour(
+                                selectedCheckout.startHourInMinutes,
+                              );
+                              setEditingDuration(
+                                selectedCheckout.totalDurationInMinutes,
+                              );
+                              const isCross =
+                                selectedCheckout.totalDurationInMinutes >
+                                1440 - selectedCheckout.startHourInMinutes;
+                              setCrossDays(isCross);
+
+                              if (isCross) {
+                                const start = new Date(selectedCheckout.date);
+                                start.setHours(0, 0, 0, 0);
+                                const endMs =
+                                  start.getTime() +
+                                  (selectedCheckout.startHourInMinutes +
+                                    selectedCheckout.totalDurationInMinutes) *
+                                    60000;
+                                const end = new Date(endMs);
+                                setEditingEndHour(
+                                  end.getHours() * 60 + end.getMinutes(),
+                                );
+                                const endDay = new Date(end);
+                                endDay.setHours(0, 0, 0, 0);
+                                setEditingEndDate(endDay);
+                              }
+                            }
+                            setIsEditingDateTime(!isEditingDateTime);
+                          } }
+                        >
+                          {isEditingDateTime ? (
+                            <X className="h-3 w-3" />
+                          ) : (
+                            <Pencil className="h-3 w-3" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0 grid grid-cols-2 gap-4">
-                    {differenceInCalendarDays(endDate, startDate) > 0 ? (
-                      <>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                            <Calendar className="h-3 w-3" /> Início
-                          </div>
-                          <div className="font-medium">
-                            {formatDate(startDate)} às {formatTime(startDate)}
-                          </div>
+                  <CardContent className="pt-0">
+                    {isEditingDateTime ? (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium">Data</Label>
+                          <DatePicker
+                            value={ editingDate! }
+                            onChange={ (date) => setEditingDate(date) }
+                            placeholder="Selecione a data"
+                            modal={ true }
+                          />
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                            <Clock className="h-3 w-3" /> Fim
-                          </div>
-                          <div className="font-medium">
-                            {formatDate(endDate)} às {formatTime(endDate)}
-                          </div>
+
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="edit-cross-days"
+                            checked={ crossDays }
+                            onCheckedChange={ (checked) =>
+                              setCrossDays(checked as boolean)
+                            }
+                          />
+                          <Label
+                            htmlFor="edit-cross-days"
+                            className="text-xs font-medium cursor-pointer"
+                          >
+                            Atravessa dias?
+                          </Label>
                         </div>
-                      </>
+
+                        {editingDate && (
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs font-medium">
+                                  Horário de início
+                                </Label>
+                                {editingStartHour !== undefined && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[10px] h-4"
+                                  >
+                                    <Timer className="h-2.5 w-2.5 mr-1" />
+                                    {minutesToHHMM(editingStartHour)}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
+                                {availableSchedules.map((hour) => {
+                                  const isAvailable = hour.availability.some(
+                                    (a) => a.available,
+                                  );
+                                  return (
+                                    <Button
+                                      key={ hour.hourInMinutes }
+                                      variant={
+                                        editingStartHour === hour.hourInMinutes
+                                          ? "default"
+                                          : "outline"
+                                      }
+                                      size="sm"
+                                      type="button"
+                                      disabled={ !isAvailable }
+                                      onClick={ () =>
+                                        setEditingStartHour(hour.hourInMinutes)
+                                      }
+                                      className={ `h-7 px-0 text-[10px] relative ${
+                                        editingStartHour === hour.hourInMinutes
+                                          ? "ring-1 ring-primary ring-offset-1"
+                                          : ""
+                                      }` }
+                                    >
+                                      {hour.formattedTime}
+                                      {editingStartHour ===
+                                        hour.hourInMinutes && (
+                                        <CheckCircle2 className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary bg-background rounded-full" />
+                                      )}
+                                    </Button>
+                                  );
+                                })}
+                                {isLoadingSchedules &&
+                                  availableSchedules.length === 0 && (
+                                  <div className="col-span-full py-2 text-center text-xs text-muted-foreground animate-pulse">
+                                      Buscando horários...
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {crossDays && (
+                              <div className="space-y-4 pt-2 border-t border-dashed">
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-medium">
+                                    Data de Término
+                                  </Label>
+                                  <DatePicker
+                                    value={ editingEndDate! }
+                                    onChange={ (date) => setEditingEndDate(date) }
+                                    placeholder="Selecione a data de término"
+                                    modal={ true }
+                                    min={ editingDate }
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-xs font-medium flex items-center justify-between">
+                                    Horário de Término
+                                    {editingEndHour !== undefined && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[10px] h-4 px-1"
+                                      >
+                                        <Timer className="h-2.5 w-2.5 mr-1" />
+                                        {minutesToHHMM(editingEndHour)}
+                                      </Badge>
+                                    )}
+                                  </Label>
+                                  <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
+                                    {workingHours
+                                      .flatMap((hour) => [ hour * 60, hour * 60 + 30 ])
+                                      .map((hourInMinutes) => {
+                                        return (
+                                          <Button
+                                            key={ hourInMinutes }
+                                            variant={
+                                              editingEndHour === hourInMinutes
+                                                ? "default"
+                                                : "outline"
+                                            }
+                                            size="sm"
+                                            className="h-7 text-[10px] px-0"
+                                            onClick={ () =>
+                                              setEditingEndHour(hourInMinutes)
+                                            }
+                                          >
+                                            {minutesToHHMM(hourInMinutes)}
+                                          </Button>
+                                        );
+                                      })}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {!crossDays && (
+                              <div className="space-y-2">
+                                <Label className="text-xs font-medium flex items-center justify-between">
+                                  Duração (horas)
+                                  {editingDuration !== undefined && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[10px] h-4 px-1"
+                                    >
+                                      <Clock className="h-2.5 w-2.5 mr-1" />
+                                      {editingDuration / 60}h
+                                    </Badge>
+                                  )}
+                                </Label>
+                                <div className="flex flex-wrap gap-1">
+                                  {availableSchedules
+                                    .find(
+                                      (h) =>
+                                        h.hourInMinutes === editingStartHour,
+                                    )
+                                    ?.availability.map((opt) => (
+                                      <Button
+                                        key={ opt.durationInMinutes }
+                                        variant={
+                                          editingDuration ===
+                                          opt.durationInMinutes
+                                            ? "default"
+                                            : "outline"
+                                        }
+                                        size="sm"
+                                        type="button"
+                                        disabled={ !opt.available }
+                                        onClick={ () =>
+                                          setEditingDuration(
+                                            opt.durationInMinutes,
+                                          )
+                                        }
+                                        className="h-7 px-2 text-[10px]"
+                                      >
+                                        {opt.durationInMinutes / 60}h
+                                      </Button>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <Button
+                              size="sm"
+                              className="w-full h-8 gap-1 mt-2"
+                              onClick={ handleUpdateDateTime }
+                              disabled={
+                                isLoadingSchedules ||
+                                editingDate === undefined ||
+                                editingStartHour === undefined ||
+                                editingDuration === undefined
+                              }
+                            >
+                              <Save className="h-3 w-3" />
+                              Salvar
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     ) : (
-                      <>
-                        <div className="space-y-1">
+                      <div className="grid grid-cols-2 gap-4">
+                        {differenceInCalendarDays(endDate, startDate) > 0 ? (
+                          <>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                                <Calendar className="h-3 w-3" /> Início
+                              </div>
+                              <div className="font-medium">
+                                {formatDate(startDate)} às{" "}
+                                {formatTime(startDate)}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                                <Clock className="h-3 w-3" /> Fim
+                              </div>
+                              <div className="font-medium">
+                                {formatDate(endDate)} às {formatTime(endDate)}
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                                <Calendar className="h-3 w-3" /> Data
+                              </div>
+                              <div className="font-medium">
+                                {formatDate(selectedCheckout.date)}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                                <Clock className="h-3 w-3" /> Horário
+                              </div>
+                              <div className="font-medium">
+                                {formatTime(startDate)} - {formatTime(endDate)}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        <div className="col-span-2 space-y-1 border-t pt-3 mt-1">
                           <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                            <Calendar className="h-3 w-3" /> Data
+                            <Clock className="h-3 w-3" /> Duração Total
                           </div>
                           <div className="font-medium">
-                            {formatDate(selectedCheckout.date)}
+                            {selectedCheckout.totalDurationInMinutes / 60} hora
+                            {selectedCheckout.totalDurationInMinutes / 60 > 1
+                              ? "s"
+                              : ""}
                           </div>
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                            <Clock className="h-3 w-3" /> Horário
-                          </div>
-                          <div className="font-medium">
-                            {formatTime(startDate)} - {formatTime(endDate)}
-                          </div>
-                        </div>
-                      </>
+                      </div>
                     )}
-                    <div className="col-span-2 space-y-1 border-t pt-3 mt-1">
-                      <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                        <Clock className="h-3 w-3" /> Duração Total
-                      </div>
-                      <div className="font-medium">
-                        {selectedCheckout.totalDurationInMinutes / 60} horas
-                      </div>
-                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Funcionario e Motorista */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <Card className="shadow-sm">
                     <CardHeader className="pb-2">
@@ -654,7 +1086,16 @@ export function BookingDetailsDialog({
                             size="icon"
                             variant="ghost"
                             className="h-6 w-6"
-                            onClick={ () => setIsEditingDriver(!isEditingDriver) }
+                            onClick={ () => {
+                              if (!isEditingDriver) {
+                                reset({
+                                  driverId: selectedCheckout?.driverId || "",
+                                  addressId: selectedCheckout?.addressId || "",
+                                  customer: selectedCheckout?.Customer,
+                                });
+                              }
+                              setIsEditingDriver(!isEditingDriver);
+                            } }
                           >
                             {isEditingDriver ? (
                               <X className="h-3 w-3" />
@@ -706,7 +1147,6 @@ export function BookingDetailsDialog({
                   </Card>
                 </div>
 
-                {/* Financeiro */}
                 <Card className="shadow-sm border-t-4 border-t-green-500">
                   <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                     <div className="flex items-center gap-2">
@@ -731,18 +1171,58 @@ export function BookingDetailsDialog({
                     )}
                   </CardHeader>
                   <CardContent className="pt-0 space-y-4">
-                    {/* Lista de  Equipamentos e Cu stos Individuais */}
                     <div className="space-y-3">
                       {selectedCheckout.Bookings.sort((a, b) =>
                         a.Gear.gearName.localeCompare(b.Gear.gearName),
                       ).map((booking) => {
                         if (booking.status === "INACTIVE") return null;
 
+                        const currentDuration =
+                          selectedCheckout.totalDurationInMinutes;
+                        const currentStartHour =
+                          selectedCheckout.startHourInMinutes;
+                        const currentBookingDate = new Date(
+                          selectedCheckout.date,
+                        );
+
                         return (
                           <div
                             key={ booking.bookingId }
                             className="bg-muted/30 p-3 rounded-md text-sm space-y-2 border"
                           >
+                            {/* <div className="flex justify-between items-center bg-muted/30 p-2 rounded-lg border border-dashed">
+                              <div>
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold px-1">
+                                  Término Previsto
+                                </p>
+                                <div className="flex items-center space-x-2 px-1">
+                                  <CalendarDays className="h-3 w-3 text-primary" />
+                                  <span className="text-xs font-semibold">
+                                    {addMinutes(
+                                      currentBookingDate,
+                                      currentStartHour + (currentDuration || 0),
+                                    ).toLocaleDateString("pt-BR")}
+                                  </span>
+                                  <Clock className="h-3 w-3 text-primary ml-1" />
+                                  <span className="text-xs font-semibold">
+                                    {minutesToHHMM(
+                                      currentStartHour + (currentDuration || 0),
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right px-1">
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                                  Duração Total
+                                </p>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px] font-bold"
+                                >
+                                  {((currentDuration || 0) / 60).toFixed(1)}h
+                                </Badge>
+                              </div>
+                            </div> */}
                             <div className="flex items-start justify-between">
                               <span className="font-semibold flex items-center gap-2">
                                 <Package className="h-3.5 w-3.5 text-muted-foreground" />
@@ -808,7 +1288,6 @@ export function BookingDetailsDialog({
 
                     <Separator />
 
-                    {/* Custos Adicionais Gerais */}
                     <div className="space-y-2 text-sm">
                       {selectedCheckout.basePrice > 0 && (
                         <div className="flex justify-between items-center text-muted-foreground p-1 hover:bg-muted/20 rounded">
@@ -875,22 +1354,29 @@ export function BookingDetailsDialog({
                       )}
 
                       {checkoutCanBeUpdated && (
-                        <div className="flex justify-end pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-1 h-7"
-                            onClick={ () => setAdditionalCostsDialogOpen(true) }
-                          >
-                            <Pencil className="h-3 w-3" /> Editar Custos Extras
-                          </Button>
+                        <div className="flex flex-col gap-2 pt-2">
+                          {/* {selectedCheckout.totalDurationInMinutes > 1440 && (
+                            <div className="text-xs font-medium text-destructive mb-1">
+                              Este agendamento ultrapassa a meia-noite.
+                            </div>
+                          )} */}
+                          <div className="flex justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-1 h-7"
+                              onClick={ () => setAdditionalCostsDialogOpen(true) }
+                            >
+                              <Pencil className="h-3 w-3" /> Editar Custos
+                              Extras
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
 
                     <Separator />
 
-                    {/* Total */}
                     <div className="bg-primary/5 p-4 rounded-lg flex items-center justify-between">
                       <span className="font-bold text-lg">Total</span>
                       <span className="font-bold text-2xl text-primary">
@@ -900,7 +1386,6 @@ export function BookingDetailsDialog({
                       </span>
                     </div>
 
-                    {/* Copy Button */}
                     <Button
                       variant="secondary"
                       className="w-full"
@@ -916,7 +1401,7 @@ export function BookingDetailsDialog({
                           `Horário: ${formatTime(startDate)} - ${formatTime(
                             endDate,
                           )}`,
-                          `Valor: ${centsToStringWithCurrencyMark(
+                          ` Valor: ${centsToStringWithCurrencyMark(
                             selectedCheckout.totalPrice,
                           )}`,
                           "(Pagamento de locação somente por pix ou transferência bancária).",
@@ -924,7 +1409,7 @@ export function BookingDetailsDialog({
                           `Contato: ${selectedCheckout.Customer.cellphone}`,
                           `Endereço: ${selectedCheckout.Address.street}, ${selectedCheckout.Address.buildingNumber} - ${selectedCheckout.Address.neighborhood}, ${selectedCheckout.Address.city}`,
                           `Estado: ${selectedCheckout.Address.state}`,
-                          `CPF/CNPJ: ${
+                          ` CPF/CNPJ: ${
                             selectedCheckout.Customer.documentNumber || "—"
                           }`,
                           `MOTORISTA: ${
@@ -940,7 +1425,6 @@ export function BookingDetailsDialog({
                   </CardContent>
                 </Card>
 
-                {/* Observacoes */}
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
@@ -967,14 +1451,13 @@ export function BookingDetailsDialog({
                           checkoutObservations === selectedCheckout.observations
                         }
                       >
-                        Salvar observação
+                        Salvar Observações
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Footer Sticked */}
               <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t p-4 flex flex-col sm:flex-row gap-3 justify-end z-10">
                 <Button
                   variant="outline"
@@ -996,7 +1479,7 @@ export function BookingDetailsDialog({
                     selectedCheckout.checkoutStatus === "Concluido" ||
                     selectedCheckout.checkoutStatus === "Cancelado"
                   }
-                  className=" sm:w-auto w-full"
+                  className="sm:w-auto w-full"
                 >
                   <Check className="mr-2 h-4 w-4" />
                   Concluir Agendamento
@@ -1031,17 +1514,19 @@ export function BookingDetailsDialog({
         }
       />
 
-      <CancelBookingConfirmationDialog
-        handleChangeCheckoutStatus={ handleChangeCheckoutStatus }
-        selectedCheckout={ selectedCheckout }
-        setSelectedCheckout={ setSelectedCheckout }
-        setCancelBookingConfirmationDialogOpen={
-          setCancelBookingConfirmationDialogOpen
-        }
-        isCancelBookingConfirmationDialogOpen={
-          isCancelBookingConfirmationDialogOpen
-        }
-      />
+      {selectedCheckout && (
+        <CancelBookingConfirmationDialog
+          handleChangeCheckoutStatus={ handleChangeCheckoutStatus }
+          selectedCheckout={ selectedCheckout }
+          setSelectedCheckout={ setSelectedCheckout }
+          isCancelBookingConfirmationDialogOpen={
+            isCancelBookingConfirmationDialogOpen
+          }
+          setCancelBookingConfirmationDialogOpen={
+            setCancelBookingConfirmationDialogOpen
+          }
+        />
+      )}
 
       <AdditionalCostsDialog
         selectedCheckout={ selectedCheckout ?? undefined }
@@ -1083,12 +1568,13 @@ interface CancelBookingConfirmationDialogProps {
     cancellationFee?: number | null,
     cancellationDate?: Date | null,
     cancellationFeePaymentDate?: Date | null,
-    cancellationFeePaymentMethod?: (typeof PaymentMethods)[number] | null,
+    cancellationFeePaymentMethod?: PaymentMethodsType | null,
   ) => void;
 }
 
 export function CancelBookingConfirmationDialog({
   selectedCheckout,
+
   setSelectedCheckout,
   isCancelBookingConfirmationDialogOpen,
   setCancelBookingConfirmationDialogOpen,
@@ -1117,7 +1603,7 @@ export function CancelBookingConfirmationDialog({
       open={ isCancelBookingConfirmationDialogOpen }
       onOpenChange={ setCancelBookingConfirmationDialogOpen }
     >
-      <DialogContent className="max-h-[90vh] w-[90vw] md:w-[500px] overflow-hidden dark:bg-gray-900">
+      <DialogContent className="max-h-[90vh] w-[90vw] md:w-[500px] overflow-hidden dark:bg-gray-900 border-none">
         <DialogHeader className="space-y-2 text-center">
           <DialogTitle className="text-2xl font-semibold text-red-600">
             Confirmar cancelamento
@@ -1133,7 +1619,7 @@ export function CancelBookingConfirmationDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <CardContent className="mt-6 flex flex-col items-center justify-center space-y-2">
+        <div className="mt-6 flex flex-col items-center justify-center space-y-4">
           <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
             {(selectedCheckout.Customer?.fullname ||
               selectedCheckout.Customer?.companyName) && (
@@ -1157,6 +1643,15 @@ export function CancelBookingConfirmationDialog({
 
           <div className="flex items-center space-x-2 mt-4">
             <Checkbox
+              id="wasRefunded"
+              checked={ wasRefunded }
+              onCheckedChange={ (checked) => setWasRefunded(checked as boolean) }
+            />
+            <Label htmlFor="wasRefunded">Reembolsar sinal?</Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
               id="hasCancellationFee"
               checked={ hasCancellationFee }
               onCheckedChange={ (checked) =>
@@ -1179,7 +1674,7 @@ export function CancelBookingConfirmationDialog({
                   <PriceInput
                     withLabel={ false }
                     value={ cancellationFee }
-                    onChange={ (value) => setCancellationFee(value) }
+                    onChange={ (value: string) => setCancellationFee(value) }
                   />
                 </div>
                 <div className="space-y-1">
@@ -1228,9 +1723,9 @@ export function CancelBookingConfirmationDialog({
               </div>
             </div>
           )}
-        </CardContent>
+        </div>
 
-        <DialogFooter className="flex justify-end gap-3 mt-4">
+        <DialogFooter className="flex justify-end gap-3 mt-6">
           <Button
             variant="outline"
             onClick={ () => setCancelBookingConfirmationDialogOpen(false) }
