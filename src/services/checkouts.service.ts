@@ -81,6 +81,7 @@ export type UpdateCheckoutBody = {
   lodgingCost?: number;
   additionalTransportCost?: number;
   foodCost?: number;
+  addressId?: string;
 };
 
 export async function UpdateCheckout({

@@ -32,6 +32,7 @@ export type Checkout = {
     fullname: string;
     documentNumber: string | null;
   };
+  addressId: string;
   Bookings: {
     bookingId: string;
     extraMachineCosts: number;

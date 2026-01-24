@@ -62,8 +62,10 @@ import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentS
 import { formatDate, formatTime } from "../bookingViewHelpers";
 import PriceInput from "@/components/shared/PriceInput";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { SelectEmployee } from "@/components/shared/SelectEmployee";
+import { SelectAddress } from "../../bookings/create/SelectAddress";
+import { Address } from "@/utils/@types/address";
 import { Employee } from "@/utils/@types/employee";
 
 interface BookingDetailsDialogProps {
@@ -98,16 +100,27 @@ export function BookingDetailsDialog({
   const [ selectedDriverData, setSelectedDriverData ] = useState<Employee | null>(
     null,
   );
+  const [ isEditingAddress, setIsEditingAddress ] = useState(false);
+  const [ selectedAddressString, setSelectedAddressString ] = useState("");
+  const [ selectedAddressData, setSelectedAddressData ] =
+    useState<Address | null>(null);
 
-  const { control, handleSubmit, setValue } = useForm({
+  const methods = useForm({
     defaultValues: {
       driverId: selectedCheckout?.driverId || "",
+      addressId: selectedCheckout?.addressId || "",
+      customer: selectedCheckout?.Customer,
     },
   });
+
+  const { control, handleSubmit, setValue } = methods;
 
   useEffect(() => {
     setCheckoutObservations(selectedCheckout?.observations || "");
     setValue("driverId", selectedCheckout?.driverId || "");
+    setValue("addressId", selectedCheckout?.addressId || "");
+    // @ts-ignore
+    setValue("customer", selectedCheckout?.Customer);
   }, [ selectedCheckout, setValue ]);
 
   useEffect(() => {
@@ -220,6 +233,40 @@ export function BookingDetailsDialog({
     });
 
     setIsEditingDriver(false);
+    queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+  }
+
+  async function handleUpdateAddress(data: { addressId: string }) {
+    if (!selectedCheckout) return;
+
+    const response = await UpdateCheckout({
+      checkoutId: selectedCheckout.checkoutId,
+      body: {
+        addressId: data.addressId,
+      },
+    });
+
+    if (response.statusCode !== 200) {
+      toast.warning(response.message, { style: { fontSize: "1rem" } });
+      return;
+    }
+
+    toast.success("Endereço atualizado com sucesso.", {
+      style: { fontSize: "1rem" },
+    });
+
+    setSelectedCheckout((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        addressId: data.addressId,
+        Address: selectedAddressData || response.data?.Address || prev.Address,
+      };
+    });
+
+    setIsEditingAddress(false);
+    setSelectedAddressData(null);
     queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
   }
 
@@ -441,29 +488,66 @@ export function BookingDetailsDialog({
                 {/* Localizacao */}
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <h3 className="font-semibold text-sm uppercase tracking-wide">
-                        Localização
-                      </h3>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <h3 className="font-semibold text-sm uppercase tracking-wide">
+                          Localização
+                        </h3>
+                      </div>
+                      {checkoutCanBeUpdated && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6"
+                          onClick={ () => setIsEditingAddress(!isEditingAddress) }
+                        >
+                          {isEditingAddress ? (
+                            <X className="h-3 w-3" />
+                          ) : (
+                            <Pencil className="h-3 w-3" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2 pt-0 text-sm">
-                    <div className="font-medium">
-                      {selectedCheckout.Address.street},{" "}
-                      {selectedCheckout.Address.buildingNumber}
-                    </div>
-                    <div className="text-muted-foreground">
-                      {selectedCheckout.Address.neighborhood},{" "}
-                      {selectedCheckout.Address.city}
-                    </div>
-                    {selectedCheckout.Address.addressComplement && (
-                      <div className="flex items-center gap-1 text-muted-foreground bg-muted p-2 rounded-md mt-2">
-                        <CircleEllipsis className="h-3.5 w-3.5 shrink-0" />
-                        <span className="italic">
-                          {selectedCheckout.Address.addressComplement}
-                        </span>
-                      </div>
+                    {isEditingAddress ? (
+                      <FormProvider { ...methods }>
+                        <div className="flex flex-col gap-2">
+                          <SelectAddress
+                            setAddressString={ setSelectedAddressString }
+                            onAddressSelect={ (address) => setSelectedAddressData(address) }
+                          />
+                          <Button
+                            size="sm"
+                            className="w-full h-8 gap-1"
+                            onClick={ handleSubmit(handleUpdateAddress) }
+                          >
+                            <Save className="h-3 w-3" />
+                            Salvar
+                          </Button>
+                        </div>
+                      </FormProvider>
+                    ) : (
+                      <>
+                        <div className="font-medium">
+                          {selectedCheckout.Address.street},{" "}
+                          {selectedCheckout.Address.buildingNumber}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {selectedCheckout.Address.neighborhood},{" "}
+                          {selectedCheckout.Address.city}
+                        </div>
+                        {selectedCheckout.Address.addressComplement && (
+                          <div className="flex items-center gap-1 text-muted-foreground bg-muted p-2 rounded-md mt-2">
+                            <CircleEllipsis className="h-3.5 w-3.5 shrink-0" />
+                            <span className="italic">
+                              {selectedCheckout.Address.addressComplement}
+                            </span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>
@@ -648,7 +732,7 @@ export function BookingDetailsDialog({
                     )}
                   </CardHeader>
                   <CardContent className="pt-0 space-y-4">
-                    {/* Lista de Equipamentos e Custos Individuais */}
+                    {/* Lista de  Equipamentos e Cu stos Individuais */}
                     <div className="space-y-3">
                       {selectedCheckout.Bookings.sort((a, b) =>
                         a.Gear.gearName.localeCompare(b.Gear.gearName),
@@ -913,7 +997,7 @@ export function BookingDetailsDialog({
                     selectedCheckout.checkoutStatus === "Concluido" ||
                     selectedCheckout.checkoutStatus === "Cancelado"
                   }
-                  className="sm:w-auto w-full"
+                  className=" sm:w-auto w-full"
                 >
                   <Check className="mr-2 h-4 w-4" />
                   Concluir Agendamento

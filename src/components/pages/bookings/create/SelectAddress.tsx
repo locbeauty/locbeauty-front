@@ -17,17 +17,19 @@ import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation"
 
 interface SelectAddressProps {
   setAddressString: Dispatch<SetStateAction<string>>;
+  onAddressSelect?: (address: Address) => void;
   disabled?: boolean;
 }
 
 export function SelectAddress({
   disabled = false,
   setAddressString,
+  onAddressSelect,
 }: SelectAddressProps) {
   const isMounted = useMounted();
   const { control, watch } = useFormContext<CreateCheckoutFormSchemaType>();
 
-  const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(
+  const [customerAddresses, setCustomerAddresses] = useState<Address[] | null>(
     null,
   );
 
@@ -47,7 +49,7 @@ export function SelectAddress({
     if (watchCustomer && watchCustomer.customerId) {
       getCustomerAddresses();
     }
-  }, [ watchCustomer ]);
+  }, [watchCustomer]);
 
   if (!isMounted) {
     return <div className="h-10 w-full" />;
@@ -56,13 +58,13 @@ export function SelectAddress({
   return (
     <Controller
       name="addressId"
-      control={ control }
-      render={ ({ field }) => {
+      control={control}
+      render={({ field }) => {
         return (
           <Select
-            disabled={ !watchCustomer || disabled }
-            value={ field.value }
-            onValueChange={ (value) => {
+            disabled={!watchCustomer || disabled}
+            value={field.value}
+            onValueChange={(value) => {
               field.onChange(value);
               const selectedAddress = customerAddresses?.find(
                 (addr) => addr.addressId === value,
@@ -70,12 +72,13 @@ export function SelectAddress({
               if (selectedAddress) {
                 const addressString = `${selectedAddress.street}, ${selectedAddress.neighborhood}, ${selectedAddress.buildingNumber} - ${selectedAddress.city}/${selectedAddress.state}${selectedAddress.addressComplement ? `, ${selectedAddress.addressComplement}` : ""}`;
                 setAddressString(addressString);
+                onAddressSelect?.(selectedAddress);
               }
-            } }
+            }}
           >
             <SelectTrigger className="w-full data-[placeholder]:text-placeholder">
               <SelectValue
-                placeholder="Selecione a função do funcionário"
+                placeholder="Selecione o endereço"
                 className="text-placeholder"
               />
             </SelectTrigger>
@@ -84,7 +87,7 @@ export function SelectAddress({
                 customerAddresses.map((addr) => {
                   if (!addr.isActive) return null;
                   return (
-                    <SelectItem key={ addr.addressId } value={ addr.addressId }>
+                    <SelectItem key={addr.addressId} value={addr.addressId}>
                       {addr.street}, {addr.neighborhood},{" "}
                       {addr.addressComplement} - {addr.city}/{addr.state}
                     </SelectItem>
@@ -93,7 +96,7 @@ export function SelectAddress({
             </SelectContent>
           </Select>
         );
-      } }
+      }}
     />
   );
 }
