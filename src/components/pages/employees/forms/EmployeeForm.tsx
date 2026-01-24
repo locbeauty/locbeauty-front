@@ -32,7 +32,7 @@ export function EmployeeForm({
     control,
     setError,
     clearErrors,
-    formState: { errors },
+    formState: { errors, isSubmitSuccessful },
   } = useFormContext<CreateEmployeeFormSchemaType>();
 
   const [ confirmPassword, setConfirmPassword ] = useState("");
@@ -81,6 +81,12 @@ export function EmployeeForm({
 
     checkUsername();
   }, [ debouncedUsername, setError, clearErrors, currentUsername ]);
+
+  useEffect(() => {
+    if (isSubmitSuccessful) {
+      setConfirmPassword("");
+    }
+  }, [ isSubmitSuccessful ]);
 
   useEffect(() => {
     if (password !== confirmPassword && confirmPassword.length > 0) {

@@ -3,6 +3,7 @@
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ROLES } from "@/utils/roles";
+import { useAuth } from "@/contexts/auth-provider";
 
 type SelectRoleProps<T extends FieldValues> = {
   control: Control<T>
@@ -10,6 +11,7 @@ type SelectRoleProps<T extends FieldValues> = {
 }
 
 export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleProps<T>) {
+  const { user } = useAuth();
 
   return (
     <Controller
@@ -26,6 +28,7 @@ export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleP
             </SelectTrigger>
             <SelectContent>
               { ROLES.map((role) => {
+                if(role === "Master" && user && user.role !== "Master") return null;
                 return (
                   <SelectItem key={ role } value={ role }>
                     { role }

@@ -16,21 +16,23 @@ export const createEmployeeFormSchema = z.object({
   cellphone: z
     .string()
     .min(14, { message: "Telefone é obrigatório" })
-    .nullable(),
+    .nullable()
+    .optional(),
   sourceFilialId: z.string(),
   email: z
     .string()
-    .min(1, { message: "Email é obrigatório" })
     .email({ message: "Email inválido" })
     .max(100, { message: "Email deve ter no máximo 100 caracteres" })
-    .nullable(),
+    .optional()
+    .or(z.literal("")),
   // address: addressSchema,
   birthdate: z
-    .date({ message: "Data de nascimento é obrigatória" })
+    .date()
     .refine((date) => date < new Date(), {
       message: "Data de nascimento deve ser no passado",
     })
-    .nullable(),
+    .nullable()
+    .optional(),
   password: z.string({ message: "Senha é obrigatória." }),
 });
 
