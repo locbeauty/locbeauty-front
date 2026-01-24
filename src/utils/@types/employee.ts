@@ -2,6 +2,7 @@ export interface Employee {
   employeeId: string;
   username: string;
   fullname: string;
+  documentNumber: string | null;
   cellphone: string | null;
   email: string | null;
   birthdate: Date | null;

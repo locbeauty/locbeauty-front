@@ -25,6 +25,7 @@ import {
   Copy,
   Calendar,
   Clock,
+  Loader2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import PriceInput from "@/components/shared/PriceInput";
@@ -56,7 +57,11 @@ import {
   createCheckoutFormSchema,
   CreateCheckoutFormSchemaType,
 } from "@/lib/zod/CreateBookingValidation";
-import { CreateCheckout, getDayCheckouts } from "@/services/checkouts.service";
+import {
+  CreateCheckout,
+  getDayCheckouts,
+  GetDayCheckoutsResponse,
+} from "@/services/checkouts.service";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { useQuery } from "@tanstack/react-query";
 import { AdditionalCostsDialog } from "./AdditionalCostsDialog";
@@ -65,16 +70,6 @@ import { queryClient } from "@/app/(main)/layout";
 import { SelectCustomer } from "./SelectCustomer";
 import { useAccess } from "@/contexts/access-provider";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
-
-export interface GetDayCheckoutsResponse {
-  hourInMinutes: number;
-  formattedTime: string;
-  availability: {
-    durationInMinutes: number;
-    available: boolean;
-    maxGearAmount: number;
-  }[];
-}
 
 export function GearsSection() {
   const {
@@ -242,12 +237,10 @@ export function CreateBookingForm() {
     watch,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting, isLoading },
     control,
   } = createBookingFormMethods;
-  useEffect(() => {
-    console.log("errors: ", errors);
-  }, [ errors ]);
+
   const startHour = watch("startHourInMinutes");
   const watchTotalDurationInMinutes = watch("totalDurationInMinutes");
   const selectedDate = watch("date");
@@ -524,11 +517,13 @@ export function CreateBookingForm() {
                     name="driverId"
                     setDriverString={ setDriverString }
                     employeeRole="Motorista"
-                    filialId={
-                      user?.role === USER_ROLES.GERENTE
-                        ? undefined
-                        : user?.sourceFilialId
-                    }
+                    filialId={ watchFilialId }
+
+                    // filialId={
+                    //   user?.role === USER_ROLES.GERENTE
+                    //     ? undefined
+                    //     : user?.sourceFilialId
+                    // }
                   />
                   {errors.driverId && (
                     <p className="text-sm text-destructive flex items-center gap-1">
@@ -685,10 +680,17 @@ Motorista: ${driverString || "A definir"}
                 disabled={
                   !startHour ||
                   watchSelectedGears.length === 0 ||
-                  watchTotalPrice === "0,00"
+                  watchTotalPrice === "0,00" ||
+                  isSubmitting ||
+                  isLoading
                 }
               >
-                <Check className="h-5 w-5 mr-2" /> Finalizar Reserva
+                {isSubmitting || isLoading ? (
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                ) : (
+                  <Check className="h-5 w-5 mr-2" />
+                )}
+                Finalizar Reserva
               </Button>
             </div>
           </div>

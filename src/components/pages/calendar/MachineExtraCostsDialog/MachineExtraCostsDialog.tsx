@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription, DialogHeader,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import PriceInput from "@/components/shared/PriceInput";
@@ -20,12 +21,11 @@ import { queryClient } from "@/app/(main)/layout";
 import { Checkout } from "@/utils/@types/checkouts";
 
 interface MachineExtraCostsDialogProps {
-    setMachineExtraCostsDialogOpen: Dispatch<SetStateAction<boolean>>;
-    isMachineExtraCostsDialogOpen: boolean;
-    selectedBookingId: string | null
-    setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>
-    setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
-
+  setMachineExtraCostsDialogOpen: Dispatch<SetStateAction<boolean>>;
+  isMachineExtraCostsDialogOpen: boolean;
+  selectedBookingId: string | null;
+  setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>;
+  setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export function MachineExtraCostsDialog({
@@ -34,10 +34,10 @@ export function MachineExtraCostsDialog({
   selectedBookingId,
   setSelectedCheckout,
 }: MachineExtraCostsDialogProps) {
-
   const [ individualPrice, setIndividualPrice ] = useState("0");
   const [ extraMachineCosts, setExtraMachineCosts ] = useState("0");
-  const [ extraMachineCostsDescription, setExtraMachineCostsDescription ] = useState("");
+  const [ extraMachineCostsDescription, setExtraMachineCostsDescription ] =
+    useState("");
 
   const { data } = useQuery<Booking | undefined, Error>({
     queryKey: [ "get-booking-by-id", selectedBookingId ],
@@ -55,13 +55,16 @@ export function MachineExtraCostsDialog({
   }, [ isMachineExtraCostsDialogOpen, data ]);
 
   async function handleUpdateMachineExtraCosts() {
-    const response = await UpdateBooking({ body: {
-      individualPrice: parseStringToCents(individualPrice),
-      extraMachineCosts: parseStringToCents(extraMachineCosts),
-      extraMachineCostsDescription
-    }, bookingId: selectedBookingId! });
+    const response = await UpdateBooking({
+      body: {
+        individualPrice: parseStringToCents(individualPrice),
+        extraMachineCosts: parseStringToCents(extraMachineCosts),
+        extraMachineCostsDescription,
+      },
+      bookingId: selectedBookingId!,
+    });
 
-    if(response.statusCode === 200) {
+    if (response.statusCode === 200) {
       queryClient.invalidateQueries({
         queryKey: [ "get-all-checkouts" ],
       });
@@ -78,7 +81,7 @@ export function MachineExtraCostsDialog({
 
           const updatedCheckout = { ...prev };
           const bookingIndex = updatedCheckout.Bookings.findIndex(
-            (b) => b.bookingId === selectedBookingId
+            (b) => b.bookingId === selectedBookingId,
           );
           if (bookingIndex === -1) return prev;
 
@@ -99,7 +102,8 @@ export function MachineExtraCostsDialog({
             updatedBooking.individualPrice = newIndividualPrice;
 
           if (oldDescription !== extraMachineCostsDescription)
-            updatedBooking.extraMachineCostsDescription = extraMachineCostsDescription;
+            updatedBooking.extraMachineCostsDescription =
+              extraMachineCostsDescription;
 
           updatedCheckout.Bookings[bookingIndex] = updatedBooking;
 
@@ -119,11 +123,11 @@ export function MachineExtraCostsDialog({
         });
       }
 
-      toast.warning(response.message, { style: { fontSize: "1rem" } });
+      toast.success(response.message, { style: { fontSize: "1rem" } });
       setMachineExtraCostsDialogOpen(false);
       window.scroll({ top: 0 });
     } else {
-      toast.success(response.message, { style: { fontSize: "1rem" } });
+      toast.warning(response.message, { style: { fontSize: "1rem" } });
       window.scroll({ top: 0 });
       setExtraMachineCosts("");
       setExtraMachineCostsDescription("");
@@ -139,31 +143,47 @@ export function MachineExtraCostsDialog({
     >
       <DialogContent className="max-h-[90vh] w-[90vw] md:w-[600px] overflow-scroll dark:bg-gray-900">
         <DialogHeader>
-          <DialogTitle className="text-xl">
-                                Custos extras
-          </DialogTitle>
+          <DialogTitle className="text-xl">Custos extras</DialogTitle>
           <DialogDescription>
-                                Defina aqui custos extras como quantidade de tiros, etc
+            Defina aqui custos extras como quantidade de tiros, etc
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <Label>Valor individual:</Label>
-          <PriceInput withLabel={ false } onChange={ (value) => setIndividualPrice(value) } value={ individualPrice } />
+          <PriceInput
+            withLabel={ false }
+            onChange={ (value) => setIndividualPrice(value) }
+            value={ individualPrice }
+          />
         </div>
         <div className="space-y-4 py-4">
           <Label>Valor extra:</Label>
-          <PriceInput withLabel={ false } onChange={ (value) => setExtraMachineCosts(value) } value={ extraMachineCosts } />
+          <PriceInput
+            withLabel={ false }
+            onChange={ (value) => setExtraMachineCosts(value) }
+            value={ extraMachineCosts }
+          />
         </div>
         <div className="space-y-4 py-4">
           <Label>Descrição do valor extra:</Label>
-          <Textarea className="max-h-[150px]" onChange={ (e) => setExtraMachineCostsDescription(e.target.value) } value={ extraMachineCostsDescription } />
+          <Textarea
+            className="max-h-[150px]"
+            onChange={ (e) => setExtraMachineCostsDescription(e.target.value) }
+            value={ extraMachineCostsDescription }
+          />
         </div>
         <div className="flex justify-end gap-4">
-          <Button variant={ "outline" } onClick={ () => setMachineExtraCostsDialogOpen(false) }>Cancelar</Button>
-          <Button onClick={ () => handleUpdateMachineExtraCosts() }>Aplicar</Button>
+          <Button
+            variant={ "outline" }
+            onClick={ () => setMachineExtraCostsDialogOpen(false) }
+          >
+            Cancelar
+          </Button>
+          <Button onClick={ () => handleUpdateMachineExtraCosts() }>
+            Aplicar
+          </Button>
         </div>
-
       </DialogContent>
     </Dialog>
   );

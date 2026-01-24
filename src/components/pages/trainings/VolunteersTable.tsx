@@ -186,21 +186,14 @@ export function VolunteersTable({
               </tr>
             )}
             {sortedVolunteers.map((volunteer) => {
-              const volunteerFilials = Array.from(
-                new Set(
-                  allTrainings
-                    .filter((t) => t.volunteerId === volunteer.volunteerId)
-                    .map((t) => t.SourceFilial?.filialName)
-                    .filter(Boolean)
-                )
-              ).join(", ");
+
               return (
                 <tr
                   key={ volunteer.volunteerId }
                   className="border-t hover:bg-muted/50"
                 >
                   <td className="p-3 text-sm font-medium">{volunteer.name}</td>
-                  <td className="p-3 text-sm">{volunteerFilials || "N/A"}</td>
+                  <td className="p-3 text-sm">{volunteer.SourceFilial?.filialName}</td>
                   <td className="p-3 text-sm">{volunteer.documentNumber}</td>
                   <td className="p-3 text-center text-sm">
                     {volunteer.cellphone}

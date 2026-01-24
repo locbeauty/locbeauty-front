@@ -1,161 +1,3 @@
-// import { Dispatch, SetStateAction, useEffect, useState } from "react";
-
-// import {
-//     Dialog,
-//     DialogContent,
-//     DialogDescription,
-//     DialogTitle,
-//     DialogTrigger
-// } from "@/components/ui/dialog";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { LucideMessageCircleQuestion } from "lucide-react";
-// import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-// import { Button } from "@/components/ui/button";
-// import { useFormContext } from "react-hook-form";
-// import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
-// import PriceInput from "@/components/shared/PriceInput";
-// import { parseStringToCents } from "@/utils/parseStringToCents";
-// import { centsToString } from "@/utils/centsToString";
-// import { toast } from "sonner";
-// import { CityInput } from "./CityInput";
-
-// interface AdditionalCostsDialogProps {
-//   setAdditionalCostsDialogOpen: Dispatch<SetStateAction<boolean>>;
-//   isAdditionalCostsDialogOpen: boolean;
-// }
-
-// export function AdditionalCostsDialog({
-//     isAdditionalCostsDialogOpen,
-//     setAdditionalCostsDialogOpen,
-// }: AdditionalCostsDialogProps) {
-
-//     const {
-//         watch,
-//         setValue,
-//         register,
-//         formState: { errors },
-//     } = useFormContext<CreateCheckoutFormSchemaType>();
-
-//     const selectedGears = watch("gears");
-
-//     const selectedGearsCost = selectedGears?.reduce(
-//         (acc, item) => acc + parseStringToCents(item.individualPrice),
-//         0
-//     );
-
-//     const [ distanceInKM, setDistanceInKM ] = useState(0);
-//     const [ consumptionKmPerLiter, setConsumptionKmPerLiter ] = useState(10);
-//     const [ fuelCost, setFuelCost ] = useState("");
-//     const [ lodgingCost, setLodgingCost ] = useState("");
-//     const [ foodCost, setFoodCost ] = useState("");
-//     const [ additionalTransportCost, setAdditionalTransportCost ] = useState("");
-
-//     const pricePerLiterCents = parseStringToCents(fuelCost || "0");
-//     const litersNeeded = Number(distanceInKM) / Number(consumptionKmPerLiter || 1);
-//     const fuelTotalCents = Math.round(pricePerLiterCents * litersNeeded);
-
-//     const finalCost =
-//   fuelTotalCents +
-//   parseStringToCents(lodgingCost || "0") +
-//   parseStringToCents(foodCost || "0") +
-//   parseStringToCents(additionalTransportCost || "0") +
-//   selectedGearsCost;
-
-//     useEffect(() => {
-//         console.log("finalCost: ", finalCost);
-//     }, [ finalCost ]);
-
-//     function handleApplyVariables() {
-//         setValue("fuelCost", fuelCost);
-//         setValue("lodgingCost", lodgingCost);
-//         setValue("foodCost", foodCost);
-//         setValue("additionalTransportCost", additionalTransportCost);
-//         setValue("distanceInKm", Number(distanceInKM));
-//         setValue("totalPrice", centsToString(finalCost));
-
-//         toast.success("Valores variáveis aplicados!");
-//     }
-
-//     function handleCloseDialog() {
-//         setAdditionalCostsDialogOpen(false);
-//         setValue("fuelCost", "0");
-//         setValue("lodgingCost", "0");
-//         setValue("foodCost", "0");
-//         setValue("additionalTransportCost", "0");
-//         setValue("distanceInKm", 0);
-//         setValue("totalPrice", centsToString(selectedGearsCost));
-
-//         setFuelCost("");
-//         setLodgingCost("");
-//         setFoodCost("");
-//         setAdditionalTransportCost("");
-//         setDistanceInKM(0);
-//     }
-
-//     return (
-//         <Dialog
-//             open={ isAdditionalCostsDialogOpen }
-//             onOpenChange={ setAdditionalCostsDialogOpen }
-//         >
-//             <DialogTrigger asChild>
-//                 <Button>
-//                 + Custos adicionais
-//                 </Button>
-//             </DialogTrigger>
-//             <DialogContent className="md:w-[40%] w-[75%] space-y-5">
-//                 <DialogTitle>Valores adicionais</DialogTitle>
-//                 <DialogDescription>Informações necessárias para o cálculo de custos referentes à entrega</DialogDescription>
-//                 <div className="space-y-3">
-//                     <Label>Distância(KM)</Label>
-//                     {/* <Input type="number" onChange={ (e) => setDistanceInKM(+e.target.value) } value={ distanceInKM }  /> */}
-//                     <CityInput distanceInKM={ distanceInKM } setDistanceInKM={ setDistanceInKM } />
-//                 </div>
-//                 <div className="space-y-3">
-//                     <Label>Valor do combustível</Label>
-//                     <PriceInput withLabel={ false } onChange={ (value) => setFuelCost(value) } value={ fuelCost } />
-//                 </div>
-//                 <div className="space-y-3">
-//                     <Label>Km/Litro</Label>
-//                     <Input type="number" onChange={ (value) => setConsumptionKmPerLiter(+value.target.value) } value={ consumptionKmPerLiter } />
-//                 </div>
-//                 <div className="space-y-3">
-//                     <Label>Custo de hospedagem</Label>
-//                     <PriceInput withLabel={ false } onChange={ (value) => setLodgingCost(value) } value={ lodgingCost } />
-
-//                 </div>
-//                 <div className="space-y-3">
-//                     <Label>Custo de alimentação</Label>
-//                     <PriceInput withLabel={ false } onChange={ (value) => setFoodCost(value) } value={ foodCost } />
-//                 </div>
-//                 <div className="">
-//                     <div className="inline-flex items-center gap-1 h-10">
-//                         <Label>Custo adicionais de transporte</Label>
-//                         <Tooltip>
-//                             <TooltipTrigger asChild>
-//                                 <Button variant="ghost" size="xs">
-//                                     <LucideMessageCircleQuestion className="size-4" />
-//                                 </Button>
-//                             </TooltipTrigger>
-//                             <TooltipContent>
-//                                 <p>Pedágios, balsas, etc</p>
-//                             </TooltipContent>
-//                         </Tooltip>
-//                     </div>
-//                     <PriceInput withLabel={ false } onChange={ (value) => setAdditionalTransportCost(value) } value={ additionalTransportCost } />
-//                 </div>
-//                 <div className="flex items-center justify-between">
-//                     <p>Valor final: <span className="font-bold">{ centsToString(finalCost) }</span></p>
-//                     <div className="flex items-center gap-4">
-//                         <Button type="button" onClick={ () => handleApplyVariables() }>Aplicar</Button>
-//                         <Button type="button" onClick={ () => handleCloseDialog() }>Cancelar</Button>
-//                     </div>
-//                 </div>
-//             </DialogContent>
-//         </Dialog>
-//     );
-// }
-
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import {
   Dialog,
@@ -192,17 +34,29 @@ import { toast } from "sonner";
 import { CityInput } from "./CityInput";
 import { Separator } from "@/components/ui/separator";
 
+import { Checkout } from "@/utils/@types/checkouts";
+import { UpdateCheckout } from "@/services/checkouts.service";
+import { queryClient } from "@/app/(main)/layout";
+
 interface AdditionalCostsDialogProps {
   setAdditionalCostsDialogOpen: Dispatch<SetStateAction<boolean>>;
   isAdditionalCostsDialogOpen: boolean;
+  selectedCheckout?: Checkout;
+  setSelectedCheckout?: Dispatch<SetStateAction<Checkout | null>>;
+  showTrigger?: boolean;
 }
 
 export function AdditionalCostsDialog({
   isAdditionalCostsDialogOpen,
   setAdditionalCostsDialogOpen,
+  selectedCheckout,
+  setSelectedCheckout,
+  showTrigger = true,
 }: AdditionalCostsDialogProps) {
-  const { watch, setValue, getValues } =
-    useFormContext<CreateCheckoutFormSchemaType>();
+  const formContext = useFormContext<CreateCheckoutFormSchemaType>();
+  const watch = formContext?.watch;
+  const setValue = formContext?.setValue;
+  const getValues = formContext?.getValues;
 
   // Estados locais para edição dentro do modal
   const [ distanceInKM, setDistanceInKM ] = useState(0);
@@ -212,18 +66,30 @@ export function AdditionalCostsDialog({
   const [ foodCost, setFoodCost ] = useState("");
   const [ additionalTransportCost, setAdditionalTransportCost ] = useState("");
 
+  const isUpdateMode = !!selectedCheckout;
+
   // Observa os equipamentos selecionados do formulário principal
-  const selectedGears = watch("gears");
+  const selectedGears = watch ? watch("gears") : selectedCheckout?.Bookings;
 
   // Recalcula custo de equipamentos sempre que mudar
-  const selectedGearsCost = useMemo(() => {
+  const selectedGearsCost: number = useMemo(() => {
+    if (isUpdateMode) {
+      return (
+        selectedCheckout?.Bookings.filter((b) => b.status === "ACTIVE").reduce(
+          (acc: number, item) =>
+            acc + Number(item.individualPrice) + (item.extraMachineCosts || 0),
+          0,
+        ) || 0
+      );
+    }
     return (
-      selectedGears?.reduce(
-        (acc, item) => acc + parseStringToCents(item.individualPrice),
-        0
+      (selectedGears as { individualPrice: string }[])?.reduce(
+        (acc: number, item: { individualPrice: string }) =>
+          acc + parseStringToCents(item.individualPrice),
+        0,
       ) || 0
     );
-  }, [ selectedGears ]);
+  }, [ selectedGears, isUpdateMode, selectedCheckout ]);
 
   // Cálculos derivados
   const pricePerLiterCents = parseStringToCents(fuelCost || "0");
@@ -237,40 +103,106 @@ export function AdditionalCostsDialog({
     fuelTotalCents = Math.round(pricePerLiterCents * litersNeeded);
   }
 
-  const finalCost =
-    fuelTotalCents +
-    parseStringToCents(lodgingCost || "0") +
-    parseStringToCents(foodCost || "0") +
-    parseStringToCents(additionalTransportCost || "0") +
-    selectedGearsCost;
+  // PREPARANDO VALORES PARA O CÁLCULO (EM CENTAVOS)
+  const lodgingTotal = parseStringToCents(lodgingCost || "0");
+  const foodTotal = parseStringToCents(foodCost || "0");
+  const transportTotal = parseStringToCents(additionalTransportCost || "0");
+
+  /**
+   * CÁLCULO DO TOTAL FINAL:
+   * No modo edição, o selectedGearsCost já inclui (individualPrice + extraMachineCosts).
+   * No modo criação, o selectedGearsCost inclui apenas o individualPrice.
+   * Somamos a isso todos os custos de logística (combustível, hospedagem, alimentação e extras).
+   */
+  const logisticsTotal =
+    fuelTotalCents + lodgingTotal + foodTotal + transportTotal;
+  const finalCost = Number(selectedGearsCost) + logisticsTotal;
 
   // EFEITO DE SINCRONIZAÇÃO (CRÍTICO):
   // Quando o modal abre, preenche os estados locais com o que já está salvo no formulário.
   useEffect(() => {
     if (isAdditionalCostsDialogOpen) {
-      const currentValues = getValues();
+      if (isUpdateMode && selectedCheckout) {
+        setFuelCost(centsToString(selectedCheckout.fuelCost) || "");
+        setLodgingCost(centsToString(selectedCheckout.lodgingCost) || "");
+        setFoodCost(centsToString(selectedCheckout.foodCost) || "");
+        setAdditionalTransportCost(
+          centsToString(selectedCheckout.additionalTransportCost) || "",
+        );
+        setDistanceInKM(Number(selectedCheckout.distanceInKm) || 0);
+        // Consumption km per liter is not in Checkout model currently, using default 10
+        setConsumptionKmPerLiter(10);
+      } else if (getValues) {
+        const currentValues = getValues();
 
-      setFuelCost(currentValues.fuelCost || "");
-      setLodgingCost(currentValues.lodgingCost || "");
-      setFoodCost(currentValues.foodCost || "");
-      setAdditionalTransportCost(currentValues.additionalTransportCost || "");
-      setDistanceInKM(Number(currentValues.distanceInKm) || 0);
-      setConsumptionKmPerLiter(Number(currentValues.consumption) || 10);
+        setFuelCost(currentValues.fuelCost || "");
+        setLodgingCost(currentValues.lodgingCost || "");
+        setFoodCost(currentValues.foodCost || "");
+        setAdditionalTransportCost(currentValues.additionalTransportCost || "");
+        setDistanceInKM(Number(currentValues.distanceInKm) || 0);
+        setConsumptionKmPerLiter(Number(currentValues.consumption) || 10);
+      }
     }
-  }, [ isAdditionalCostsDialogOpen, getValues ]);
+  }, [ isAdditionalCostsDialogOpen, getValues, isUpdateMode, selectedCheckout ]);
 
-  function handleSaveVariables() {
-    setValue("fuelCost", fuelCost);
-    setValue("lodgingCost", lodgingCost);
-    setValue("foodCost", foodCost);
-    setValue("additionalTransportCost", additionalTransportCost);
-    setValue("distanceInKm", Number(distanceInKM));
-    setValue("consumption", Number(consumptionKmPerLiter));
+  async function handleSaveVariables() {
+    if (isUpdateMode && selectedCheckout && setSelectedCheckout) {
+      const fuelTotal = fuelTotalCents;
+      const lodgingTotal = parseStringToCents(lodgingCost);
+      const foodTotal = parseStringToCents(foodCost);
+      const transportTotal = parseStringToCents(additionalTransportCost);
+      const distance = Number(distanceInKM);
 
-    // Atualiza o total final no formulário
-    setValue("totalPrice", centsToString(finalCost));
+      const response = await UpdateCheckout({
+        body: {
+          distanceInKm: distance,
+          fuelCost: fuelTotal,
+          lodgingCost: lodgingTotal,
+          additionalTransportCost: transportTotal,
+          foodCost: foodTotal,
+        },
+        checkoutId: selectedCheckout.checkoutId,
+      });
 
-    toast.success("Custos adicionais aplicados!");
+      if (response.statusCode !== 200) {
+        toast.warning(response.message, { style: { fontSize: "1rem" } });
+        return;
+      }
+
+      toast.success(response.message, { style: { fontSize: "1rem" } });
+      queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+
+      // Atualiza o estado local mesclando os novos valores para garantir atualização instantânea e preservar relações
+      setSelectedCheckout((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          distanceInKm: distance,
+          fuelCost: fuelTotal,
+          lodgingCost: lodgingTotal,
+          additionalTransportCost: transportTotal,
+          foodCost: foodTotal,
+          totalPrice: finalCost,
+        };
+      });
+
+      setAdditionalCostsDialogOpen(false);
+      return;
+    }
+
+    if (setValue) {
+      setValue("fuelCost", fuelCost);
+      setValue("lodgingCost", lodgingCost);
+      setValue("foodCost", foodCost);
+      setValue("additionalTransportCost", additionalTransportCost);
+      setValue("distanceInKm", Number(distanceInKM));
+      setValue("consumption", Number(consumptionKmPerLiter));
+
+      // Atualiza o total final no formulário
+      setValue("totalPrice", centsToString(finalCost));
+
+      toast.success("Custos adicionais aplicados!");
+    }
     setAdditionalCostsDialogOpen(false);
   }
 
@@ -292,11 +224,13 @@ export function AdditionalCostsDialog({
       open={ isAdditionalCostsDialogOpen }
       onOpenChange={ setAdditionalCostsDialogOpen }
     >
-      <DialogTrigger asChild>
-        <Button variant="outline" className="w-full">
-          + Custos adicionais
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="outline" className="w-full">
+            + Custos adicionais
+          </Button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="md:w-[800px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -448,26 +382,13 @@ export function AdditionalCostsDialog({
                 <span className="text-muted-foreground">
                   Combustível + Extras:
                 </span>
-                <span>
-                  {centsToString(
-                    Math.round(
-                      (parseStringToCents(fuelCost || "0") /
-                                                (Number(consumptionKmPerLiter) || 1)) *
-                                            Number(distanceInKM || "0")
-                    ) + parseStringToCents(additionalTransportCost || "0")
-                  )}
-                </span>
+                <span>{centsToString(fuelTotalCents + transportTotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   Estadia + Alimentação:
                 </span>
-                <span>
-                  {centsToString(
-                    parseStringToCents(lodgingCost || "0") +
-                      parseStringToCents(foodCost || "0")
-                  )}
-                </span>
+                <span>{centsToString(lodgingTotal + foodTotal)}</span>
               </div>
               <Separator className="bg-primary/20" />
               <div className="flex justify-between items-center pt-2">

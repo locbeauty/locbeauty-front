@@ -21,6 +21,7 @@ type SelectEmployeeProps<T extends FieldValues> = {
   employeeRole?: ROLES;
   filialId?: string;
   setDriverString?: Dispatch<SetStateAction<string>>;
+  onEmployeeSelect?: (employee: Employee) => void;
 };
 
 export function SelectEmployee<T extends FieldValues>({
@@ -29,6 +30,7 @@ export function SelectEmployee<T extends FieldValues>({
   employeeRole,
   filialId,
   setDriverString,
+  onEmployeeSelect,
 }: SelectEmployeeProps<T>) {
   const { data } = useQuery<
     ApiResponse<{ items: Employee[]; total: number } | Employee[]>,
@@ -61,6 +63,9 @@ export function SelectEmployee<T extends FieldValues>({
               const addressString = `${driverStr.fullname}`;
               setDriverString(addressString);
             }
+            if (driverStr && onEmployeeSelect) {
+              onEmployeeSelect(driverStr);
+            }
           } }
           value={ field.value }
           defaultValue={ field.value }
@@ -78,7 +83,8 @@ export function SelectEmployee<T extends FieldValues>({
                 key={ employee.employeeId }
                 value={ employee.employeeId }
               >
-                {employee.fullname}
+                {employee.fullname}{" "}
+                {employee.documentNumber ? `(${employee.documentNumber})` : ""}
               </SelectItem>
             ))}
           </SelectContent>

@@ -76,10 +76,6 @@ export function GearsTable() {
     getGears();
   }, [ user, accessibleFilialIds ]);
 
-  useEffect(() => {
-    console.log(gears);
-  }, [ gears ]);
-
   return (
     <>
       <div className="border rounded-lg max-h-[70vh] w-full overflow-x-auto hidden md:block">

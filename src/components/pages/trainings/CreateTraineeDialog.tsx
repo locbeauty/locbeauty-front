@@ -115,6 +115,7 @@ export function CreateTraineeDialog({
                 id="traineeName"
                 { ...traineeForm.register("name") }
                 placeholder="Ex: João Pereira"
+                className="placeholder:text-placeholder"
               />
               {traineeForm.formState.errors.name && (
                 <p className="text-sm text-red-600">
@@ -139,6 +140,7 @@ export function CreateTraineeDialog({
             <div className="space-y-2">
               <Label htmlFor="traineeEmail">Email *</Label>
               <Input
+                className="placeholder:text-placeholder"
                 id="traineeEmail"
                 type="email"
                 { ...traineeForm.register("email") }

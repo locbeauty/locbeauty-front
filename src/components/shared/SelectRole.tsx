@@ -10,17 +10,7 @@ type SelectRoleProps<T extends FieldValues> = {
 }
 
 export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleProps<T>) {
-  // const [ allRoles, setAllRoles ] = useState<ROLES[]>([]);
-
-  // useEffect(() => {
-  //     const getEmployees = async () => {
-  //         const response = await fetch("http://localhost:3333/api/roles", { credentials: "include" });
-  //         const { data } = await response.json();
-  //         console.log("DATA: ", data);
-  //         setAllRoles(data);
-  //     };
-  //     getEmployees();
-  // }, []);
+  
   return (
     <Controller
       name={ name }

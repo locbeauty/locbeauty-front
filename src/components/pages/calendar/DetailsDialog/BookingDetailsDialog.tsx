@@ -25,12 +25,12 @@ import {
   Mail,
   Trash2,
   CircleEllipsis,
-  Text,
   FileText,
   Pencil,
   Copy,
   Check,
   X,
+  Save,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,13 +46,9 @@ import { toast } from "sonner";
 import { MachineExtraCostsDialog } from "../MachineExtraCostsDialog/MachineExtraCostsDialog";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Checkout } from "@/utils/@types/checkouts";
-import { UpdateAdditionalCostsDialog } from "../AdditionalCostsDialog/UpdateAdditionalCostsDialog";
+import { AdditionalCostsDialog } from "../../bookings/create/AdditionalCostsDialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   UpdateCheckout,
@@ -66,6 +62,9 @@ import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentS
 import { formatDate, formatTime } from "../bookingViewHelpers";
 import PriceInput from "@/components/shared/PriceInput";
 import { parseStringToCents } from "@/utils/parseStringToCents";
+import { useForm } from "react-hook-form";
+import { SelectEmployee } from "@/components/shared/SelectEmployee";
+import { Employee } from "@/utils/@types/employee";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -95,10 +94,21 @@ export function BookingDetailsDialog({
     setCancelBookingConfirmationDialogOpen,
   ] = useState(false);
   const [ checkoutCanBeUpdated, setCheckoutCanBeUpdated ] = useState(true);
+  const [ isEditingDriver, setIsEditingDriver ] = useState(false);
+  const [ selectedDriverData, setSelectedDriverData ] = useState<Employee | null>(
+    null,
+  );
+
+  const { control, handleSubmit, setValue } = useForm({
+    defaultValues: {
+      driverId: selectedCheckout?.driverId || "",
+    },
+  });
 
   useEffect(() => {
     setCheckoutObservations(selectedCheckout?.observations || "");
-  }, [ selectedCheckout ]);
+    setValue("driverId", selectedCheckout?.driverId || "");
+  }, [ selectedCheckout, setValue ]);
 
   useEffect(() => {
     if (!selectedCheckout) return;
@@ -137,7 +147,7 @@ export function BookingDetailsDialog({
     queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
   }
 
-  async function handleRemoveGearFromCheckout(
+  async function handleRemoveBookingFromCheckout(
     booking: Checkout["Bookings"][number],
   ) {
     if (!selectedCheckout) return;
@@ -172,6 +182,44 @@ export function BookingDetailsDialog({
       };
     });
 
+    queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+  }
+
+  async function handleUpdateDriver(data: { driverId: string }) {
+    if (!selectedCheckout) return;
+
+    const response = await UpdateCheckout({
+      checkoutId: selectedCheckout.checkoutId,
+      body: {
+        driverId: data.driverId,
+      },
+    });
+
+    if (response.statusCode !== 200) {
+      toast.warning(response.message, { style: { fontSize: "1rem" } });
+      return;
+    }
+
+    toast.success("Motorista atualizado com sucesso.", {
+      style: { fontSize: "1rem" },
+    });
+
+    setSelectedCheckout((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        driverId: data.driverId,
+        driver: selectedDriverData
+          ? {
+            employeeId: selectedDriverData.employeeId,
+            fullname: selectedDriverData.fullname,
+            documentNumber: selectedDriverData.documentNumber,
+          }
+          : prev.driver,
+      };
+    });
+
+    setIsEditingDriver(false);
     queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
   }
 
@@ -257,7 +305,7 @@ export function BookingDetailsDialog({
           CheckoutPayment: wasRefunded
             ? {
               ...payment!,
-              ymentStatus: "Reembolsado",
+              paymentStatus: "Reembolsado",
             }
             : checkoutStatus === "Cancelado" &&
                 prev.CheckoutPayment?.paymentStatus === "Pendente"
@@ -275,603 +323,668 @@ export function BookingDetailsDialog({
     }
   }
 
-  if (!selectedCheckout) return null;
-
-  const startDate = new Date(selectedCheckout.date);
-  startDate.setHours(Math.floor(selectedCheckout.startHourInMinutes / 60));
-  startDate.setMinutes(selectedCheckout.startHourInMinutes % 60);
+  // Stable mount logic: removed early return to keep the Dialog structure constant
+  const startDate = selectedCheckout
+    ? new Date(selectedCheckout.date)
+    : new Date();
+  if (selectedCheckout) {
+    startDate.setHours(Math.floor(selectedCheckout.startHourInMinutes / 60));
+    startDate.setMinutes(selectedCheckout.startHourInMinutes % 60);
+  }
 
   const endDate = new Date(startDate);
-  endDate.setMinutes(
-    endDate.getMinutes() + selectedCheckout.totalDurationInMinutes,
-  );
+  if (selectedCheckout) {
+    endDate.setMinutes(
+      endDate.getMinutes() + selectedCheckout.totalDurationInMinutes,
+    );
+  }
 
   return (
-    <Dialog
-      open={ isBookingDetailsDialogOpen }
-      onOpenChange={ setBookingDetailsDialogOpen }
-    >
-      <DialogContent className="max-h-[95vh] w-full max-w-5xl overflow-y-auto dark:bg-gray-900 p-0 gap-0">
-        {selectedCheckout && (
-          <>
-            {/* Header Sticked */}
-            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between">
-              <div className="flex flex-col gap-1">
-                <DialogTitle>
-                  <div className="flex items-center gap-2 text-primary">
-                    <Package className="h-5 w-5" />
-                    <h2 className="text-xl font-bold leading-none tracking-tight">
-                      {selectedCheckout.Bookings.filter(
-                        (booking) => booking.status === "ACTIVE",
-                      )
-                        .sort((a, b) =>
-                          a.Gear.gearName.localeCompare(b.Gear.gearName),
+    <TooltipProvider>
+      <Dialog
+        open={ isBookingDetailsDialogOpen }
+        onOpenChange={ setBookingDetailsDialogOpen }
+      >
+        <DialogContent className="max-h-[95vh] w-full max-w-5xl overflow-y-auto dark:bg-gray-900 p-0 gap-0">
+          {selectedCheckout ? (
+            <>
+              {/* Header Sticked */}
+              <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <DialogTitle>
+                    <div className="flex items-center gap-2 text-primary">
+                      <Package className="h-5 w-5" />
+                      <h2 className="text-xl font-bold leading-none tracking-tight">
+                        {selectedCheckout.Bookings.filter(
+                          (booking) => booking.status === "ACTIVE",
                         )
-                        .map((item) => item.Gear.gearName)
-                        .join(", ")}
-                    </h2>
-                  </div>
-                </DialogTitle>
-                <span className="text-sm text-muted-foreground">
-                  Agendamento em {formatDate(selectedCheckout.date)} • ID:{" "}
-                  <span className="font-mono text-xs">
-                    {selectedCheckout.checkoutId}
-                  </span>
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <BookingStatusBadge status={ selectedCheckout.checkoutStatus } />
-                <BookingPaymentStatusBadge
-                  status={ selectedCheckout.CheckoutPayment?.paymentStatus }
-                  isCourtesy={ selectedCheckout.isCourtesy }
-                  wasRefunded={ selectedCheckout.wasRefunded }
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={ () => setBookingDetailsDialogOpen(false) }
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6 bg-muted/10">
-              {/* Cliente */}
-              <Card className="shadow-sm border-l-4 border-l-primary/50">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-primary" />
-                    <h3 className="font-semibold text-sm uppercase tracking-wide">
-                      Cliente
-                    </h3>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-0">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-lg">
-                      {selectedCheckout.Customer.fullname}
+                          .sort((a, b) =>
+                            a.Gear.gearName.localeCompare(b.Gear.gearName),
+                          )
+                          .map((item) => item.Gear.gearName)
+                          .join(", ")}
+                      </h2>
+                    </div>
+                  </DialogTitle>
+                  <span className="text-sm text-muted-foreground">
+                    Agendamento em {formatDate(selectedCheckout.date)} • ID:{" "}
+                    <span className="font-mono text-xs">
+                      {selectedCheckout.checkoutId}
                     </span>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
-                      {selectedCheckout.Customer.email && (
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3.5 w-3.5" />
-                          {selectedCheckout.Customer.email}
-                        </div>
-                      )}
-                      {selectedCheckout.Customer.cellphone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3.5 w-3.5" />
-                          {selectedCheckout.Customer.cellphone}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="block text-xs text-muted-foreground">
-                        Documento
-                      </span>
-                      <span>
-                        {selectedCheckout.Customer.documentNumber || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </span>
+                </div>
 
-              {/* Localização */}
-              <Card className="shadow-sm">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <h3 className="font-semibold text-sm uppercase tracking-wide">
-                      Localização
-                    </h3>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2 pt-0 text-sm">
-                  <div className="font-medium">
-                    {selectedCheckout.Address.street},{" "}
-                    {selectedCheckout.Address.buildingNumber}
-                  </div>
-                  <div className="text-muted-foreground">
-                    {selectedCheckout.Address.neighborhood},{" "}
-                    {selectedCheckout.Address.city}
-                  </div>
-                  {selectedCheckout.Address.addressComplement && (
-                    <div className="flex items-center gap-1 text-muted-foreground bg-muted p-2 rounded-md mt-2">
-                      <CircleEllipsis className="h-3.5 w-3.5 shrink-0" />
-                      <span className="italic">
-                        {selectedCheckout.Address.addressComplement}
-                      </span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                <div className="flex items-center gap-2">
+                  <BookingStatusBadge
+                    status={ selectedCheckout.checkoutStatus }
+                  />
+                  <BookingPaymentStatusBadge
+                    status={ selectedCheckout.CheckoutPayment?.paymentStatus }
+                    isCourtesy={ selectedCheckout.isCourtesy }
+                    wasRefunded={ selectedCheckout.wasRefunded }
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={ () => setBookingDetailsDialogOpen(false) }
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
-              {/* Data e Hora */}
-              <Card className="shadow-sm">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    <h3 className="font-semibold text-sm uppercase tracking-wide">
-                      Agendamento
-                    </h3>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 grid grid-cols-2 gap-4">
-                  {differenceInCalendarDays(endDate, startDate) > 0 ? (
-                    <>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                          <Calendar className="h-3 w-3" /> Início
-                        </div>
-                        <div className="font-medium">
-                          {formatDate(startDate)} às {formatTime(startDate)}
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                          <Clock className="h-3 w-3" /> Fim
-                        </div>
-                        <div className="font-medium">
-                          {formatDate(endDate)} às {formatTime(endDate)}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                          <Calendar className="h-3 w-3" /> Data
-                        </div>
-                        <div className="font-medium">
-                          {formatDate(selectedCheckout.date)}
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                          <Clock className="h-3 w-3" /> Horário
-                        </div>
-                        <div className="font-medium">
-                          {formatTime(startDate)} - {formatTime(endDate)}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  <div className="col-span-2 space-y-1 border-t pt-3 mt-1">
-                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                      <Clock className="h-3 w-3" /> Duração Total
+              <div className="p-6 space-y-6 bg-muted/10">
+                {/* Cliente */}
+                <Card className="shadow-sm border-l-4 border-l-primary/50">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-primary" />
+                      <h3 className="font-semibold text-sm uppercase tracking-wide">
+                        Cliente
+                      </h3>
                     </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-0">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-lg">
+                        {selectedCheckout.Customer.fullname}
+                      </span>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
+                        {selectedCheckout.Customer.email && (
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-3.5 w-3.5" />
+                            {selectedCheckout.Customer.email}
+                          </div>
+                        )}
+                        {selectedCheckout.Customer.cellphone && (
+                          <div className="flex items-center gap-1">
+                            <Phone className="h-3.5 w-3.5" />
+                            {selectedCheckout.Customer.cellphone}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="block text-xs text-muted-foreground">
+                          Documento
+                        </span>
+                        <span>
+                          {selectedCheckout.Customer.documentNumber || "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Localizacao */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <h3 className="font-semibold text-sm uppercase tracking-wide">
+                        Localização
+                      </h3>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2 pt-0 text-sm">
                     <div className="font-medium">
-                      {selectedCheckout.totalDurationInMinutes / 60} horas
+                      {selectedCheckout.Address.street},{" "}
+                      {selectedCheckout.Address.buildingNumber}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Funcionário & Motorista */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
-                        Filial
-                      </h3>
+                    <div className="text-muted-foreground">
+                      {selectedCheckout.Address.neighborhood},{" "}
+                      {selectedCheckout.Address.city}
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-0 text-sm font-medium">
-                    {selectedCheckout.SourceFilial.filialName}
-                  </CardContent>
-                </Card>
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
-                        Funcionário responsável
-                      </h3>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0 text-sm font-medium">
-                    {selectedCheckout.AccountableEmployee.fullname}
-                  </CardContent>
-                </Card>
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
-                        Motorista
-                      </h3>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0 text-sm font-medium">
-                    {selectedCheckout.driverId || (
-                      <span className="text-muted-foreground italic">
-                        A definir
-                      </span>
+                    {selectedCheckout.Address.addressComplement && (
+                      <div className="flex items-center gap-1 text-muted-foreground bg-muted p-2 rounded-md mt-2">
+                        <CircleEllipsis className="h-3.5 w-3.5 shrink-0" />
+                        <span className="italic">
+                          {selectedCheckout.Address.addressComplement}
+                        </span>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Financeiro */}
-              <Card className="shadow-sm border-t-4 border-t-green-500">
-                <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-primary" />
-                    <h3 className="font-semibold text-sm uppercase tracking-wide">
-                      Financeiro
-                    </h3>
-                  </div>
-                  {selectedCheckout.Bookings.filter(
-                    (booking) => booking.status === "ACTIVE",
-                  ).length < 3 &&
-                    checkoutCanBeUpdated && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={ () => setIsAddGearDialogOpen(true) }
-                      className="flex items-center gap-1 h-7 text-xs"
-                    >
-                      <Package className="h-3 w-3" />
-                        Add Equip.
-                    </Button>
-                  )}
-                </CardHeader>
-                <CardContent className="pt-0 space-y-4">
-                  {/* Lista de Equipamentos e Custos Individuais */}
-                  <div className="space-y-3">
-                    {selectedCheckout.Bookings.sort((a, b) =>
-                      a.Gear.gearName.localeCompare(b.Gear.gearName),
-                    ).map((booking) => {
-                      if (booking.status === "INACTIVE") return null;
-
-                      return (
-                        <div
-                          key={ booking.bookingId }
-                          className="bg-muted/30 p-3 rounded-md text-sm space-y-2 border"
-                        >
-                          <div className="flex items-start justify-between">
-                            <span className="font-semibold flex items-center gap-2">
-                              <Package className="h-3.5 w-3.5 text-muted-foreground" />
-                              {booking.Gear.gearName}
-                            </span>
-                            <span className="font-medium">
-                              {centsToStringWithCurrencyMark(
-                                booking.individualPrice,
-                              )}
-                            </span>
+                {/* Data e Hora */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <h3 className="font-semibold text-sm uppercase tracking-wide">
+                        Agendamento
+                      </h3>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0 grid grid-cols-2 gap-4">
+                    {differenceInCalendarDays(endDate, startDate) > 0 ? (
+                      <>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                            <Calendar className="h-3 w-3" /> Início
                           </div>
+                          <div className="font-medium">
+                            {formatDate(startDate)} às {formatTime(startDate)}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                            <Clock className="h-3 w-3" /> Fim
+                          </div>
+                          <div className="font-medium">
+                            {formatDate(endDate)} às {formatTime(endDate)}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                            <Calendar className="h-3 w-3" /> Data
+                          </div>
+                          <div className="font-medium">
+                            {formatDate(selectedCheckout.date)}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                            <Clock className="h-3 w-3" /> Horário
+                          </div>
+                          <div className="font-medium">
+                            {formatTime(startDate)} - {formatTime(endDate)}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    <div className="col-span-2 space-y-1 border-t pt-3 mt-1">
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                        <Clock className="h-3 w-3" /> Duração Total
+                      </div>
+                      <div className="font-medium">
+                        {selectedCheckout.totalDurationInMinutes / 60} horas
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                          {booking.extraMachineCosts > 0 && (
-                            <div className="flex flex-col gap-0.5 text-muted-foreground text-xs pl-5 border-l-2 ml-1">
-                              <span>Extras:</span>
-                              <span className="font-semibold">
+                {/* Funcionario e Motorista */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-2">
+                        <Building className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
+                          Filial
+                        </h3>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-sm font-medium">
+                      {selectedCheckout.SourceFilial.filialName}
+                    </CardContent>
+                  </Card>
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
+                          Funcionário responsável
+                        </h3>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-sm font-medium">
+                      {selectedCheckout.AccountableEmployee.fullname}
+                    </CardContent>
+                  </Card>
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4 text-muted-foreground" />
+                          <h3 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
+                            Motorista
+                          </h3>
+                        </div>
+                        {checkoutCanBeUpdated && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6"
+                            onClick={ () => setIsEditingDriver(!isEditingDriver) }
+                          >
+                            {isEditingDriver ? (
+                              <X className="h-3 w-3" />
+                            ) : (
+                              <Pencil className="h-3 w-3" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-sm font-medium">
+                      {isEditingDriver ? (
+                        <div className="flex flex-col gap-2">
+                          <SelectEmployee
+                            control={ control }
+                            name="driverId"
+                            employeeRole="Motorista"
+                            filialId={ selectedCheckout.SourceFilial.filialId }
+                            onEmployeeSelect={ (employee) =>
+                              setSelectedDriverData(employee)
+                            }
+                          />
+                          <Button
+                            size="sm"
+                            className="w-full h-8 gap-1"
+                            onClick={ handleSubmit(handleUpdateDriver) }
+                          >
+                            <Save className="h-3 w-3" />
+                            Salvar
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col">
+                          <span>
+                            {selectedCheckout.driver?.fullname || (
+                              <span className="text-muted-foreground italic">
+                                A definir
+                              </span>
+                            )}
+                          </span>
+                          {selectedCheckout.driver?.documentNumber && (
+                            <span className="text-xs text-muted-foreground line-clamp-1">
+                              CPF: {selectedCheckout.driver.documentNumber}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Financeiro */}
+                <Card className="shadow-sm border-t-4 border-t-green-500">
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                      <h3 className="font-semibold text-sm uppercase tracking-wide">
+                        Financeiro
+                      </h3>
+                    </div>
+                    {selectedCheckout.Bookings.filter(
+                      (booking) => booking.status === "ACTIVE",
+                    ).length < 3 &&
+                      checkoutCanBeUpdated && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={ () => setIsAddGearDialogOpen(true) }
+                        className="flex items-center gap-1 h-7 text-xs"
+                      >
+                        <Package className="h-3 w-3" />
+                          Add Equip.
+                      </Button>
+                    )}
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-4">
+                    {/* Lista de Equipamentos e Custos Individuais */}
+                    <div className="space-y-3">
+                      {selectedCheckout.Bookings.sort((a, b) =>
+                        a.Gear.gearName.localeCompare(b.Gear.gearName),
+                      ).map((booking) => {
+                        if (booking.status === "INACTIVE") return null;
+
+                        return (
+                          <div
+                            key={ booking.bookingId }
+                            className="bg-muted/30 p-3 rounded-md text-sm space-y-2 border"
+                          >
+                            <div className="flex items-start justify-between">
+                              <span className="font-semibold flex items-center gap-2">
+                                <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                                {booking.Gear.gearName}
+                              </span>
+                              <span className="font-medium">
                                 {centsToStringWithCurrencyMark(
-                                  booking.extraMachineCosts,
+                                  booking.individualPrice,
                                 )}
                               </span>
-                              {booking.extraMachineCostsDescription && (
-                                <span className="italic opacity-80">
-                                  {booking.extraMachineCostsDescription}
-                                </span>
-                              )}
                             </div>
-                          )}
 
-                          {checkoutCanBeUpdated && (
-                            <div className="flex justify-end gap-2 pt-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={ () =>
-                                  setSelectedBookingIdForExtraCosts(
-                                    booking.bookingId,
-                                  )
-                                }
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                              {selectedCheckout.Bookings.filter(
-                                (b) => b.status === "ACTIVE",
-                              ).length > 1 && (
+                            {booking.extraMachineCosts > 0 && (
+                              <div className="flex flex-col gap-0.5 text-muted-foreground text-xs pl-5 border-l-2 ml-1">
+                                <span>Extras:</span>
+                                <span className="font-semibold">
+                                  {centsToStringWithCurrencyMark(
+                                    booking.extraMachineCosts,
+                                  )}
+                                </span>
+                                {booking.extraMachineCostsDescription && (
+                                  <span className="italic opacity-80">
+                                    {booking.extraMachineCostsDescription}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {checkoutCanBeUpdated && (
+                              <div className="flex justify-end gap-2 pt-1">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                  className="h-6 w-6 p-0"
                                   onClick={ () =>
-                                    handleRemoveGearFromCheckout(booking)
+                                    setSelectedBookingIdForExtraCosts(
+                                      booking.bookingId,
+                                    )
                                   }
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <Pencil className="h-3 w-3" />
                                 </Button>
-                              )}
+                                {selectedCheckout.Bookings.filter(
+                                  (b) => b.status === "ACTIVE",
+                                ).length > 1 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                    onClick={ () =>
+                                      handleRemoveBookingFromCheckout(booking)
+                                    }
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <Separator />
+
+                    {/* Custos Adicionais Gerais */}
+                    <div className="space-y-2 text-sm">
+                      {selectedCheckout.basePrice > 0 && (
+                        <div className="flex justify-between items-center text-muted-foreground p-1 hover:bg-muted/20 rounded">
+                          <span>Preço Base</span>
+                          <span>
+                            {centsToStringWithCurrencyMark(
+                              selectedCheckout.basePrice,
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {selectedCheckout.fuelCost > 0 && (
+                        <div className="flex justify-between items-center text-muted-foreground p-1 hover:bg-muted/20 rounded">
+                          <span className="flex items-center gap-1">
+                            Combustível{" "}
+                            <span className="text-xs opacity-70">
+                              ({selectedCheckout.distanceInKm} km)
+                            </span>
+                          </span>
+                          <span>
+                            {centsToStringWithCurrencyMark(
+                              selectedCheckout.fuelCost,
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {(selectedCheckout.lodgingCost > 0 ||
+                        selectedCheckout.foodCost > 0 ||
+                        selectedCheckout.additionalTransportCost > 0) && (
+                        <div className="pl-2 border-l-2 border-muted space-y-1 my-1">
+                          {selectedCheckout.lodgingCost > 0 && (
+                            <div className="flex justify-between items-center text-muted-foreground text-xs">
+                              <span>Hospedagem</span>
+                              <span>
+                                {centsToStringWithCurrencyMark(
+                                  selectedCheckout.lodgingCost,
+                                )}
+                              </span>
+                            </div>
+                          )}
+                          {selectedCheckout.foodCost > 0 && (
+                            <div className="flex justify-between items-center text-muted-foreground text-xs">
+                              <span>Alimentação</span>
+                              <span>
+                                {centsToStringWithCurrencyMark(
+                                  selectedCheckout.foodCost,
+                                )}
+                              </span>
+                            </div>
+                          )}
+                          {selectedCheckout.additionalTransportCost > 0 && (
+                            <div className="flex justify-between items-center text-muted-foreground text-xs">
+                              <span>Outros transportes</span>
+                              <span>
+                                {centsToStringWithCurrencyMark(
+                                  selectedCheckout.additionalTransportCost,
+                                )}
+                              </span>
                             </div>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-
-                  <Separator />
-
-                  {/* Custos Adicionais Gerais */}
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center text-muted-foreground p-1 hover:bg-muted/20 rounded">
-                      <span>Preço Base</span>
-                      <span>
-                        {centsToStringWithCurrencyMark(
-                          selectedCheckout.basePrice,
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-muted-foreground p-1 hover:bg-muted/20 rounded">
-                      <span className="flex items-center gap-1">
-                        Combustível{" "}
-                        <span className="text-xs opacity-70">
-                          ({selectedCheckout.distanceInKm} km)
-                        </span>
-                      </span>
-                      <span>
-                        {centsToStringWithCurrencyMark(
-                          selectedCheckout.fuelCost,
-                        )}
-                      </span>
-                    </div>
-
-                    {(selectedCheckout.lodgingCost > 0 ||
-                      selectedCheckout.foodCost > 0 ||
-                      selectedCheckout.additionalTransportCost > 0) && (
-                      <div className="pl-2 border-l-2 border-muted space-y-1 my-1">
-                        {selectedCheckout.lodgingCost > 0 && (
-                          <div className="flex justify-between items-center text-muted-foreground text-xs">
-                            <span>Hospedagem</span>
-                            <span>
-                              {centsToStringWithCurrencyMark(
-                                selectedCheckout.lodgingCost,
-                              )}
-                            </span>
-                          </div>
-                        )}
-                        {selectedCheckout.foodCost > 0 && (
-                          <div className="flex justify-between items-center text-muted-foreground text-xs">
-                            <span>Alimentação</span>
-                            <span>
-                              {centsToStringWithCurrencyMark(
-                                selectedCheckout.foodCost,
-                              )}
-                            </span>
-                          </div>
-                        )}
-                        {selectedCheckout.additionalTransportCost > 0 && (
-                          <div className="flex justify-between items-center text-muted-foreground text-xs">
-                            <span>Outros transportes</span>
-                            <span>
-                              {centsToStringWithCurrencyMark(
-                                selectedCheckout.additionalTransportCost,
-                              )}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {checkoutCanBeUpdated && (
-                      <div className="flex justify-end pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-1 h-7"
-                          onClick={ () => setAdditionalCostsDialogOpen(true) }
-                        >
-                          <Pencil className="h-3 w-3" /> Editar Custos Extras
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator />
-
-                  {/* Total */}
-                  <div className="bg-primary/5 p-4 rounded-lg flex items-center justify-between">
-                    <span className="font-bold text-lg">Total</span>
-                    <span className="font-bold text-2xl text-primary">
-                      {centsToStringWithCurrencyMark(
-                        selectedCheckout.totalPrice,
                       )}
-                    </span>
-                  </div>
 
-                  {/* Copy Button */}
-                  <Button
-                    variant="secondary"
-                    className="w-full"
-                    onClick={ () => {
-                      const lines = [
-                        "*Resumo do Agendamento*",
-                        `Máquina: ${selectedCheckout.Bookings.map(
-                          (b) => b.Gear.gearName,
-                        ).join(", ")}`,
-                        `Data: ${new Date(
-                          selectedCheckout.date,
-                        ).toLocaleDateString("pt-BR")}`,
-                        `Horário: ${formatTime(startDate)} - ${formatTime(
-                          endDate,
-                        )}`,
-                        `Valor: ${centsToStringWithCurrencyMark(
+                      {checkoutCanBeUpdated && (
+                        <div className="flex justify-end pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-1 h-7"
+                            onClick={ () => setAdditionalCostsDialogOpen(true) }
+                          >
+                            <Pencil className="h-3 w-3" /> Editar Custos Extras
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    <Separator />
+
+                    {/* Total */}
+                    <div className="bg-primary/5 p-4 rounded-lg flex items-center justify-between">
+                      <span className="font-bold text-lg">Total</span>
+                      <span className="font-bold text-2xl text-primary">
+                        {centsToStringWithCurrencyMark(
                           selectedCheckout.totalPrice,
-                        )}`,
-                        "(Pagamento de locação somente por pix ou transferência bancária).",
-                        `Cliente: ${selectedCheckout.Customer.fullname}`,
-                        `Contato: ${selectedCheckout.Customer.cellphone}`,
-                        `Endereço: ${selectedCheckout.Address.street}, ${selectedCheckout.Address.buildingNumber} - ${selectedCheckout.Address.neighborhood}, ${selectedCheckout.Address.city}`,
-                        `Estado: ${selectedCheckout.Address.state}`,
-                        `CPF/CNPJ: ${
-                          selectedCheckout.Customer.documentNumber || "—"
-                        }`,
-                        `MOTORISTA: ${
-                          selectedCheckout.driverId || "A definir"
-                        }`,
-                      ];
-                      navigator.clipboard.writeText(lines.join("\n"));
-                      toast.success("Resumo copiado!");
-                    } }
-                  >
-                    <Copy className="h-4 w-4 mr-2" /> Copiar Resumo Curto
-                  </Button>
-                </CardContent>
-              </Card>
+                        )}
+                      </span>
+                    </div>
 
-              {/* Observações */}
-              <Card className="shadow-sm">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-                      Observações
-                    </h3>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 space-y-2">
-                  <Textarea
-                    disabled={ !checkoutCanBeUpdated }
-                    placeholder="Adicione uma observação"
-                    value={ checkoutObservations }
-                    onChange={ (e) => setCheckoutObservations(e.target.value) }
-                    className="min-h-[100px] resize-none"
-                    maxLength={ 500 }
-                  />
-                  <div className="flex justify-end">
+                    {/* Copy Button */}
                     <Button
-                      size="sm"
-                      onClick={ () => handleUpdateCheckoutObservations() }
-                      disabled={
-                        checkoutObservations === selectedCheckout.observations
-                      }
+                      variant="secondary"
+                      className="w-full"
+                      onClick={ () => {
+                        const lines = [
+                          "*Resumo do Agendamento*",
+                          `Máquina: ${selectedCheckout.Bookings.map(
+                            (b) => b.Gear.gearName,
+                          ).join(", ")}`,
+                          `Data: ${new Date(
+                            selectedCheckout.date,
+                          ).toLocaleDateString("pt-BR")}`,
+                          `Horário: ${formatTime(startDate)} - ${formatTime(
+                            endDate,
+                          )}`,
+                          `Valor: ${centsToStringWithCurrencyMark(
+                            selectedCheckout.totalPrice,
+                          )}`,
+                          "(Pagamento de locação somente por pix ou transferência bancária).",
+                          `Cliente: ${selectedCheckout.Customer.fullname}`,
+                          `Contato: ${selectedCheckout.Customer.cellphone}`,
+                          `Endereço: ${selectedCheckout.Address.street}, ${selectedCheckout.Address.buildingNumber} - ${selectedCheckout.Address.neighborhood}, ${selectedCheckout.Address.city}`,
+                          `Estado: ${selectedCheckout.Address.state}`,
+                          `CPF/CNPJ: ${
+                            selectedCheckout.Customer.documentNumber || "—"
+                          }`,
+                          `MOTORISTA: ${
+                            selectedCheckout.driver?.fullname || "A definir"
+                          }`,
+                        ];
+                        navigator.clipboard.writeText(lines.join("\n"));
+                        toast.success("Resumo copiado!");
+                      } }
                     >
-                      Salvar observação
+                      <Copy className="h-4 w-4 mr-2" /> Copiar Resumo Curto
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
 
-            {/* Footer Sticked */}
-            <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t p-4 flex flex-col sm:flex-row gap-3 justify-end z-10">
-              <Button
-                variant="outline"
-                onClick={ () => setIsCheckoutPaymentMethodDialogOpen(true) }
-                className="sm:w-auto w-full"
-              >
-                <DollarSign className="mr-2 h-4 w-4" />
-                Gerenciar Pagamento
-              </Button>
+                {/* Observacoes */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+                        Observações
+                      </h3>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-2">
+                    <Textarea
+                      disabled={ !checkoutCanBeUpdated }
+                      placeholder="Adicione uma observação"
+                      value={ checkoutObservations }
+                      onChange={ (e) => setCheckoutObservations(e.target.value) }
+                      className="min-h-[100px] resize-none"
+                      maxLength={ 500 }
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        onClick={ () => handleUpdateCheckoutObservations() }
+                        disabled={
+                          checkoutObservations === selectedCheckout.observations
+                        }
+                      >
+                        Salvar observação
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-              <Button
-                onClick={ () => {
-                  handleChangeCheckoutStatus(
-                    selectedCheckout.checkoutId,
-                    "Concluido",
-                  );
-                } }
-                disabled={
-                  selectedCheckout.checkoutStatus === "Concluido" ||
-                  selectedCheckout.checkoutStatus === "Cancelado"
-                }
-                className="sm:w-auto w-full"
-              >
-                <Check className="mr-2 h-4 w-4" />
-                Concluir Agendamento
-              </Button>
-
-              {selectedCheckout.checkoutStatus === "Pendente" && (
+              {/* Footer Sticked */}
+              <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t p-4 flex flex-col sm:flex-row gap-3 justify-end z-10">
                 <Button
-                  variant="destructive"
-                  onClick={ () => setCancelBookingConfirmationDialogOpen(true) }
+                  variant="outline"
+                  onClick={ () => setIsCheckoutPaymentMethodDialogOpen(true) }
                   className="sm:w-auto w-full"
                 >
-                  Cancelamento
+                  <DollarSign className="mr-2 h-4 w-4" />
+                  Gerenciar Pagamento
                 </Button>
-              )}
+
+                <Button
+                  onClick={ () => {
+                    handleChangeCheckoutStatus(
+                      selectedCheckout.checkoutId,
+                      "Concluido",
+                    );
+                  } }
+                  disabled={
+                    selectedCheckout.checkoutStatus === "Concluido" ||
+                    selectedCheckout.checkoutStatus === "Cancelado"
+                  }
+                  className="sm:w-auto w-full"
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  Concluir Agendamento
+                </Button>
+
+                {selectedCheckout.checkoutStatus === "Pendente" && (
+                  <Button
+                    variant="destructive"
+                    onClick={ () => setCancelBookingConfirmationDialogOpen(true) }
+                    className="sm:w-auto w-full"
+                  >
+                    Cancelamento
+                  </Button>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="p-8 text-center text-muted-foreground">
+              Carregando dados do agendamento...
             </div>
-          </>
-        )}
+          )}
+        </DialogContent>
+      </Dialog>
 
-        {/* Dialogs Components Rendered inside content but functionally independent */}
-        <CheckoutPaymentMethodDialog
-          selectedCheckout={ selectedCheckout }
-          setSelectedCheckout={ setSelectedCheckout }
-          isCheckoutPaymentMethodDialogOpen={ isCheckoutPaymentMethodDialogOpen }
-          setIsCheckoutPaymentMethodDialogOpen={
-            setIsCheckoutPaymentMethodDialogOpen
-          }
-        />
+      {/* Sibling Dialogs for stability */}
+      <CheckoutPaymentMethodDialog
+        selectedCheckout={ selectedCheckout }
+        setSelectedCheckout={ setSelectedCheckout }
+        isCheckoutPaymentMethodDialogOpen={ isCheckoutPaymentMethodDialogOpen }
+        setIsCheckoutPaymentMethodDialogOpen={
+          setIsCheckoutPaymentMethodDialogOpen
+        }
+      />
 
-        <CancelBookingConfirmationDialog
-          handleChangeCheckoutStatus={ handleChangeCheckoutStatus }
-          selectedCheckout={ selectedCheckout }
-          setSelectedCheckout={ setSelectedCheckout }
-          setCancelBookingConfirmationDialogOpen={
-            setCancelBookingConfirmationDialogOpen
-          }
-          isCancelBookingConfirmationDialogOpen={
-            isCancelBookingConfirmationDialogOpen
-          }
-        />
+      <CancelBookingConfirmationDialog
+        handleChangeCheckoutStatus={ handleChangeCheckoutStatus }
+        selectedCheckout={ selectedCheckout }
+        setSelectedCheckout={ setSelectedCheckout }
+        setCancelBookingConfirmationDialogOpen={
+          setCancelBookingConfirmationDialogOpen
+        }
+        isCancelBookingConfirmationDialogOpen={
+          isCancelBookingConfirmationDialogOpen
+        }
+      />
 
-        <UpdateAdditionalCostsDialog
-          selectedCheckout={ selectedCheckout }
-          setAdditionalCostsDialogOpen={ setAdditionalCostsDialogOpen }
-          isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
-          setSelectedCheckout={ setSelectedCheckout }
-        />
+      <AdditionalCostsDialog
+        selectedCheckout={ selectedCheckout ?? undefined }
+        setAdditionalCostsDialogOpen={ setAdditionalCostsDialogOpen }
+        isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
+        setSelectedCheckout={ setSelectedCheckout }
+        showTrigger={ false }
+      />
 
-        <MachineExtraCostsDialog
-          setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
-          setSelectedCheckout={ setSelectedCheckout }
-          selectedBookingId={ selectedBookingIdForExtraCosts }
-          isMachineExtraCostsDialogOpen={ !!selectedBookingIdForExtraCosts }
-          setMachineExtraCostsDialogOpen={ () =>
-            setSelectedBookingIdForExtraCosts(null)
-          }
-        />
+      <MachineExtraCostsDialog
+        setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
+        setSelectedCheckout={ setSelectedCheckout }
+        selectedBookingId={ selectedBookingIdForExtraCosts }
+        isMachineExtraCostsDialogOpen={ !!selectedBookingIdForExtraCosts }
+        setMachineExtraCostsDialogOpen={ () =>
+          setSelectedBookingIdForExtraCosts(null)
+        }
+      />
 
-        <AddGearToCheckoutDialog
-          selectedCheckout={ selectedCheckout }
-          setSelectedCheckout={ setSelectedCheckout }
-          isOpen={ isAddGearDialogOpen }
-          setIsOpen={ setIsAddGearDialogOpen }
-        />
-      </DialogContent>
-    </Dialog>
+      <AddGearToCheckoutDialog
+        selectedCheckout={ selectedCheckout }
+        setSelectedCheckout={ setSelectedCheckout }
+        isOpen={ isAddGearDialogOpen }
+        setIsOpen={ setIsAddGearDialogOpen }
+      />
+    </TooltipProvider>
   );
 }
 
@@ -915,9 +1028,6 @@ export function CancelBookingConfirmationDialog({
   const today = new Date();
   const daysUntilBooking = differenceInCalendarDays(bookingDate, today);
   const hasFee = daysUntilBooking < 7;
-  const somePaymentIsDone =
-    selectedCheckout.CheckoutPayment?.firstPaymentStatus === "Pago" ||
-    selectedCheckout.CheckoutPayment?.secondPaymentStatus === "Pago";
 
   return (
     <Dialog
@@ -1015,7 +1125,9 @@ export function CancelBookingConfirmationDialog({
                   <Select
                     value={ cancellationFeePaymentMethod }
                     onValueChange={ (value) =>
-                      setCancellationFeePaymentMethod(value as PaymentMethodsType)
+                      setCancellationFeePaymentMethod(
+                        value as PaymentMethodsType,
+                      )
                     }
                   >
                     <SelectTrigger>

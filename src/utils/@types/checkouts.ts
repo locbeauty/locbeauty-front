@@ -21,11 +21,16 @@ export type Checkout = {
   cancellationFee: number | null;
   refundAmount: number | null;
   CheckoutPayment: CheckoutPayment | null;
+  driver: {
+    employeeId: string;
+    fullname: string;
+    documentNumber: string | null;
+  } | null;
   driverId: string;
   AccountableEmployee: {
     employeeId: string;
     fullname: string;
-    documentNumber: string;
+    documentNumber: string | null;
   };
   Bookings: {
     bookingId: string;

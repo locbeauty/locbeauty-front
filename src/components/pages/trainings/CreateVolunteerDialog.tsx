@@ -118,7 +118,8 @@ export function CreateVolunteerDialog({
               <Input
                 id="name"
                 { ...volunteerForm.register("name") }
-                placeholder="Ex: Dr. Carlos Silva"
+                placeholder="Ex: João Pereira"
+                className="placeholder:text-placeholder"
               />
               {volunteerForm.formState.errors.name && (
                 <p className="text-sm text-red-600">

@@ -147,7 +147,6 @@ export function AddCustomerAddressForm({
             onClick={ handleSubmit(
               (data: AddressTypeSchema) => handleSaveUpdatedCustomer(data),
               (errors) => {
-                console.log(errors);
                 const firstError = Object.values(errors)[0];
                 if (firstError) {
                   toast.warning(firstError.message || "Erro de validação", {

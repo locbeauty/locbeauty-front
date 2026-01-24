@@ -281,7 +281,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               <th className="text-left p-3 font-medium">Equipamento</th>
               <th className="text-left p-3 font-medium">Aluno</th>
               <th className="text-left p-3 font-medium">Modelo</th>
-              <th className="text-center p-3 font-medium">Duração</th>
+              <th className="text-center p-3 font-medium">Horário</th>
               <th className="text-center p-3 font-medium">Status</th>
               <th className="text-center p-3 font-medium">Detalhes</th>
             </tr>
@@ -302,7 +302,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 className="border-t hover:bg-muted/50"
               >
                 <td className="p-3 text-sm">
-                  {format(new Date(training.dueDate), "dd/MM/yyyy HH:mm")}
+                  {format(new Date(training.dueDate), "dd/MM/yyyy")}
                 </td>
                 <td className="p-3 text-sm font-medium">
                   {training.SourceFilial?.filialName || "N/A"}

@@ -100,11 +100,6 @@ export default function MetasMensaisPage() {
   });
 
   const goals = data;
-  useEffect(() => {
-    if (goals) {
-      console.log("Goals loaded:", goals.length);
-    }
-  }, [ goals ]);
 
   const filteredGoals = useMemo(() => {
     if (!goals) return [];

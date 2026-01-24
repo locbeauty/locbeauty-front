@@ -39,10 +39,6 @@ export function TraineesTable({
   const [ filterPending, setFilterPending ] = useState(false);
   const [ filterFilial, setFilterFilial ] = useState<string>("all");
 
-  useEffect(() => {
-    console.log("trainees: ", trainees);
-  }, [ trainees ]);
-
   const handleOpenDetails = (trainee: Trainee) => {
     setSelectedTrainee(trainee);
     setIsDetailsOpen(true);
@@ -191,14 +187,6 @@ export function TraineesTable({
               </tr>
             )}
             {sortedTrainees.map((trainee) => {
-              const traineeFilials = Array.from(
-                new Set(
-                  allTrainings
-                    .filter((t) => t.traineeId === trainee.traineeId)
-                    .map((t) => t.SourceFilial?.filialName)
-                    .filter(Boolean)
-                )
-              ).join(", ");
 
               return (
                 <tr
@@ -206,7 +194,7 @@ export function TraineesTable({
                   className="border-t hover:bg-muted/50"
                 >
                   <td className="p-3 text-sm font-medium">{trainee.name}</td>
-                  <td className="p-3 text-sm">{traineeFilials || "N/A"}</td>
+                  <td className="p-3 text-sm">{trainee.SourceFilial?.filialName}</td>
                   <td className="p-3 text-sm">{trainee.documentNumber}</td>
                   <td className="p-3 text-sm">{trainee.email}</td>
                   <td className="p-3 text-center text-sm">

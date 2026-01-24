@@ -157,7 +157,7 @@ export function CityInput({
 
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&countrycodes=br&limit=2&addressdetails=1&q=${cityQuery}`,
-          { signal }
+          { signal },
         );
 
         if (!res.ok) throw new Error("Falha na requisição");
@@ -187,7 +187,7 @@ export function CityInput({
               baseCity.lat,
               baseCity.lon,
               lat,
-              lon
+              lon,
             );
 
             // CORREÇÃO LÓGICA: Usar 'item' em vez de 'data[0]'
@@ -204,13 +204,13 @@ export function CityInput({
               name: cityName,
               distance: Math.round(distance),
             };
-          }
+          },
         );
 
         // Remove duplicatas baseadas no nome da cidade para limpar a UI
         const uniqueResults = results.filter(
           (city: CityOption, index: number, self: CityOption[]) =>
-            index === self.findIndex((c) => c.name === city.name)
+            index === self.findIndex((c) => c.name === city.name),
         );
 
         setCityOptions(uniqueResults);
@@ -240,13 +240,9 @@ export function CityInput({
     };
   }, [ cityQuery ]); // Dependência única: cityQuery
 
-  useEffect(() => {
-    setDistanceInKM(0);
-  }, [ setDistanceInKM ]);
-
   return (
     <div className="w-full">
-      {/* shouldFilter={false} é crucial para buscas remotas (server-side) */}
+      {/* shouldFilter={ false } é crucial para buscas remotas (server-side) */}
       <Command className="border rounded-md" shouldFilter={ false }>
         <CommandInput
           placeholder="Digite a cidade"
@@ -298,7 +294,7 @@ function getDistanceInKm(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ) {
   const R = 6371; // Raio da Terra em km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;

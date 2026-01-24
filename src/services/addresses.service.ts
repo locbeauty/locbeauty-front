@@ -34,7 +34,6 @@ export async function CreateCustomerAddress({
   customerId: string;
   body: unknown;
 }) {
-  console.log("Creating address for customer:", customerId);
   const response = await apiRequest<Address[]>({
     endpoint: `address/create/${customerId}`,
     body,
