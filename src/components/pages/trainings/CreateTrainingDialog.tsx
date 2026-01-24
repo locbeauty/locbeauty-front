@@ -43,7 +43,10 @@ import { SelectFilial } from "@/components/shared/SelectFilial";
 // Services & Utils
 import { CreateTraining } from "@/services/trainings.service";
 import { GetAllTraineeAddresses } from "@/services/addresses.service";
-import { getDayCheckouts } from "@/services/checkouts.service";
+import {
+  getDayCheckouts,
+  GetDayCheckoutsResponse,
+} from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { useAuth } from "@/contexts/auth-provider";
@@ -71,7 +74,6 @@ import { Trainee } from "@/utils/@types/trainee";
 import { Gear } from "@/utils/@types/gears";
 import { ApiResponse } from "@/lib/api";
 import { Address } from "@/utils/@types/address";
-import { GetDayCheckoutsResponse } from "../bookings/create/CreateBookingForm";
 
 interface CreateTrainingDialogProps {
   dialogNovoTreinamento: boolean;
@@ -98,6 +100,7 @@ const defaultPaymentInfoStructure: CreateTrainingDataType["traineePayment"]["pay
 export function CreateTrainingDialog({
   dialogNovoTreinamento,
   setDialogNovoTreinamento,
+  gears,
 }: CreateTrainingDialogProps) {
   const { user } = useAuth();
   const { getAccessibleFilialsForCreate } = useAccess();
@@ -161,7 +164,7 @@ export function CreateTrainingDialog({
     string | undefined
   >(undefined);
   const [ selectedGearId, setSelectedGearId ] = useState<string | undefined>(
-    undefined
+    undefined,
   );
 
   // --- Watchers ---
@@ -181,7 +184,7 @@ export function CreateTrainingDialog({
     priceStr: string | undefined,
     paymentInfo: CreateTrainingDataType["traineePayment"]["paymentInfo"],
     additionalCostStr?: string,
-    additionalCostDesc?: string
+    additionalCostDesc?: string,
   ) => {
     return {
       // Se preço não for preenchido, envia 0
@@ -246,13 +249,13 @@ export function CreateTrainingDialog({
           data.traineePayment.price,
           data.traineePayment.paymentInfo,
           data.traineePayment.additionalCost,
-          data.traineePayment.additionalCostDescription
+          data.traineePayment.additionalCostDescription,
         ),
 
         // 2. Pagamento do Volunteer
         volunteerPayment: formatPaymentPayload(
           data.volunteerPayment.price,
-          data.volunteerPayment.paymentInfo
+          data.volunteerPayment.paymentInfo,
         ),
       };
 
@@ -286,9 +289,18 @@ export function CreateTrainingDialog({
   });
   const allCustomerAddresses = addressesData.data?.data;
 
+  const availableGears = gears;
   const params = {
-    filialId: user?.sourceFilialId,
-    gears: [ { gearId: watchSelectedGear, gearName: "" } ],
+    filialId: (watchFilialId || "") as string,
+    gears: [
+      {
+        gearId: watchSelectedGear || "",
+        gearName:
+          availableGears?.find((g) => g.gearId === watchSelectedGear)
+            ?.gearName || "",
+        individualPrice: "0,00",
+      },
+    ],
     date: watchDueDate,
   };
   const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
@@ -452,7 +464,7 @@ export function CreateTrainingDialog({
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2">
                   {checkoutSchedule?.map((hour) => {
                     const hasSomeAvailableGapTime = hour.availability.some(
-                      (item) => item.available
+                      (item) => item.available,
                     );
                     return (
                       <Button
@@ -525,7 +537,7 @@ export function CreateTrainingDialog({
                             <PriceInput
                               withLabel={ false }
                               register={ createTrainingMethods.register(
-                                "traineePayment.price"
+                                "traineePayment.price",
                               ) }
                               value={ field.value?.toString() ?? "" }
                               setValue={ setValue }
@@ -550,7 +562,7 @@ export function CreateTrainingDialog({
                                 <PriceInput
                                   withLabel={ false }
                                   register={ createTrainingMethods.register(
-                                    "traineePayment.additionalCost"
+                                    "traineePayment.additionalCost",
                                   ) }
                                   value={ field.value?.toString() ?? "" }
                                   setValue={ setValue }
@@ -561,7 +573,7 @@ export function CreateTrainingDialog({
                             />
                             <Textarea
                               { ...createTrainingMethods.register(
-                                "traineePayment.additionalCostDescription"
+                                "traineePayment.additionalCostDescription",
                               ) }
                               placeholder="Descrição: Taxa de sala, material..."
                               className="resize-none min-h-[40px]"
@@ -598,7 +610,7 @@ export function CreateTrainingDialog({
                             <PriceInput
                               withLabel={ false }
                               register={ createTrainingMethods.register(
-                                "volunteerPayment.price"
+                                "volunteerPayment.price",
                               ) }
                               value={ field.value?.toString() ?? "" }
                               setValue={ setValue }

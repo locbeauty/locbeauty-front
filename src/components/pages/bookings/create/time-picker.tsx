@@ -9,9 +9,10 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar, Clock, Timer, CheckCircle2 } from "lucide-react";
 import { useFormContext, Controller } from "react-hook-form";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
-import { GetDayCheckoutsResponse } from "./CreateBookingForm";
+// import { GetDayCheckoutsResponse } from "./CreateBookingForm";
 import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
 import { Checkbox } from "@/components/ui/checkbox";
+import { GetDayCheckoutsResponse } from "@/services/checkouts.service";
 
 interface TimePickerProps {
   selectedDate?: Date;
