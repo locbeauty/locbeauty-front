@@ -29,7 +29,7 @@ export function SelectAddress({
   const isMounted = useMounted();
   const { control, watch } = useFormContext<CreateCheckoutFormSchemaType>();
 
-  const [customerAddresses, setCustomerAddresses] = useState<Address[] | null>(
+  const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(
     null,
   );
 
@@ -49,7 +49,7 @@ export function SelectAddress({
     if (watchCustomer && watchCustomer.customerId) {
       getCustomerAddresses();
     }
-  }, [watchCustomer]);
+  }, [ watchCustomer ]);
 
   if (!isMounted) {
     return <div className="h-10 w-full" />;
@@ -58,13 +58,13 @@ export function SelectAddress({
   return (
     <Controller
       name="addressId"
-      control={control}
-      render={({ field }) => {
+      control={ control }
+      render={ ({ field }) => {
         return (
           <Select
-            disabled={!watchCustomer || disabled}
-            value={field.value}
-            onValueChange={(value) => {
+            disabled={ !watchCustomer || disabled }
+            value={ field.value }
+            onValueChange={ (value) => {
               field.onChange(value);
               const selectedAddress = customerAddresses?.find(
                 (addr) => addr.addressId === value,
@@ -74,7 +74,7 @@ export function SelectAddress({
                 setAddressString(addressString);
                 onAddressSelect?.(selectedAddress);
               }
-            }}
+            } }
           >
             <SelectTrigger className="w-full data-[placeholder]:text-placeholder">
               <SelectValue
@@ -87,7 +87,7 @@ export function SelectAddress({
                 customerAddresses.map((addr) => {
                   if (!addr.isActive) return null;
                   return (
-                    <SelectItem key={addr.addressId} value={addr.addressId}>
+                    <SelectItem key={ addr.addressId } value={ addr.addressId }>
                       {addr.street}, {addr.neighborhood},{" "}
                       {addr.addressComplement} - {addr.city}/{addr.state}
                     </SelectItem>
@@ -96,7 +96,7 @@ export function SelectAddress({
             </SelectContent>
           </Select>
         );
-      }}
+      } }
     />
   );
 }
