@@ -52,7 +52,7 @@ export function UpdateEmployeeDialog({
           : null,
         cellphone: selectedEmployee.cellphone,
         username: selectedEmployee.username,
-        email: selectedEmployee.email,
+        email: selectedEmployee.email ?? undefined,
         fullname: selectedEmployee.fullname,
         role: selectedEmployee.role,
         sourceFilialId: selectedEmployee.SourceFilial.filialId,
