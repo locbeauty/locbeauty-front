@@ -10,7 +10,7 @@ type SelectRoleProps<T extends FieldValues> = {
 }
 
 export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleProps<T>) {
-  
+
   return (
     <Controller
       name={ name }
