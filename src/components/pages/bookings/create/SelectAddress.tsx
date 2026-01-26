@@ -17,12 +17,14 @@ import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation"
 
 interface SelectAddressProps {
   setAddressString: Dispatch<SetStateAction<string>>;
+  onAddressSelect?: (address: Address) => void;
   disabled?: boolean;
 }
 
 export function SelectAddress({
   disabled = false,
   setAddressString,
+  onAddressSelect,
 }: SelectAddressProps) {
   const isMounted = useMounted();
   const { control, watch } = useFormContext<CreateCheckoutFormSchemaType>();
@@ -70,12 +72,13 @@ export function SelectAddress({
               if (selectedAddress) {
                 const addressString = `${selectedAddress.street}, ${selectedAddress.neighborhood}, ${selectedAddress.buildingNumber} - ${selectedAddress.city}/${selectedAddress.state}${selectedAddress.addressComplement ? `, ${selectedAddress.addressComplement}` : ""}`;
                 setAddressString(addressString);
+                onAddressSelect?.(selectedAddress);
               }
             } }
           >
             <SelectTrigger className="w-full data-[placeholder]:text-placeholder">
               <SelectValue
-                placeholder="Selecione a função do funcionário"
+                placeholder="Selecione o endereço"
                 className="text-placeholder"
               />
             </SelectTrigger>

@@ -81,6 +81,10 @@ export type UpdateCheckoutBody = {
   lodgingCost?: number;
   additionalTransportCost?: number;
   foodCost?: number;
+  addressId?: string;
+  date?: Date;
+  startHourInMinutes?: number;
+  totalDurationInMinutes?: number;
 };
 
 export async function UpdateCheckout({
@@ -167,6 +171,7 @@ export async function getDayCheckouts({
     filialId: string;
     gears: Array<{ gearId: string; gearName: string; individualPrice: string }>;
     date: Date | undefined;
+    excludeCheckoutId?: string;
   };
 }) {
   const response = await apiRequest<GetDayCheckoutsResponse[]>({
