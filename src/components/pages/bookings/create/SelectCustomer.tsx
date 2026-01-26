@@ -1,158 +1,254 @@
 "use client";
 
-import * as React from "react";
-import { Controller, ControllerRenderProps, FieldValues, useFormContext } from "react-hook-form";
+import {
+  Controller,
+  ControllerRenderProps,
+  useFormContext,
+} from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useMediaQuery } from "usehooks-ts";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useDebounceValue, useMediaQuery } from "usehooks-ts";
 import { useMounted } from "@/hooks/useMounted";
+import { useEffect, useState } from "react";
+import { Customer } from "@/utils/@types/customer";
+import { fetchWithToken } from "@/utils/fetchWithToken";
+import { hideDocumentNumber } from "@/utils/hideDocumentNumber";
+import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse } from "@/lib/api";
+import { GetAllCustomers } from "@/services/customers.service";
 
-type Customer = {
-  slug: string
-  label: string
-  id: string
-}
+export function SelectCustomer({ disabled = false }: { disabled?: boolean }) {
+  const isMounted = useMounted();
+  const { control, watch } = useFormContext<CreateCheckoutFormSchemaType>();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const filialId = watch("filialId");
 
-const customers: Customer[] = [
-    {
-        slug: "jose-silva",
-        label: "José Silva",
-        id: "1",
-    },
-    {
-        slug: "antonio-marcelo",
-        label: "Antonio Marcelo",
-        id: "2",
-    },
-    {
-        slug: "lucas-lima",
-        label: "Lucas Lima",
-        id: "3",
-    },
-    {
-        slug: "caique-franca",
-        label: "Caíque França",
-        id: "4",
-    },
-    {
-        slug: "ze-lucas",
-        label: "Zé Lucas",
-        id: "5",
-    },
-];
+  const [ searchTerm, setSearchTerm ] = useState("");
+  const [ debouncedSearchTerm ] = useDebounceValue(searchTerm, 500);
 
-for (let i = 6; i <= 500; i++) {
-    customers.push({
-        slug: `cliente-${i}`,
-        label: `Cliente ${i}`,
-        id: `${i}`,
-    });
-}
+  const { data } = useQuery<
+    ApiResponse<{ items: Customer[]; total: number }>,
+    Error
+  >({
+    queryKey: [ "get-all-customers", filialId, debouncedSearchTerm ],
+    queryFn: () =>
+      GetAllCustomers(
+        { filialId, name: debouncedSearchTerm },
+        { page: 1, limit: 100 },
+      ),
+    staleTime: 1000 * 60, // 1 minuto de cache
+    // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
+  });
 
-export function SelectCustomer({ name = "customerId", }: { name?: string }) {
-    const isMounted = useMounted();
-    const {
-        control,
-    } = useFormContext();
-    const isDesktop = useMediaQuery("(min-width: 768px)");
+  const allCustomers = data?.data?.items;
+  // removed early return to allow rendering empty state/input even if loading or no data initially
 
-    if (!isMounted) {
-    // Return a placeholder with the same height to prevent layout shift
-        return <div className="h-10 w-full" />;
-    }
+  if (!isMounted) {
+    return <div className="h-10 w-full" />;
+  }
 
-    return (
-        <div className="flex flex-col space-y-1">
-            <Controller
-                control={ control }
-                name={ name }
-                render={ ({ field }) => (isDesktop ? <DesktopSelect field={ field } /> : <MobileSelect field={ field } />) }
+  return (
+    <div className="flex flex-col space-y-1  w-full">
+      <Controller
+        control={ control }
+        name="customer"
+        render={ ({ field }) =>
+          isDesktop ? (
+            <DesktopSelect
+              disabled={ disabled }
+              allCustomers={ allCustomers || [] }
+              field={ field }
+              searchTerm={ searchTerm }
+              setSearchTerm={ setSearchTerm }
             />
-        </div>
-    );
+          ) : (
+            <MobileSelect
+              allCustomers={ allCustomers || [] }
+              field={ field }
+              searchTerm={ searchTerm }
+              setSearchTerm={ setSearchTerm }
+            />
+          )
+        }
+      />
+    </div>
+  );
 }
 
-function DesktopSelect({ field }: { field: ControllerRenderProps<FieldValues, string> }) {
-    const [ open, setOpen ] = React.useState(false);
+function DesktopSelect({
+  disabled,
+  field,
+  allCustomers,
+  searchTerm,
+  setSearchTerm,
+}: {
+  disabled?: boolean;
+  field: ControllerRenderProps<CreateCheckoutFormSchemaType, "customer">;
+  allCustomers: Customer[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+}) {
+  const [ open, setOpen ] = useState(false);
 
-    const selectedCustomer = field.value ? customers.find((customer) => customer.id === field.value) : null;
+  const selectedCustomer = field.value;
 
-    return (
-        <Popover open={ open } onOpenChange={ setOpen }>
-            <PopoverTrigger asChild>
-                <Button variant="outline" className="w-fit justify-start">
-                    {selectedCustomer ? (
-                        <>{selectedCustomer.label}</>
-                    ) : (
-                        <span className="text-placeholder">Selecione o cliente</span>
-                    )}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0" align="start">
-                <CustomersList setOpen={ setOpen } onChange={ field.onChange } value={ field.value } />
-            </PopoverContent>
-        </Popover>
-    );
+  return (
+    <Popover open={ open } onOpenChange={ setOpen }>
+      <PopoverTrigger asChild>
+        <Button
+          disabled={ disabled }
+          variant="outline"
+          className="w-full justify-start group cursor-pointer"
+        >
+          {selectedCustomer ? (
+            <>
+              {selectedCustomer.fullname} -{" "}
+              {hideDocumentNumber(selectedCustomer.documentNumber)}
+            </>
+          ) : (
+            <span className="text-placeholder group-hover:text-white">
+              Selecione o cliente
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-full" align="start">
+        <CustomersList
+          allCustomers={ allCustomers }
+          setOpen={ setOpen }
+          onChange={ field.onChange }
+          value={ field.value }
+          searchTerm={ searchTerm }
+          setSearchTerm={ setSearchTerm }
+        />
+      </PopoverContent>
+    </Popover>
+  );
 }
 
-function MobileSelect({ field }: { field: ControllerRenderProps<FieldValues, string> }) {
-    const [ open, setOpen ] = React.useState(false);
+function MobileSelect({
+  field,
+  allCustomers,
+  searchTerm,
+  setSearchTerm,
+}: {
+  field: ControllerRenderProps<CreateCheckoutFormSchemaType, "customer">;
+  allCustomers: Customer[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+}) {
+  const [ open, setOpen ] = useState(false);
 
-    const selectedCustomer = field.value ? customers.find((customer) => customer.id === field.value) : null;
+  const selectedCustomer = field.value;
 
-    return (
-        <Drawer open={ open } onOpenChange={ setOpen }>
-            <DrawerTrigger asChild>
-                <Button variant="outline" className="w-full justify-start">
-                    {selectedCustomer ? (
-                        <>{selectedCustomer.label}</>
-                    ) : (
-                        <span className="text-placeholder">Selecione o cliente</span>
-                    )}
-                </Button>
-            </DrawerTrigger>
-            <DrawerContent aria-describedby={ undefined }>
-                <DrawerTitle>
-                    <div className="mt-4 border-t">
-                        <CustomersList setOpen={ setOpen } onChange={ field.onChange } value={ field.value } />
-                    </div>
-                </DrawerTitle>
-            </DrawerContent>
-        </Drawer>
-    );
+  return (
+    <Drawer open={ open } onOpenChange={ setOpen }>
+      <DrawerTrigger asChild>
+        <Button variant="outline" className="w-full justify-start">
+          {selectedCustomer ? (
+            <>
+              {selectedCustomer.fullname} - {selectedCustomer.documentNumber}
+            </>
+          ) : (
+            <span className="text-placeholder">Selecione o cliente</span>
+          )}
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent className="w-full" aria-describedby={ undefined }>
+        <DrawerTitle>
+          <div className="mt-4 border-t">
+            <CustomersList
+              allCustomers={ allCustomers }
+              setOpen={ setOpen }
+              onChange={ field.onChange }
+              value={ field.value }
+              searchTerm={ searchTerm }
+              setSearchTerm={ setSearchTerm }
+            />
+          </div>
+        </DrawerTitle>
+      </DrawerContent>
+    </Drawer>
+  );
 }
 
 function CustomersList({
-    setOpen,
-    onChange,
+  setOpen,
+  onChange,
+  allCustomers,
+  searchTerm,
+  setSearchTerm,
 }: {
-  setOpen: (_open: boolean) => void
-  onChange: (_value: string) => void
-  value: string
+  setOpen: (_open: boolean) => void;
+  onChange: (_value: {
+    customerId: string;
+    fullname: string;
+    documentNumber: string;
+    cellphone: string;
+  }) => void;
+  value?:
+    | {
+        customerId: string;
+        fullname: string;
+        documentNumber: string;
+        cellphone: string;
+      }
+    | undefined;
+  allCustomers: Customer[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }) {
-    return (
-        <Command>
-            <CommandInput placeholder="Filtrar clientes..." />
-            <CommandList>
-                <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
-                <CommandGroup>
-                    {customers.map((customer) => (
-                        <CommandItem
-                            key={ customer.slug }
-                            value={ customer.id }
-                            onSelect={ (customerId) => {
-                                onChange(customerId);
-                                setOpen(false);
-                            } }
-                        >
-                            {customer.label}
-                        </CommandItem>
-                    ))}
-                </CommandGroup>
-            </CommandList>
-        </Command>
-    );
+  return (
+    <Command shouldFilter={ false }>
+      <CommandInput
+        placeholder="Filtrar clientes..."
+        value={ searchTerm }
+        onValueChange={ setSearchTerm }
+      />
+      <CommandList>
+        <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+        <CommandGroup>
+          {allCustomers?.map((customer) => (
+            <CommandItem
+              className="w-[700px]"
+              key={ customer.customerId }
+              value={ customer.customerId }
+              onSelect={ () => {
+                onChange({
+                  customerId: customer.customerId,
+                  fullname: customer.fullname,
+                  documentNumber: customer.documentNumber,
+                  cellphone: customer.cellphone ?? "",
+                });
+                setOpen(false);
+              } }
+            >
+              {customer.fullname} -{" "}
+              {hideDocumentNumber(customer.documentNumber)}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  );
 }

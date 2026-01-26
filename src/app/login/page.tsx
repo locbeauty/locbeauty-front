@@ -1,62 +1,169 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 import Image from "next/image";
-import { ROUTES } from "@/utils/routes";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { redirect, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { LoaderCircle } from "lucide-react";
+import DocumentInput from "@/components/shared/DocumentInput";
+import {
+  getFirstAccessibleRoute,
+  UserAccess,
+} from "@/utils/get-first-accessible-route";
+
+const LoginSchema = z.object({
+  username: z.string().min(1, "Username é obrigatório"),
+  password: z.string(),
+});
+
+type LoginSchemaType = z.infer<typeof LoginSchema>;
 
 export default function LoginPage() {
+  const [ errorMessage, setErrorMessage ] = useState("");
 
-    return (
-        <div className="h-dvh flex items-center justify-center bg-background">
-            <div className="w-full max-w-md p-6">
-                <div className="flex flex-col items-center space-y-2 mb-6">
-                    <div className="size-36 bg-primary rounded-full flex items-center justify-center">
-                        <Image src="/logo.png" alt="logo" width={ 100 } height={ 100 } className="text-green-500" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-primary">Sistema de Gestão</h1>
-                </div>
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<LoginSchemaType>({
+    resolver: zodResolver(LoginSchema),
+  });
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-2xl text-center">Login</CardTitle>
-                        <CardDescription className="text-center">
-              Acesse no sistema com suas credenciais.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form>
-                            <div className="grid gap-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="exemplo@empresa.com"
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="password">Senha</Label>
-                                    <Input id="password" type="password" />
-                                </div>
-                            </div>
-                        </form>
-                    </CardContent>
-                    <CardFooter className="flex flex-col space-y-4">
-                        <Button className="w-full" asChild>
-                            <Link href={ ROUTES.DASHBOARD }>Entrar</Link>
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </div>
+  const router = useRouter();
+
+  async function handleLogin({ username, password }: LoginSchemaType) {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/signin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const loginResponse = await res.json();
+
+    if (res.status !== 200) {
+      setErrorMessage(loginResponse.error);
+      return;
+    }
+    // console.log("loginResponse: ", loginResponse);
+
+    const token = loginResponse.data;
+    localStorage.setItem("accessToken", token);
+
+    // Decode JWT to extract employeeId (sub claim)
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const employeeId = payload.sub;
+
+      // Fetch user permissions to determine first accessible route
+      const permissionsRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/access/${employeeId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (permissionsRes.ok) {
+        const response = await permissionsRes.json();
+        // Backend might return { data: [...] } or just [...]
+        const permissions: UserAccess[] = Array.isArray(response)
+          ? response
+          : response.data || [];
+        const targetRoute = getFirstAccessibleRoute(permissions);
+        router.push(targetRoute);
+      } else {
+        // If permissions fetch fails, default to dashboard
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Failed to fetch permissions:", error);
+      // Fallback to dashboard if permission fetch fails
+      router.push("/dashboard");
+    }
+  }
+
+  return (
+    <div className="h-dvh flex items-center justify-center bg-background">
+      <div className="w-full max-w-md p-6">
+        <div className="flex flex-col items-center space-y-2 mb-6">
+          <div className="size-36 bg-primary rounded-full flex items-center justify-center">
+            <Image
+              src="/logo.png"
+              alt="log o"
+              width={ 100 }
+              height={ 100 }
+              className="text-green-500"
+            />
+          </div>
+          <h1 className="text-3xl font-bold text-primary">Sistema de Gestão</h1>
         </div>
-    );
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">Login</CardTitle>
+            <CardDescription className="text-center">
+              Acesse no sistema com suas credenciais.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form id="login-form" onSubmit={ handleSubmit(handleLogin) }>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    className="placeholder:text-placeholder"
+                    placeholder="Digite seu username"
+                    { ...register("username") }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="password"> Senha</Label>
+                  <Input
+                    { ...register("password") }
+                    className="placeholder:text-placeholder"
+                    placeholder="******"
+                    name="password"
+                    id="password"
+                    type="password"
+                  />
+                </div>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <span className="text-red-600 text-sm font-medium">
+              {errorMessage && errorMessage}
+            </span>
+            <Button
+              disabled={ isSubmitting }
+              type="submit"
+              form="login-form"
+              className="w-full cursor-pointer"
+            >
+              {isSubmitting ? (
+                <LoaderCircle className="animate-spin" />
+              ) : (
+                "Entrar"
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
 }

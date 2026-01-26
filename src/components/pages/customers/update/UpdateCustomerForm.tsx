@@ -1,70 +1,312 @@
-import { FormProvider, useForm } from "react-hook-form";
-import { CustomerGeneralInformationForm } from "../create/CustomerGeneralInformationForm";
-import { CustomerAddressForm } from "../create/CustomerAddressForm";
-import { toast } from "sonner";
-import { zodResolver } from "@hookform/resolvers/zod";
+"use client";
+
 import {
-    createCustomerFormSchema,
-    CreateCustomerFormSchemaType,
-} from "@/lib/zod/CreateCustomerValidation";
-import { Customer } from "@/utils/@types/customers";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Controller, useFormContext } from "react-hook-form";
+import { CUSTOMER_STATUSES } from "@/utils/constants";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import PhoneInput from "../../../shared/PhoneInput";
+import DocumentInput from "../../../shared/DocumentInput";
+import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
+import { toast } from "sonner";
+import { Customer } from "@/utils/@types/customer";
+import { useEffect, useState } from "react";
+import { fetchWithToken } from "@/utils/fetchWithToken";
+import { Address } from "@/utils/@types/address";
+import { ListCustomerAddressesCard } from "./ListAddressCard";
+import { GetAllCustomerAddresses } from "@/services/addresses.service";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse } from "@/lib/api";
 
 interface UpdateCustomerFormProps {
-  selectedCustomer: Customer;
+  selectedCustomer: Customer | null;
 }
 
 export function UpdateCustomerForm({
-    selectedCustomer,
+  selectedCustomer,
 }: UpdateCustomerFormProps) {
-    const updateCustomerMethods = useForm<CreateCustomerFormSchemaType>({
-        resolver: zodResolver(createCustomerFormSchema),
-        //TODO: corrigir para null, ao inves de undefined
-        defaultValues: {
-            personType: selectedCustomer.personType,
-            addressComplement: selectedCustomer.address.addressComplement,
-            birthdate: new Date(selectedCustomer.birthdate),
-            cellphone: selectedCustomer.cellphone,
-            address: {
-                zipCode: selectedCustomer.address.zipCode,
-                city: selectedCustomer.address.city,
-                buildingNumber: selectedCustomer.address.buildingNumber,
-                neighborhood: selectedCustomer.address.neighborhood,
-                street: selectedCustomer.address.street,
-                state: {
-                    UF: selectedCustomer.address.state.UF,
-                    title: selectedCustomer.address.state.title,
-                },
-            },
-            CNPJ: selectedCustomer.CNPJ || undefined,
-            companyName: selectedCustomer.companyName || undefined,
-            CPF: selectedCustomer.CPF || undefined,
-            fullname: selectedCustomer.fullname || undefined,
-            email: selectedCustomer.email,
-            instagram: selectedCustomer.instagram || undefined,
-            personAccountableName:
-            selectedCustomer.personAccountableName || undefined,
-        },
-    });
+  const {
+    handleSubmit,
+    formState: { errors },
+    register,
+    setValue,
+    control,
+  } = useFormContext<UpdateCustomerFormSchemaType>();
+  // const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(null);
 
-    const { handleSubmit } = updateCustomerMethods;
+  const { data, isLoading, error, refetch } = useQuery<
+    ApiResponse<Address[]>,
+    Error
+  >({
+    queryKey: [ "get-all-customer-addresses", selectedCustomer?.customerId ],
+    queryFn: ({ queryKey }) => {
+      const [ , customerId ] = queryKey as [string, string | undefined];
+      if (!customerId) throw new Error("Nenhum cliente selecionado");
+      return GetAllCustomerAddresses({ customerId });
+    },
+    enabled: !!selectedCustomer,
+    staleTime: 1000 * 60, // 1 minuto de cache
+    // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
+  });
 
-    function handleCreateCustomer(
-        updatedCustomerData: CreateCustomerFormSchemaType
-    ) {
-    // TODO: selecionar as informações antes de enviar pra
-        console.log("updatedCustomerData: ", updatedCustomerData);
-        toast.success("Cliente editado com sucesso!");
-    }
-    return (
-        <form
-            id="update-customer-form"
-            onSubmit={ handleSubmit(handleCreateCustomer) }
-            className="flex flex-col gap-5 mt-5"
-        >
-            <FormProvider { ...updateCustomerMethods }>
-                <CustomerGeneralInformationForm />
-                <CustomerAddressForm />
-            </FormProvider>
-        </form>
-    );
+  const customerAddresses = data?.data ?? [];
+
+  // useEffect(() => {
+  //     async function getCustomerAddresses(customerId: string) {
+  //         const response = await fetchWithToken(`${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${customerId}`, {
+  //             credentials: "include",
+  //         });
+  //         const { data }: {data: Address[]} = await response.json();
+  //         // setCustomerAddresses(data);
+  //     }
+  //     if(selectedCustomer && selectedCustomer.customerId) {
+  //         getCustomerAddresses(selectedCustomer.customerId);
+  //     }
+  // }, [ selectedCustomer ]);
+
+  if (!selectedCustomer) return;
+
+  return (
+    <>
+      {/* <CustomerGeneralInformationForm /> */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dados Pessoais</CardTitle>
+          <CardDescription>
+            Preencha os dados pessoais do cliente
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="border p-4 rounded-md ">
+            <h3 className="text-lg font-medium mb-4">Informações do Cliente</h3>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome Completo</Label>
+                <Input
+                  className="placeholder:text-muted-foreground/50"
+                  { ...register("fullname") }
+                  id="nome"
+                  placeholder="Nome completo"
+                />
+                <div className="h-3">
+                  {errors.fullname && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.fullname.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="empresa">Empresa</Label>
+                <Input
+                  className="placeholder:text-muted-foreground/50"
+                  { ...register("companyName") }
+                  id="empresa"
+                  placeholder="Nome da empresa"
+                  onBlur={ (e) => {
+                    if (e.target.value === "") {
+                      setValue("companyName", null);
+                    }
+                  } }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="documentNumber">CPF/CNPJ</Label>
+                <DocumentInput
+                  disabled={ true }
+                  register={ register("documentNumber") }
+                />
+                <div className="h-3">
+                  {errors.documentNumber && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.documentNumber.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Controller
+                  name="customerStatus"
+                  control={ control }
+                  render={ ({ field }) => (
+                    <Select onValueChange={ field.onChange } value={ field.value }>
+                      <SelectTrigger id="status" className="w-full">
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CUSTOMER_STATUSES.map((status) => (
+                          <SelectItem key={ status } value={ status }>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) }
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border p-4 rounded-md">
+            <h3 className="text-lg font-medium mb-4">Informações de Contato</h3>
+            <div className="space-y-4">
+              <div className="space-y-4">
+                {/* Emails */}
+                <div className="space-y-4">
+                  <Label>Emails</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Input
+                        className="placeholder:text-muted-foreground/50"
+                        { ...register("email") }
+                        placeholder="Email Principal"
+                        type="email"
+                        onBlur={ (e) => {
+                          if (e.target.value === "") setValue("email", null);
+                        } }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        className="placeholder:text-muted-foreground/50"
+                        { ...register("emailDescription") }
+                        placeholder="Descrição (ex: Pessoal)"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("emailDescription", null);
+                        } }
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Input
+                        className="placeholder:text-muted-foreground/50"
+                        { ...register("secondaryEmail") }
+                        placeholder="Email Secundário"
+                        type="email"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("secondaryEmail", null);
+                        } }
+                      />
+                      {errors.secondaryEmail && (
+                        <p className="text-xs font-medium text-destructive">
+                          {errors.secondaryEmail.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        className="placeholder:text-muted-foreground/50"
+                        { ...register("secondaryEmailDescription") }
+                        placeholder="Descrição (ex: Trabalho)"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("secondaryEmailDescription", null);
+                        } }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Phones */}
+                <div className="space-y-4">
+                  <Label>Telefones</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <PhoneInput register={ register("cellphone") } />
+                      <div className="h-3">
+                        {errors.cellphone && (
+                          <p className="text-xs font-medium text-destructive">
+                            {errors.cellphone.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        className="placeholder:text-muted-foreground/50"
+                        { ...register("cellphoneDescription") }
+                        placeholder="Descrição (ex: WhatsApp)"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("cellphoneDescription", null);
+                        } }
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <PhoneInput register={ register("secondaryCellphone") } />
+                      {errors.secondaryCellphone && (
+                        <p className="text-xs font-medium text-destructive">
+                          {errors.secondaryCellphone.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        className="placeholder:text-muted-foreground/50"
+                        { ...register("secondaryCellphoneDescription") }
+                        placeholder="Descrição (ex: Casa)"
+                        onBlur={ (e) => {
+                          if (e.target.value === "")
+                            setValue("secondaryCellphoneDescription", null);
+                        } }
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="instagram">Instagram</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                    @
+                  </span>
+                  <Input
+                    { ...register("instagram") }
+                    id="instagram"
+                    className="pl-8 placeholder:text-muted-foreground/50"
+                    placeholder="usuario"
+                    onBlur={ (e) => {
+                      if (e.target.value === "") {
+                        setValue("instagram", null);
+                      }
+                    } }
+                  />
+                </div>
+                {errors.instagram && (
+                  <p className="text-xs font-medium text-destructive">
+                    {errors.instagram.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <ListCustomerAddressesCard
+        customerId={ selectedCustomer.customerId }
+        customerAddresses={ customerAddresses }
+      />
+    </>
+  );
 }

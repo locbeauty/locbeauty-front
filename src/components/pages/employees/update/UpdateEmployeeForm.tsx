@@ -1,62 +1,50 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Employee } from "@/utils/@types/employees";
+import { Employee } from "@/utils/@types/employee";
 import {
-    createEmployeeFormSchema,
-    CreateEmployeeFormSchemaType,
+  createEmployeeFormSchema,
+  CreateEmployeeFormSchemaType,
 } from "@/lib/zod/CreateEmployeeValidation";
 import { EmployeeForm } from "../forms/EmployeeForm";
+import { UpdateEmployeeDialog } from "./UpdateEmployeeDialog";
+import { FilialUpdateAddressForm } from "../../filials/update/FilialUpdateAddressForm";
+import { AccessControlDialog } from "../view/AccessControlDialog";
+import { Separator } from "@/components/ui/separator";
+import { useEffect } from "react";
+import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 
 interface UpdateEmployeeFormProps {
   selectedEmployee: Employee;
 }
 
 export function UpdateEmployeeForm({
-    selectedEmployee,
+  selectedEmployee,
 }: UpdateEmployeeFormProps) {
-    const updateEmployeeMethods = useForm<CreateEmployeeFormSchemaType>({
-        resolver: zodResolver(createEmployeeFormSchema),
-        defaultValues: {
-            birthdate: selectedEmployee.birthdate,
-            cellphone: selectedEmployee.cellphone,
-            address: {
-                zipCode: selectedEmployee.address.zipCode,
-                city: selectedEmployee.address.city,
-                buildingNumber: selectedEmployee.address.buildingNumber,
-                addressComplement: selectedEmployee.address.addressComplement,
-                neighborhood: selectedEmployee.address.neighborhood,
-                state: {
-                    title: selectedEmployee.address.state.title,
-                    UF: selectedEmployee.address.state.UF,
-                },
-            },
-            CPF: selectedEmployee.CPF,
-            email: selectedEmployee.email,
-            fullname: selectedEmployee.fullname,
-            role: selectedEmployee.role,
-            sourceRegionalId: selectedEmployee.sourceRegionalId,
-        },
-    });
+  const { user } = useAuth();
+  return (
+    <>
+      <EmployeeForm
+        isEditing={ true }
+        currentUsername={ selectedEmployee.username }
+      />
 
-    const { handleSubmit } = updateEmployeeMethods;
+      {(user?.role === USER_ROLES.GERENTE ||
+        user?.role === USER_ROLES.MASTER) && (
+        <>
+          <Separator className="my-6" />
 
-    function handleUpdateEmployee(
-        updatedEmployeeData: CreateEmployeeFormSchemaType
-    ) {
-    // TODO: selecionar as informações antes de enviar pra
-        console.log("updatedEmployeeData: ", updatedEmployeeData);
-        toast.success("Funcionário editado com sucesso!");
-    }
-    return (
-        <form
-            id="update-customer-form"
-            onSubmit={ handleSubmit(handleUpdateEmployee) }
-            className="flex flex-col gap-5 mt-5"
-        >
-            <FormProvider { ...updateEmployeeMethods }>
-                <EmployeeForm />
-            </FormProvider>
-        </form>
-    );
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Controle de Acessos</h3>
+            <p className="text-sm text-muted-foreground">
+              Gerencie as permissões de acesso deste funcionário por filial. As
+              alterações são salvas automaticamente.
+            </p>
+            <AccessControlDialog employee={ selectedEmployee } />
+          </div>
+        </>
+      )}
+    </>
+  );
 }

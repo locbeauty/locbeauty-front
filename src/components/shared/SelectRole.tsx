@@ -3,6 +3,7 @@
 import { Controller, Control, FieldPath, FieldValues } from "react-hook-form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ROLES } from "@/utils/roles";
+import { useAuth } from "@/contexts/auth-provider";
 
 type SelectRoleProps<T extends FieldValues> = {
   control: Control<T>
@@ -10,34 +11,38 @@ type SelectRoleProps<T extends FieldValues> = {
 }
 
 export function SelectRole<T extends FieldValues>({ control, name }: SelectRoleProps<T>) {
-    return (
-        <Controller
-            name={ name }
-            control={ control }
-            render={ ({ field }) => (
-                <Select onValueChange={ field.onChange } value={ field.value ?? "" }>
-                    <SelectTrigger className="w-full md:w-[270px] data-[placeholder]:text-placeholder">
-                        <SelectValue
-                            placeholder="Selecione a função do funcionário"
-                            className="text-placeholder"
-                        />
-                    </SelectTrigger>
-                    <SelectContent>
-                        { ROLES.map((role) => {
-                            if (role === "") return null;
-                            return (
+  const { user } = useAuth();
 
-                                <SelectItem key={ role } value={ role }>
-                                    { role }
-                                </SelectItem>
-                            );
+  return (
+    <Controller
+      name={ name }
+      control={ control }
+      render={ ({ field }) => {
+        return (
+          <Select onValueChange={ field.onChange } value={ field.value }>
+            <SelectTrigger className="w-full md:w-[270px] data-[placeholder]:text-placeholder">
+              <SelectValue
+                placeholder="Selecione a função do funcionário"
+                className="text-placeholder"
+              />
+            </SelectTrigger>
+            <SelectContent>
+              { ROLES.map((role) => {
+                if(role === "Master" && user && user.role !== "Master") return null;
+                return (
+                  <SelectItem key={ role } value={ role }>
+                    { role }
+                  </SelectItem>
+                );
 
-                        }) }
-                    </SelectContent>
-                </Select>
-            ) }
-        />
-    );
+              }) }
+            </SelectContent>
+          </Select>
+        );
+      }
+      }
+    />
+  );
 
 }
 

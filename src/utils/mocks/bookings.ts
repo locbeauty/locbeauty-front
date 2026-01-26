@@ -1,412 +1,428 @@
-import { createDate } from "@/components/pages/bookings/view/bookingViewHelpers";
-import { Booking } from "../@types/bookings";
+import { startOfWeek } from "date-fns";
+import { Checkout } from "@/utils/@types/checkouts";
 
-export const bookings: Booking[] = [
-    {
-        id: 2,
-        gear: "Ultraformer",
-        customer:
-      "Empresa ABC LtdaEmpresa ABC LtdaEmpresa ABC LtdaEmpresa ABC Ltda",
-        customerEmail: "contato@empresaabc.com",
-        customerCellphone: "(11) 3456-7890",
-        city: "Campinas",
-        address: "Rua das Indústrias, 500, Campinas - SP",
-        startDate: createDate(0, 14, 0), // Hoje às 14h
-        endDate: createDate(0, 20, 0), // Hoje às 20h
-        totalDuration: 6,
+// Helper to create date relative to now (days offset, hour, minute)
+const createDate = (days: number, hours: number, minutes: number = 0): Date => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
+
+// Helper function to convert hours and minutes to total minutes
+const hoursToMinutes = (hours: number, minutes: number = 0): number => {
+  return hours * 60 + minutes;
+};
+
+// Mock checkouts data
+export const bookings: Checkout[] = [
+  {
+    checkoutId: "checkout-001",
+    paymentStatus: "Pago",
+    checkoutStatus: "Concluido",
+    totalPrice: 800.0,
+    sourceFilial: {
+      filialId: "filial-001",
+      description: "Filial São Paulo",
+    },
+    customer: {
+      customerId: "customer-001",
+      fullname: "Empresa ABC Ltda",
+      documentNumber: "12345678901234",
+      email: "contato@empresaabc.com",
+      instagram: "@empresaabc",
+      cellphone: "(11) 3456-7890",
+      birthdate: "1990-01-01",
+      companyName: "Empresa ABC Ltda",
+      customerStatus: "Ativo",
+      lastBooking: createDate(0, 14, 0).toISOString(),
+    },
+    Bookings: [
+      {
+        bookingId: "booking-001",
+        bookingStatus: "Concluido",
+        date: createDate(0, 14, 0),
+        gearAmount: 1,
+        startHourInMinutes: hoursToMinutes(14, 0),
+        totalDurationInMinutes: 360, // 6 hours
         price: 800.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pago",
-        observations: "Aguardando confirmação de pagamento. Cliente é recorrente.",
+        observations:
+          "Aguardando confirmação de pagamento. Cliente é recorrente.",
+        gear: {
+          gearId: "gear-001",
+          gearName: "Ultraformer",
+        },
+      },
+    ],
+    address: {
+      addressId: "address-001",
+      zipCode: "13100-000",
+      buildingNumber: "500",
+      addressComplement: "Sala 10",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      state: {
+        stateId: "state-001",
+        stateName: "São Paulo",
+        UF: "SP",
+      },
+      city: {
+        cityId: "city-001",
+        cityName: "Campinas",
+      },
+      neighborhood: {
+        neighborhoodId: "neighborhood-001",
+        neighborhoodName: "Centro",
+      },
+      street: {
+        streetId: "street-001",
+        streetName: "Rua das Indústrias",
+      },
     },
-    {
-        id: 1,
-        gear: "Lavieen",
-        customer: "João Silva",
-        customerEmail: "joao.silva@email.com",
-        customerCellphone: "(11) 98765-4321",
-        city: "São Paulo - Centro",
-        address: "Av. Paulista, 1000, São Paulo - SP",
-        startDate: createDate(0, 9, 0), // Hoje às 9h
-        endDate: createDate(0, 13, 0), // Hoje às 13h
-        totalDuration: 4,
+  },
+  {
+    checkoutId: "checkout-002",
+    paymentStatus: "Pendente",
+    checkoutStatus: "Concluido",
+    totalPrice: 1200.0,
+    sourceFilial: {
+      filialId: "filial-001",
+      description: "Filial São Paulo",
+    },
+    customer: {
+      customerId: "customer-002",
+      fullname: "João Silva",
+      documentNumber: "12345678901",
+      email: "joao.silva@email.com",
+      instagram: "@joaosilva",
+      cellphone: "(11) 98765-4321",
+      birthdate: "1985-05-15",
+      companyName: "",
+      customerStatus: "Ativo",
+      lastBooking: createDate(0, 9, 0).toISOString(),
+    },
+    Bookings: [
+      {
+        bookingId: "booking-002",
+        bookingStatus: "Concluido",
+        date: createDate(0, 9, 0),
+        gearAmount: 1,
+        startHourInMinutes: hoursToMinutes(9, 0),
+        totalDurationInMinutes: 240, // 4 hours
         price: 1200.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Não pago",
         observations:
-      "Cliente solicitou entrega do equipamento no city. Acesso pela entrada lateral do terreno.",
+          "Cliente solicitou entrega do equipamento no city. Acesso pela entrada lateral do terreno.",
+        gear: {
+          gearId: "gear-002",
+          gearName: "Lavieen",
+        },
+      },
+    ],
+    address: {
+      addressId: "address-002",
+      zipCode: "01311-000",
+      buildingNumber: "1000",
+      addressComplement: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      state: {
+        stateId: "state-001",
+        stateName: "São Paulo",
+        UF: "SP",
+      },
+      city: {
+        cityId: "city-002",
+        cityName: "São Paulo",
+      },
+      neighborhood: {
+        neighborhoodId: "neighborhood-002",
+        neighborhoodName: "Centro",
+      },
+      street: {
+        streetId: "street-002",
+        streetName: "Av. Paulista",
+      },
     },
-    {
-        id: 33,
-        gear: "Delight",
-        customer: "Maria Oliveira",
-        customerEmail: "maria@email.com",
-        customerCellphone: "(11) 91234-5678",
-        city: "Guarulhos",
-        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
-        startDate: createDate(1, 8, 0), // Amanhã às 8h
-        endDate: createDate(1, 16, 0), // Amanhã às 16h
-        totalDuration: 8,
+  },
+  {
+    checkoutId: "checkout-003",
+    paymentStatus: "Pago",
+    checkoutStatus: "Pendente",
+    totalPrice: 650.0,
+    sourceFilial: {
+      filialId: "filial-002",
+      description: "Filial Guarulhos",
+    },
+    customer: {
+      customerId: "customer-003",
+      fullname: "Maria Oliveira",
+      documentNumber: "98765432100",
+      email: "maria@email.com",
+      instagram: "@mariaoliveira",
+      cellphone: "(11) 91234-5678",
+      birthdate: "1992-03-20",
+      companyName: "",
+      customerStatus: "Ativo",
+      lastBooking: createDate(1, 8, 0).toISOString(),
+    },
+    Bookings: [
+      {
+        bookingId: "booking-003",
+        bookingStatus: "Pendente",
+        date: createDate(1, 8, 0),
+        gearAmount: 1,
+        startHourInMinutes: hoursToMinutes(8, 0),
+        totalDurationInMinutes: 480, // 8 hours
         price: 650.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pago",
+        observations: null,
+        gear: {
+          gearId: "gear-003",
+          gearName: "Delight",
+        },
+      },
+    ],
+    address: {
+      addressId: "address-003",
+      zipCode: "07000-000",
+      buildingNumber: "300",
+      addressComplement: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      state: {
+        stateId: "state-001",
+        stateName: "São Paulo",
+        UF: "SP",
+      },
+      city: {
+        cityId: "city-003",
+        cityName: "Guarulhos",
+      },
+      neighborhood: {
+        neighborhoodId: "neighborhood-003",
+        neighborhoodName: "Centro",
+      },
+      street: {
+        streetId: "street-003",
+        streetName: "Av. Monteiro Lobato",
+      },
     },
-    {
-        id: 34,
-        gear: "Delight",
-        customer: "Maria Oliveira",
-        customerEmail: "maria@email.com",
-        customerCellphone: "(11) 91234-5678",
-        city: "Guarulhos",
-        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
-        startDate: createDate(1, 8, 0), // Amanhã às 8h
-        endDate: createDate(1, 16, 0), // Amanhã às 16h
-        totalDuration: 8,
-        price: 650.0,
-        bookingStatus: "Não iniciado",
-        paymentStatus: "Pago",
+  },
+  {
+    checkoutId: "checkout-004",
+    paymentStatus: "Pendente",
+    checkoutStatus: "Pendente",
+    totalPrice: 1500.0,
+    sourceFilial: {
+      filialId: "filial-003",
+      description: "Filial Santo André",
     },
-    {
-        id: 349,
-        gear: "Delight",
-        customer: "Maria Oliveira",
-        customerEmail: "maria@email.com",
-        customerCellphone: "(11) 91234-5678",
-        city: "Guarulhos",
-        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
-        startDate: createDate(1, 8, 0), // Amanhã às 8h
-        endDate: createDate(1, 16, 0), // Amanhã às 16h
-        totalDuration: 8,
-        price: 650.0,
-        bookingStatus: "Não iniciado",
-        paymentStatus: "Pago",
+    customer: {
+      customerId: "customer-004",
+      fullname: "Estetica XYZ",
+      documentNumber: "12345678000123",
+      email: "contato@esteticaxyz.com",
+      instagram: "@esteticaxyz",
+      cellphone: "(11) 2345-6789",
+      birthdate: "1988-07-10",
+      companyName: "Estetica XYZ Ltda",
+      customerStatus: "Ativo",
+      lastBooking: createDate(2, 10, 0).toISOString(),
     },
-    {
-        id: 3429,
-        gear: "Delight",
-        customer: "Maria Oliveira",
-        customerEmail: "maria@email.com",
-        customerCellphone: "(11) 91234-5678",
-        city: "Guarulhos",
-        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
-        startDate: createDate(1, 8, 0), // Amanhã às 8h
-        endDate: createDate(1, 16, 0), // Amanhã às 16h
-        totalDuration: 8,
-        price: 650.0,
-        bookingStatus: "Não iniciado",
-        paymentStatus: "Pago",
-    },
-    {
-        id: 34292,
-        gear: "Delight",
-        customer: "Maria Oliveira",
-        customerEmail: "maria@email.com",
-        customerCellphone: "(11) 91234-5678",
-        city: "Guarulhos",
-        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
-        startDate: createDate(1, 8, 0), // Amanhã às 8h
-        endDate: createDate(1, 16, 0), // Amanhã às 16h
-        totalDuration: 8,
-        price: 650.0,
-        bookingStatus: "Não iniciado",
-        paymentStatus: "Pago",
-    },
-    {
-        id: 342922,
-        gear: "Delight",
-        customer: "Maria Oliveira",
-        customerEmail: "maria@email.com",
-        customerCellphone: "(11) 91234-5678",
-        city: "Guarulhos",
-        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
-        startDate: createDate(1, 18, 0), // Amanhã às 8h
-        endDate: createDate(1, 22, 0), // Amanhã às 16h
-        totalDuration: 4,
-        price: 650.0,
-        bookingStatus: "Não iniciado",
-        paymentStatus: "Pago",
-    },
-    {
-        id: 3,
-        gear: "Delight",
-        customer: "Maria Oliveira",
-        customerEmail: "maria@email.com",
-        customerCellphone: "(11) 91234-5678",
-        city: "Guarulhos",
-        address: "Av. Monteiro Lobato, 300, Guarulhos - SP",
-        startDate: createDate(1, 6, 0), // Amanhã às 8h
-        endDate: createDate(1, 10, 0), // Amanhã às 16h
-        totalDuration: 4,
-        price: 650.0,
-        bookingStatus: "Cancelado",
-        paymentStatus: "Pago",
-    },
-    {
-        id: 4,
-        gear: "Lightsheer Duet",
-        customer: "Estetica XYZ",
-        customerEmail: "Estetica@esteticaxyz.com",
-        customerCellphone: "(11) 2345-6789",
-        city: "Santo André",
-        address: "Rua das Obras, 123, Santo André - SP",
-        startDate: createDate(2, 10, 0), // Depois de amanhã às 10h
-        endDate: createDate(2, 22, 0), // Depois de amanhã às 22h
-        totalDuration: 2,
+    Bookings: [
+      {
+        bookingId: "booking-004",
+        bookingStatus: "Pendente",
+        date: createDate(2, 10, 0),
+        gearAmount: 1,
+        startHourInMinutes: hoursToMinutes(10, 0),
+        totalDurationInMinutes: 720, // 12 hours
         price: 1500.0,
-        bookingStatus: "Não iniciado",
-        paymentStatus: "Não pago",
+        observations: null,
+        gear: {
+          gearId: "gear-004",
+          gearName: "Lightsheer Duet",
+        },
+      },
+    ],
+    address: {
+      addressId: "address-004",
+      zipCode: "09000-000",
+      buildingNumber: "123",
+      addressComplement: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      state: {
+        stateId: "state-001",
+        stateName: "São Paulo",
+        UF: "SP",
+      },
+      city: {
+        cityId: "city-004",
+        cityName: "Santo André",
+      },
+      neighborhood: {
+        neighborhoodId: "neighborhood-004",
+        neighborhoodName: "Centro",
+      },
+      street: {
+        streetId: "street-004",
+        streetName: "Rua das Obras",
+      },
     },
-    {
-        id: 5,
-        gear: "HERUS HIFU",
-        customer: "Pedro Santos",
-        customerEmail: "pedro@email.com",
-        customerCellphone: "(11) 97654-3210",
-        city: "Osasco",
-        address: "Rua das Torres, 50, Osasco - SP",
-        startDate: createDate(-1, 13, 0), // Ontem às 13h
-        endDate: createDate(-1, 17, 0), // Ontem às 17h
-        totalDuration: 4,
+  },
+  {
+    checkoutId: "checkout-005",
+    paymentStatus: "Pago",
+    checkoutStatus: "Cancelado",
+    totalPrice: 350.0,
+    sourceFilial: {
+      filialId: "filial-004",
+      description: "Filial Osasco",
+    },
+    customer: {
+      customerId: "customer-005",
+      fullname: "Pedro Santos",
+      documentNumber: "11122233344",
+      email: "pedro@email.com",
+      instagram: "@pedrosantos",
+      cellphone: "(11) 97654-3210",
+      birthdate: "1980-12-05",
+      companyName: "",
+      customerStatus: "Ativo",
+      lastBooking: createDate(-1, 13, 0).toISOString(),
+    },
+    Bookings: [
+      {
+        bookingId: "booking-005",
+        bookingStatus: "Cancelado",
+        date: createDate(-1, 13, 0),
+        gearAmount: 1,
+        startHourInMinutes: hoursToMinutes(13, 0),
+        totalDurationInMinutes: 240, // 4 hours
         price: 350.0,
-        bookingStatus: "Cancelado",
-        paymentStatus: "Pago",
+        observations: null,
+        gear: {
+          gearId: "gear-005",
+          gearName: "HERUS HIFU",
+        },
+      },
+    ],
+    address: {
+      addressId: "address-005",
+      zipCode: "06000-000",
+      buildingNumber: "50",
+      addressComplement: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      state: {
+        stateId: "state-001",
+        stateName: "São Paulo",
+        UF: "SP",
+      },
+      city: {
+        cityId: "city-005",
+        cityName: "Osasco",
+      },
+      neighborhood: {
+        neighborhoodId: "neighborhood-005",
+        neighborhoodName: "Centro",
+      },
+      street: {
+        streetId: "street-005",
+        streetName: "Rua das Torres",
+      },
     },
-    {
-        id: 6,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(3, 9, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(3, 15, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
+  },
+  {
+    checkoutId: "checkout-006",
+    paymentStatus: "Parcial",
+    checkoutStatus: "Concluido",
+    totalPrice: 1260.0, // Multiple bookings in same checkout
+    sourceFilial: {
+      filialId: "filial-005",
+      description: "Filial São Bernardo",
+    },
+    customer: {
+      customerId: "customer-006",
+      fullname: "Cliente Z",
+      documentNumber: "55566677788",
+      email: "contato@reformasrapidas.com",
+      instagram: "@clientez",
+      cellphone: "(11) 3333-4444",
+      birthdate: "1975-09-25",
+      companyName: "Reformas Rápidas Ltda",
+      customerStatus: "Ativo",
+      lastBooking: createDate(3, 9, 30).toISOString(),
+    },
+    Bookings: [
+      {
+        bookingId: "booking-006-1",
+        bookingStatus: "Concluido",
+        date: createDate(3, 9, 30),
+        gearAmount: 1,
+        startHourInMinutes: hoursToMinutes(9, 30),
+        totalDurationInMinutes: 360, // 6 hours
         price: 420.0,
-        bookingStatus: "Cancelado",
-        paymentStatus: "Não pago",
         observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 755,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(3, 9, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(3, 17, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 9,
+          "Cliente solicitou demonstração do equipamento antes do início do serviço.",
+        gear: {
+          gearId: "gear-006",
+          gearName: "Galaxy Fiber",
+        },
+      },
+      {
+        bookingId: "booking-006-2",
+        bookingStatus: "Concluido",
+        date: createDate(3, 16, 30),
+        gearAmount: 1,
+        startHourInMinutes: hoursToMinutes(16, 30),
+        totalDurationInMinutes: 240, // 4 hours
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7266,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(3, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(3, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 2,
+        observations: "Segunda reserva do mesmo cliente no mesmo checkout.",
+        gear: {
+          gearId: "gear-006",
+          gearName: "Galaxy Fiber",
+        },
+      },
+      {
+        bookingId: "booking-006-3",
+        bookingStatus: "Concluido",
+        date: createDate(7, 16, 30),
+        gearAmount: 1,
+        startHourInMinutes: hoursToMinutes(16, 30),
+        totalDurationInMinutes: 360, // 6 hours
         price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
+        observations: "Terceira reserva do mesmo cliente no mesmo checkout.",
+        gear: {
+          gearId: "gear-006",
+          gearName: "Galaxy Fiber",
+        },
+      },
+    ],
+    address: {
+      addressId: "address-006",
+      zipCode: "09700-000",
+      buildingNumber: "789",
+      addressComplement: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      state: {
+        stateId: "state-001",
+        stateName: "São Paulo",
+        UF: "SP",
+      },
+      city: {
+        cityId: "city-006",
+        cityName: "São Bernardo do Campo",
+      },
+      neighborhood: {
+        neighborhoodId: "neighborhood-006",
+        neighborhoodName: "Industrial",
+      },
+      street: {
+        streetId: "street-006",
+        streetName: "Av. Industrial",
+      },
     },
-    {
-        id: 72177,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 4,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 72288,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7229,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7228,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7227,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7226,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7225,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7224,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7223,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7222,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-    {
-        id: 7221,
-        gear: "Galaxy Fiber",
-        customer: "Cliente Z",
-        customerEmail: "contato@reformasrapidas.com",
-        customerCellphone: "(11) 3333-4444",
-        city: "São Bernardo",
-        address: "Av. Industrial, 789, São Bernardo do Campo - SP",
-        startDate: createDate(7, 16, 30), // Daqui a 3 dias às 9:30h
-        endDate: createDate(7, 20, 30), // Daqui a 3 dias às 15:30h
-        totalDuration: 6,
-        price: 420.0,
-        bookingStatus: "Concluído",
-        paymentStatus: "Pagamento parcial",
-        observations:
-      "Cliente solicitou demonstração do equipamento antes do início do serviço.",
-    },
-];
+  },
+] as unknown as Checkout[];

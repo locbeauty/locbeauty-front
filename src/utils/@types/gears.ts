@@ -1,13 +1,11 @@
 export type Gear = {
-    id: string,
-    name: string,
-    description: string,
-    region: string,
-    availableUnits: number,
-    outOfServiceUnits: number,
-    totalUnits: number,
-    acquisitionDate: Date | null,
-    transferable: boolean,
-    nextMaintenance: Date | null,
-    lastMaintenance: Date | null,
-}
+  gearId: string;
+  gearName: string;
+  availableUnits: number;
+  outOfServiceUnits: number;
+  totalUnits: number;
+  SourceFilial: {
+    filialId: string;
+    filialName: string;
+  };
+};

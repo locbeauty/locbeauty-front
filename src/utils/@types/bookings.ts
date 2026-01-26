@@ -1,19 +1,66 @@
-export type BookingStatuses = "Não iniciado" | "Concluído" | "Cancelado"
-export type PaymentStatuses = "Não pago" | "Pagamento parcial" | "Pago"
+import { CheckoutStatuses, PaymentStatuses } from "../constants";
 
-export type Booking = {
-  id: number;
-  gear: string;
-  customer: string;
-  customerEmail?: string;
-  customerCellphone?: string;
-  city: string;
-  address?: string;
-  startDate: Date;
-  endDate: Date;
-  totalDuration: number; // em horas
-  price: number;
-  bookingStatus: BookingStatuses;
+export interface BookingWithCheckout {
+  bookingId: string;
+  checkoutId: string;
+  observations: string;
+  individualPrice: number;
+  startHourInMinutes: number;
+  totalDurationInMinutes: number;
+  date: Date;
+  extraMachineCosts: number;
+  extraMachineCostsDescription: string;
+  status: "ACTIVE" | "INACTIVE";
+  isCourtesy: boolean;
+  wasRefunded: boolean;
+  gear: {
+    gearId: string;
+    gearName: string;
+  };
   paymentStatus: PaymentStatuses;
-  observations?: string;
-};
+  checkoutStatus: CheckoutStatuses;
+  totalPrice: number;
+  sourceFilial: {
+    filialId: string;
+    filialName: string;
+    CNPJ: string;
+    slug: string;
+    email: string;
+    cellphone: string;
+    addressId: string;
+    managerEmployeeId: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  customer: {
+    customerId: string;
+    fullname: string;
+    documentNumber: string;
+    companyName: string;
+    email: string;
+    cellphone: string;
+    instagram: string;
+    birthdate: Date;
+    customerStatus: "Ativo" | "Inativo";
+    lastBooking: Date;
+    higherValueBooking: number;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  address: {
+    addressId: string;
+    zipCode: string;
+    buildingNumber: string;
+    addressComplement: string | null;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    city: string;
+    state: string;
+    neighborhood: string;
+    street: string;
+  };
+  hasMultipleBookingsInCheckout: boolean;
+}
+
+export type Booking = BookingWithCheckout;

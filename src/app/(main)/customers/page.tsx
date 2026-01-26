@@ -1,56 +1,63 @@
+"use client";
 import { CustomersTable } from "@/components/pages/customers/view/CustomersTable";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/utils/routes";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Upload } from "lucide-react";
 import Link from "next/link";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { useState } from "react";
+import { ImportCustomersDialog } from "@/components/pages/customers/ImportCustomersDialog";
 
 const CustomerFilterStatusTypes = [
-    "Ativo",
-    "Inativo",
-    "Inadimplente",
-    "Bloqueado",
+  "Ativo",
+  "Inativo",
+  "Inadimplente",
+  "Bloqueado",
 ];
 
 export default function CustomersPage() {
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
-                    <p className="text-muted-foreground">
-                        Gerencie o cadastro de clientes
-                    </p>
-                </div>
-                <Button className="flex justify-center items-center" asChild>
-                    <Link href={ ROUTES.CREATE_CUSTOMER }>
-                        <Plus className="" />
-                        <span className="hidden md:inline">Novo Cliente</span>
-                    </Link>
-                </Button>
-            </div>
+  const [ dialogImportCustomers, setDialogImportCustomers ] = useState(false);
 
-            <div className="flex items-center gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Buscar clientes..."
-                        className="pl-8"
-                    />
-                </div>
-                <CustomFilterSelect
-                    items={ CustomerFilterStatusTypes }
-                    placeholder="Status"
-                    triggerProps={ {
-                        className: "w-[180px]",
-                        disabled: false,
-                    } }
-                />
+  return (
+    <RouteGuard module={ SYSTEM_MODULES.CUSTOMERS }>
+      <div className="">
+        <div className="flex items-center justify-between space-y-5">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
+            <p className="text-muted-foreground">
+              Gerencie o cadastro de clientes
+            </p>
+          </div>
+          <Can module={ SYSTEM_MODULES.CUSTOMERS } action="canCreate">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={ () => setDialogImportCustomers(true) }
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                <span className="hidden md:inline">Importar</span>
+              </Button>
+              <Button className="flex justify-center items-center" asChild>
+                <Link href={ ROUTES.CREATE_CUSTOMER }>
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span className="hidden md:inline">Novo Cliente</span>
+                </Link>
+              </Button>
             </div>
-
-            <CustomersTable />
+          </Can>
         </div>
-    );
+
+        <CustomersTable />
+
+        <ImportCustomersDialog
+          open={ dialogImportCustomers }
+          onOpenChange={ setDialogImportCustomers }
+        />
+      </div>
+    </RouteGuard>
+  );
 }

@@ -1,221 +1,254 @@
 import { Save } from "lucide-react";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Dispatch, SetStateAction } from "react";
-import { gears } from "@/utils/mocks/gears";
-import { regionals } from "@/utils/mocks/regionals";
+import { Separator } from "@/components/ui/separator";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { Gear } from "@/utils/@types/gears";
+import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
+import { Controller, FormProvider, useForm } from "react-hook-form";
+import {
+  updateGearFormSchema,
+  UpdateGearFormSchemaType,
+} from "@/lib/zod/UpdateGearValidation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { SelectFilial } from "@/components/shared/SelectFilial";
+
+import { AmountControlButton } from "@/components/shared/AmountControlButton";
+import { fetchWithToken } from "@/utils/fetchWithToken";
+import { toast } from "sonner";
+import { queryClient } from "@/app/(main)/layout";
 
 interface UpdateGearDialogProps {
   isUpdateGearDialogOpen: boolean;
   setIsUpdateGearDialogOpen: Dispatch<SetStateAction<boolean>>;
   selectedGear: Gear | null;
   setSelectedGear: Dispatch<SetStateAction<Gear | null>>;
-  setGears: Dispatch<SetStateAction<Gear[]>>;
+  setGears: Dispatch<SetStateAction<Gear[] | null>>;
 }
 
 export function UpdateGearDialog({
-    isUpdateGearDialogOpen,
-    setIsUpdateGearDialogOpen,
-    selectedGear,
-    setSelectedGear,
-    setGears,
+  isUpdateGearDialogOpen,
+  setIsUpdateGearDialogOpen,
+  selectedGear,
+  setSelectedGear,
+  setGears,
 }: UpdateGearDialogProps) {
-    const handleInputChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
-        if (selectedGear) {
-            setSelectedGear({
-                ...selectedGear,
-                [e.target.name]: e.target.value,
-            });
-        }
-    };
+  const { user } = useAuth();
 
-    // Handle number input changes
-    const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (selectedGear) {
-            setSelectedGear({
-                ...selectedGear,
-                [e.target.name]: Number.parseInt(e.target.value, 10) || 0,
-            });
-        }
-    };
+  const updateGearMethods = useForm<UpdateGearFormSchemaType>({
+    resolver: zodResolver(updateGearFormSchema),
+  });
 
-    // Handle select changes
-    const handleSelectChange = (value: string, field: string) => {
-        if (selectedGear) {
-            setSelectedGear({
-                ...selectedGear,
-                [field]: value,
-            });
-        }
-    };
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    trigger,
+    reset,
+    formState: { errors, isDirty },
+  } = updateGearMethods;
 
-    const handleSaveGear = () => {
-        if (selectedGear) {
-            setGears(
-                gears.map((gear) => (gear.id === selectedGear.id ? selectedGear : gear))
+  const availableUnits = watch("availableUnits") || 0;
+  const outOfServiceUnits = watch("outOfServiceUnits") || 0;
+
+  useEffect(() => {
+    setValue("totalUnits", availableUnits + outOfServiceUnits);
+  }, [ availableUnits, outOfServiceUnits, setValue ]);
+
+  useEffect(() => {
+    if (selectedGear) {
+      reset({
+        sourceFilialId: selectedGear?.SourceFilial.filialId,
+        availableUnits: selectedGear?.availableUnits,
+        gearName: selectedGear?.gearName,
+        outOfServiceUnits: selectedGear?.outOfServiceUnits,
+        totalUnits: selectedGear?.totalUnits,
+      });
+    }
+  }, [ selectedGear, reset ]);
+
+  const handleSaveGear = async (targetGearData: UpdateGearFormSchemaType) => {
+    try {
+      const response = await fetchWithToken(
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/gears/update?gearId=${selectedGear?.gearId}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(targetGearData),
+        },
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.warning(data.message, { style: { fontSize: "1rem" } });
+      } else {
+        toast.success("Equipamento atualizado com sucesso!", {
+          style: { fontSize: "1rem" },
+        });
+
+        if (setGears) {
+          setGears((prevGears) => {
+            if (!prevGears) return [ data.gear ];
+            return prevGears.map((g) =>
+              g.gearId === data.gear.gearId ? data.gear : g,
             );
-            setIsUpdateGearDialogOpen(false);
+          });
         }
-    };
 
-    const handleSwitchChange = (checked: boolean) => {
-        if (selectedGear) {
-            setSelectedGear({
-                ...selectedGear,
-                transferable: checked,
-            });
-        }
-    };
+        await queryClient.invalidateQueries({ queryKey: [ "get-all-gears" ] });
+        await queryClient.invalidateQueries({
+          queryKey: [ "get-day-checkouts" ],
+        });
 
-    return (
-        <Dialog
-            open={ isUpdateGearDialogOpen }
-            onOpenChange={ setIsUpdateGearDialogOpen }
-        >
-            <DialogContent
-                className="sm:max-w-[600px]"
-                aria-describedby={ undefined }
-                onOpenAutoFocus={ (e) => e.preventDefault() }
-            >
-                <DialogHeader>
-                    <DialogTitle>Editar Equipamento</DialogTitle>
-                </DialogHeader>
+        reset();
+        setIsUpdateGearDialogOpen(false);
+      }
+    } catch {
+      toast.error("Erro ao atualizar equipamento.");
+    }
+  };
 
-                {selectedGear && (
-                    <div className="grid gap-6 py-4">
-                        <div className="grid grid-cols-1 gap-3">
-                            <Label>Nome</Label>
-                            <Input
-                                name="name"
-                                value={ selectedGear.name }
-                                onChange={ handleInputChange }
-                            />
-                        </div>
+  return (
+    <Dialog
+      open={ isUpdateGearDialogOpen }
+      onOpenChange={ setIsUpdateGearDialogOpen }
+    >
+      <DialogContent
+        className="sm:max-w-[600px]"
+        aria-describedby={ undefined }
+        onOpenAutoFocus={ (e) => e.preventDefault() }
+      >
+        <DialogHeader>
+          <DialogTitle>Editar Equipamento</DialogTitle>
+        </DialogHeader>
 
-                        <div className="grid grid-cols-1 gap-3">
-                            <Label htmlFor="description">Descrição</Label>
-                            <Textarea
-                                id="description"
-                                name="description"
-                                value={ selectedGear.description }
-                                onChange={ handleInputChange }
-                                rows={ 3 }
-                            />
-                        </div>
+        {selectedGear && (
+          <form
+            onSubmit={ handleSubmit(handleSaveGear) }
+            className="grid gap-6 py-4"
+          >
+            {/* Informações Gerais */}
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <Label>Nome</Label>
+                <Input { ...register("gearName") } />
+              </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid grid-cols-1 gap-3">
-                                <Label htmlFor="region">Regional</Label>
-                                <Select
-                                    value={ selectedGear.region }
-                                    onValueChange={ (value) => handleSelectChange(value, "region") }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione uma regional" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {regionals.map((regional) => {
-                                            return (
-                                                <SelectItem key={ regional.regionalId } value={ regional.title }>
-                                                    {regional.title}, {regional.address.state.title}
-                                                </SelectItem>
-                                            );
-                                        })}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+              {user?.role === USER_ROLES.GERENTE && (
+                <div className="space-y-2">
+                  <Label>Filial</Label>
+                  <FormProvider { ...updateGearMethods }>
+                    <SelectFilial<UpdateGearFormSchemaType>
+                      control={ control }
+                      name="sourceFilialId"
+                    />
+                  </FormProvider>
+                  {errors.sourceFilialId && (
+                    <p className="text-sm text-destructive mt-1">
+                      {errors.sourceFilialId.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
 
-                            <div className="grid grid-cols-1 gap-3">
-                                <Label htmlFor="acquisitionDate">Data da aquisição</Label>
-                                <Input
-                                    id="acquisitionDate"
-                                    name="acquisitionDate"
-                                    value={ selectedGear.acquisitionDate ? selectedGear.acquisitionDate.toLocaleDateString(
-                                        "pt-BR"
-                                    ) : "Não informado" }
-                                    onChange={ handleInputChange }
-                                />
-                            </div>
-                        </div>
+            <Separator />
 
-                        <div className="flex flex-col gap-3 max-w-[90%] md:max-w-[40%]">
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="totalUnits">Unidades totais</Label>
-                                <Input
-                                    id="totalUnits"
-                                    name="totalUnits"
-                                    type="number"
-                                    value={ selectedGear.totalUnits }
-                                    onChange={ handleNumberChange }
-                                />
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <Label htmlFor="availableUnits">Unidades disponíveis</Label>
-                                <Input
-                                    id="availableUnits"
-                                    name="availableUnits"
-                                    type="number"
-                                    value={ selectedGear.availableUnits }
-                                    onChange={ handleNumberChange }
-                                />
-                            </div>
+            {/* Gestão de Estoque */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Gestão de Estoque
+                </h4>
+              </div>
 
-                            <div className="flex flex-col gap-3">
-                                <Label htmlFor="totalUnits">Unidades defeituosas</Label>
-                                <Input
-                                    id="totalUnits"
-                                    name="totalUnits"
-                                    type="number"
-                                    value={ selectedGear.outOfServiceUnits }
-                                    onChange={ handleNumberChange }
-                                />
-                            </div>
-                        </div>
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <Label
+                    htmlFor="availableUnits"
+                    className="text-muted-foreground font-normal"
+                  >
+                    Disponíveis
+                  </Label>
+                  <Controller
+                    control={ control }
+                    name="availableUnits"
+                    render={ ({ field }) => (
+                      <div className="flex justify-start">
+                        <AmountControlButton
+                          value={ field.value || 0 }
+                          onChange={ field.onChange }
+                          error={ !!errors.availableUnits }
+                        />
+                      </div>
+                    ) }
+                  />
+                  {errors.availableUnits && (
+                    <p className="text-sm text-destructive">
+                      {errors.availableUnits.message}
+                    </p>
+                  )}
+                </div>
 
-                        <div className="flex items-center space-x-2">
-                            <Switch
-                                id="transferable"
-                                checked={ selectedGear.transferable }
-                                onCheckedChange={ handleSwitchChange }
-                            />
-                            <Label htmlFor="transferable">Pode ser transferido</Label>
-                        </div>
-                    </div>
-                )}
+                <div className="space-y-3">
+                  <Label
+                    htmlFor="outOfServiceUnits"
+                    className="text-muted-foreground font-normal"
+                  >
+                    Defeituosas
+                  </Label>
+                  <Controller
+                    control={ control }
+                    name="outOfServiceUnits"
+                    render={ ({ field }) => (
+                      <div className="flex justify-start">
+                        <AmountControlButton
+                          value={ field.value || 0 }
+                          onChange={ field.onChange }
+                          error={ !!errors.outOfServiceUnits }
+                        />
+                      </div>
+                    ) }
+                  />
+                  {errors.outOfServiceUnits && (
+                    <p className="text-sm text-destructive">
+                      {errors.outOfServiceUnits.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
 
-                <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={ () => setIsUpdateGearDialogOpen(false) }
-                    >
-            Cancelar
-                    </Button>
-                    <Button onClick={ handleSaveGear }>
-                        <Save className="mr-2 h-4 w-4" />
-            Salvar alterações
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+            <DialogFooter>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={ () => setIsUpdateGearDialogOpen(false) }
+              >
+                Cancelar
+              </Button>
+              <Button disabled={ !isDirty }>
+                <Save className="mr-2 h-4 w-4" />
+                Salvar alterações
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 }

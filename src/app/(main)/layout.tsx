@@ -1,37 +1,26 @@
 "use client";
 
-import { DashboardHeader } from "@/components/ui/AplicationHeader/DashboardHeader";
-import { Sidebar } from "@/components/shared/Sidebar";
-import { Toaster } from "@/components/ui/sonner";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { AuthProvider } from "@/contexts/auth-provider";
+import PageWithAuth from "./page";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AccessProvider } from "@/contexts/access-provider";
+
+export const queryClient = new QueryClient();
 
 export default function DashboardLayout({
-    children,
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const [ sidebarOpen, setSidebarOpen ] = useState(false);
-
-    return (
-        <div className="max-h-screen flex bg-background">
-            <Sidebar
-                className={ cn(sidebarOpen ? "translate-x-0" : "-translate-x-full") }
-            />
-
-            <div className="flex-1 md:ml-48">
-                <DashboardHeader setSidebarOpen={ setSidebarOpen } />
-                <main className="p-6">{children}</main>
-            </div>
-
-            {/* Overlay for mobile */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-black/50 md:hidden"
-                    onClick={ () => setSidebarOpen(false) }
-                />
-            )}
-            <Toaster />
-        </div>
-    );
+  return (
+    <AuthProvider>
+      <AccessProvider>
+        <PageWithAuth>
+          <QueryClientProvider client={ queryClient }>
+            {children}
+          </QueryClientProvider>
+        </PageWithAuth>
+      </AccessProvider>
+    </AuthProvider>
+  );
 }

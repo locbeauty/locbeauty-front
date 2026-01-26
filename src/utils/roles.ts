@@ -1,8 +1,8 @@
 export const ROLES = [
-    "",
-    "gerente",
-    "comercial",
-    "logistica",
-    "financeiro",
-    "motorista",
+  "Master",
+  "Gerente",
+  "Comercial",
+  "Financeiro",
+  "Logistica",
+  "Motorista",
 ] as const;
