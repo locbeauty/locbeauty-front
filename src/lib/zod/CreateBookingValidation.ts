@@ -16,7 +16,7 @@ export const checkoutPaymentDataSchema = z
     firstPaymentAmount: z.string().optional(),
     firstPaymentMethod: z.enum(PaymentMethods).optional(),
     firstPaymentStatus: z
-      .enum([ "Pendente", "Pago" ])
+      .enum(["Pendente", "Pago"])
       .default("Pendente")
       .optional(),
 
@@ -24,7 +24,7 @@ export const checkoutPaymentDataSchema = z
     secondPaymentAmount: z.string().optional(),
     secondPaymentMethod: z.enum(PaymentMethods).optional(),
     secondPaymentStatus: z
-      .enum([ "Pendente", "Pago" ])
+      .enum(["Pendente", "Pago"])
       .default("Pendente")
       .optional(),
   })
@@ -38,21 +38,21 @@ export const checkoutPaymentDataSchema = z
       const firstPaymentCents = parseStringToCents(data.firstPaymentAmount);
       if (firstPaymentCents === 0) {
         ctx.addIssue({
-          path: [ "firstPaymentAmount" ],
+          path: ["firstPaymentAmount"],
           code: z.ZodIssueCode.custom,
           message: "O valor da 1ª parcela é obrigatório.",
         });
       }
       if (!data.firstPaymentDate) {
         ctx.addIssue({
-          path: [ "firstPaymentDate" ],
+          path: ["firstPaymentDate"],
           code: z.ZodIssueCode.custom,
           message: "A data da 1ª parcela é obrigatória.",
         });
       }
       if (!data.firstPaymentMethod) {
         ctx.addIssue({
-          path: [ "firstPaymentMethod" ],
+          path: ["firstPaymentMethod"],
           code: z.ZodIssueCode.custom,
           message: "A forma da 1ª parcela é obrigatória.",
         });
@@ -90,15 +90,12 @@ export const createCheckoutFormSchema = z
       z.object({
         gearId: z.string({ message: "ID da máquina é obrigatório" }),
         gearName: z.string({ message: "Nome da máquina é obrigatório" }),
-        individualPrice: z
-          .string()
-          .refine((value) => parseStringToCents(value) > 0, {
-            message: "Valor deve ser maior que R$ 0,00.",
-          }),
+        individualPrice: z.string(),
       }),
     ),
 
-    basePrice: z.string().min(1, { message: "Preço base é obrigatório." }),
+    // basePrice: z.string().min(1, { message: "Preço base é obrigatório." }),
+    basePrice: z.string(),
     extraMachineCosts: z.string().optional(),
 
     distanceInKm: z.number().optional(),
@@ -108,10 +105,11 @@ export const createCheckoutFormSchema = z
     additionalTransportCost: z.string().optional(),
 
     consumption: z.number().optional(),
+    isRoundTrip: z.boolean().default(true),
 
     totalPrice: z.string(),
 
-    checkoutStatus: z.enum([ "Pendente", "Concluido", "Cancelado" ], {
+    checkoutStatus: z.enum(["Pendente", "Concluido", "Cancelado"], {
       message: "Status do agendamento é obrigatório.",
     }),
     paymentStatus: z.enum(paymentStatuses, {
@@ -131,7 +129,7 @@ export const createCheckoutFormSchema = z
     if (data.crossDays) {
       if (!data.endDate) {
         ctx.addIssue({
-          path: [ "endDate" ],
+          path: ["endDate"],
           code: z.ZodIssueCode.custom,
           message:
             "Data final é obrigatória quando 'Agendamento atravessa dias' está marcado.",
@@ -144,7 +142,7 @@ export const createCheckoutFormSchema = z
         data.endHourInMinutes === null
       ) {
         ctx.addIssue({
-          path: [ "endHourInMinutes" ],
+          path: ["endHourInMinutes"],
           code: z.ZodIssueCode.custom,
           message: "Horário final é obrigatório.",
         });
@@ -167,7 +165,7 @@ export const createCheckoutFormSchema = z
 
         if (end <= start) {
           ctx.addIssue({
-            path: [ "endDate" ],
+            path: ["endDate"],
             code: z.ZodIssueCode.custom,
             message: "A data/hora final deve ser posterior à inicial.",
           });
@@ -186,7 +184,7 @@ export const createCheckoutFormSchema = z
       // Aqui, só precisamos checar se é >= ao total.
       if (firstPaymentCents > 0 && firstPaymentCents >= totalCents) {
         ctx.addIssue({
-          path: [ "paymentInfo", "firstPaymentAmount" ], // Anexa o erro ao campo de valor
+          path: ["paymentInfo", "firstPaymentAmount"], // Anexa o erro ao campo de valor
           code: z.ZodIssueCode.custom,
           message:
             "O valor parcial deve ser menor que o total. Para quitar, selecione 'Pago'.",
@@ -205,7 +203,10 @@ export const createCheckoutFormSchema = z
     let fuelCostCents = 0;
     if (distance > 0 && fuelPriceCents > 0) {
       const litersNeeded = distance / consumption;
-      fuelCostCents = Math.round(litersNeeded * fuelPriceCents);
+      const roundTripMultiplier = data.isRoundTrip ? 2 : 1;
+      fuelCostCents = Math.round(
+        litersNeeded * fuelPriceCents * roundTripMultiplier,
+      );
     }
 
     const computedTotal =
@@ -220,7 +221,7 @@ export const createCheckoutFormSchema = z
     // mas idealmente deve bater exato se a lógica for idêntica.
     if (parseStringToCents(data.totalPrice) !== computedTotal) {
       ctx.addIssue({
-        path: [ "totalPrice" ],
+        path: ["totalPrice"],
         code: z.ZodIssueCode.custom,
         message: `O preço total (${
           data.totalPrice

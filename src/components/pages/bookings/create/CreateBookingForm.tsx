@@ -222,6 +222,7 @@ export function CreateBookingForm() {
       crossDays: false,
       endDate: undefined,
       endHourInMinutes: undefined,
+      isRoundTrip: true,
     },
   });
 
@@ -261,6 +262,7 @@ export function CreateBookingForm() {
   const watchCrossDays = watch("crossDays");
   const watchEndDate = watch("endDate");
   const watchEndHourInMinutes = watch("endHourInMinutes");
+  const watchIsRoundTrip = watch("isRoundTrip");
 
   // const isDateInPast = selectedDate && selectedDate < new Date();
   const isDateInPast = false;
@@ -323,11 +325,12 @@ export function CreateBookingForm() {
     const fuelCents = parseStringToCents(watchFuelCost || "0"); // custo por litro
     const distance = watchDistanceInKm || 0;
     const consumption = watchConsumption || 1;
+    const roundTripMultiplier = watchIsRoundTrip ? 2 : 1;
 
     let totalFuel = 0;
     if (distance > 0 && fuelCents > 0) {
       const litersNeeded = distance / consumption;
-      totalFuel = Math.round(litersNeeded * fuelCents);
+      totalFuel = Math.round(litersNeeded * fuelCents * roundTripMultiplier);
     }
 
     const total =
@@ -343,6 +346,7 @@ export function CreateBookingForm() {
     watchDistanceInKm,
     watchAdditionalTransportCost,
     watchConsumption,
+    watchIsRoundTrip,
     setValue,
   ]);
 
@@ -680,7 +684,7 @@ Motorista: ${driverString || "A definir"}
                 disabled={
                   !startHour ||
                   watchSelectedGears.length === 0 ||
-                  watchTotalPrice === "0,00" ||
+                  // watchTotalPrice === "0,00" ||
                   isSubmitting ||
                   isLoading
                 }

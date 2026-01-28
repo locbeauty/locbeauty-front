@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft, Table } from "lucide-react";
+import { Plus, ArrowLeft, Table, Eye } from "lucide-react";
+import { Can } from "@/components/auth/Can";
 import Link from "next/link";
 import { ROUTES } from "@/utils/routes";
 import { useRouter } from "next/navigation";
@@ -22,7 +23,7 @@ export default function AgendamentosPage() {
   // Estado para controlar a semana atual
   const [ currentDate, setCurrentDate ] = useState(new Date());
   const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(
-    null
+    null,
   );
   const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] =
     useState(false);
@@ -59,6 +60,32 @@ export default function AgendamentosPage() {
                 Visualize agendamentos e treinamentos
               </p>
             </div>
+          </div>
+          <div className="flex gap-4">
+            <Can module={ SYSTEM_MODULES.BOOKINGS } action="canCreate">
+              <Button className="flex justify-center items-center" asChild>
+                <Link
+                  className="flex justify-center items-center"
+                  href={ ROUTES.CREATE_BOOKING }
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span className="hidden md:inline">Novo Agendamento</span>
+                </Link>
+              </Button>
+            </Can>
+            <Button
+              variant="outline"
+              className="flex justify-center items-center"
+              asChild
+            >
+              <Link
+                className="flex justify-center items-center"
+                href={ ROUTES.BOOKING_TABLE }
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                <span className="hidden md:inline">Visualizar Tabela</span>
+              </Link>
+            </Button>
           </div>
         </div>
 
