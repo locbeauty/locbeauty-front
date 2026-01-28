@@ -1,4 +1,4 @@
-("use client");
+"use client";
 
 import { useEffect, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
@@ -57,7 +57,7 @@ const getPaymentIcon = (method: string) => {
 };
 
 const parseCurrencyToFloat = (
-  value: string | number | null | undefined
+  value: string | number | null | undefined,
 ): number => {
   if (!value) return 0;
   if (typeof value === "number") return value;
@@ -77,6 +77,7 @@ const formatToDecimalString = (value: number) => {
 
 interface TrainingPaymentSectionProps {
   prefix: "traineePayment" | "volunteerPayment";
+  label?: string;
 }
 
 import { CreateTrainingDataType } from "@/lib/zod/CreateTrainingValidation";
@@ -85,6 +86,7 @@ import { CreateTrainingDataType } from "@/lib/zod/CreateTrainingValidation";
 
 export function TrainingPaymentSection({
   prefix,
+  label,
 }: TrainingPaymentSectionProps) {
   // Usamos 'any' no generic aqui para permitir flexibilidade com os caminhos dinâmicos
   const {
@@ -95,6 +97,7 @@ export function TrainingPaymentSection({
   } = useFormContext<CreateTrainingDataType>();
 
   const paymentStatus = watch(`${prefix}.paymentInfo.paymentStatus`);
+  const firstPaymentStatus = watch(`${prefix}.paymentInfo.firstPaymentStatus`);
 
   // ...
 
@@ -103,7 +106,8 @@ export function TrainingPaymentSection({
   const statusError = errors?.[prefix]?.paymentInfo?.paymentStatus;
 
   return (
-    <div className="space-y-6 pt-2">
+    <div className="space-y-4 py-4 border-t mt-4">
+      {label && <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{label}</h4>}
       {/* Cabeçalho: Status do Pagamento */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -134,7 +138,7 @@ export function TrainingPaymentSection({
                         <div className="flex items-center gap-2">
                           <div
                             className={ `w-2 h-2 rounded-full ${getStatusColor(
-                              status
+                              status,
                             )}` }
                           />
                           {status}
@@ -260,7 +264,7 @@ export function TrainingPaymentSection({
           </div>
 
           {/* --- 2ª PARCELA / RESTANTE (Apenas Parcial) --- */}
-          {paymentStatus === "Parcial" && (
+          {paymentStatus === "Parcial" && firstPaymentStatus !== "Pendente" && (
             <>
               <div className="h-px bg-border border-dashed" />
               <div className="space-y-3 opacity-90">

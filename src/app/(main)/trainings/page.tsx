@@ -114,8 +114,11 @@ export default function Treinamentos() {
     // Filtrar Alunos
     const visibleTraineeIds = new Set<string>();
     trainings?.forEach((t) => {
-      if (accessibleFilialIds.includes(t.sourceFilialId) && t.traineeId) {
-        visibleTraineeIds.add(t.traineeId);
+      if (accessibleFilialIds.includes(t.sourceFilialId)) {
+        if (t.traineeId) visibleTraineeIds.add(t.traineeId);
+        t.Trainees?.forEach((trainee) =>
+          visibleTraineeIds.add(trainee.traineeId),
+        );
       }
     });
 
@@ -128,8 +131,11 @@ export default function Treinamentos() {
     // Filtrar Voluntários
     const visibleVolunteerIds = new Set<string>();
     trainings?.forEach((t) => {
-      if (accessibleFilialIds.includes(t.sourceFilialId) && t.volunteerId) {
-        visibleVolunteerIds.add(t.volunteerId);
+      if (accessibleFilialIds.includes(t.sourceFilialId)) {
+        if (t.volunteerId) visibleVolunteerIds.add(t.volunteerId);
+        t.Volunteers?.forEach((volunteer) =>
+          visibleVolunteerIds.add(volunteer.volunteerId),
+        );
       }
     });
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Eye, Filter, X } from "lucide-react";
 
 import { Trainee } from "@/utils/@types/trainee";
@@ -60,25 +60,30 @@ export function TraineesTable({
     // Name Filter
     if (filterName) {
       result = result.filter((t) =>
-        t.name.toLowerCase().includes(filterName.toLowerCase())
+        t.name.toLowerCase().includes(filterName.toLowerCase()),
       );
     }
 
     // Pending Payment Filter
     if (filterPending) {
-      // We need to check if this trainee has any training with pending payment.
-      // The `trainees` object itself might not have payment info directly attached in this view unless we cross-reference `allTrainings`.
-      // `allTrainings` contains the payment info linked to `traineeId`.
       const traineesWithPending = new Set<string>();
       allTrainings.forEach((training) => {
-        // Check trainee payments
-        if (
-          training.TrainingPayment?.some(
-            (p) => p.paymentStatus === "Pendente" && p.payerType === "TRAINEE"
-          )
-        ) {
-          if (training.traineeId) traineesWithPending.add(training.traineeId);
-        }
+        training.TrainingPayment?.forEach((p) => {
+          const isPending =
+            p.paymentMode === "AVista"
+              ? p.paymentStatus === "Pendente" ||
+                p.firstPaymentStatus === "Pendente"
+              : p.paymentStatus === "Pendente" ||
+                p.paymentStatus === "Parcial" ||
+                p.firstPaymentStatus === "Pendente" ||
+                p.secondPaymentStatus === "Pendente";
+
+          if (isPending && p.payerType === "TRAINEE") {
+            if (p.traineeId) traineesWithPending.add(p.traineeId);
+            else if (training.traineeId)
+              traineesWithPending.add(training.traineeId);
+          }
+        });
       });
 
       result = result.filter((t) => traineesWithPending.has(t.traineeId));
@@ -89,6 +94,9 @@ export function TraineesTable({
       const traineesInFilial = new Set<string>();
       allTrainings.forEach((training) => {
         if (training.sourceFilialId === filterFilial) {
+          // Check all trainees in this training
+          training.Trainees?.forEach((t) => traineesInFilial.add(t.traineeId));
+          // Fallback to legacy single traineeId
           if (training.traineeId) traineesInFilial.add(training.traineeId);
         }
       });
@@ -187,14 +195,15 @@ export function TraineesTable({
               </tr>
             )}
             {sortedTrainees.map((trainee) => {
-
               return (
                 <tr
                   key={ trainee.traineeId }
                   className="border-t hover:bg-muted/50"
                 >
                   <td className="p-3 text-sm font-medium">{trainee.name}</td>
-                  <td className="p-3 text-sm">{trainee.SourceFilial?.filialName}</td>
+                  <td className="p-3 text-sm">
+                    {trainee.SourceFilial?.filialName}
+                  </td>
                   <td className="p-3 text-sm">{trainee.documentNumber}</td>
                   <td className="p-3 text-sm">{trainee.email}</td>
                   <td className="p-3 text-center text-sm">
@@ -224,8 +233,8 @@ export function TraineesTable({
               allTrainings
                 .filter((t) => t.traineeId === trainee.traineeId)
                 .map((t) => t.SourceFilial?.filialName)
-                .filter(Boolean)
-            )
+                .filter(Boolean),
+            ),
           ).join(", ");
           return (
             <ResponsiveCard

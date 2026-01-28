@@ -279,8 +279,6 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               <th className="text-left p-3 font-medium">Data</th>
               <th className="text-left p-3 font-medium">Filial</th>
               <th className="text-left p-3 font-medium">Equipamento</th>
-              <th className="text-left p-3 font-medium">Aluno</th>
-              <th className="text-left p-3 font-medium">Modelo</th>
               <th className="text-center p-3 font-medium">Horário</th>
               <th className="text-center p-3 font-medium">Status</th>
               <th className="text-center p-3 font-medium">Detalhes</th>
@@ -309,12 +307,6 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 </td>
                 <td className="p-3 text-sm">
                   {training.Gear?.gearName || "N/A"}
-                </td>
-                <td className="p-3 text-sm">
-                  {training.Trainee?.name || "N/A"}
-                </td>
-                <td className="p-3 text-sm">
-                  {training.Volunteer?.name || "N/A"}
                 </td>
                 <td className="p-3 text-center text-sm">
                   {formatDuration(training.hourInMinutes)}

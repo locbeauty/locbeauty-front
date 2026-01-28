@@ -30,7 +30,7 @@ export function VolunteersTable({
   filials,
 }: VolunteersTableProps) {
   const [ selectedVolunteer, setSelectedVolunteer ] = useState<Volunteer | null>(
-    null
+    null,
   );
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
 
@@ -57,7 +57,7 @@ export function VolunteersTable({
     // Name Filter
     if (filterName) {
       result = result.filter((v) =>
-        v.name.toLowerCase().includes(filterName.toLowerCase())
+        v.name.toLowerCase().includes(filterName.toLowerCase()),
       );
     }
 
@@ -65,20 +65,22 @@ export function VolunteersTable({
     if (filterPending) {
       const volunteersWithPending = new Set<string>();
       allTrainings.forEach((training) => {
-        if (
-          training.TrainingPayment?.some(
-            (p) => p.paymentStatus === "Pendente" && p.payerType === "VOLUNTEER"
-          )
-        ) {
-          // Assuming a training tracks volunteerId. Wait, `Training` type has `Volunteer` relation or `volunteerId`?
-          // The `Training` type usually has `volunteerId` or `Volunteer`.
-          // Let's assume `volunteerId` exists or we check `training.Volunteer?.volunteerId`.
-          // But `Training` type usually has `volunteerId` as FK.
-          // Let's check `training.volunteerId`.
-          // If checking the `allTrainings` confirms `volunteerId`.
-          if (training.volunteerId)
-            volunteersWithPending.add(training.volunteerId);
-        }
+        training.TrainingPayment?.forEach((p) => {
+          const isPending =
+            p.paymentMode === "AVista"
+              ? p.paymentStatus === "Pendente" ||
+                p.firstPaymentStatus === "Pendente"
+              : p.paymentStatus === "Pendente" ||
+                p.paymentStatus === "Parcial" ||
+                p.firstPaymentStatus === "Pendente" ||
+                p.secondPaymentStatus === "Pendente";
+
+          if (isPending && p.payerType === "VOLUNTEER") {
+            if (p.volunteerId) volunteersWithPending.add(p.volunteerId);
+            else if (training.volunteerId)
+              volunteersWithPending.add(training.volunteerId);
+          }
+        });
       });
       result = result.filter((v) => volunteersWithPending.has(v.volunteerId));
     }
@@ -88,6 +90,11 @@ export function VolunteersTable({
       const volunteersInFilial = new Set<string>();
       allTrainings.forEach((training) => {
         if (training.sourceFilialId === filterFilial) {
+          // Check all volunteers in this training
+          training.Volunteers?.forEach((v) =>
+            volunteersInFilial.add(v.volunteerId),
+          );
+          // Fallback to legacy single volunteerId
           if (training.volunteerId)
             volunteersInFilial.add(training.volunteerId);
         }
@@ -186,14 +193,16 @@ export function VolunteersTable({
               </tr>
             )}
             {sortedVolunteers.map((volunteer) => {
-
               return (
                 <tr
                   key={ volunteer.volunteerId }
                   className="border-t hover:bg-muted/50"
+                  onDoubleClick={ () => handleOpenDetails(volunteer) }
                 >
                   <td className="p-3 text-sm font-medium">{volunteer.name}</td>
-                  <td className="p-3 text-sm">{volunteer.SourceFilial?.filialName}</td>
+                  <td className="p-3 text-sm">
+                    {volunteer.SourceFilial?.filialName}
+                  </td>
                   <td className="p-3 text-sm">{volunteer.documentNumber}</td>
                   <td className="p-3 text-center text-sm">
                     {volunteer.cellphone}
@@ -222,8 +231,8 @@ export function VolunteersTable({
               allTrainings
                 .filter((t) => t.volunteerId === volunteer.volunteerId)
                 .map((t) => t.SourceFilial?.filialName)
-                .filter(Boolean)
-            )
+                .filter(Boolean),
+            ),
           ).join(", ");
           return (
             <ResponsiveCard

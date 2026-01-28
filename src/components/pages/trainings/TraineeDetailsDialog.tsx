@@ -66,7 +66,9 @@ export function TraineeDetailsDialog({
 
   const trainingsList = useMemo(() => {
     if (!trainee || !allTrainings) return [];
-    return allTrainings.filter((t) => t.traineeId === trainee.traineeId);
+    return allTrainings.filter((t) =>
+      t.Trainees?.some((tr) => tr.traineeId === trainee.traineeId),
+    );
   }, [ trainee, allTrainings ]);
 
   const filteredTrainings = useMemo(() => {
@@ -311,7 +313,9 @@ export function TraineeDetailsDialog({
                   {filteredTrainings.map((training) => {
                     // Encontra o pagamento específico do aluno (TRAINEE)
                     const payment = training.TrainingPayment?.find(
-                      (p) => p.payerType === "TRAINEE",
+                      (p) =>
+                        p.payerType === "TRAINEE" &&
+                        p.traineeId === trainee.traineeId,
                     );
 
                     return (

@@ -36,13 +36,17 @@ import PriceInput from "@/components/shared/PriceInput";
 import { SelectTrainingGear } from "@/components/pages/trainings/SelectTrainingGear";
 import { SelectTrainee } from "./SelectTrainee";
 import { SelectVolunteer } from "./SelectVolunteer";
-import { SelectTrainingAddress } from "./SelectTrainingAddress";
+// import { SelectTrainingAddress } from "./SelectTrainingAddress"; // Removed
+import { EmbeddedTrainingAddressForm } from "./EmbeddedTrainingAddressForm";
 import { TrainingPaymentSection } from "./TrainingPaymentSection";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 
 // Services & Utils
 import { CreateTraining } from "@/services/trainings.service";
-import { GetAllTraineeAddresses } from "@/services/addresses.service";
+import {
+  GetAllTraineeAddresses,
+  CreateGenericAddress,
+} from "@/services/addresses.service";
 import {
   getDayCheckouts,
   GetDayCheckoutsResponse,
@@ -51,14 +55,6 @@ import { queryClient } from "@/app/(main)/layout";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { useAuth } from "@/contexts/auth-provider";
 import { useAccess } from "@/contexts/access-provider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { findAllFilials } from "@/services/filials.service";
 import { Filial } from "@/utils/@types/filials";
 import { USER_ROLES } from "@/utils/constants";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
@@ -69,8 +65,6 @@ import {
   CreateTrainingDataType,
   CreateTrainingSchema,
 } from "@/lib/zod/CreateTrainingValidation";
-import { Volunteer } from "@/utils/@types/volunteer";
-import { Trainee } from "@/utils/@types/trainee";
 import { Gear } from "@/utils/@types/gears";
 import { ApiResponse } from "@/lib/api";
 import { Address } from "@/utils/@types/address";
@@ -78,8 +72,6 @@ import { Address } from "@/utils/@types/address";
 interface CreateTrainingDialogProps {
   dialogNovoTreinamento: boolean;
   setDialogNovoTreinamento: (openStatus: boolean) => void;
-  // volunteers: Volunteer[] | undefined; // Removed
-  // trainees: Trainee[] | undefined; // Removed
   gears: Gear[] | undefined;
 }
 
@@ -128,8 +120,8 @@ export function CreateTrainingDialog({
     resolver: zodResolver(CreateTrainingSchema),
     defaultValues: {
       filialId: defaultFilialId || "",
-      traineeId: undefined,
-      volunteerId: undefined,
+      traineeIds: [], // Changed to array
+      volunteerIds: [], // Changed to array
       gearId: "",
       addressId: "",
 
@@ -157,27 +149,16 @@ export function CreateTrainingDialog({
   } = createTrainingMethods;
 
   // --- UI States ---
-  const [ selectedTraineeName, setSelectedTraineeName ] = useState<
-    string | undefined
-  >(undefined);
-  const [ selectedVolunteerName, setSelectedVolunteerName ] = useState<
-    string | undefined
-  >(undefined);
-  const [ selectedGearId, setSelectedGearId ] = useState<string | undefined>(
-    undefined,
-  );
+  const [ isCreatingAddress, setIsCreatingAddress ] = useState(false);
 
   // --- Watchers ---
-  const watchSelectedTraineeId = watch("traineeId");
-  const watchSelectedVolunteerId = watch("volunteerId");
+  const watchSelectedTraineeIds = watch("traineeIds") || [];
+  const watchSelectedVolunteerIds = watch("volunteerIds") || [];
   const watchSelectedAddress = watch("addressId");
   const watchSelectedGear = watch("gearId");
   const watchFilialId = watch("filialId");
   const watchDueDate = watch("dueDate");
   const watchHour = watch("hourInMinutes");
-
-  // --- Effects: Sync UI ---
-  // (Removed trainees/volunteers effects)
 
   // --- Helper de Formatação do Submit ---
   const formatPaymentPayload = (
@@ -234,13 +215,44 @@ export function CreateTrainingDialog({
   // --- Submit Handler ---
   const onSubmitTraining = async (data: CreateTrainingDataType) => {
     try {
+      let finalAddressId = data.addressId;
+
+      // Se não selecionou um endereço existente mas preencheu os campos de novo endereço
+      if (!finalAddressId && data.cityName && data.stateName) {
+        const addressPayload = {
+          zipCode: data.zipCode,
+          stateName: data.stateName,
+          cityName: data.cityName,
+          neighborhoodName: data.neighborhoodName,
+          streetName: data.streetName,
+          buildingNumber: data.buildingNumber,
+          addressComplement: data.addressComplement,
+        };
+
+        const addressResponse = await CreateGenericAddress({
+          body: addressPayload,
+        });
+
+        if (addressResponse?.data?.addressId) {
+          finalAddressId = addressResponse.data.addressId;
+        } else {
+          toast.error("Erro ao criar endereço. Verifique os campos.");
+          return;
+        }
+      }
+
+      if (!finalAddressId) {
+        toast.warning("Selecione um endereço ou preencha o novo endereço.");
+        return;
+      }
+
       const payload: CreateTrainingBackendPayload = {
         // Campos raiz
         hourInMinutes: data.hourInMinutes,
         gearId: data.gearId,
-        volunteerId: data.volunteerId,
-        traineeId: data.traineeId,
-        addressId: data.addressId,
+        volunteerIds: data.volunteerIds,
+        traineeIds: data.traineeIds,
+        addressId: finalAddressId,
         dueDate: data.dueDate,
         filialId: data.filialId,
 
@@ -269,8 +281,6 @@ export function CreateTrainingDialog({
         toast.success(response.message, { style: { fontSize: "1rem" } });
         window.scroll({ top: 0 });
         reset();
-        setSelectedVolunteerName(undefined);
-        setSelectedTraineeName(undefined);
         setDialogNovoTreinamento(false);
       }
     } catch (error) {
@@ -280,11 +290,19 @@ export function CreateTrainingDialog({
   };
 
   // --- Queries ---
+  // Assuming address logic might rely on specific trainee, but with multiple trainees we might default to no addresses or logic to select one.
+  // For now, if multiple trainees are selected, maybe we fetch addresses for the first one or logic needs adjustment?
+  // Previous logic: queryKey based on watchSelectedTraineeId (single).
+  // Now we have watchSelectedTraineeIds (array).
+  // Ideally, addresses should belong to one of the trainees or generic?
+  // Assuming we pick addresses from the first selected trainee for now or update GetAllTraineeAddresses to support array (unlikely).
+  // Let's use the first traineeId for address fetching if available.
+  const firstTraineeId = watchSelectedTraineeIds[0];
+
   const addressesData = useQuery<ApiResponse<Address[]>, Error>({
-    queryKey: [ "get-all-trainee-addresses", watchSelectedTraineeId ],
-    queryFn: () =>
-      GetAllTraineeAddresses({ traineeId: watchSelectedTraineeId }),
-    enabled: !!watchSelectedTraineeId,
+    queryKey: [ "get-all-trainee-addresses", firstTraineeId ],
+    queryFn: () => GetAllTraineeAddresses({ traineeId: firstTraineeId }),
+    enabled: !!firstTraineeId,
     staleTime: 1000 * 60,
   });
   const allCustomerAddresses = addressesData.data?.data;
@@ -306,7 +324,7 @@ export function CreateTrainingDialog({
   const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
     queryKey: [ "get-day-checkouts", params ],
     queryFn: () => getDayCheckouts({ body: params }),
-    enabled: !!user?.sourceFilialId && !!watchDueDate && !!watchSelectedGear,
+    enabled: !!watchFilialId && !!watchDueDate && !!watchSelectedGear,
     staleTime: 0,
   });
   const checkoutSchedule = data?.data;
@@ -326,195 +344,211 @@ export function CreateTrainingDialog({
           Novo Treinamento
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-card">
         <form onSubmit={ handleSubmit(onSubmitTraining) }>
-          <DialogHeader>
-            <DialogTitle>Criar Nova Sessão</DialogTitle>
-            <DialogDescription>
-              Configure os detalhes do agendamento e valores para Aluno e
-              Modelo.
-            </DialogDescription>
-          </DialogHeader>
+          <FormProvider { ...createTrainingMethods }>
+            <DialogHeader>
+              <DialogTitle>Criar Nova Sessão</DialogTitle>
+              <DialogDescription>
+                Configure os detalhes do agendamento, participantes e local.
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="grid gap-6 py-4">
-            {/* --- DADOS GERAIS --- */}
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label>Filial *</Label>
-                <SelectFilial
-                  control={ control }
-                  name="filialId"
-                  accessibleFilials={ accessibleFilialsIds }
-                  defaultFilial={ defaultFilialId }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="gearId">Equipamento *</Label>
-                <SelectTrainingGear
-                  disabled={ !watchFilialId }
-                  filialId={ watchFilialId }
-                  selectedGear={ selectedGearId }
-                  onGearChange={ (gearId) => {
-                    setValue("gearId", gearId);
-                    setSelectedGearId(gearId);
-                  } }
-                />
-                {errors.gearId && (
-                  <p className="text-sm text-red-600">
-                    {errors.gearId.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Aluno *</Label>
-                  <SelectTrainee
-                    disabled={ !watchFilialId }
-                    filialId={ watchFilialId }
-                    selectedTrainee={ selectedTraineeName }
-                    onTraineeChange={ (trainee) => {
-                      setValue("traineeId", trainee.traineeId);
-                      setSelectedTraineeName(trainee.name);
-                    } }
-                  />
-
-                  {errors.traineeId && (
-                    <p className="text-sm text-red-600">
-                      {errors.traineeId.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label>Paciente modelo *</Label>
-                  <SelectVolunteer
-                    disabled={ !watchFilialId }
-                    filialId={ watchFilialId }
-                    selectedVolunteer={ selectedVolunteerName }
-                    onVolunteerChange={ (volunteer) => {
-                      setValue("volunteerId", volunteer.volunteerId);
-                      setSelectedVolunteerName(volunteer.name);
-                    } }
-                  />
-
-                  {errors.volunteerId && (
-                    <p className="text-sm text-red-600">
-                      {errors.volunteerId.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Endereço de Realização *</Label>
-                <SelectTrainingAddress
-                  addresses={ allCustomerAddresses }
-                  selectedAddress={ watchSelectedAddress }
-                  onAddressChange={ (addressId) =>
-                    setValue("addressId", addressId)
-                  }
-                />
-                {errors.addressId && (
-                  <p className="text-sm text-red-600">
-                    {errors.addressId.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* --- DATA E HORA --- */}
-            <div className="space-y-4">
-              <h4 className="flex items-center gap-2 font-medium text-muted-foreground">
-                <CalendarIcon className="h-4 w-4" /> Data e Horário
-              </h4>
-              <div className="space-y-2">
-                <Label>Data do Treinamento *</Label>
-                <Controller
-                  control={ control }
-                  name="dueDate"
-                  render={ ({ field }) => (
-                    <DatePicker
-                      modal={ true }
-                      value={ field.value! }
-                      onChange={ (e) => {
-                        field.onChange(e);
-                        if (e) setValue("dueDate", e);
-                      } }
-                      placeholder="Selecione a data"
-                      clearable
+            <div className="space-y-8 py-4">
+              {/* --- BLOCO 1: LOGÍSTICA E PARTICIPANTES --- */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-lg border-b pb-2 mb-4">
+                  Logística e Participantes
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Filial *</Label>
+                    <SelectFilial
+                      control={ control }
+                      name="filialId"
+                      accessibleFilials={ accessibleFilialsIds }
+                      defaultFilial={ defaultFilialId }
                     />
-                  ) }
-                />
-                {errors.dueDate && (
-                  <p className="text-sm text-red-600">
-                    {errors.dueDate.message}
-                  </p>
-                )}
-              </div>
+                  </div>
 
-              <div className="space-y-2">
-                {checkoutSchedule && (
-                  <Label className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" /> Horário de Início *
-                  </Label>
-                )}
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2">
-                  {checkoutSchedule?.map((hour) => {
-                    const hasSomeAvailableGapTime = hour.availability.some(
-                      (item) => item.available,
-                    );
-                    return (
-                      <Button
-                        type="button"
-                        key={ hour.hourInMinutes }
-                        variant={
-                          watchHour === hour.hourInMinutes
-                            ? "default"
-                            : "outline"
-                        }
-                        size="sm"
-                        disabled={ !hasSomeAvailableGapTime }
-                        onClick={ () =>
-                          setValue("hourInMinutes", hour.hourInMinutes)
-                        }
-                        className={ `text-xs h-9 transition-all ${
-                          watchHour === hour.hourInMinutes
-                            ? "ring-2 ring-primary ring-offset-2"
-                            : ""
-                        } ${
-                          !hasSomeAvailableGapTime
-                            ? "opacity-50"
-                            : "hover:scale-105"
-                        }` }
-                      >
-                        {hour.formattedTime}
-                        {watchHour === hour.hourInMinutes && (
-                          <CheckCircle2 className="h-3 w-3 absolute -top-1 -right-1 text-primary bg-background rounded-full" />
-                        )}
-                      </Button>
-                    );
-                  })}
+                  <div className="space-y-2">
+                    <Label htmlFor="gearId">Equipamento *</Label>
+                    <SelectTrainingGear
+                      disabled={ !watchFilialId }
+                      filialId={ watchFilialId }
+                      selectedGear={ watchSelectedGear }
+                      onGearChange={ (gearId) => {
+                        setValue("gearId", gearId);
+                      } }
+                    />
+                    {errors.gearId && (
+                      <p className="text-sm text-red-600">
+                        {errors.gearId.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                {errors.hourInMinutes && (
-                  <p className="text-sm text-red-600">Selecione um horário.</p>
-                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Alunos *</Label>
+                    <SelectTrainee
+                      disabled={ !watchFilialId }
+                      filialId={ watchFilialId }
+                      selectedTraineeIds={ watchSelectedTraineeIds }
+                      onTraineesChange={ (trainees) => {
+                        setValue(
+                          "traineeIds",
+                          trainees.map((t) => t.traineeId),
+                        );
+                      } }
+                    />
+                    {errors.traineeIds && (
+                      <p className="text-sm text-red-600">
+                        {errors.traineeIds.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Pacientes modelo *</Label>
+                    <SelectVolunteer
+                      disabled={ !watchFilialId }
+                      filialId={ watchFilialId }
+                      selectedVolunteerIds={ watchSelectedVolunteerIds }
+                      onVolunteersChange={ (volunteers) => {
+                        setValue(
+                          "volunteerIds",
+                          volunteers.map((v) => v.volunteerId),
+                        );
+                      } }
+                    />
+                    {errors.volunteerIds && (
+                      <p className="text-sm text-red-600">
+                        {errors.volunteerIds.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <Separator />
+              <Separator />
 
-            {/* --- FINANCEIRO E CUSTOS --- */}
-            <div className="space-y-6">
-              <h4 className="flex items-center gap-2 font-medium text-muted-foreground">
-                <DollarSign className="h-4 w-4" /> Financeiro e Custos
-              </h4>
+              {/* --- BLOCO 2: DATA E HORA --- */}
+              <div className="space-y-4">
+                <h4 className="flex items-center gap-2 font-medium text-muted-foreground">
+                  <CalendarIcon className="h-4 w-4" /> Data e Horário
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Data do Treinamento *</Label>
+                    <Controller
+                      control={ control }
+                      name="dueDate"
+                      render={ ({ field }) => (
+                        <DatePicker
+                          modal={ true }
+                          value={ field.value! }
+                          onChange={ (e) => {
+                            field.onChange(e);
+                            if (e) setValue("dueDate", e);
+                          } }
+                          placeholder="Selecione a data"
+                          clearable
+                        />
+                      ) }
+                    />
+                    {errors.dueDate && (
+                      <p className="text-sm text-red-600">
+                        {errors.dueDate.message}
+                      </p>
+                    )}
+                  </div>
 
-              {/* Envolvendo ambas as seções com o FormProvider */}
-              <FormProvider { ...createTrainingMethods }>
-                <div className="flex flex-col gap-8">
+                  <div className="space-y-2">
+                    {checkoutSchedule && (
+                      <Label className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" /> Horário de Início *
+                      </Label>
+                    )}
+                    {/* Feedback if missing selections */}
+                    {(!watchFilialId ||
+                      !watchDueDate ||
+                      !watchSelectedGear) && (
+                      <p className="text-sm text-muted-foreground italic">
+                        Selecione Filial, Equipamento e Data para visualizar os
+                        horários.
+                      </p>
+                    )}
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2">
+                      {checkoutSchedule?.map((hour) => {
+                        const hasSomeAvailableGapTime = hour.availability.some(
+                          (item) => item.available,
+                        );
+                        return (
+                          <Button
+                            type="button"
+                            key={ hour.hourInMinutes }
+                            variant={
+                              watchHour === hour.hourInMinutes
+                                ? "default"
+                                : "outline"
+                            }
+                            size="sm"
+                            disabled={ !hasSomeAvailableGapTime }
+                            onClick={ () =>
+                              setValue("hourInMinutes", hour.hourInMinutes)
+                            }
+                            className={ `text-xs h-9 transition-all ${
+                              watchHour === hour.hourInMinutes
+                                ? "ring-2 ring-primary ring-offset-2"
+                                : ""
+                            } ${!hasSomeAvailableGapTime ? "opacity-50" : "hover:scale-105"}` }
+                          >
+                            {hour.formattedTime}
+                            {watchHour === hour.hourInMinutes && (
+                              <CheckCircle2 className="h-3 w-3 absolute -top-1 -right-1 text-primary bg-background rounded-full" />
+                            )}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    {errors.hourInMinutes && (
+                      <p className="text-sm text-red-600">
+                        Selecione um horário.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* --- BLOCO 3: LOCALIZAÇÃO --- */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <EmbeddedTrainingAddressForm />
+                  {errors.addressId && (
+                    <p className="text-sm text-red-600">
+                      {errors.addressId.message}
+                    </p>
+                  )}
+                </div>
+                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-sm rounded-md">
+                  <p>
+                    O endereço informado será automaticamente vinculado a este
+                    treinamento.
+                  </p>
+                </div>
+              </div>
+              <Separator />
+
+              {/* --- BLOCO 4: FINANCEIRO E CUSTOS --- */}
+              <div className="space-y-6">
+                <h4 className="flex items-center gap-2 font-medium text-muted-foreground">
+                  <DollarSign className="h-4 w-4" /> Financeiro e Custos
+                </h4>
+
+                <div className="flex flex-col gap-6">
                   {/* --- BLOCO ALUNO --- */}
                   <div className="border rounded-md p-5 bg-muted/10 shadow-sm">
                     <div className="flex items-center gap-2 mb-4 border-b pb-2">
@@ -527,7 +561,6 @@ export function CreateTrainingDialog({
                     </div>
 
                     <div className="space-y-4">
-                      {/* 1. Preço Base */}
                       <div className="space-y-2">
                         <Label>Valor do Curso (Preço Base)</Label>
                         <Controller
@@ -548,7 +581,6 @@ export function CreateTrainingDialog({
                         />
                       </div>
 
-                      {/* 2. Custo Adicional */}
                       <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-md border border-yellow-200 dark:border-yellow-900/50 space-y-3">
                         <div className="space-y-2">
                           <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">
@@ -582,11 +614,12 @@ export function CreateTrainingDialog({
                           </div>
                         </div>
                       </div>
-
-                      {/* 3. Pagamento */}
-                      {/* <Separator className="my-2" />
-                                            <TrainingPaymentSection prefix="traineePayment" /> */}
                     </div>
+
+                    <TrainingPaymentSection
+                      prefix="traineePayment"
+                      label="Informações de Pagamento do Aluno"
+                    />
                   </div>
 
                   {/* --- BLOCO MODELO --- */}
@@ -621,30 +654,66 @@ export function CreateTrainingDialog({
                         />
                       </div>
 
-                      {/* <Separator className="my-2" />
-                                            <TrainingPaymentSection prefix="volunteerPayment" /> */}
+                      <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-md border border-yellow-200 dark:border-yellow-900/50 space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">
+                            Custos Operacionais Extras
+                          </Label>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Controller
+                              control={ control }
+                              name="volunteerPayment.additionalCost"
+                              render={ ({ field }) => (
+                                <PriceInput
+                                  withLabel={ false }
+                                  register={ createTrainingMethods.register(
+                                    "volunteerPayment.additionalCost",
+                                  ) }
+                                  value={ field.value?.toString() ?? "" }
+                                  setValue={ setValue }
+                                  name="volunteerPayment.additionalCost"
+                                  placeholder="Valor: R$ 0,00"
+                                />
+                              ) }
+                            />
+                            <Textarea
+                              { ...createTrainingMethods.register(
+                                "volunteerPayment.additionalCostDescription",
+                              ) }
+                              placeholder="Descrição: Taxa de sala, material..."
+                              className="resize-none min-h-[40px]"
+                              rows={ 1 }
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <TrainingPaymentSection
+                        prefix="volunteerPayment"
+                        label="Informações de Pagamento do Modelo"
+                      />
                     </div>
                   </div>
                 </div>
-              </FormProvider>
+              </div>
             </div>
-          </div>
 
-          <DialogFooter className="mt-4">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={ () => setDialogNovoTreinamento(false) }
-            >
-              Cancelar
-            </Button>
-            <Button disabled={ isSubmitting } type="submit">
-              {isSubmitting ? (
-                <Loader2 className="animate-spin mr-2 h-4 w-4" />
-              ) : null}
-              Criar Treinamento
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="mt-4">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={ () => setDialogNovoTreinamento(false) }
+              >
+                Cancelar
+              </Button>
+              <Button disabled={ isSubmitting } type="submit">
+                {isSubmitting ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : null}
+                Criar Treinamento
+              </Button>
+            </DialogFooter>
+          </FormProvider>
         </form>
       </DialogContent>
     </Dialog>

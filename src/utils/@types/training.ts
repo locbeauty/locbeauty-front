@@ -12,16 +12,18 @@ export interface Training {
   hourInMinutes: number;
 
   gearId: string;
-  volunteerId: string;
-  traineeId: string;
+  volunteerId?: string;
+  traineeId?: string;
   dueDate: string;
   sourceFilialId: string;
   addressId: string;
   createdAt: string;
   updatedAt: string;
   Gear: Gear;
-  Volunteer: Volunteer;
-  Trainee: Trainee;
+  Volunteers: Volunteer[];
+  Trainees: Trainee[];
+  Trainee?: Trainee; // Keep for backward compatibility if needed, but likely unused
+  Volunteer?: Volunteer; // Keep for backward compatibility if needed, but likely unused
   TrainingPayment: TrainingPayment[];
   SourceFilial: Filial;
   wasRefunded?: boolean;

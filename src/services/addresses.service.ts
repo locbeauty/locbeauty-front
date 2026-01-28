@@ -27,6 +27,7 @@ export async function GetAllTraineeAddresses({
   return response;
 }
 
+// ... existing code ...
 export async function CreateCustomerAddress({
   customerId,
   body,
@@ -42,6 +43,17 @@ export async function CreateCustomerAddress({
 
   return response;
 }
+
+export async function CreateGenericAddress({ body }: { body: unknown }) {
+  const response = await apiRequest<Address>({
+    endpoint: "address/create",
+    body,
+    method: "POST",
+  });
+
+  return response;
+}
+// ... existing code ...
 
 export async function DeactivateCustomerAddress({
   addressId,
