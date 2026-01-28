@@ -612,18 +612,28 @@ export function TrainingPaymentMethodDialog({
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {paymentStatuses.map((status) => (
-                      <SelectItem key={ status } value={ status }>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={ `w-2 h-2 rounded-full ${getStatusColor(
-                              status,
-                            )}` }
-                          />
-                          {status}
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {paymentStatuses
+                      .filter((status) => {
+                        if (
+                          status === "Reembolsado" ||
+                          status === "Cancelado"
+                        ) {
+                          return paymentStatus === status;
+                        }
+                        return true;
+                      })
+                      .map((status) => (
+                        <SelectItem key={ status } value={ status }>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={ `w-2 h-2 rounded-full ${getStatusColor(
+                                status,
+                              )}` }
+                            />
+                            {status}
+                          </div>
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 {errors.paymentStatus && (
@@ -636,7 +646,7 @@ export function TrainingPaymentMethodDialog({
               {/* Checkboxes removed to match Checkout flow */}
             </div>
 
-            {paymentStatus !== "Pendente" && (
+            {paymentStatus !== "Pendente" && paymentStatus !== "Cancelado" && (
               <div className="">
                 <Label>
                   O valor total é:{" "}
@@ -646,16 +656,18 @@ export function TrainingPaymentMethodDialog({
             )}
           </div>
 
-          {paymentStatus !== "Pendente" && paymentStatus !== "Cortesia" && (
+          {paymentStatus !== "Pendente" &&
+            paymentStatus !== "Cortesia" &&
+            paymentStatus !== "Cancelado" && (
             <div className="bg-muted/30 p-4 rounded-lg border space-y-6">
               {/* --- PRIMEIRA PARCELA / ENTRADA --- */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-bold flex items-center gap-2 text-primary">
                     <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs">
-                      1
+                        1
                     </div>
-                    Primeira Parcela / Entrada
+                      Primeira Parcela / Entrada
                   </Label>
                   <BookingPaymentStatusBadge status={ firstPaymentStatus } />
                 </div>
@@ -663,15 +675,15 @@ export function TrainingPaymentMethodDialog({
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div className="sm:col-span-4">
                     <Label className="text-xs text-muted-foreground">
-                      Valor
+                        Valor
                     </Label>
                     <PriceInput
                       disabled={
                         areDetailsDisabled ||
-                        (paymentMode === "Parcelado" &&
-                          firstPaymentStatus === "Pago") ||
-                        isFirstInstallmentSavedAsPaid ||
-                        paymentStatus === "Pago"
+                          (paymentMode === "Parcelado" &&
+                            firstPaymentStatus === "Pago") ||
+                          isFirstInstallmentSavedAsPaid ||
+                          paymentStatus === "Pago"
                       }
                       withLabel={ false }
                       value={ firstPaymentAmount || "0,00" }
@@ -705,7 +717,7 @@ export function TrainingPaymentMethodDialog({
 
                   <div className="sm:col-span-4">
                     <Label className="text-xs text-muted-foreground">
-                      Forma de Pagamento
+                        Forma de Pagamento
                     </Label>
                     <Select
                       onValueChange={ (value) => setFirstPaymentMethod(value) }
@@ -745,16 +757,16 @@ export function TrainingPaymentMethodDialog({
 
               {/* --- SEGUNDA PARCELA (CONDICIONAL) --- */}
               {(paymentMode === "Parcelado" || paymentStatus === "Parcial") &&
-                firstPaymentStatus !== "Pendente" && (
+                  firstPaymentStatus !== "Pendente" && (
                 <>
                   <div className="h-px bg-border border-dashed" />
                   <div className="space-y-3 opacity-90">
                     <div className="flex items-center justify-between">
                       <Label className="text-sm font-bold flex items-center gap-2 text-orange-600">
                         <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-xs">
-                            2
+                              2
                         </div>
-                          Segunda Parcela / Restante
+                            Segunda Parcela / Restante
                       </Label>
                       <BookingPaymentStatusBadge
                         status={ secondPaymentStatus }
@@ -763,13 +775,15 @@ export function TrainingPaymentMethodDialog({
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                       <div className="sm:col-span-4">
                         <Label className="text-xs text-muted-foreground">
-                            Valor Restante
+                              Valor Restante
                         </Label>
                         <PriceInput
                           disabled={ true }
                           withLabel={ false }
                           value={ secondPaymentAmount || "0,00" }
-                          onChange={ (value) => setSecondPaymentAmount(value) }
+                          onChange={ (value) =>
+                            setSecondPaymentAmount(value)
+                          }
                         />
                         {errors.paymentInfo?.secondPaymentAmount && (
                           <p className="text-xs text-red-500 mt-1">
@@ -799,7 +813,7 @@ export function TrainingPaymentMethodDialog({
 
                       <div className="sm:col-span-4">
                         <Label className="text-xs text-muted-foreground">
-                            Forma Prevista
+                              Forma Prevista
                         </Label>
                         <Select
                           onValueChange={ (value) =>
@@ -842,12 +856,12 @@ export function TrainingPaymentMethodDialog({
           )}
 
           {/* Refund Section */}
-          {(paymentStatus === "Pago" ||
-            paymentStatus === "Parcial" ||
-            wasRefunded ||
-            currentPaymentData?.paymentStatus === "Pago" ||
-            currentPaymentData?.paymentStatus === "Parcial" ||
-            currentPaymentData?.wasRefunded) && (
+          {(currentPaymentData?.paymentStatus === "Pago" ||
+            currentPaymentData?.firstPaymentStatus === "Pago" ||
+            currentPaymentData?.secondPaymentStatus === "Pago") &&
+            (trainingStatus !== "Concluido" ||
+              wasRefunded ||
+              currentPaymentData?.wasRefunded) && (
             <div className="bg-red-50/50 p-4 rounded-lg border border-dashed border-red-200 mt-4">
               <div className="flex items-center space-x-2 mb-2">
                 <Checkbox
@@ -855,7 +869,7 @@ export function TrainingPaymentMethodDialog({
                   checked={ wasRefunded }
                   disabled={
                     currentPaymentData?.paymentStatus === "Reembolsado" ||
-                    trainingStatus === "Cancelado"
+                      trainingStatus === "Cancelado"
                   }
                   onCheckedChange={ (checked) => {
                     setWasRefunded(checked as boolean);
@@ -869,31 +883,31 @@ export function TrainingPaymentMethodDialog({
                   htmlFor="refunded"
                   className="text-sm font-semibold text-red-900 cursor-pointer"
                 >
-                  Houve Reembolso / Cancelamento?
+                    Houve Reembolso / Cancelamento?
                 </Label>
               </div>
 
               {wasRefunded && (
                 <div className="pl-6 space-y-2 animate-in slide-in-from-top-2 duration-200">
                   <DialogDescription className="text-red-800/80 text-xs text-justify">
-                    Ao marcar como reembolsado, o status financeiro do pagamento
-                    será alterado para &quot;Reembolsado&quot;. Se houver uma
-                    taxa de cancelamento, informe o valor abaixo (o valor que
-                    foi RETIDO/COBRADO do cliente). Se o reembolso foi total, a
-                    taxa é 0.
+                      Ao marcar como reembolsado, o status financeiro do
+                      pagamento será alterado para &quot;Reembolsado&quot;. Se
+                      houver uma taxa de cancelamento, informe o valor abaixo (o
+                      valor que foi RETIDO/COBRADO do cliente). Se o reembolso
+                      foi total, a taxa é 0.
                   </DialogDescription>
 
                   <div className="pt-2">
                     <Label className="text-xs text-red-900 font-medium">
-                      Taxa de Cancelamento (Valor Retido)
+                        Taxa de Cancelamento (Valor Retido)
                     </Label>
                     <PriceInput
                       value={ cancellationFee }
                       onChange={ (v) => setCancellationFee(v) }
                     />
                     <p className="text-[10px] text-red-700 mt-1">
-                      Ex: Se o cliente pagou R$ 100,00 e você devolveu R$ 80,00,
-                      a taxa de cancelamento foi R$ 20,00.
+                        Ex: Se o cliente pagou R$ 100,00 e você devolveu R$
+                        80,00, a taxa de cancelamento foi R$ 20,00.
                     </p>
                   </div>
                 </div>

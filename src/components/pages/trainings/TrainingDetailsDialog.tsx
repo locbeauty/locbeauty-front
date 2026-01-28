@@ -403,6 +403,7 @@ export function TrainingDetailsDialog({
                   if (
                     trainingStatus === "Cancelado" &&
                       (updatedPayment.paymentStatus === "Pendente" ||
+                        updatedPayment.paymentStatus === "Parcial" ||
                         !updatedPayment.paymentStatus)
                   ) {
                     updatedPayment.paymentStatus = "Cancelado";

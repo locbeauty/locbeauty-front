@@ -55,6 +55,7 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Checkout } from "@/utils/@types/checkouts";
+import { CheckoutPayment } from "@/utils/@types/payments";
 import { AdditionalCostsDialog } from "../../bookings/create/AdditionalCostsDialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -516,12 +517,11 @@ export function BookingDetailsDialog({
               ...payment!,
               paymentStatus: "Reembolsado",
             }
-            : checkoutStatus === "Cancelado" &&
-                prev.CheckoutPayment?.paymentStatus === "Pendente"
-              ? {
+            : checkoutStatus === "Cancelado" && prev.CheckoutPayment
+              ? ({
                 ...prev.CheckoutPayment,
                 paymentStatus: "Cancelado",
-              }
+              } as CheckoutPayment)
               : prev.CheckoutPayment,
         };
       });
@@ -899,7 +899,10 @@ export function BookingDetailsDialog({
                                   </Label>
                                   <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
                                     {workingHours
-                                      .flatMap((hour) => [ hour * 60, hour * 60 + 30 ])
+                                      .flatMap((hour) => [
+                                        hour * 60,
+                                        hour * 60 + 30,
+                                      ])
                                       .map((hourInMinutes) => {
                                         return (
                                           <Button
