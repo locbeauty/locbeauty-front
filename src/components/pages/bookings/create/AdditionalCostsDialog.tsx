@@ -262,8 +262,8 @@ export function AdditionalCostsDialog({
             <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" /> Distância Total (Ida e
-                  Volta)
+                  <MapPin className="h-3.5 w-3.5" />
+                  Distância Total
                 </Label>
                 <CityInput
                   setDistanceInKM={ setDistanceInKM }
@@ -284,7 +284,7 @@ export function AdditionalCostsDialog({
                     <Input
                       type="number"
                       className="h-7 w-20 text-xs"
-                      value={ distanceInKM }
+                      value={ distanceInKM || "" }
                       onChange={ (e) => setDistanceInKM(Number(e.target.value)) }
                       placeholder="0"
                     />
@@ -336,7 +336,14 @@ export function AdditionalCostsDialog({
               </div>
 
               <div className="text-sm bg-primary/5 p-2 rounded text-primary flex justify-between items-center">
-                <span>Custo estimado de combustível:</span>
+                <span>
+                  Custo estimado de combustível:{" "}
+                  {isRoundTrip ? (
+                    <span>(Ida e Volta)</span>
+                  ) : (
+                    <span>(Ida)</span>
+                  )}
+                </span>
                 <span className="font-bold">
                   {centsToString(fuelTotalCents)}
                 </span>

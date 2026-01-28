@@ -42,12 +42,12 @@ export function CityInput({
   setDistanceInKM: (value: number) => void;
   filialId?: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const [ open, setOpen ] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [selectedCityName, setSelectedCityName] = useState<string>("");
+  const [ selectedCityName, setSelectedCityName ] = useState<string>("");
 
   const { data: cityOptions = [], isLoading } = useQuery({
-    queryKey: ["city-distances", filialId],
+    queryKey: [ "city-distances", filialId ],
     queryFn: async () => {
       if (!filialId) return [];
       const data = await fetchCityDistances(filialId);
@@ -80,12 +80,12 @@ export function CityInput({
 
   if (isDesktop) {
     return (
-      <Popover open={open} onOpenChange={setOpen} modal={true}>
+      <Popover open={ open } onOpenChange={ setOpen } modal={ true }>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
-            aria-expanded={open}
+            aria-expanded={ open }
             className="w-full justify-between"
           >
             {selectedCityName ? (
@@ -105,9 +105,9 @@ export function CityInput({
           align="start"
         >
           <CityList
-            options={cityOptions}
-            isLoading={isLoading}
-            onSelect={handleSelect}
+            options={ cityOptions }
+            isLoading={ isLoading }
+            onSelect={ handleSelect }
             selectedId={
               cityOptions.find(
                 (c) =>
@@ -121,12 +121,12 @@ export function CityInput({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={ open } onOpenChange={ setOpen }>
       <DrawerTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
-          aria-expanded={open}
+          aria-expanded={ open }
           className="w-full justify-between"
         >
           {selectedCityName ? (
@@ -143,9 +143,9 @@ export function CityInput({
         <div className="mt-4 borde r-t">
           <DrawerTitle className="sr-only">Selecionar cidade</DrawerTitle>
           <CityList
-            options={cityOptions}
-            isLoading={isLoading}
-            onSelect={handleSelect}
+            options={ cityOptions }
+            isLoading={ isLoading }
+            onSelect={ handleSelect }
             selectedId={
               cityOptions.find(
                 (c) =>
@@ -186,15 +186,15 @@ function CityList({
         <CommandGroup>
           {options.map((city) => (
             <CommandItem
-              key={city.id}
-              value={city.name}
-              onSelect={() => onSelect(city)}
+              key={ city.id }
+              value={ city.name }
+              onSelect={ () => onSelect(city) }
             >
               <Check
-                className={cn(
+                className={ cn(
                   "mr-2 h-4 w-4",
                   selectedId === city.id ? "opacity-100" : "opacity-0",
-                )}
+                ) }
               />
               <div className="flex flex-col">
                 <span>{city.name}</span>
