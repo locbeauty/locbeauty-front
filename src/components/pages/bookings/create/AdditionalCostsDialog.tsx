@@ -268,6 +268,13 @@ export function AdditionalCostsDialog({
                 <CityInput
                   setDistanceInKM={ setDistanceInKM }
                   distanceInKM={ distanceInKM }
+                  filialId={
+                    isUpdateMode && selectedCheckout
+                      ? selectedCheckout.SourceFilial.filialId
+                      : watch
+                        ? watch("filialId")
+                        : ""
+                  }
                 />
                 <div className="flex flex-col gap-3 mt-1">
                   <div className="flex items-center gap-2">
