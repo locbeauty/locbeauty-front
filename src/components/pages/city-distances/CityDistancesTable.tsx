@@ -121,10 +121,10 @@ export function CityDistancesTable({
         </TableHeader>
         <TableBody>
           {filteredDistances.length > 0 ? (
-            filteredDistances.map((distance) => (
-              <TableRow key={ distance.cityDistanceId }>
+            filteredDistances.map((distance, index) => (
+              <TableRow key={ distance.cityDistanceId || `fallback-${index}` }>
                 <TableCell className="font-medium">
-                  {distance.cityName}
+                  {distance.cityName || JSON.stringify(distance)}
                 </TableCell>
                 <TableCell>{distance.state}</TableCell>
                 <TableCell>{distance.distance} km</TableCell>
@@ -160,7 +160,7 @@ export function CityDistancesTable({
         open={ !!distanceToDelete }
         onOpenChange={ (open) => !open && setDistanceToDelete(null) }
       >
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Remover distância?</DialogTitle>
             <DialogDescription>
