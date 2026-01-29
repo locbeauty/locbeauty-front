@@ -731,6 +731,10 @@ export function BookingDetailsDialog({
                               setSelectedAddressData(address)
                             }
                           />
+                          <div className="text-xs text-muted-foreground mb-4">
+                            <CalendarDays className="h-3 w-3 inline mr-1" />
+                            Previsão de retorno para a filial
+                          </div>
                           <Button
                             size="sm"
                             className="w-full h-8 gap-1"

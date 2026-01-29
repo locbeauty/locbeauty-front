@@ -36,11 +36,9 @@ import { Checkout } from "@/utils/@types/checkouts";
 export function SelectAdditionalGear({
   onSelect,
   selectedCheckout,
-  unavailableGearIds = [],
 }: {
   onSelect: (gear: Gear) => void;
   selectedCheckout: Checkout;
-  unavailableGearIds?: string[];
 }) {
   const [ filteredGears, setFilteredGears ] = useState<Gear[] | undefined>([]);
   const { user } = useAuth();
@@ -62,9 +60,8 @@ export function SelectAdditionalGear({
     const updated = originalGears?.filter(
       (gear) =>
         !selectedCheckout.Bookings.some(
-          (item) =>
-            item.Gear.gearId === gear.gearId && item.status === "ACTIVE",
-        ),
+          (item) => item.Gear.gearId === gear.gearId && item.status === "ACTIVE"
+        )
     );
     setFilteredGears(updated);
   }, [ selectedCheckout, originalGears ]);
@@ -76,17 +73,9 @@ export function SelectAdditionalGear({
       {!filteredGears ? (
         <Loader2 className="animate-spin" />
       ) : isDesktop ? (
-        <DesktopSelect
-          gears={ filteredGears }
-          onSelect={ onSelect }
-          unavailableGearIds={ unavailableGearIds }
-        />
+        <DesktopSelect gears={ filteredGears } onSelect={ onSelect } />
       ) : (
-        <MobileSelect
-          gears={ filteredGears }
-          onSelect={ onSelect }
-          unavailableGearIds={ unavailableGearIds }
-        />
+        <MobileSelect gears={ filteredGears } onSelect={ onSelect } />
       )}
     </div>
   );
@@ -95,11 +84,9 @@ export function SelectAdditionalGear({
 function DesktopSelect({
   gears,
   onSelect,
-  unavailableGearIds,
 }: {
   gears: Gear[];
   onSelect: (gear: Gear) => void;
-  unavailableGearIds: string[];
 }) {
   const [ open, setOpen ] = useState(false);
   const [ selectedLabel, setSelectedLabel ] = useState<string | null>(null);
@@ -124,7 +111,6 @@ function DesktopSelect({
             onSelect(gear);
             setSelectedLabel(gear.gearName);
           } }
-          unavailableGearIds={ unavailableGearIds }
         />
       </PopoverContent>
     </Popover>
@@ -134,11 +120,9 @@ function DesktopSelect({
 function MobileSelect({
   gears,
   onSelect,
-  unavailableGearIds,
 }: {
   gears: Gear[];
   onSelect: (gear: Gear) => void;
-  unavailableGearIds: string[];
 }) {
   const [ open, setOpen ] = useState(false);
 
@@ -159,12 +143,7 @@ function MobileSelect({
           Máquinas
         </DrawerTitle>
         <div className="mt-2 border-t px-4">
-          <GearsList
-            gears={ gears }
-            setOpen={ setOpen }
-            onSelect={ onSelect }
-            unavailableGearIds={ unavailableGearIds }
-          />
+          <GearsList gears={ gears } setOpen={ setOpen } onSelect={ onSelect } />
         </div>
       </DrawerContent>
     </Drawer>
@@ -175,12 +154,10 @@ function GearsList({
   gears,
   setOpen,
   onSelect,
-  unavailableGearIds,
 }: {
   gears: Gear[];
   setOpen: (_open: boolean) => void;
   onSelect: (gear: Gear) => void;
-  unavailableGearIds: string[];
 }) {
   return (
     <Command>
@@ -188,25 +165,19 @@ function GearsList({
       <CommandList>
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
         <CommandGroup>
-          {gears.map((gear) => {
-            const isUnavailable = unavailableGearIds.includes(gear.gearId);
-            return (
-              <CommandItem
-                key={ gear.gearId }
-                value={ gear.gearName }
-                className={ `w-full ${isUnavailable ? "opacity-50 pointer-events-none" : ""}` }
-                disabled={ isUnavailable }
-                onSelect={ () => {
-                  if (!isUnavailable) {
-                    onSelect(gear);
-                    setOpen(false);
-                  }
-                } }
-              >
-                {gear.gearName} {isUnavailable && "(Indisponível)"}
-              </CommandItem>
-            );
-          })}
+          {gears.map((gear) => (
+            <CommandItem
+              key={ gear.gearId }
+              value={ gear.gearName }
+              className="w-full"
+              onSelect={ () => {
+                onSelect(gear);
+                setOpen(false);
+              } }
+            >
+              {gear.gearName}
+            </CommandItem>
+          ))}
         </CommandGroup>
       </CommandList>
     </Command>
