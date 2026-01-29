@@ -22,6 +22,7 @@ import { SYSTEM_MODULES } from "@/utils/@types/access";
 export default function AgendamentosPage() {
   // Estado para controlar a semana atual
   const [ currentDate, setCurrentDate ] = useState(new Date());
+  const [ hideCanceled, setHideCanceled ] = useState(true);
   const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(
     null,
   );
@@ -94,11 +95,14 @@ export default function AgendamentosPage() {
           setCurrentDate={ setCurrentDate }
           viewType={ viewType }
           setViewType={ setViewType }
+          hideCanceled={ hideCanceled }
+          setHideCanceled={ setHideCanceled }
         />
         <CalendarContent
           currentDate={ currentDate }
           openCheckoutDetails={ openCheckoutDetails }
           viewType={ viewType }
+          hideCanceled={ hideCanceled }
         />
         <CalendarFooter />
 
