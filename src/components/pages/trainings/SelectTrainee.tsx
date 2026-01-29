@@ -28,28 +28,30 @@ import { Trainee } from "@/utils/@types/trainee";
 import { useQuery } from "@tanstack/react-query";
 import { GetAllTrainees } from "@/services/trainees.service";
 import { ApiResponse } from "@/lib/api";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface SelectTraineeProps {
   disabled?: boolean;
   filialId: string | undefined;
-  // trainees: Trainee[] | undefined; // Removed
-  selectedTrainee: string | undefined;
-  onTraineeChange: (trainee: Trainee) => void; // Changed to return object
+  selectedTraineeIds: string[];
+  onTraineesChange: (trainees: Trainee[]) => void;
 }
 
 export function SelectTrainee({
   disabled = false,
   filialId,
-  selectedTrainee,
-  onTraineeChange,
+  selectedTraineeIds,
+  onTraineesChange,
 }: SelectTraineeProps) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const { data: traineesData } = useQuery<ApiResponse<Trainee[]>, Error>({
     queryKey: [ "get-all-trainees", filialId ],
-    queryFn: () => GetAllTrainees({ filialId: filialId ?? "" }),
-    enabled: !!filialId,
+    queryFn: () => GetAllTrainees(filialId ? { filialId } : undefined),
+    enabled: Boolean(filialId),
     staleTime: 1000 * 60,
   });
 
@@ -65,14 +67,14 @@ export function SelectTrainee({
         <DesktopSelect
           disabled={ disabled || !filialId }
           allTrainees={ trainees }
-          selectedTrainee={ selectedTrainee }
-          onTraineeChange={ onTraineeChange }
+          selectedTraineeIds={ selectedTraineeIds }
+          onTraineesChange={ onTraineesChange }
         />
       ) : (
         <MobileSelect
           allTrainees={ trainees }
-          selectedTrainee={ selectedTrainee }
-          onTraineeChange={ onTraineeChange }
+          selectedTraineeIds={ selectedTraineeIds }
+          onTraineesChange={ onTraineesChange }
         />
       )}
     </div>
@@ -82,19 +84,19 @@ export function SelectTrainee({
 interface SelectProps {
   disabled?: boolean;
   allTrainees: Trainee[] | undefined;
-  selectedTrainee: string | undefined;
-  onTraineeChange: (trainee: Trainee) => void;
+  selectedTraineeIds: string[];
+  onTraineesChange: (trainees: Trainee[]) => void;
 }
 
 function DesktopSelect({
   disabled,
   allTrainees,
-  selectedTrainee,
-  onTraineeChange,
+  selectedTraineeIds,
+  onTraineesChange,
 }: SelectProps) {
   const [ open, setOpen ] = useState(false);
 
-  const selectedValue = getDisplayValue(selectedTrainee, allTrainees);
+  const selectedCount = selectedTraineeIds.length;
 
   return (
     <Popover modal={ true } open={ open } onOpenChange={ setOpen }>
@@ -102,25 +104,25 @@ function DesktopSelect({
         <Button
           disabled={ disabled }
           variant="outline"
-          className="w-full justify-start group cursor-pointer"
+          role="combobox"
+          aria-expanded={ open }
+          className="w-full justify-between"
         >
-          {selectedValue ? (
-            <>
-              {selectedValue.name} -{" "}
-              {hideDocumentNumber(selectedValue.documentNumber)}
-            </>
+          {selectedCount > 0 ? (
+            <div className="flex gap-1 flex-wrap">
+              <Badge variant="secondary">{selectedCount} selecionado(s)</Badge>
+            </div>
           ) : (
-            <span className="text-placeholder group-hover:text-white">
-              Selecione o aluno
-            </span>
+            <span className="text-muted-foreground">Selecione os alunos</span>
           )}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-full" align="start">
         <TraineesList
           allTrainees={ allTrainees }
-          setOpen={ setOpen }
-          onTraineeChange={ onTraineeChange }
+          selectedTraineeIds={ selectedTraineeIds }
+          onTraineesChange={ onTraineesChange }
         />
       </PopoverContent>
     </Popover>
@@ -129,25 +131,23 @@ function DesktopSelect({
 
 function MobileSelect({
   allTrainees,
-  selectedTrainee,
-  onTraineeChange,
+  selectedTraineeIds,
+  onTraineesChange,
 }: Omit<SelectProps, "disabled">) {
   const [ open, setOpen ] = useState(false);
 
-  const selectedValue = getDisplayValue(selectedTrainee, allTrainees);
+  const selectedCount = selectedTraineeIds.length;
 
   return (
     <Drawer open={ open } onOpenChange={ setOpen }>
       <DrawerTrigger asChild>
-        <Button variant="outline" className="w-full justify-start">
-          {selectedValue ? (
-            <>
-              {selectedValue.name} -{" "}
-              {hideDocumentNumber(selectedValue.documentNumber)}
-            </>
+        <Button variant="outline" className="w-full justify-between">
+          {selectedCount > 0 ? (
+            <Badge variant="secondary">{selectedCount} selecionado(s)</Badge>
           ) : (
-            <span className="text-placeholder">Selecione o aluno</span>
+            <span className="text-muted-foreground">Selecione os alunos</span>
           )}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </DrawerTrigger>
       <DrawerContent className="w-full" aria-describedby={ undefined }>
@@ -155,8 +155,8 @@ function MobileSelect({
           <div className="mt-4 border-t">
             <TraineesList
               allTrainees={ allTrainees }
-              setOpen={ setOpen }
-              onTraineeChange={ onTraineeChange }
+              selectedTraineeIds={ selectedTraineeIds }
+              onTraineesChange={ onTraineesChange }
             />
           </div>
         </DrawerTitle>
@@ -166,19 +166,32 @@ function MobileSelect({
 }
 
 interface TraineesListProps {
-  setOpen: (_open: boolean) => void;
-  onTraineeChange: (trainee: Trainee) => void;
   allTrainees: Trainee[] | undefined;
+  selectedTraineeIds: string[];
+  onTraineesChange: (trainees: Trainee[]) => void;
 }
 
 function TraineesList({
-  setOpen,
-  onTraineeChange,
   allTrainees,
+  selectedTraineeIds,
+  onTraineesChange,
 }: TraineesListProps) {
   const handleSelect = (trainee: Trainee) => {
-    onTraineeChange(trainee);
-    setOpen(false);
+    const isSelected = selectedTraineeIds.includes(trainee.traineeId);
+    let newSelectedIds: string[];
+
+    if (isSelected) {
+      newSelectedIds = selectedTraineeIds.filter(
+        (id) => id !== trainee.traineeId,
+      );
+    } else {
+      newSelectedIds = [ ...selectedTraineeIds, trainee.traineeId ];
+    }
+
+    const newSelectedTrainees =
+      allTrainees?.filter((t) => newSelectedIds.includes(t.traineeId)) || [];
+
+    onTraineesChange(newSelectedTrainees);
   };
 
   return (
@@ -187,36 +200,28 @@ function TraineesList({
       <CommandList>
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
         <CommandGroup>
-          {allTrainees?.map((trainee) => (
-            <CommandItem
-              key={ trainee.traineeId }
-              value={ `${trainee.name} ${trainee.documentNumber}` }
-              onSelect={ () => handleSelect(trainee) }
-            >
-              {trainee.name} - {hideDocumentNumber(trainee.documentNumber)}
-            </CommandItem>
-          ))}
+          {allTrainees?.map((trainee) => {
+            const isSelected = selectedTraineeIds.includes(trainee.traineeId);
+            return (
+              <CommandItem
+                key={ trainee.traineeId }
+                value={ `${trainee.name} ${trainee.documentNumber}` }
+                onSelect={ () => handleSelect(trainee) }
+              >
+                <Check
+                  className={ cn(
+                    "mr-2 h-4 w-4",
+                    isSelected ? "opacity-100" : "opacity-0",
+                  ) }
+                />
+                {trainee.name} - {hideDocumentNumber(trainee.documentNumber)}
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
       </CommandList>
     </Command>
   );
-}
-
-function getDisplayValue(
-  traineeName: string | undefined,
-  allTrainees: Trainee[] | undefined,
-): { name: string; documentNumber: string } | null {
-  if (!traineeName || !allTrainees) return null;
-
-  const trainee = allTrainees.find((s) => s.name === traineeName);
-  if (trainee) {
-    return {
-      name: trainee.name,
-      documentNumber: trainee.documentNumber,
-    };
-  }
-
-  return null;
 }
 
 function hideDocumentNumber(documentNumber: string) {

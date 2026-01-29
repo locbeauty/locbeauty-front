@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Goal } from "@/utils/@types/goals";
-import { GoalStatuses } from "@/utils/constants";
+import { GoalStatuses , USER_ROLES } from "@/utils/constants";
 import { getMonthName } from "@/utils/getMonthName";
 import {
   Building2,
@@ -11,25 +11,58 @@ import {
   DollarSign,
   MoreVertical,
   Eye,
-} from "lucide-react";
+  Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { GoalDetailsDialog } from "./GoalDetailsDialog";
+import { useAuth } from "@/contexts/auth-provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { DeleteGoal } from "@/services/goals.service";
+import { toast } from "sonner";
 
 export function GoalCard({ goal }: { goal: Goal }) {
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
+
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const handleDeleteGoal = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await DeleteGoal(goal.goalId);
+
+      if (response.statusCode === 200) {
+        toast.success("Meta excluída com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+      } else {
+        toast.error(response.message || "Erro ao excluir meta.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir meta.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+    }
+  };
   const isMoney = goal.targetCents !== null;
   const target = isMoney ? goal.targetCents! : goal.targetQuantity!;
-  const current = isMoney ? goal.currentCents ?? 0 : goal.currentQuantity ?? 0;
+  const current = isMoney
+    ? (goal.currentCents ?? 0)
+    : (goal.currentQuantity ?? 0);
   const estimated = isMoney
-    ? goal.estimatedCents ?? 0
-    : goal.estimatedQuantity ?? 0;
+    ? (goal.estimatedCents ?? 0)
+    : (goal.estimatedQuantity ?? 0);
 
   const formatValue = (v: number) =>
     isMoney
@@ -75,7 +108,7 @@ export function GoalCard({ goal }: { goal: Goal }) {
               <Badge
                 variant="outline"
                 className={ `${statusColor(
-                  goal.status
+                  goal.status,
                 )} text-[10px] px-1.5 py-0 h-5 whitespace-nowrap` }
               >
                 {goal.status === "EM_ANDAMENTO"
@@ -136,6 +169,18 @@ export function GoalCard({ goal }: { goal: Goal }) {
                   <Eye className="mr-2 h-4 w-4" />
                   Ver Detalhes
                 </DropdownMenuItem>
+                {user?.role === USER_ROLES.MASTER && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                      onClick={ () => setIsDeleteConfirmationDialogOpen(true) }
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -206,6 +251,15 @@ export function GoalCard({ goal }: { goal: Goal }) {
           open={ isDetailsOpen }
           onOpenChange={ setIsDetailsOpen }
           goal={ goal }
+        />
+
+        <DeleteConfirmationDialog
+          isOpen={ isDeleteConfirmationDialogOpen }
+          onOpenChange={ setIsDeleteConfirmationDialogOpen }
+          onConfirm={ handleDeleteGoal }
+          title="Confirmar Exclusão"
+          description="Tem certeza que deseja excluir esta meta?"
+          isDeleting={ isDeleting }
         />
       </CardContent>
     </Card>

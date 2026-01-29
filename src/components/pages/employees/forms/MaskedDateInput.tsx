@@ -22,6 +22,10 @@ export function MaskedDateInput({
   useEffect(() => {
     if (value instanceof Date) {
       setInputValue(value.toLocaleDateString("pt-BR"));
+    } else if (typeof value === "string" && value.match(/^\d{4}-\d{2}-\d{2}/)) {
+      const [ y, m, d ] = value.split("T")[0].split("-").map(Number);
+      const date = new Date(y, m - 1, d);
+      setInputValue(date.toLocaleDateString("pt-BR"));
     } else if (!value) {
       setInputValue("");
     }

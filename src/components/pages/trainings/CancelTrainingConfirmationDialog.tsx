@@ -41,7 +41,7 @@ interface CancelTrainingConfirmationDialogProps {
       | "Debito"
       | "Credito"
       | "Dinheiro"
-      | null
+      | null,
   ) => void;
 }
 
@@ -56,17 +56,17 @@ export function CancelTrainingConfirmationDialog({
   const [ hasCancellationFee, setHasCancellationFee ] = useState(false);
   const [ cancellationFee, setCancellationFee ] = useState<string>("0,00");
   const [ canceledBy, setCanceledBy ] = useState<"VOLUNTEER" | "TRAINEE">(
-    "TRAINEE"
+    "TRAINEE",
   );
 
   const [ cancellationDate, setCancellationDate ] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [ cancellationFeePaymentDate, setCancellationFeePaymentDate ] =
     useState<string>("");
   const [ cancellationFeePaymentMethod, setCancellationFeePaymentMethod ] =
     useState<"PIX" | "Transferencia" | "Debito" | "Credito" | "Dinheiro" | "">(
-      ""
+      "",
     );
 
   if (!selectedTraining) return null;
@@ -81,7 +81,7 @@ export function CancelTrainingConfirmationDialog({
       p.paymentStatus === "Pago" ||
       p.paymentStatus === "Parcial" ||
       p.firstPaymentStatus === "Pago" ||
-      p.secondPaymentStatus === "Pago"
+      p.secondPaymentStatus === "Pago",
   );
 
   const handleConfirm = () => {
@@ -125,7 +125,7 @@ export function CancelTrainingConfirmationDialog({
             | "Debito"
             | "Credito"
             | "Dinheiro")
-        : null
+        : null,
     );
 
     setCurrentTrainingStatus("Cancelado");
@@ -159,7 +159,7 @@ export function CancelTrainingConfirmationDialog({
               <span className="font-medium text-gray-700 dark:text-gray-200">
                 Aluno:
               </span>{" "}
-              {selectedTraining.Trainee.name}
+              {selectedTraining.Trainees?.[0]?.name || "Desconhecido"}
             </p>
             {selectedTraining.dueDate && (
               <p>
@@ -236,7 +236,7 @@ export function CancelTrainingConfirmationDialog({
                         | "Transferencia"
                         | "Debito"
                         | "Credito"
-                        | "Dinheiro"
+                        | "Dinheiro",
                     )
                   }
                   className="w-full px-3 py-2 border rounded-md bg-background"

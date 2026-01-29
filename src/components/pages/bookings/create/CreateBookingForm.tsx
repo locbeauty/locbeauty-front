@@ -222,6 +222,7 @@ export function CreateBookingForm() {
       crossDays: false,
       endDate: undefined,
       endHourInMinutes: undefined,
+      isRoundTrip: true,
     },
   });
 
@@ -261,6 +262,7 @@ export function CreateBookingForm() {
   const watchCrossDays = watch("crossDays");
   const watchEndDate = watch("endDate");
   const watchEndHourInMinutes = watch("endHourInMinutes");
+  const watchIsRoundTrip = watch("isRoundTrip");
 
   // const isDateInPast = selectedDate && selectedDate < new Date();
   const isDateInPast = false;
@@ -323,11 +325,12 @@ export function CreateBookingForm() {
     const fuelCents = parseStringToCents(watchFuelCost || "0"); // custo por litro
     const distance = watchDistanceInKm || 0;
     const consumption = watchConsumption || 1;
+    const roundTripMultiplier = watchIsRoundTrip ? 2 : 1;
 
     let totalFuel = 0;
     if (distance > 0 && fuelCents > 0) {
       const litersNeeded = distance / consumption;
-      totalFuel = Math.round(litersNeeded * fuelCents);
+      totalFuel = Math.round(litersNeeded * fuelCents * roundTripMultiplier);
     }
 
     const total =
@@ -343,6 +346,7 @@ export function CreateBookingForm() {
     watchDistanceInKm,
     watchAdditionalTransportCost,
     watchConsumption,
+    watchIsRoundTrip,
     setValue,
   ]);
 
@@ -452,7 +456,7 @@ export function CreateBookingForm() {
     <div>
       <div className="space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
         <div className="ml-auto mr-auto w-[50%]">
-          <SelectFilial
+          <SelectFilial<CreateCheckoutFormSchemaType>
             control={ control }
             name="filialId"
             accessibleFilials={ accessibleFilialsIds }
@@ -512,7 +516,7 @@ export function CreateBookingForm() {
                   <Label className="text-sm font-medium flex items-center gap-1">
                     <Truck className="h-5 w-5 text-primary" /> Motorista
                   </Label>
-                  <SelectEmployee
+                  <SelectEmployee<CreateCheckoutFormSchemaType>
                     control={ control }
                     name="driverId"
                     setDriverString={ setDriverString }
@@ -536,14 +540,17 @@ export function CreateBookingForm() {
             </Card>
 
             {/* Seletor de Data e Hora */}
-            <CheckoutTimeSelector
+            <CheckoutTimeSelector<CreateCheckoutFormSchemaType>
               name="date"
               control={ control }
               checkoutSchedule={ checkoutSchedule }
             />
 
             {watchCrossDays && (
-              <CheckoutEndTimeSelector control={ control } name="endDate" />
+              <CheckoutEndTimeSelector<CreateCheckoutFormSchemaType>
+                control={ control }
+                name="endDate"
+              />
             )}
 
             {/* Observações */}
@@ -680,7 +687,7 @@ Motorista: ${driverString || "A definir"}
                 disabled={
                   !startHour ||
                   watchSelectedGears.length === 0 ||
-                  watchTotalPrice === "0,00" ||
+                  // watchTotalPrice === "0,00" ||
                   isSubmitting ||
                   isLoading
                 }

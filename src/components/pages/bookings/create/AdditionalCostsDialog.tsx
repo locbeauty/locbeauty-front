@@ -33,6 +33,7 @@ import { centsToString } from "@/utils/centsToString";
 import { toast } from "sonner";
 import { CityInput } from "./CityInput";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { Checkout } from "@/utils/@types/checkouts";
 import { UpdateCheckout } from "@/services/checkouts.service";
@@ -65,6 +66,7 @@ export function AdditionalCostsDialog({
   const [ lodgingCost, setLodgingCost ] = useState("");
   const [ foodCost, setFoodCost ] = useState("");
   const [ additionalTransportCost, setAdditionalTransportCost ] = useState("");
+  const [ isRoundTrip, setIsRoundTrip ] = useState(true);
 
   const isUpdateMode = !!selectedCheckout;
 
@@ -97,10 +99,13 @@ export function AdditionalCostsDialog({
   const safeConsumption = Number(consumptionKmPerLiter) || 1;
 
   // Cálculo de combustível
+  const roundTripMultiplier = isRoundTrip ? 2 : 1;
   let fuelTotalCents = 0;
   if (distanceInKM > 0 && pricePerLiterCents > 0) {
     const litersNeeded = Number(distanceInKM) / safeConsumption;
-    fuelTotalCents = Math.round(pricePerLiterCents * litersNeeded);
+    fuelTotalCents = Math.round(
+      pricePerLiterCents * litersNeeded * roundTripMultiplier,
+    );
   }
 
   // PREPARANDO VALORES PARA O CÁLCULO (EM CENTAVOS)
@@ -141,6 +146,7 @@ export function AdditionalCostsDialog({
         setAdditionalTransportCost(currentValues.additionalTransportCost || "");
         setDistanceInKM(Number(currentValues.distanceInKm) || 0);
         setConsumptionKmPerLiter(Number(currentValues.consumption) || 10);
+        setIsRoundTrip(currentValues.isRoundTrip ?? true);
       }
     }
   }, [ isAdditionalCostsDialogOpen, getValues, isUpdateMode, selectedCheckout ]);
@@ -197,6 +203,7 @@ export function AdditionalCostsDialog({
       setValue("additionalTransportCost", additionalTransportCost);
       setValue("distanceInKm", Number(distanceInKM));
       setValue("consumption", Number(consumptionKmPerLiter));
+      setValue("isRoundTrip", isRoundTrip);
 
       // Atualiza o total final no formulário
       setValue("totalPrice", centsToString(finalCost));
@@ -217,6 +224,7 @@ export function AdditionalCostsDialog({
     setAdditionalTransportCost("");
     setDistanceInKM(0);
     setConsumptionKmPerLiter(10);
+    setIsRoundTrip(true);
   }
 
   return (
@@ -236,7 +244,7 @@ export function AdditionalCostsDialog({
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <CarFront className="h-6 w-6 text-primary" />
-            Custos de Logística e Viagem
+            Custos de Logística e Viagemasdada
           </DialogTitle>
           <DialogDescription>
             Calcule e adicione custos variáveis relacionados à entrega e
@@ -254,27 +262,52 @@ export function AdditionalCostsDialog({
             <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" /> Distância Total (Ida e
-                  Volta)
+                  <MapPin className="h-3.5 w-3.5" />
+                  Distância Total
                 </Label>
                 <CityInput
                   setDistanceInKM={ setDistanceInKM }
                   distanceInKM={ distanceInKM }
+                  filialId={
+                    isUpdateMode && selectedCheckout
+                      ? selectedCheckout.SourceFilial.filialId
+                      : watch
+                        ? watch("filialId")
+                        : ""
+                  }
                 />
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-muted-foreground w-16">
-                    Manual:
-                  </span>
-                  <Input
-                    type="number"
-                    className="h-7 w-20 text-xs"
-                    value={ distanceInKM }
-                    onChange={ (e) => setDistanceInKM(Number(e.target.value)) }
-                    placeholder="0"
-                  />
-                  <span className="text-xs font-medium text-muted-foreground">
-                    km
-                  </span>
+                <div className="flex flex-col gap-3 mt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-16">
+                      Manual:
+                    </span>
+                    <Input
+                      type="number"
+                      className="h-7 w-20 text-xs"
+                      value={ distanceInKM || "" }
+                      onChange={ (e) => setDistanceInKM(Number(e.target.value)) }
+                      placeholder="0"
+                    />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      km
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-2 bg-primary/5 p-2 rounded-md border border-primary/10">
+                    <Checkbox
+                      id="round-trip"
+                      checked={ isRoundTrip }
+                      onCheckedChange={ (checked) =>
+                        setIsRoundTrip(checked === true)
+                      }
+                    />
+                    <Label
+                      htmlFor="round-trip"
+                      className="text-xs font-semibold cursor-pointer select-none text-primary"
+                    >
+                      Ida e volta (Multiplicar distância por 2)
+                    </Label>
+                  </div>
                 </div>
               </div>
 
@@ -303,7 +336,14 @@ export function AdditionalCostsDialog({
               </div>
 
               <div className="text-sm bg-primary/5 p-2 rounded text-primary flex justify-between items-center">
-                <span>Custo estimado de combustível:</span>
+                <span>
+                  Custo estimado de combustível:{" "}
+                  {isRoundTrip ? (
+                    <span>(Ida e Volta)</span>
+                  ) : (
+                    <span>(Ida)</span>
+                  )}
+                </span>
                 <span className="font-bold">
                   {centsToString(fuelTotalCents)}
                 </span>

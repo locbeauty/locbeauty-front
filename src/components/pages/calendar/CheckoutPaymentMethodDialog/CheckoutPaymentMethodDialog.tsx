@@ -535,18 +535,28 @@ export function CheckoutPaymentMethodDialog({
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {paymentStatuses.map((status) => (
-                      <SelectItem key={ status } value={ status }>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={ `w-2 h-2 rounded-full ${getStatusColor(
-                              status,
-                            )}` }
-                          />
-                          {status}
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {paymentStatuses
+                      .filter((status) => {
+                        if (
+                          status === "Reembolsado" ||
+                          status === "Cancelado"
+                        ) {
+                          return paymentStatus === status;
+                        }
+                        return true;
+                      })
+                      .map((status) => (
+                        <SelectItem key={ status } value={ status }>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={ `w-2 h-2 rounded-full ${getStatusColor(
+                                status,
+                              )}` }
+                            />
+                            {status}
+                          </div>
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 {errors.paymentStatus && (
@@ -559,7 +569,7 @@ export function CheckoutPaymentMethodDialog({
               {/* Checkboxes removed as requested */}
             </div>
 
-            {paymentStatus !== "Pendente" && (
+            {paymentStatus !== "Pendente" && paymentStatus !== "Cancelado" && (
               <div className="">
                 <Label>
                   O valor total é:{" "}
@@ -570,15 +580,17 @@ export function CheckoutPaymentMethodDialog({
               </div>
             )}
           </div>
-          {paymentStatus !== "Pendente" && paymentStatus !== "Cortesia" && (
+          {paymentStatus !== "Pendente" &&
+            paymentStatus !== "Cortesia" &&
+            paymentStatus !== "Cancelado" && (
             <div className={ "bg-muted/30 p-4 rounded-lg border space-y-6" }>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-bold flex items-center gap-2 text-primary">
                     <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs">
-                      1
+                        1
                     </div>
-                    Primeira Parcela / Entrada
+                      Primeira Parcela / Entrada
                   </Label>
                   <BookingPaymentStatusBadge
                     status={
@@ -590,15 +602,15 @@ export function CheckoutPaymentMethodDialog({
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div className="sm:col-span-4">
                     <Label className="text-xs text-muted-foreground">
-                      Valor
+                        Valor
                     </Label>
                     <PriceInput
                       disabled={
                         isRefundedStatus ||
-                        paymentStatus === "Pago" ||
-                        selectedCheckout?.CheckoutPayment?.paymentMode ===
-                          "Parcelado" ||
-                        firstPaymentStatus === "Pago"
+                          paymentStatus === "Pago" ||
+                          selectedCheckout?.CheckoutPayment?.paymentMode ===
+                            "Parcelado" ||
+                          firstPaymentStatus === "Pago"
                       }
                       withLabel={ false }
                       value={ firstPaymentAmount || "0,00" }
@@ -618,11 +630,11 @@ export function CheckoutPaymentMethodDialog({
                     <Input
                       disabled={
                         isRefundedStatus ||
-                        selectedCheckout.CheckoutPayment?.paymentStatus ===
-                          "Pago" ||
-                        selectedCheckout?.CheckoutPayment?.paymentMode ===
-                          "Parcelado" ||
-                        firstPaymentStatus === "Pago"
+                          selectedCheckout.CheckoutPayment?.paymentStatus ===
+                            "Pago" ||
+                          selectedCheckout?.CheckoutPayment?.paymentMode ===
+                            "Parcelado" ||
+                          firstPaymentStatus === "Pago"
                       }
                       type="date"
                       value={ firstPaymentDate }
@@ -637,7 +649,7 @@ export function CheckoutPaymentMethodDialog({
 
                   <div className="sm:col-span-4">
                     <Label className="text-xs text-muted-foreground">
-                      Forma de Pagamento
+                        Forma de Pagamento
                     </Label>
                     <Select
                       onValueChange={ (value) => setFirstPaymentMethod(value) }
@@ -646,11 +658,11 @@ export function CheckoutPaymentMethodDialog({
                       <SelectTrigger
                         disabled={
                           isRefundedStatus ||
-                          selectedCheckout.CheckoutPayment?.paymentStatus ===
-                            "Pago" ||
-                          selectedCheckout?.CheckoutPayment?.paymentMode ===
-                            "Parcelado" ||
-                          firstPaymentStatus === "Pago"
+                            selectedCheckout.CheckoutPayment?.paymentStatus ===
+                              "Pago" ||
+                            selectedCheckout?.CheckoutPayment?.paymentMode ===
+                              "Parcelado" ||
+                            firstPaymentStatus === "Pago"
                         }
                         className={
                           errors.paymentInfo?.firstPaymentMethod
@@ -680,33 +692,37 @@ export function CheckoutPaymentMethodDialog({
                 </div>
               </div>
 
-              {(paymentMode === "Parcelado" || paymentStatus === "Parcial") && (
+              {(paymentMode === "Parcelado" || paymentStatus === "Parcial") &&
+                  firstPaymentStatus !== "Pendente" && (
                 <>
                   <div className="h-px bg-border border-dashed" />
                   <div className="space-y-3 opacity-90">
                     <div className="flex items-center justify-between">
                       <Label className="text-sm font-bold flex items-center gap-2 text-orange-600">
                         <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-xs">
-                          2
+                              2
                         </div>
-                        Segunda Parcela / Restante
+                            Segunda Parcela / Restante
                       </Label>
                       <BookingPaymentStatusBadge
                         status={
-                          selectedCheckout.CheckoutPayment?.secondPaymentStatus
+                          selectedCheckout.CheckoutPayment
+                            ?.secondPaymentStatus
                         }
                       />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                       <div className="sm:col-span-4">
                         <Label className="text-xs text-muted-foreground">
-                          Valor Restante
+                              Valor Restante
                         </Label>
                         <PriceInput
                           disabled={ true }
                           withLabel={ false }
                           value={ secondPaymentAmount || "0,00" }
-                          onChange={ (value) => setSecondPaymentAmount(value) }
+                          onChange={ (value) =>
+                            setSecondPaymentAmount(value)
+                          }
                         />
                         {errors.paymentInfo?.secondPaymentAmount && (
                           <p className="text-xs text-red-500 mt-1">
@@ -722,14 +738,16 @@ export function CheckoutPaymentMethodDialog({
                         <Input
                           disabled={
                             isRefundedStatus ||
-                            selectedCheckout.CheckoutPayment?.paymentStatus ===
-                              "Pendente" ||
-                            selectedCheckout.CheckoutPayment
-                              ?.secondPaymentStatus === "Pago"
+                                selectedCheckout.CheckoutPayment
+                                  ?.paymentStatus === "Pendente" ||
+                                selectedCheckout.CheckoutPayment
+                                  ?.secondPaymentStatus === "Pago"
                           }
                           type="date"
                           value={ secondPaymentDate }
-                          onChange={ (e) => setSecondPaymentDate(e.target.value) }
+                          onChange={ (e) =>
+                            setSecondPaymentDate(e.target.value)
+                          }
                         />
                         {errors.paymentInfo?.secondPaymentDate && (
                           <p className="text-xs text-red-500 mt-1">
@@ -740,7 +758,7 @@ export function CheckoutPaymentMethodDialog({
 
                       <div className="sm:col-span-4">
                         <Label className="text-xs text-muted-foreground">
-                          Forma Prevista
+                              Forma Prevista
                         </Label>
                         <Select
                           onValueChange={ (value) =>
@@ -751,10 +769,10 @@ export function CheckoutPaymentMethodDialog({
                           <SelectTrigger
                             disabled={
                               isRefundedStatus ||
-                              selectedCheckout.CheckoutPayment
-                                ?.paymentStatus === "Pendente" ||
-                              selectedCheckout.CheckoutPayment
-                                ?.secondPaymentStatus === "Pago"
+                                  selectedCheckout.CheckoutPayment
+                                    ?.paymentStatus === "Pendente" ||
+                                  selectedCheckout.CheckoutPayment
+                                    ?.secondPaymentStatus === "Pago"
                             }
                             className={
                               errors.paymentInfo?.secondPaymentMethod

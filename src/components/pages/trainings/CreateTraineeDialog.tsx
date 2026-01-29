@@ -29,7 +29,6 @@ import {
   CreateTraineeSchema,
 } from "@/lib/zod/CreateTraineeValidation";
 import { CreateTrainee } from "@/services/trainees.service";
-import { TraineeAddressForm } from "./TraineeAddressForm";
 
 interface CreateTraineeDialogProps {
   dialogNovoAluno: boolean;
@@ -86,7 +85,7 @@ export function CreateTraineeDialog({
           Novo Aluno
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[90%] h-[80%] overflow-scroll">
+      <DialogContent className="md:max-w-[50%] overflow-scroll">
         <form onSubmit={ traineeForm.handleSubmit(onSubmitTrainee) }>
           <DialogHeader>
             <DialogTitle>Cadastrar Novo Aluno</DialogTitle>
@@ -161,9 +160,6 @@ export function CreateTraineeDialog({
                 </p>
               )}
             </div>
-            <FormProvider { ...traineeForm }>
-              <TraineeAddressForm />
-            </FormProvider>
           </div>
           <DialogFooter>
             <Button

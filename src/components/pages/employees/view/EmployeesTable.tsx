@@ -2,7 +2,7 @@
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { Button } from "@/components/ui/button";
 import { Employee } from "@/utils/@types/employee";
-import { Eye, Pencil, ChevronLeft, ChevronsLeft } from "lucide-react";
+import { Eye, Pencil, ChevronLeft, ChevronsLeft, Trash2 } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import { UpdateEmployeeDialog } from "../update/UpdateEmployeeDialog";
 import { EmployeeDetailsDialog } from "./EmployeeDetailsDialog";
@@ -10,6 +10,12 @@ import { fetchWithToken } from "@/utils/fetchWithToken";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { useAuth } from "@/contexts/auth-provider";
+import { DeleteEmployee } from "@/services/employees.service";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { USER_ROLES } from "@/utils/constants";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface EmployeesTableProps {
   searchName?: string;
@@ -26,9 +32,18 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
   const [ selectedEmployee, setSelectedEmployee ] = useState<Employee | null>(
     null,
   );
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
+  const [ employeeToDelete, setEmployeeToDelete ] = useState<Employee | null>(
+    null,
+  );
+  const [ refreshCounter, setRefreshCounter ] = useState(0);
 
   const [ isEmployeeDetailsDialogOpen, setIsEmployeeDetailsDialogOpen ] =
     useState(false);
+
+  const [ isVisible, setIsVisible ] = useState<boolean>(false);
 
   const totalPages = Math.ceil(totalEmployees / pagination.limit);
 
@@ -55,9 +70,31 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
     setIsEmployeeDetailsDialogOpen(openStatus);
   }
 
+  async function handleDeleteEmployee() {
+    if (!employeeToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await DeleteEmployee(employeeToDelete.employeeId);
+
+      if (response.statusCode === 200 || response.statusCode === 204) {
+        toast.success("Funcionário excluído com sucesso.");
+        setRefreshCounter((prev) => prev + 1);
+      } else {
+        toast.error(response.message || "Erro ao excluir funcionário.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir funcionário.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+      setEmployeeToDelete(null);
+    }
+  }
+
   useEffect(() => {
     setPagination((prev) => ({ ...prev, page: 1 }));
-  }, [ searchName, filialId ]);
+  }, [ searchName, filialId, isVisible ]);
 
   useEffect(() => {
     async function getEmployees() {
@@ -69,6 +106,10 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
 
       if (filialId && filialId !== "Todas") {
         queryParams.append("filialId", filialId);
+      }
+
+      if (isVisible) {
+        queryParams.append("isVisible", "false");
       }
 
       queryParams.append("page", pagination.page.toString());
@@ -95,10 +136,23 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
       }
     }
     getEmployees();
-  }, [ searchName, filialId, pagination ]);
+  }, [ searchName, filialId, pagination, refreshCounter, isVisible ]);
 
   return (
     <>
+      {(user?.role === USER_ROLES.MASTER ||
+        user?.role === USER_ROLES.ADMIN) && (
+        <div className="flex justify-end mb-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="view-deleted-employees"
+              checked={ isVisible }
+              onCheckedChange={ setIsVisible }
+            />
+            <Label htmlFor="view-deleted-employees">Ver Excluídos</Label>
+          </div>
+        </div>
+      )}
       <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto md:block hidden ">
         <table className="w-full">
           <thead className="bg-muted">
@@ -123,7 +177,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               allEmployees
                 .filter(
                   (employee) =>
-                    employee.employeeId !== (user?.employeeId || user?.sub),
+                    employee.employeeId !== (user?.employeeId || user?.sub) &&
+                    employee.role !== USER_ROLES.MASTER,
                 )
                 .map((employee) => (
                   <tr
@@ -161,6 +216,18 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                           <Pencil />
                         </Button>
                       </Can>
+                      {user?.role === USER_ROLES.MASTER && (
+                        <Button
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={ () => {
+                            setEmployeeToDelete(employee);
+                            setIsDeleteConfirmationDialogOpen(true);
+                          } }
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -263,7 +330,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         {allEmployees
           ?.filter(
             (employee) =>
-              employee.employeeId !== (user?.employeeId || user?.sub),
+              employee.employeeId !== (user?.employeeId || user?.sub) &&
+              employee.role !== USER_ROLES.MASTER,
           )
           .map((employee) => (
             <Fragment key={ employee.employeeId }>
@@ -381,6 +449,16 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         selectedEmployee={ selectedEmployee! }
         setSelectedEmployee={ setSelectedEmployee }
         handleToggleUpdateEmployeeDialog={ handleToggleUpdateEmployeeDialog }
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+        onConfirm={ handleDeleteEmployee }
+        title="Confirmar Exclusão"
+        description="Tem certeza que deseja excluir o funcionário"
+        itemName={ employeeToDelete?.fullname }
+        isDeleting={ isDeleting }
       />
     </>
   );

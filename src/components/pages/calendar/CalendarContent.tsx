@@ -25,12 +25,14 @@ interface CalendarContentProps {
   viewType: "semana" | "dia" | "mes";
   currentDate: Date;
   openCheckoutDetails: (_agendamento: Checkout) => void;
+  hideCanceled: boolean;
 }
 
 export function CalendarContent({
   viewType,
   currentDate,
   openCheckoutDetails,
+  hideCanceled,
 }: CalendarContentProps) {
   const { user } = useAuth();
   const { accesses } = useAccess();
@@ -119,7 +121,7 @@ export function CalendarContent({
 
   const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
     queryKey: [ "get-all-trainings" ],
-    queryFn: GetAllTrainings,
+    queryFn: () => GetAllTrainings(),
     staleTime: 1000 * 60, // 1 minuto de cache
   });
 
@@ -138,7 +140,18 @@ export function CalendarContent({
   const trainings = trainingsData.data?.data || [];
   const notices = noticesData.data?.data || [];
 
-  const allEvents: CalendarEvent[] = [ ...checkouts, ...trainings, ...notices ];
+  const filteredCheckouts = hideCanceled
+    ? checkouts.filter((c) => c.checkoutStatus !== "Cancelado")
+    : checkouts;
+  const filteredTrainings = hideCanceled
+    ? trainings.filter((t) => t.trainingStatus !== "Cancelado")
+    : trainings;
+
+  const allEvents: CalendarEvent[] = [
+    ...filteredCheckouts,
+    ...filteredTrainings,
+    ...notices,
+  ];
 
   const openDetails = (event: CalendarEvent) => {
     if ("trainingId" in event) {

@@ -11,8 +11,6 @@ import { ROUTES } from "@/utils/routes";
 import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 
-const GearFilterStatusTypes = [ "Todos", "Pequeno", "Médio", "Grande" ];
-
 export default function GearsPage() {
   return (
     <RouteGuard module={ SYSTEM_MODULES.GEARS }>
@@ -43,14 +41,6 @@ export default function GearsPage() {
               className="pl-8"
             />
           </div>
-          <CustomFilterSelect
-            items={ GearFilterStatusTypes }
-            placeholder="Status"
-            triggerProps={ {
-              className: "w-fit md:w-[180px]",
-              disabled: false,
-            } }
-          />
         </div>
 
         <GearsTable />

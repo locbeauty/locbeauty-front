@@ -19,8 +19,10 @@ export async function CreateVolunteer(body: CreateVolunteerFormDataType) {
   return response;
 }
 
-// export async function UpdateCustomer({ body, queryParams }: {body: UpdateCustomerFormSchemaType, queryParams?: Record<string, string>}) {
-//     const response = await apiRequest<Customer[]>({ endpoint: "customers/update", method: "POST", body, queryParams });
-
-//     return response;
-// }
+export async function DeleteVolunteer(volunteerId: string) {
+  const response = await apiRequest({
+    endpoint: `volunteers/${volunteerId}`,
+    method: "DELETE",
+  });
+  return response;
+}

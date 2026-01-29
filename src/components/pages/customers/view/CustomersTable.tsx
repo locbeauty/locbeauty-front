@@ -10,7 +10,17 @@ import {
   ChevronsLeft,
   ChevronsRight,
   X,
+  Trash2,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Fragment, useEffect, useState } from "react";
 import { UpdateCustomerDialog } from "../update/UpdateCustomerDialog";
 import { CustomerDetailsDialog } from "./CustomerDetailsDialog";
@@ -18,10 +28,11 @@ import { Button } from "@/components/ui/button";
 import { Customer } from "@/utils/@types/customer";
 import { format } from "date-fns";
 import { fetchWithToken } from "@/utils/fetchWithToken";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   GetAllCustomers,
   GetAllCustomersFilters,
+  DeleteCustomer,
 } from "@/services/customers.service";
 import { ApiResponse } from "@/lib/api";
 import { Can } from "@/components/auth/Can";
@@ -35,8 +46,28 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export function CustomersTable() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
+  const [ customerToDelete, setCustomerToDelete ] = useState<Customer | null>(
+    null,
+  );
+
   const [ pagination, setPagination ] = useState({ page: 1, limit: 10 });
   const [ filters, setFilters ] = useState<GetAllCustomersFilters>({
     name: "",
@@ -44,6 +75,7 @@ export function CustomersTable() {
     document: "",
     phone: "",
     filialId: "",
+    status: undefined,
   });
 
   const { data, isLoading } = useQuery<
@@ -66,7 +98,7 @@ export function CustomersTable() {
   const [ isUpdateCustomerDialogOpen, setIsUpdateCustomerDialogOpen ] =
     useState(false);
   const [ selectedCustomer, setSelectedCustomer ] = useState<Customer | null>(
-    null
+    null,
   );
 
   const [ isCustomerDetailsDialogOpen, setIsCustomerDetailsDialogOpen ] =
@@ -74,7 +106,7 @@ export function CustomersTable() {
 
   const handleToggleUpdateCustomerDialog = (
     openStatus: boolean,
-    customer: Customer | null
+    customer: Customer | null,
   ) => {
     if (openStatus) {
       setSelectedCustomer(customer);
@@ -85,10 +117,32 @@ export function CustomersTable() {
 
   const handleToggleCustomerDetailsDialog = (
     openStatus: boolean,
-    customer: Customer | null
+    customer: Customer | null,
   ) => {
     setSelectedCustomer(customer);
     setIsCustomerDetailsDialogOpen(openStatus);
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!customerToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await DeleteCustomer(customerToDelete.customerId);
+
+      if (response.statusCode === 200 || response.statusCode === 204) {
+        toast.success("Cliente excluído com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+      } else {
+        toast.error(response.message || "Erro ao excluir cliente.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir cliente.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+      setCustomerToDelete(null);
+    }
   };
 
   return (
@@ -119,10 +173,47 @@ export function CustomersTable() {
             setFilters({ ...filters, filialId: value === "ALL" ? "" : value })
           }
         />
+        <Select
+          value={ filters.status || "ALL" }
+          onValueChange={ (value) =>
+            setFilters({
+              ...filters,
+              status:
+                value === "ALL" ? undefined : (value as "Ativo" | "Inativo"),
+            })
+          }
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Todos os Status</SelectItem>
+            <SelectItem value="Ativo">Ativo</SelectItem>
+            <SelectItem value="Inativo">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
+        {(user?.role === USER_ROLES.MASTER ||
+          user?.role === USER_ROLES.ADMIN) && (
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="view-deleted"
+              checked={ filters.isVisible === "false" }
+              onCheckedChange={ (checked: boolean) =>
+                setFilters({
+                  ...filters,
+                  isVisible: checked ? "false" : undefined,
+                })
+              }
+            />
+            <Label htmlFor="view-deleted">Ver Excluídos</Label>
+          </div>
+        )}
         {(filters.name ||
           filters.email ||
           filters.document ||
-          filters.filialId) && (
+          filters.filialId ||
+          filters.status ||
+          filters.isVisible) && (
           <Button
             variant="ghost"
             onClick={ () =>
@@ -132,6 +223,8 @@ export function CustomersTable() {
                 document: "",
                 phone: "",
                 filialId: "",
+                isVisible: undefined,
+                status: undefined,
               })
             }
             className="px-2 lg:px-3"
@@ -255,6 +348,18 @@ export function CustomersTable() {
                           <Pencil className="w-4 h-4" />
                         </Button>
                       </Can>
+                      {user?.role === USER_ROLES.MASTER && (
+                        <Button
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={ () => {
+                            setCustomerToDelete(customer);
+                            setIsDeleteConfirmationDialogOpen(true);
+                          } }
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -294,11 +399,11 @@ export function CustomersTable() {
               const pages = [];
               let startPage = Math.max(
                 1,
-                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2)
+                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2),
               );
               const endPage = Math.min(
                 totalPages,
-                startPage + MAX_VISIBLE_PAGES - 1
+                startPage + MAX_VISIBLE_PAGES - 1,
               );
 
               if (endPage - startPage + 1 < MAX_VISIBLE_PAGES) {
@@ -315,7 +420,7 @@ export function CustomersTable() {
                     onClick={ () => handlePageChange(i) }
                   >
                     {i}
-                  </Button>
+                  </Button>,
                 );
               }
               return pages;
@@ -458,6 +563,43 @@ export function CustomersTable() {
         setSelectedCustomer={ setSelectedCustomer }
         handleToggleUpdateCustomerDialog={ handleToggleUpdateCustomerDialog }
       />
+
+      <Dialog
+        open={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+      >
+        <DialogContent className="max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <Trash2 className="h-5 w-5" /> Confirmar Exclusão
+            </DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o cliente{" "}
+              <span className="font-bold">
+                {customerToDelete?.fullname || customerToDelete?.companyName}
+              </span>
+              ? Esta ação ocultará o cliente para todos os usuários menos para
+              administradores de nível Master.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={ () => setIsDeleteConfirmationDialogOpen(false) }
+              disabled={ isDeleting }
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={ handleDeleteCustomer }
+              disabled={ isDeleting }
+            >
+              {isDeleting ? "Excluindo..." : "Confirmar Exclusão"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
