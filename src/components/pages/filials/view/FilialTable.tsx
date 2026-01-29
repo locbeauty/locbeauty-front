@@ -19,20 +19,20 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 export function FilialsTable() {
-  const [isUpdateFilialDialogOpen, setIsUpdateFilialDialogOpen] =
+  const [ isUpdateFilialDialogOpen, setIsUpdateFilialDialogOpen ] =
     useState(false);
-  const [selectedFilial, setSelectedFilial] = useState<Filial | null>(null);
+  const [ selectedFilial, setSelectedFilial ] = useState<Filial | null>(null);
 
-  const [isFilialDetailsDialogOpen, setIsFilialDetailsDialogOpen] =
+  const [ isFilialDetailsDialogOpen, setIsFilialDetailsDialogOpen ] =
     useState(false);
-  const [allFilials, setAllFilials] = useState<Filial[] | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen] =
+  const [ allFilials, setAllFilials ] = useState<Filial[] | null>(null);
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
-  const [filialToDelete, setFilialToDelete] = useState<Filial | null>(null);
-  const [refreshCounter, setRefreshCounter] = useState(0);
+  const [ filialToDelete, setFilialToDelete ] = useState<Filial | null>(null);
+  const [ refreshCounter, setRefreshCounter ] = useState(0);
 
-  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [ isVisible, setIsVisible ] = useState<boolean>(false);
 
   const { user } = useAuth();
 
@@ -90,7 +90,7 @@ export function FilialsTable() {
         {
           credentials: "include",
           next: {
-            tags: ["get-all-filials"],
+            tags: [ "get-all-filials" ],
           },
         },
       );
@@ -100,7 +100,7 @@ export function FilialsTable() {
       return data;
     }
     handleGetAllFilials();
-  }, [refreshCounter, isVisible]);
+  }, [ refreshCounter, isVisible ]);
 
   return (
     <>
@@ -110,8 +110,8 @@ export function FilialsTable() {
           <div className="flex items-center space-x-2">
             <Switch
               id="view-deleted-filials"
-              checked={isVisible}
-              onCheckedChange={setIsVisible}
+              checked={ isVisible }
+              onCheckedChange={ setIsVisible }
             />
             <Label htmlFor="view-deleted-filials">Ver Excluídos</Label>
           </div>
@@ -132,7 +132,7 @@ export function FilialsTable() {
           <tbody>
             {allFilials?.length === 0 && (
               <tr>
-                <td className="text-center p-4" colSpan={7}>
+                <td className="text-center p-4" colSpan={ 7 }>
                   Nada a mostrar por aqui.
                 </td>
               </tr>
@@ -140,7 +140,7 @@ export function FilialsTable() {
             {allFilials ? (
               allFilials.map((filial) => (
                 <tr
-                  key={filial.filialId}
+                  key={ filial.filialId }
                   className="border-t hover:bg-muted/50"
                 >
                   <td className="p-3 text-sm truncate max-w-[200px]">
@@ -156,19 +156,19 @@ export function FilialsTable() {
                   <td className="p-3 text-center text-sm">{filial.email}</td>
                   <td className="">
                     <div className="flex gap-2 items-center">
-                      <Can module={SYSTEM_MODULES.FILIALS} action="canView">
+                      <Can module={ SYSTEM_MODULES.FILIALS } action="canView">
                         <Button
-                          onClick={() =>
+                          onClick={ () =>
                             handleToggleFilialDetailsDialog(true, filial)
                           }
                         >
                           <Eye />
                         </Button>
                       </Can>
-                      <Can module={SYSTEM_MODULES.FILIALS} action="canEdit">
+                      <Can module={ SYSTEM_MODULES.FILIALS } action="canEdit">
                         <Button
                           variant="outline"
-                          onClick={() =>
+                          onClick={ () =>
                             handleToggleUpdateFilialDialog(true, filial)
                           }
                         >
@@ -180,10 +180,10 @@ export function FilialsTable() {
                         <Button
                           variant="ghost"
                           className="text-destructive hover:bg-destructive/10"
-                          onClick={() => {
+                          onClick={ () => {
                             setFilialToDelete(filial);
                             setIsDeleteConfirmationDialogOpen(true);
-                          }}
+                          } }
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -195,7 +195,7 @@ export function FilialsTable() {
             ) : (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={ 8 }
                   className="p-4 text-center text-muted-foreground"
                 >
                   Carregando...
@@ -209,10 +209,10 @@ export function FilialsTable() {
       <div className="md:hidden flex flex-col gap-4">
         {allFilials &&
           allFilials.map((filial) => (
-            <Fragment key={filial.filialId}>
-              <Can module={SYSTEM_MODULES.FILIALS} action="canView">
+            <Fragment key={ filial.filialId }>
+              <Can module={ SYSTEM_MODULES.FILIALS } action="canView">
                 <ResponsiveCard
-                  cardData={{
+                  cardData={ {
                     id: filial.filialId,
                     title: filial.filialName,
                     items: [
@@ -222,9 +222,9 @@ export function FilialsTable() {
                         itemInfo: filial.cellphone,
                       },
                     ],
-                  }}
-                  rawData={filial}
-                  handleToggleDialog={handleToggleFilialDetailsDialog}
+                  } }
+                  rawData={ filial }
+                  handleToggleDialog={ handleToggleFilialDetailsDialog }
                 />
               </Can>
             </Fragment>
@@ -232,27 +232,27 @@ export function FilialsTable() {
       </div>
 
       <FilialDetailsDialog
-        selectedFilial={selectedFilial}
-        handleToggleUpdateFilialDialog={handleToggleUpdateFilialDialog}
-        handleToggleFilialDetailsDialog={handleToggleFilialDetailsDialog}
-        isFilialDetailsModalOpen={isFilialDetailsDialogOpen}
+        selectedFilial={ selectedFilial }
+        handleToggleUpdateFilialDialog={ handleToggleUpdateFilialDialog }
+        handleToggleFilialDetailsDialog={ handleToggleFilialDetailsDialog }
+        isFilialDetailsModalOpen={ isFilialDetailsDialogOpen }
       />
 
       <UpdateFilialDialog
-        isUpdateFilialDialogOpen={isUpdateFilialDialogOpen}
-        selectedFilial={selectedFilial!}
-        setSelectedFilial={setSelectedFilial}
-        handleToggleUpdateFilialDialog={handleToggleUpdateFilialDialog}
+        isUpdateFilialDialogOpen={ isUpdateFilialDialogOpen }
+        selectedFilial={ selectedFilial! }
+        setSelectedFilial={ setSelectedFilial }
+        handleToggleUpdateFilialDialog={ handleToggleUpdateFilialDialog }
       />
 
       <DeleteConfirmationDialog
-        isOpen={isDeleteConfirmationDialogOpen}
-        onOpenChange={setIsDeleteConfirmationDialogOpen}
-        onConfirm={handleDeleteFilial}
+        isOpen={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+        onConfirm={ handleDeleteFilial }
         title="Confirmar Exclusão"
         description="Tem certeza que deseja excluir a filial"
-        itemName={filialToDelete?.filialName}
-        isDeleting={isDeleting}
+        itemName={ filialToDelete?.filialName }
+        isDeleting={ isDeleting }
       />
     </>
   );

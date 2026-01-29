@@ -85,7 +85,7 @@ export function CreateTraineeDialog({
           Novo Aluno
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[90%] overflow-scroll">
+      <DialogContent className="md:max-w-[50%] overflow-scroll">
         <form onSubmit={ traineeForm.handleSubmit(onSubmitTrainee) }>
           <DialogHeader>
             <DialogTitle>Cadastrar Novo Aluno</DialogTitle>

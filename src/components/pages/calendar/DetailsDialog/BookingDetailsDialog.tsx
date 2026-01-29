@@ -1721,15 +1721,6 @@ export function CancelBookingConfirmationDialog({
             )}
           </div>
 
-          <div className="flex items-center space-x-2 mt-4">
-            <Checkbox
-              id="wasRefunded"
-              checked={ wasRefunded }
-              onCheckedChange={ (checked) => setWasRefunded(checked as boolean) }
-            />
-            <Label htmlFor="wasRefunded">Reembolsar sinal?</Label>
-          </div>
-
           <div className="flex items-center space-x-2">
             <Checkbox
               id="hasCancellationFee"

@@ -12,6 +12,13 @@ import {
   X,
   Trash2,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Fragment, useEffect, useState } from "react";
@@ -68,6 +75,7 @@ export function CustomersTable() {
     document: "",
     phone: "",
     filialId: "",
+    status: undefined,
   });
 
   const { data, isLoading } = useQuery<
@@ -165,6 +173,25 @@ export function CustomersTable() {
             setFilters({ ...filters, filialId: value === "ALL" ? "" : value })
           }
         />
+        <Select
+          value={ filters.status || "ALL" }
+          onValueChange={ (value) =>
+            setFilters({
+              ...filters,
+              status:
+                value === "ALL" ? undefined : (value as "Ativo" | "Inativo"),
+            })
+          }
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Todos os Status</SelectItem>
+            <SelectItem value="Ativo">Ativo</SelectItem>
+            <SelectItem value="Inativo">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
         {(user?.role === USER_ROLES.MASTER ||
           user?.role === USER_ROLES.ADMIN) && (
           <div className="flex items-center space-x-2">
@@ -185,6 +212,7 @@ export function CustomersTable() {
           filters.email ||
           filters.document ||
           filters.filialId ||
+          filters.status ||
           filters.isVisible) && (
           <Button
             variant="ghost"
@@ -196,6 +224,7 @@ export function CustomersTable() {
                 phone: "",
                 filialId: "",
                 isVisible: undefined,
+                status: undefined,
               })
             }
             className="px-2 lg:px-3"
