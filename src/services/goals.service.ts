@@ -9,7 +9,7 @@ export async function GetAllGoals({
   filialId?: string;
   isVisible?: string;
 }): Promise<Goal[]> {
-  const queryParams: any = {};
+  const queryParams: Record<string, string> = {};
   if (filialId) queryParams.filialId = filialId;
   if (isVisible) queryParams.isVisible = isVisible;
 
