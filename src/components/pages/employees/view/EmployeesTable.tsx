@@ -136,11 +136,12 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
       }
     }
     getEmployees();
-  }, [ searchName, filialId, pagination, refreshCounter ]);
+  }, [ searchName, filialId, pagination, refreshCounter, isVisible ]);
 
   return (
     <>
-      {(user?.role === USER_ROLES.MASTER || user?.role === USER_ROLES.ADMIN) && (
+      {(user?.role === USER_ROLES.MASTER ||
+        user?.role === USER_ROLES.ADMIN) && (
         <div className="flex justify-end mb-4">
           <div className="flex items-center space-x-2">
             <Switch

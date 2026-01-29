@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -42,14 +42,7 @@ export function AddParticipantDialog({
   const [ isLoading, setIsLoading ] = useState(false);
   const [ selectedId, setSelectedId ] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      loadOptions();
-      setSelectedId(null);
-    }
-  }, [ open, type ]);
-
-  const loadOptions = async () => {
+  const loadOptions = useCallback(async () => {
     setIsLoading(true);
     try {
       if (type === "TRAINEE") {
@@ -69,7 +62,14 @@ export function AddParticipantDialog({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [ type, filialId ]);
+
+  useEffect(() => {
+    if (open) {
+      loadOptions();
+      setSelectedId(null);
+    }
+  }, [ open, type, loadOptions ]);
 
   const handleSelect = async (id: string) => {
     setSelectedId(id);

@@ -5,13 +5,10 @@ import {
   UseFormSetValue,
   UseFormWatch,
   FieldErrors,
-  useFieldArray,
   Path,
 } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import PriceInput from "@/components/shared/PriceInput";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +28,7 @@ interface FinancialInputSectionProps {
   errors: FieldErrors<CreateTrainingDataType>;
   participants: Participant[];
   type: "trainee" | "volunteer";
+  fields: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 // Helper para tratar string de moeda (ex: "1.000,00")
@@ -53,7 +51,7 @@ export function FinancialInputSection({
   participants,
   type,
   fields,
-}: FinancialInputSectionProps & { fields: any[] }) {
+}: FinancialInputSectionProps) {
   const fieldName =
     type === "trainee" ? "traineePayments" : "volunteerPayments";
 
@@ -77,6 +75,7 @@ export function FinancialInputSection({
   }, [ participants, selectedParticipantId ]);
 
   const selectedIndex = fields.findIndex(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (field: any) => field.participantId === selectedParticipantId,
   );
 
@@ -97,6 +96,7 @@ export function FinancialInputSection({
   // Replicate effect
   useEffect(() => {
     if (isReplicating && selectedIndex !== -1) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fields.forEach((field: any, index) => {
         if (index === selectedIndex) return;
 
@@ -122,7 +122,7 @@ export function FinancialInputSection({
         }
       });
     }
-  }, [
+  }, [ // eslint-disable-line react-hooks/exhaustive-deps
     isReplicating,
     selectedIndex,
     currentPrice,
@@ -132,7 +132,7 @@ export function FinancialInputSection({
     fields,
     fieldName,
     setValue,
-    type,
+
     // currentPaymentInfo - omitted from strict dep check due to deep object comparison complexity, handled by re-renders
   ]);
 
@@ -263,10 +263,10 @@ export function FinancialInputSection({
               {/* Payment Info Section reused */}
               <TrainingPaymentSection
                 prefix={ `${fieldName}.${selectedIndex}` }
-                label="D etalhes do Pagamento"
+                label="Detalhes do Pagamento"
                 totalValue={
-                  parseCurrencyToFloat(currentPrice as any) +
-                  parseCurrencyToFloat(currentAddCost as any)
+                  parseCurrencyToFloat(currentPrice as unknown as string) +
+                  parseCurrencyToFloat(currentAddCost as unknown as string)
                 }
               />
             </div>

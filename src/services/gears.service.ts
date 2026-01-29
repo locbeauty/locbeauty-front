@@ -10,7 +10,7 @@ export async function GetAllGears({
   filialId?: string | undefined;
   isVisible?: string;
 }) {
-  const queryParams: any = {};
+  const queryParams: Record<string, string> = {};
   if (filialId) queryParams.filialIds = filialId;
   if (isVisible) queryParams.isVisible = isVisible;
 
