@@ -50,7 +50,7 @@ export function SelectTrainee({
 
   const { data: traineesData } = useQuery<ApiResponse<Trainee[]>, Error>({
     queryKey: [ "get-all-trainees", filialId ],
-    queryFn: () => GetAllTrainees({ filialId: filialId || undefined }),
+    queryFn: () => GetAllTrainees(filialId ? { filialId } : undefined),
     enabled: Boolean(filialId),
     staleTime: 1000 * 60,
   });
