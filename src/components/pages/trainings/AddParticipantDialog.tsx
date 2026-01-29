@@ -27,6 +27,7 @@ interface AddParticipantDialogProps {
   type: "TRAINEE" | "VOLUNTEER";
   onAdd: (id: string) => Promise<void>;
   excludeIds?: string[];
+  filialId?: string;
 }
 
 export function AddParticipantDialog({
@@ -35,26 +36,31 @@ export function AddParticipantDialog({
   type,
   onAdd,
   excludeIds = [],
+  filialId,
 }: AddParticipantDialogProps) {
-  const [ options, setOptions ] = useState<(Trainee | Volunteer)[]>([]);
-  const [ isLoading, setIsLoading ] = useState(false);
-  const [ selectedId, setSelectedId ] = useState<string | null>(null);
+  const [options, setOptions] = useState<(Trainee | Volunteer)[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       loadOptions();
       setSelectedId(null);
     }
-  }, [ open, type ]);
+  }, [open, type]);
 
   const loadOptions = async () => {
     setIsLoading(true);
     try {
       if (type === "TRAINEE") {
-        const response = await GetAllTrainees();
+        const response = await GetAllTrainees(
+          filialId ? { filialId } : undefined,
+        );
         setOptions(response.data || []);
       } else {
-        const response = await GetAllVolunteers();
+        const response = await GetAllVolunteers(
+          filialId ? { filialId } : undefined,
+        );
         setOptions(response.data || []);
       }
     } catch (error) {
@@ -81,7 +87,7 @@ export function AddParticipantDialog({
   );
 
   return (
-    <Dialog open={ open } onOpenChange={ onOpenChange }>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden">
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle>
@@ -90,7 +96,7 @@ export function AddParticipantDialog({
         </DialogHeader>
         <Command className="overflow-hidden rounded-t-none border-t">
           <CommandInput
-            placeholder={ `Buscar ${type === "TRAINEE" ? "aluno" : "modelo"}...` }
+            placeholder={`Buscar ${type === "TRAINEE" ? "aluno" : "modelo"}...`}
           />
           <CommandList>
             <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
@@ -110,15 +116,15 @@ export function AddParticipantDialog({
 
                   return (
                     <CommandItem
-                      key={ id }
-                      value={ name }
-                      onSelect={ () => handleSelect(id) }
+                      key={id}
+                      value={name}
+                      onSelect={() => handleSelect(id)}
                     >
                       <Check
-                        className={ cn(
+                        className={cn(
                           "mr-2 h-4 w-4",
                           isSelected ? "opacity-100" : "opacity-0",
-                        ) }
+                        )}
                       />
                       {name}
                     </CommandItem>

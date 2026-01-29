@@ -304,29 +304,29 @@ export function TrainingPaymentSection({
                       </Label>
                       <FormControl>
                           <DatePicker
-                              value={field.value ? new Date(field.value) : null}
-                              onChange={field.onChange}
+                              value={ field.value ? new Date(field.value) : null }
+                              onChange={ field.onChange }
                               placeholder="Selecione a data"
                             />
                       </FormControl>
                       <FormMessage className="text-xs" />
                      </FormItem>
-                  )}
+                  ) }
                 />
               </div>
 
               <div className="sm:col-span-4">
                 <FormField
-                  control={control}
-                  name={`${prefix}.paymentInfo.firstPaymentMethod` as any}
-                  render={({ field }) => (
+                  control={ control }
+                  name={ `${prefix}.paymentInfo.firstPaymentMethod` as any }
+                  render={ ({ field }) => (
                     <FormItem>
                       <Label className="text-xs text-muted-foreground">
                         Forma de Pagamento
                       </Label>
                       <Select
-                        onValueChange={field.onChange}
-                        value={(field.value as string) ?? undefined}
+                        onValueChange={ field.onChange }
+                        value={ (field.value as string) ?? undefined }
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -335,7 +335,7 @@ export function TrainingPaymentSection({
                         </FormControl>
                         <SelectContent>
                           {paymentMethods.map((method) => (
-                            <SelectItem key={method} value={method}>
+                            <SelectItem key={ method } value={ method }>
                               <div className="flex items-center gap-2">
                                 {getPaymentIcon(method)}
                                 <span>{method}</span>
@@ -346,7 +346,7 @@ export function TrainingPaymentSection({
                       </Select>
                       <FormMessage className="text-xs" />
                     </FormItem>
-                  )}
+                  ) }
                 />
               </div>
             </div>
@@ -369,61 +369,61 @@ export function TrainingPaymentSection({
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div className="sm:col-span-4">
                     <FormField
-                      control={control}
-                      name={`${prefix}.paymentInfo.secondPaymentAmount` as any}
-                      render={({ field }) => (
+                      control={ control }
+                      name={ `${prefix}.paymentInfo.secondPaymentAmount` as any }
+                      render={ ({ field }) => (
                         <FormItem>
                           <Label className="text-xs text-muted-foreground">
                             Valor Restante
                           </Label>
                           <FormControl>
                             <PriceInput
-                              {...field}
-                              withLabel={false}
-                              disabled={true} // Sempre calculado automaticamente
-                              value={field.value ? String(field.value) : ""}
+                              { ...field }
+                              withLabel={ false }
+                              disabled={ true } // Sempre calculado automaticamente
+                              value={ field.value ? String(field.value) : "" }
                             />
                           </FormControl>
                           <FormMessage className="text-xs" />
                         </FormItem>
-                      )}
+                      ) }
                     />
                   </div>
 
                   <div className="sm:col-span-4">
                     <FormField
-                      control={control}
-                      name={`${prefix}.paymentInfo.secondPaymentDate` as any}
-                      render={({ field }) => (
+                      control={ control }
+                      name={ `${prefix}.paymentInfo.secondPaymentDate` as any }
+                      render={ ({ field }) => (
                         <FormItem>
                           <Label className="text-xs text-muted-foreground flex items-center gap-1">
                             <CalendarIcon className="w-3 h-3" /> Data Prevista
                           </Label>
                           <FormControl>
                             <DatePicker
-                              value={field.value ? new Date(field.value) : null}
-                              onChange={field.onChange}
+                              value={ field.value ? new Date(field.value) : null }
+                              onChange={ field.onChange }
                               placeholder="Selecione a data"
                             />
                           </FormControl>
                           <FormMessage className="text-xs" />
                         </FormItem>
-                      )}
+                      ) }
                     />
                   </div>
 
                   <div className="sm:col-span-4">
                     <FormField
-                      control={control}
-                      name={`${prefix}.paymentInfo.secondPaymentMethod` as any}
-                      render={({ field }) => (
+                      control={ control }
+                      name={ `${prefix}.paymentInfo.secondPaymentMethod` as any }
+                      render={ ({ field }) => (
                         <FormItem>
                           <Label className="text-xs text-muted-foreground">
                             Forma Prevista
                           </Label>
                           <Select
-                            onValueChange={field.onChange}
-                            value={(field.value as string) ?? undefined}
+                            onValueChange={ field.onChange }
+                            value={ (field.value as string) ?? undefined }
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -432,7 +432,7 @@ export function TrainingPaymentSection({
                             </FormControl>
                             <SelectContent>
                               {paymentMethods.map((method) => (
-                                <SelectItem key={method} value={method}>
+                                <SelectItem key={ method } value={ method }>
                                   <div className="flex items-center gap-2">
                                     {getPaymentIcon(method)}
                                     <span>{method}</span>
@@ -443,7 +443,7 @@ export function TrainingPaymentSection({
                           </Select>
                           <FormMessage className="text-xs" />
                         </FormItem>
-                      )}
+                      ) }
                     />
                   </div>
                 </div>
