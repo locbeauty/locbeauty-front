@@ -177,7 +177,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               allEmployees
                 .filter(
                   (employee) =>
-                    employee.employeeId !== (user?.employeeId || user?.sub),
+                    employee.employeeId !== (user?.employeeId || user?.sub) &&
+                    employee.role !== USER_ROLES.MASTER,
                 )
                 .map((employee) => (
                   <tr
@@ -329,7 +330,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         {allEmployees
           ?.filter(
             (employee) =>
-              employee.employeeId !== (user?.employeeId || user?.sub),
+              employee.employeeId !== (user?.employeeId || user?.sub) &&
+              employee.role !== USER_ROLES.MASTER,
           )
           .map((employee) => (
             <Fragment key={ employee.employeeId }>
