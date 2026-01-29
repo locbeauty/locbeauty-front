@@ -25,7 +25,7 @@ export async function apiRequest<T = unknown>({
   const cleanQueryParams = new URLSearchParams();
 
   if (queryParams) {
-    Object.entries(queryParams).forEach(([ key, value ]) => {
+    Object.entries(queryParams).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
         if (Array.isArray(value)) {
           value.forEach((v) => cleanQueryParams.append(key, String(v)));
@@ -44,16 +44,26 @@ export async function apiRequest<T = unknown>({
       : "";
 
   try {
+    const headers: Record<string, string> = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
+    // Force empty body for DELETE if not provided, to satisfy server requirements
+    if (method === "DELETE" && !body) {
+      body = {};
+    }
+
+    if (method !== "GET" && body) {
+      headers["Content-Type"] = "application/json";
+    }
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SERVER_URL}/${endpoint}${queryString}`,
       {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers,
         ...(method !== "GET" && body ? { body: JSON.stringify(body) } : {}),
-      }
+      },
     );
     const data: ApiResponse<T> = await response.json();
 

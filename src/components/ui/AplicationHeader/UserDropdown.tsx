@@ -74,21 +74,18 @@ export function UserDropdown() {
           </Button>
         </DropdownMenuItem>
 
-        {(user.role === "Master" ||
-          user.role === "Gerente") && (
-          <DropdownMenuItem asChild>
-            <Button
-              variant="ghost"
-              className="cursor-pointer w-full justify-start h-auto px-2 py-1.5"
-              asChild
-            >
-              <Link href="/city-distances">
-                <MapPin className="mr-2 h-4 w-4" />
-                <span>Distâncias</span>
-              </Link>
-            </Button>
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem asChild>
+          <Button
+            variant="ghost"
+            className="cursor-pointer w-full justify-start h-auto px-2 py-1.5"
+            asChild
+          >
+            <Link href="/city-distances">
+              <MapPin className="mr-2 h-4 w-4" />
+              <span>Distâncias</span>
+            </Link>
+          </Button>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DarkModeSwitcher />
         <DropdownMenuSeparator />

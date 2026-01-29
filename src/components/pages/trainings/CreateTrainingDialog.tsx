@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm, Controller, FormProvider } from "react-hook-form";
+import {
+  useForm,
+  Controller,
+  FormProvider,
+  useFieldArray,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,19 +32,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { DatePicker } from "@/components/ui/DatePicker";
 
 // Components
-import PriceInput from "@/components/shared/PriceInput";
 import { SelectTrainingGear } from "@/components/pages/trainings/SelectTrainingGear";
 import { SelectTrainee } from "./SelectTrainee";
 import { SelectVolunteer } from "./SelectVolunteer";
-// import { SelectTrainingAddress } from "./SelectTrainingAddress"; // Removed
 import { EmbeddedTrainingAddressForm } from "./EmbeddedTrainingAddressForm";
-import { TrainingPaymentSection } from "./TrainingPaymentSection";
 import { SelectFilial } from "@/components/shared/SelectFilial";
+import { FinancialInputSection } from "./FinancialInputSection";
 
 // Services & Utils
 import { CreateTraining } from "@/services/trainings.service";
@@ -55,7 +57,6 @@ import { queryClient } from "@/app/(main)/layout";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { useAuth } from "@/contexts/auth-provider";
 import { useAccess } from "@/contexts/access-provider";
-import { Filial } from "@/utils/@types/filials";
 import { USER_ROLES } from "@/utils/constants";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 
@@ -76,18 +77,27 @@ interface CreateTrainingDialogProps {
 }
 
 // Estrutura padrão para inicializar o form
-const defaultPaymentInfoStructure: CreateTrainingDataType["traineePayment"]["paymentInfo"] =
-  {
-    paymentStatus: "Pendente",
-    firstPaymentDate: null,
-    secondPaymentDate: null,
-    firstPaymentAmount: "0",
-    firstPaymentStatus: "Pendente",
-    secondPaymentAmount: "0",
-    secondPaymentStatus: "Pendente",
-    secondPaymentMethod: "",
-    firstPaymentMethod: "",
-  };
+const defaultPaymentInfoStructure: {
+  paymentStatus: "Pendente" | "Pago" | "Parcial";
+  firstPaymentDate: null;
+  secondPaymentDate: null;
+  firstPaymentAmount: string;
+  firstPaymentStatus: string;
+  secondPaymentAmount: string;
+  secondPaymentStatus: string;
+  secondPaymentMethod: string;
+  firstPaymentMethod: string;
+} = {
+  paymentStatus: "Pendente",
+  firstPaymentDate: null,
+  secondPaymentDate: null,
+  firstPaymentAmount: "0",
+  firstPaymentStatus: "Pendente",
+  secondPaymentAmount: "0",
+  secondPaymentStatus: "Pendente",
+  secondPaymentMethod: "",
+  firstPaymentMethod: "",
+};
 
 export function CreateTrainingDialog({
   dialogNovoTreinamento,
@@ -120,22 +130,12 @@ export function CreateTrainingDialog({
     resolver: zodResolver(CreateTrainingSchema),
     defaultValues: {
       filialId: defaultFilialId || "",
-      traineeIds: [], // Changed to array
-      volunteerIds: [], // Changed to array
+      traineeIds: [],
+      volunteerIds: [],
       gearId: "",
       addressId: "",
-
-      // Estrutura aninhada conforme novo Schema
-      traineePayment: {
-        price: "",
-        additionalCost: "",
-        additionalCostDescription: "",
-        paymentInfo: { ...defaultPaymentInfoStructure },
-      },
-      volunteerPayment: {
-        price: "",
-        paymentInfo: { ...defaultPaymentInfoStructure },
-      },
+      traineePayments: [],
+      volunteerPayments: [],
     },
   });
 
@@ -146,66 +146,153 @@ export function CreateTrainingDialog({
     setValue,
     control,
     reset,
+    register,
   } = createTrainingMethods;
 
-  // --- UI States ---
-  const [ isCreatingAddress, setIsCreatingAddress ] = useState(false);
+  // --- Field Arrays para gerenciar sincronia ---
+  const {
+    fields: traineeFields,
+    append: appendTrainee,
+    remove: removeTrainee,
+  } = useFieldArray({
+    control,
+    name: "traineePayments",
+    keyName: "key",
+  });
+
+  const {
+    fields: volunteerFields,
+    append: appendVolunteer,
+    remove: removeVolunteer,
+  } = useFieldArray({
+    control,
+    name: "volunteerPayments",
+    keyName: "key",
+  });
+
+  // --- UI States for Participant Names ---
+  const [selectedTrainees, setSelectedTrainees] = useState<
+    { traineeId: string; name: string }[]
+  >([]);
+  const [selectedVolunteers, setSelectedVolunteers] = useState<
+    { volunteerId: string; name: string }[]
+  >([]);
 
   // --- Watchers ---
   const watchSelectedTraineeIds = watch("traineeIds") || [];
   const watchSelectedVolunteerIds = watch("volunteerIds") || [];
-  const watchSelectedAddress = watch("addressId");
   const watchSelectedGear = watch("gearId");
   const watchFilialId = watch("filialId");
   const watchDueDate = watch("dueDate");
   const watchHour = watch("hourInMinutes");
 
+  // --- Handlers de Sincronização (Select -> Field Array) ---
+
+  const handleTraineesChange = (
+    trainees: { traineeId: string; name: string }[],
+  ) => {
+    setSelectedTrainees(trainees);
+    // Atualiza campo de IDs para validação
+    setValue(
+      "traineeIds",
+      trainees.map((t) => t.traineeId),
+    );
+
+    // Sync Array: Adicionar novos
+    trainees.forEach((t) => {
+      const exists = traineeFields.some(
+        (field) => field.participantId === t.traineeId,
+      );
+      if (!exists) {
+        appendTrainee({
+          participantId: t.traineeId,
+          price: "",
+          additionalCost: "",
+          additionalCostDescription: "",
+          paymentInfo: { ...defaultPaymentInfoStructure },
+        });
+      }
+    });
+
+    // Sync Array: Remover excluídos
+    // Precisamos iterar ao contrário ou buscar índices cuidadosamente
+    // O jeito mais seguro é reconstruir ou filtrar.
+    // Mas removeTrainee usa index.
+    const idsToKeep = new Set(trainees.map((t) => t.traineeId));
+
+    // Encontrar indices para remover (do maior para o menor para não afetar indices subsequentes)
+    const indicesToRemove: number[] = [];
+    traineeFields.forEach((field, index) => {
+      if (!idsToKeep.has(field.participantId)) {
+        indicesToRemove.push(index);
+      }
+    });
+
+    // Remove in reverse order
+    indicesToRemove.reverse().forEach((index) => removeTrainee(index));
+  };
+
+  const handleVolunteersChange = (
+    volunteers: { volunteerId: string; name: string }[],
+  ) => {
+    setSelectedVolunteers(volunteers);
+    setValue(
+      "volunteerIds",
+      volunteers.map((v) => v.volunteerId),
+    );
+
+    volunteers.forEach((v) => {
+      const exists = volunteerFields.some(
+        (field) => field.participantId === v.volunteerId,
+      );
+      if (!exists) {
+        appendVolunteer({
+          participantId: v.volunteerId,
+          price: "",
+          paymentInfo: { ...defaultPaymentInfoStructure },
+        });
+      }
+    });
+
+    const idsToKeep = new Set(volunteers.map((v) => v.volunteerId));
+    const indicesToRemove: number[] = [];
+    volunteerFields.forEach((field, index) => {
+      if (!idsToKeep.has(field.participantId)) {
+        indicesToRemove.push(index);
+      }
+    });
+    indicesToRemove.reverse().forEach((index) => removeVolunteer(index));
+  };
+
   // --- Helper de Formatação do Submit ---
   const formatPaymentPayload = (
     priceStr: string | undefined,
-    paymentInfo: CreateTrainingDataType["traineePayment"]["paymentInfo"],
+    paymentInfo: CreateTrainingDataType["traineePayments"][number]["paymentInfo"],
     additionalCostStr?: string,
     additionalCostDesc?: string,
   ) => {
     return {
-      // Se preço não for preenchido, envia 0
       price: parseStringToCents(priceStr || "0"),
-
-      // Se additionalCost não for preenchido, envia 0
       additionalCost: additionalCostStr
         ? parseStringToCents(additionalCostStr)
         : 0,
-
-      // Descrição pode ser undefined
       additionalCostDescription: additionalCostDesc,
-
       paymentInfo: {
         paymentStatus: paymentInfo.paymentStatus || "Pendente",
-
-        // Datas: Se não existir, envia null
         firstPaymentDate: paymentInfo.firstPaymentDate
           ? new Date(paymentInfo.firstPaymentDate)
           : null,
-
-        // Valores: Se string vazia ou null, parseStringToCents devolve 0 (assumindo que sua func trata isso),
-        // mas garantimos null se não houver pagamento.
         firstPaymentAmount: paymentInfo.firstPaymentAmount
           ? parseStringToCents(String(paymentInfo.firstPaymentAmount))
-          : 0, // ou null, dependendo do seu backend. Normalmente 0 é mais seguro para cálculos.
-
+          : 0,
         firstPaymentMethod: paymentInfo.firstPaymentMethod || null,
-
-        // Se status é Pendente, firstPaymentStatus tbm é Pendente por coerência
         firstPaymentStatus: paymentInfo.firstPaymentStatus || "Pendente",
-
         secondPaymentDate: paymentInfo.secondPaymentDate
           ? new Date(paymentInfo.secondPaymentDate)
           : null,
-
         secondPaymentAmount: paymentInfo.secondPaymentAmount
           ? parseStringToCents(String(paymentInfo.secondPaymentAmount))
           : 0,
-
         secondPaymentMethod: paymentInfo.secondPaymentMethod || null,
         secondPaymentStatus: paymentInfo.secondPaymentStatus || "Pendente",
       },
@@ -217,7 +304,6 @@ export function CreateTrainingDialog({
     try {
       let finalAddressId = data.addressId;
 
-      // Se não selecionou um endereço existente mas preencheu os campos de novo endereço
       if (!finalAddressId && data.cityName && data.stateName) {
         const addressPayload = {
           zipCode: data.zipCode,
@@ -246,29 +332,31 @@ export function CreateTrainingDialog({
         return;
       }
 
+      // Preparar Arrays de Pagamento Backend
+      const formattedTraineePayments = data.traineePayments.map((p) => ({
+        traineeId: p.participantId,
+        ...formatPaymentPayload(
+          p.price,
+          p.paymentInfo,
+          p.additionalCost,
+          p.additionalCostDescription,
+        ),
+      }));
+
+      const formattedVolunteerPayments = data.volunteerPayments.map((p) => ({
+        volunteerId: p.participantId,
+        ...formatPaymentPayload(p.price, p.paymentInfo),
+      }));
+
       const payload: CreateTrainingBackendPayload = {
-        // Campos raiz
         hourInMinutes: data.hourInMinutes,
         gearId: data.gearId,
-        volunteerIds: data.volunteerIds,
-        traineeIds: data.traineeIds,
         addressId: finalAddressId,
         dueDate: data.dueDate,
         filialId: data.filialId,
 
-        // 1. Pagamento do Trainee
-        traineePayment: formatPaymentPayload(
-          data.traineePayment.price,
-          data.traineePayment.paymentInfo,
-          data.traineePayment.additionalCost,
-          data.traineePayment.additionalCostDescription,
-        ),
-
-        // 2. Pagamento do Volunteer
-        volunteerPayment: formatPaymentPayload(
-          data.volunteerPayment.price,
-          data.volunteerPayment.paymentInfo,
-        ),
+        traineePayments: formattedTraineePayments,
+        volunteerPayments: formattedVolunteerPayments,
       };
 
       const response = await CreateTraining(payload);
@@ -276,11 +364,21 @@ export function CreateTrainingDialog({
       if (response.statusCode !== 201) {
         toast.warning(response.message, { style: { fontSize: "1rem" } });
       } else {
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
-        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-trainings"] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-goals"] });
         toast.success(response.message, { style: { fontSize: "1rem" } });
         window.scroll({ top: 0 });
-        reset();
+        reset({
+          filialId: defaultFilialId || "",
+          traineeIds: [],
+          volunteerIds: [],
+          gearId: "",
+          addressId: "",
+          traineePayments: [],
+          volunteerPayments: [],
+        });
+        setSelectedTrainees([]);
+        setSelectedVolunteers([]);
         setDialogNovoTreinamento(false);
       }
     } catch (error) {
@@ -290,22 +388,15 @@ export function CreateTrainingDialog({
   };
 
   // --- Queries ---
-  // Assuming address logic might rely on specific trainee, but with multiple trainees we might default to no addresses or logic to select one.
-  // For now, if multiple trainees are selected, maybe we fetch addresses for the first one or logic needs adjustment?
-  // Previous logic: queryKey based on watchSelectedTraineeId (single).
-  // Now we have watchSelectedTraineeIds (array).
-  // Ideally, addresses should belong to one of the trainees or generic?
-  // Assuming we pick addresses from the first selected trainee for now or update GetAllTraineeAddresses to support array (unlikely).
-  // Let's use the first traineeId for address fetching if available.
+  // Use first trainee for address hint (legacy behavior maintained)
   const firstTraineeId = watchSelectedTraineeIds[0];
 
   const addressesData = useQuery<ApiResponse<Address[]>, Error>({
-    queryKey: [ "get-all-trainee-addresses", firstTraineeId ],
+    queryKey: ["get-all-trainee-addresses", firstTraineeId],
     queryFn: () => GetAllTraineeAddresses({ traineeId: firstTraineeId }),
     enabled: !!firstTraineeId,
     staleTime: 1000 * 60,
   });
-  const allCustomerAddresses = addressesData.data?.data;
 
   const availableGears = gears;
   const params = {
@@ -322,7 +413,7 @@ export function CreateTrainingDialog({
     date: watchDueDate,
   };
   const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
-    queryKey: [ "get-day-checkouts", params ],
+    queryKey: ["get-day-checkouts", params],
     queryFn: () => getDayCheckouts({ body: params }),
     enabled: !!watchFilialId && !!watchDueDate && !!watchSelectedGear,
     staleTime: 0,
@@ -331,12 +422,12 @@ export function CreateTrainingDialog({
 
   useEffect(() => {
     setValue("hourInMinutes", 0);
-  }, [ setValue, watchSelectedGear ]);
+  }, [setValue, watchSelectedGear]);
 
   return (
     <Dialog
-      open={ dialogNovoTreinamento }
-      onOpenChange={ setDialogNovoTreinamento }
+      open={dialogNovoTreinamento}
+      onOpenChange={setDialogNovoTreinamento}
     >
       <DialogTrigger asChild>
         <Button>
@@ -345,8 +436,8 @@ export function CreateTrainingDialog({
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-card">
-        <form onSubmit={ handleSubmit(onSubmitTraining) }>
-          <FormProvider { ...createTrainingMethods }>
+        <form onSubmit={handleSubmit(onSubmitTraining)}>
+          <FormProvider {...createTrainingMethods}>
             <DialogHeader>
               <DialogTitle>Criar Nova Sessão</DialogTitle>
               <DialogDescription>
@@ -364,22 +455,22 @@ export function CreateTrainingDialog({
                   <div className="space-y-2">
                     <Label>Filial *</Label>
                     <SelectFilial
-                      control={ control }
+                      control={control}
                       name="filialId"
-                      accessibleFilials={ accessibleFilialsIds }
-                      defaultFilial={ defaultFilialId }
+                      accessibleFilials={accessibleFilialsIds}
+                      defaultFilial={defaultFilialId}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="gearId">Equipamento *</Label>
                     <SelectTrainingGear
-                      disabled={ !watchFilialId }
-                      filialId={ watchFilialId }
-                      selectedGear={ watchSelectedGear }
-                      onGearChange={ (gearId) => {
+                      disabled={!watchFilialId}
+                      filialId={watchFilialId}
+                      selectedGear={watchSelectedGear}
+                      onGearChange={(gearId) => {
                         setValue("gearId", gearId);
-                      } }
+                      }}
                     />
                     {errors.gearId && (
                       <p className="text-sm text-red-600">
@@ -393,15 +484,10 @@ export function CreateTrainingDialog({
                   <div className="space-y-2">
                     <Label>Alunos *</Label>
                     <SelectTrainee
-                      disabled={ !watchFilialId }
-                      filialId={ watchFilialId }
-                      selectedTraineeIds={ watchSelectedTraineeIds }
-                      onTraineesChange={ (trainees) => {
-                        setValue(
-                          "traineeIds",
-                          trainees.map((t) => t.traineeId),
-                        );
-                      } }
+                      disabled={!watchFilialId}
+                      filialId={watchFilialId}
+                      selectedTraineeIds={watchSelectedTraineeIds}
+                      onTraineesChange={handleTraineesChange}
                     />
                     {errors.traineeIds && (
                       <p className="text-sm text-red-600">
@@ -412,15 +498,10 @@ export function CreateTrainingDialog({
                   <div className="space-y-2">
                     <Label>Pacientes modelo *</Label>
                     <SelectVolunteer
-                      disabled={ !watchFilialId }
-                      filialId={ watchFilialId }
-                      selectedVolunteerIds={ watchSelectedVolunteerIds }
-                      onVolunteersChange={ (volunteers) => {
-                        setValue(
-                          "volunteerIds",
-                          volunteers.map((v) => v.volunteerId),
-                        );
-                      } }
+                      disabled={!watchFilialId}
+                      filialId={watchFilialId}
+                      selectedVolunteerIds={watchSelectedVolunteerIds}
+                      onVolunteersChange={handleVolunteersChange}
                     />
                     {errors.volunteerIds && (
                       <p className="text-sm text-red-600">
@@ -442,20 +523,20 @@ export function CreateTrainingDialog({
                   <div className="space-y-2">
                     <Label>Data do Treinamento *</Label>
                     <Controller
-                      control={ control }
+                      control={control}
                       name="dueDate"
-                      render={ ({ field }) => (
+                      render={({ field }) => (
                         <DatePicker
-                          modal={ true }
-                          value={ field.value! }
-                          onChange={ (e) => {
+                          modal={true}
+                          value={field.value!}
+                          onChange={(e) => {
                             field.onChange(e);
                             if (e) setValue("dueDate", e);
-                          } }
+                          }}
                           placeholder="Selecione a data"
                           clearable
                         />
-                      ) }
+                      )}
                     />
                     {errors.dueDate && (
                       <p className="text-sm text-red-600">
@@ -470,7 +551,6 @@ export function CreateTrainingDialog({
                         <Clock className="h-4 w-4" /> Horário de Início *
                       </Label>
                     )}
-                    {/* Feedback if missing selections */}
                     {(!watchFilialId ||
                       !watchDueDate ||
                       !watchSelectedGear) && (
@@ -487,22 +567,22 @@ export function CreateTrainingDialog({
                         return (
                           <Button
                             type="button"
-                            key={ hour.hourInMinutes }
+                            key={hour.hourInMinutes}
                             variant={
                               watchHour === hour.hourInMinutes
                                 ? "default"
                                 : "outline"
                             }
                             size="sm"
-                            disabled={ !hasSomeAvailableGapTime }
-                            onClick={ () =>
+                            disabled={!hasSomeAvailableGapTime}
+                            onClick={() =>
                               setValue("hourInMinutes", hour.hourInMinutes)
                             }
-                            className={ `text-xs h-9 transition-all ${
+                            className={`text-xs h-9 transition-all ${
                               watchHour === hour.hourInMinutes
                                 ? "ring-2 ring-primary ring-offset-2"
                                 : ""
-                            } ${!hasSomeAvailableGapTime ? "opacity-50" : "hover:scale-105"}` }
+                            } ${!hasSomeAvailableGapTime ? "opacity-50" : "hover:scale-105"}`}
                           >
                             {hour.formattedTime}
                             {watchHour === hour.hourInMinutes && (
@@ -548,7 +628,7 @@ export function CreateTrainingDialog({
                   <DollarSign className="h-4 w-4" /> Financeiro e Custos
                 </h4>
 
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-8">
                   {/* --- BLOCO ALUNO --- */}
                   <div className="border rounded-md p-5 bg-muted/10 shadow-sm">
                     <div className="flex items-center gap-2 mb-4 border-b pb-2">
@@ -560,65 +640,18 @@ export function CreateTrainingDialog({
                       </h3>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Valor do Curso (Preço Base)</Label>
-                        <Controller
-                          control={ control }
-                          name="traineePayment.price"
-                          render={ ({ field }) => (
-                            <PriceInput
-                              withLabel={ false }
-                              register={ createTrainingMethods.register(
-                                "traineePayment.price",
-                              ) }
-                              value={ field.value?.toString() ?? "" }
-                              setValue={ setValue }
-                              name="traineePayment.price"
-                              placeholder="R$ 0,00"
-                            />
-                          ) }
-                        />
-                      </div>
-
-                      <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-md border border-yellow-200 dark:border-yellow-900/50 space-y-3">
-                        <div className="space-y-2">
-                          <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">
-                            Custos Operacionais Extras
-                          </Label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Controller
-                              control={ control }
-                              name="traineePayment.additionalCost"
-                              render={ ({ field }) => (
-                                <PriceInput
-                                  withLabel={ false }
-                                  register={ createTrainingMethods.register(
-                                    "traineePayment.additionalCost",
-                                  ) }
-                                  value={ field.value?.toString() ?? "" }
-                                  setValue={ setValue }
-                                  name="traineePayment.additionalCost"
-                                  placeholder="Valor: R$ 0,00"
-                                />
-                              ) }
-                            />
-                            <Textarea
-                              { ...createTrainingMethods.register(
-                                "traineePayment.additionalCostDescription",
-                              ) }
-                              placeholder="Descrição: Taxa de sala, material..."
-                              className="resize-none min-h-[40px]"
-                              rows={ 1 }
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <TrainingPaymentSection
-                      prefix="traineePayment"
-                      label="Informações de Pagamento do Aluno"
+                    <FinancialInputSection
+                      control={ control }
+                      register={ register }
+                      setValue={ setValue }
+                      watch={ watch }
+                      errors={ errors }
+                      participants={ selectedTrainees.map((t) => ({
+                        id: t.traineeId,
+                        name: t.name,
+                      })) }
+                      type="trainee"
+                      fields={ traineeFields }
                     />
                   </div>
 
@@ -633,66 +666,19 @@ export function CreateTrainingDialog({
                       </h3>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Valor cobrado do Modelo (se houver)</Label>
-                        <Controller
-                          control={ control }
-                          name="volunteerPayment.price"
-                          render={ ({ field }) => (
-                            <PriceInput
-                              withLabel={ false }
-                              register={ createTrainingMethods.register(
-                                "volunteerPayment.price",
-                              ) }
-                              value={ field.value?.toString() ?? "" }
-                              setValue={ setValue }
-                              name="volunteerPayment.price"
-                              placeholder="R$ 0,00"
-                            />
-                          ) }
-                        />
-                      </div>
-
-                      <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-md border border-yellow-200 dark:border-yellow-900/50 space-y-3">
-                        <div className="space-y-2">
-                          <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">
-                            Custos Operacionais Extras
-                          </Label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Controller
-                              control={ control }
-                              name="volunteerPayment.additionalCost"
-                              render={ ({ field }) => (
-                                <PriceInput
-                                  withLabel={ false }
-                                  register={ createTrainingMethods.register(
-                                    "volunteerPayment.additionalCost",
-                                  ) }
-                                  value={ field.value?.toString() ?? "" }
-                                  setValue={ setValue }
-                                  name="volunteerPayment.additionalCost"
-                                  placeholder="Valor: R$ 0,00"
-                                />
-                              ) }
-                            />
-                            <Textarea
-                              { ...createTrainingMethods.register(
-                                "volunteerPayment.additionalCostDescription",
-                              ) }
-                              placeholder="Descrição: Taxa de sala, material..."
-                              className="resize-none min-h-[40px]"
-                              rows={ 1 }
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <TrainingPaymentSection
-                        prefix="volunteerPayment"
-                        label="Informações de Pagamento do Modelo"
-                      />
-                    </div>
+                    <FinancialInputSection
+                      control={ control }
+                      register={ register }
+                      setValue={ setValue }
+                      watch={ watch }
+                      errors={ errors }
+                      participants={ selectedVolunteers.map((v) => ({
+                        id: v.volunteerId,
+                        name: v.name,
+                      })) }
+                      type="volunteer"
+                      fields={ volunteerFields }
+                    />
                   </div>
                 </div>
               </div>
@@ -702,11 +688,11 @@ export function CreateTrainingDialog({
               <Button
                 variant="outline"
                 type="button"
-                onClick={ () => setDialogNovoTreinamento(false) }
+                onClick={() => setDialogNovoTreinamento(false)}
               >
                 Cancelar
               </Button>
-              <Button disabled={ isSubmitting } type="submit">
+              <Button disabled={isSubmitting} type="submit">
                 {isSubmitting ? (
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
                 ) : null}

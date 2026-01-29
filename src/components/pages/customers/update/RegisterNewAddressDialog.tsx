@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { useEffect } from "react";
 import {
   Dialog,
-  DialogContent, DialogTitle,
-  DialogTrigger
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FormProvider, useForm } from "react-hook-form";
@@ -16,27 +18,38 @@ import { CreateCustomerAddress } from "@/services/addresses.service";
 import { queryClient } from "@/app/(main)/layout";
 
 interface RegisterNewAddressDialogProps {
-    isRegisterNewAddressDialogOpen: boolean,
-    setIsRegisterNewAddressDialogOpen: (isOpen: boolean) => void
-    customerId: string,
+  isRegisterNewAddressDialogOpen: boolean;
+  setIsRegisterNewAddressDialogOpen: (isOpen: boolean) => void;
+  customerId: string;
 }
 
-export function RegisterNewAddressDialog({ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen, customerId }: RegisterNewAddressDialogProps) {
-
+export function RegisterNewAddressDialog({
+  isRegisterNewAddressDialogOpen,
+  setIsRegisterNewAddressDialogOpen,
+  customerId,
+}: RegisterNewAddressDialogProps) {
   const createAddressMethods = useForm<AddressTypeSchema>({
-    resolver: zodResolver(addressSchema)
+    resolver: zodResolver(addressSchema),
   });
+
+  useEffect(() => {
+    if (isRegisterNewAddressDialogOpen) {
+      createAddressMethods.reset();
+    }
+  }, [isRegisterNewAddressDialogOpen, createAddressMethods]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: { customerId: string; body: unknown }) =>
       CreateCustomerAddress(data),
     onSuccess: (data) => {
-      toast.success("Endereço criado com sucesso!", { style: { fontSize: "1rem" } });
+      toast.success("Endereço criado com sucesso!", {
+        style: { fontSize: "1rem" },
+      });
       setIsRegisterNewAddressDialogOpen(false);
 
       // revalida os endereços
       queryClient.invalidateQueries({
-        queryKey: [ "get-all-customer-addresses", customerId ],
+        queryKey: ["get-all-customer-addresses", customerId],
       });
     },
     onError: (error: any) => {
@@ -51,23 +64,28 @@ export function RegisterNewAddressDialog({ isRegisterNewAddressDialogOpen, setIs
   };
 
   return (
-    <Dialog open={ isRegisterNewAddressDialogOpen } onOpenChange={ setIsRegisterNewAddressDialogOpen }>
+    <Dialog
+      open={isRegisterNewAddressDialogOpen}
+      onOpenChange={setIsRegisterNewAddressDialogOpen}
+    >
       <DialogTrigger asChild className="flex">
         <Button variant="default" className="ml-auto mt-5">
-                    Registrar novo endereço
+          Registrar novo endereço
         </Button>
       </DialogTrigger>
       <DialogContent
         className="max-w-[90%] md:w-[60%] max-h-[90%] overflow-y-scroll flex flex-col gap-0"
-        aria-describedby={ undefined }
-        onOpenAutoFocus={ (e) => e.preventDefault() }
+        aria-describedby={undefined}
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogTitle className="text-3xl font-bold">
-                    Cadastre um novo endereço para o cliente:
+          Cadastre um novo endereço para o cliente:
         </DialogTitle>
         <div className="space-y-6">
-          <FormProvider { ...createAddressMethods }>
-            <AddCustomerAddressForm handleSaveUpdatedCustomer={ handleSaveUpdatedCustomer } />
+          <FormProvider {...createAddressMethods}>
+            <AddCustomerAddressForm
+              handleSaveUpdatedCustomer={handleSaveUpdatedCustomer}
+            />
           </FormProvider>
         </div>
       </DialogContent>

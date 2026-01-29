@@ -3,55 +3,53 @@ import { z } from "zod";
 // --- Schemas Auxiliares ---
 
 const currencyFieldSchema = z
-  .union([ z.string(), z.number() ])
+  .union([z.string(), z.number()])
   .optional()
   .nullable();
 
 // Schema base para os dados de pagamento
-// CORREÇÃO: paymentStatus agora é .optional() ao invés de .default()
-// Isso alinha a tipagem do input do formulário com o React Hook Form
 const basePaymentInfoSchema = z.object({
-  paymentStatus: z.enum([ "Pendente", "Pago", "Parcial" ]).optional(),
+  paymentStatus: z.enum(["Pendente", "Pago", "Parcial"]).optional(),
 
   firstPaymentAmount: currencyFieldSchema,
-  firstPaymentDate: z.union([ z.date(), z.string() ]).optional().nullable(),
+  firstPaymentDate: z.union([z.date(), z.string()]).optional().nullable(),
   firstPaymentMethod: z.string().optional().nullable(),
   firstPaymentStatus: z.string().optional().nullable(),
 
   secondPaymentAmount: currencyFieldSchema,
-  secondPaymentDate: z.union([ z.date(), z.string() ]).optional().nullable(),
+  secondPaymentDate: z.union([z.date(), z.string()]).optional().nullable(),
   secondPaymentMethod: z.string().optional().nullable(),
   secondPaymentStatus: z.string().optional().nullable(),
 });
 
-// Schema refinado
-const PaymentSectionSchema = z
+// Schema individual de pagamento
+export const IndividualPaymentSchema = z
   .object({
+    participantId: z.string(), // ID do trainee ou volunteer
     price: z.string().optional(),
 
+    // Custos adicionais (apenas para trainee, mas podemos deixar genérico)
     additionalCost: z.string().optional(),
     additionalCostDescription: z.string().optional(),
 
     paymentInfo: basePaymentInfoSchema,
   })
   .superRefine((data, ctx) => {
-    // CORREÇÃO: Tratamos o undefined aqui, assumindo "Pendente" se não houver valor
     const currentStatus = data.paymentInfo.paymentStatus || "Pendente";
 
-    // Se o status for "Pago" ou "Parcial", exigimos Data e Método
     if (currentStatus === "Pago" || currentStatus === "Parcial") {
       if (!data.paymentInfo.firstPaymentDate) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Data é obrigatória",
-          path: [ "paymentInfo", "firstPaymentDate" ],
+          path: ["paymentInfo", "firstPaymentDate"],
         });
       }
       if (!data.paymentInfo.firstPaymentMethod) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Método é obrigatório",
-          path: [ "paymentInfo", "firstPaymentMethod" ],
+          path: ["paymentInfo", "firstPaymentMethod"],
         });
       }
     }
@@ -63,17 +61,19 @@ export const CreateTrainingSchema = z.object({
   hourInMinutes: z.number({ message: "Selecione um horário" }),
   gearId: z.string().cuid({ message: "Selecione um equipamento" }),
 
+  // Mantemos IDs para controle dos seletores de UI (quem está selecionado)
   volunteerIds: z
     .array(z.string().cuid())
     .min(1, { message: "Selecione pelo menos um paciente modelo" }),
   traineeIds: z
     .array(z.string().cuid())
     .min(1, { message: "Selecione pelo menos um aluno" }),
+
   addressId: z.string().optional().nullable(),
   dueDate: z.date({ message: "Data é obrigatória" }),
   filialId: z.string(),
 
-  // Endereço (opcional, usado se addressId for null)
+  // Endereço
   zipCode: z.string().optional(),
   stateName: z.string().optional(),
   cityName: z.string().optional(),
@@ -82,9 +82,10 @@ export const CreateTrainingSchema = z.object({
   buildingNumber: z.string().optional(),
   addressComplement: z.string().optional().nullable(),
 
-  // Seções de pagamento
-  traineePayment: PaymentSectionSchema,
-  volunteerPayment: PaymentSectionSchema,
+  // Seções de pagamento (Listas)
+  // O formulário irá inicializar/manter esses arrays sincronizados com os IDs selecionados
+  traineePayments: z.array(IndividualPaymentSchema),
+  volunteerPayments: z.array(IndividualPaymentSchema),
 });
 
 // --- Tipos ---
@@ -103,18 +104,22 @@ type ProcessedPaymentInfo = {
   secondPaymentStatus: string | null;
 };
 
+// Tipo enviado ao backend (omitindo os campos de UI-only e formatando pagamentos)
 export type CreateTrainingBackendPayload = Omit<
   CreateTrainingDataType,
-  "traineePayment" | "volunteerPayment"
+  "traineePayments" | "volunteerPayments" | "traineeIds" | "volunteerIds"
 > & {
-  traineePayment: {
+  // Backend espera arrays com IDs explícitos dentro
+  traineePayments: {
+    traineeId: string;
     price: number;
     additionalCost: number;
     additionalCostDescription?: string;
     paymentInfo: ProcessedPaymentInfo;
-  };
-  volunteerPayment: {
+  }[];
+  volunteerPayments: {
+    volunteerId: string;
     price: number;
     paymentInfo: ProcessedPaymentInfo;
-  };
+  }[];
 };
