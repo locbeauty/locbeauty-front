@@ -1,4 +1,4 @@
-import { Save } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,12 +27,15 @@ interface UpdateEmployeeDialogProps {
     _openStatus: boolean,
     _employee: Employee | null,
   ) => void;
+  onEmployeeUpdated?: (updatedEmployee: Employee) => void;
 }
 
 export function UpdateEmployeeDialog({
   isUpdateEmployeeDialogOpen,
   selectedEmployee,
+  setSelectedEmployee,
   handleToggleUpdateEmployeeDialog,
+  onEmployeeUpdated,
 }: UpdateEmployeeDialogProps) {
   const updateEmployeeMethods = useForm<UpdateEmployeeFormSchemaType>({
     resolver: zodResolver(updateEmployeeFormSchema),
@@ -41,7 +44,7 @@ export function UpdateEmployeeDialog({
   const {
     handleSubmit,
     reset,
-    formState: { isDirty, errors },
+    formState: { isDirty, errors, isSubmitting },
   } = updateEmployeeMethods;
 
   useEffect(() => {
@@ -90,7 +93,44 @@ export function UpdateEmployeeDialog({
           style: { fontSize: "1rem" },
         });
         window.scroll({ top: 0 });
-        reset();
+
+        // Update local form state with the new data to prevent reverting to old values
+        reset(updatedEmployeeData);
+
+        // Update parent state to ensure consistency if the dialog is reopened or other components depend on it
+        // Assuming the response 'data' might simplify contain the updated employee or we just optimistically update part of it.
+        // Since we don't know the exact shape of 'data' for sure without checking the backend, we will merge the updates into selectedEmployee.
+        // Be careful with types here.
+        setSelectedEmployee((prev) => {
+          if (!prev) return null;
+          const { password, ...rest } = updatedEmployeeData;
+          return {
+            ...prev,
+            ...rest,
+            SourceFilial: {
+              ...prev.SourceFilial,
+              filialId:
+                updatedEmployeeData.sourceFilialId ??
+                prev.SourceFilial.filialId,
+            },
+          };
+        });
+
+        if (onEmployeeUpdated) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { password, ...restData } = updatedEmployeeData;
+          const updatedEmployee: Employee = {
+            ...selectedEmployee,
+            ...restData,
+            SourceFilial: {
+              ...selectedEmployee.SourceFilial,
+              filialId:
+                updatedEmployeeData.sourceFilialId ??
+                selectedEmployee.SourceFilial.filialId,
+            },
+          };
+          onEmployeeUpdated(updatedEmployee);
+        }
       }
     } catch {
       toast.error("Erro ao criar equipamento.");
@@ -124,14 +164,20 @@ export function UpdateEmployeeDialog({
               <DialogFooter>
                 <Button
                   variant="outline"
+                  type="button"
                   onClick={ () =>
                     handleToggleUpdateEmployeeDialog(false, selectedEmployee)
                   }
+                  disabled={ isSubmitting }
                 >
                   Cancelar
                 </Button>
-                <Button disabled={ !isDirty }>
-                  <Save className="mr-2 h-4 w-4" />
+                <Button disabled={ !isDirty || isSubmitting } type="submit">
+                  {isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
                   Salvar alterações
                 </Button>
               </DialogFooter>
