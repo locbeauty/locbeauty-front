@@ -40,7 +40,7 @@ export default function CEPInput<T extends FieldValues>({
   ...props
 }: CEPInputProps<T>) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isLoadingZipCode, setIsLoadingZipCode] = useState(false);
+  const [ isLoadingZipCode, setIsLoadingZipCode ] = useState(false);
 
   // const zipCode = isUpdateForm ? "zipCode" : "address.zipCode" as Path<T>;
   const zipCode: Path<T> = isUpdateForm
@@ -66,14 +66,14 @@ export default function CEPInput<T extends FieldValues>({
       <Label htmlFor="cep">CEP</Label>
       <div className="relative">
         <Controller
-          name={zipCode}
-          control={control}
-          render={({ field }) => (
+          name={ zipCode }
+          control={ control }
+          render={ ({ field }) => (
             <Input
-              {...props}
+              { ...props }
               id="zipCode"
-              value={field.value || ""}
-              onChange={(e) => {
+              value={ field.value || "" }
+              onChange={ (e) => {
                 field.onChange(e);
                 handleCepChange<T>({
                   e,
@@ -84,18 +84,18 @@ export default function CEPInput<T extends FieldValues>({
                   setError,
                   clearErrors,
                 });
-              }}
-              ref={(el) => {
+              } }
+              ref={ (el) => {
                 // Atribuir ao ref do React Hook Form
                 field.ref(el);
                 // Atribuir ao ref local para o IMask
                 inputRef.current = el;
-              }}
+              } }
               className="placeholder:text-placeholder md:w-[110px] w-full"
               placeholder="00000-000"
               autoComplete="off"
             />
-          )}
+          ) }
         />
         {isLoadingZipCode && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">

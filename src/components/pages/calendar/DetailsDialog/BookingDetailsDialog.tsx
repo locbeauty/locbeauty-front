@@ -43,7 +43,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PaymentMethods, PaymentMethodsType } from "@/utils/constants";
+import {
+  PaymentMethods,
+  PaymentMethodsType,
+  USER_ROLES,
+} from "@/utils/constants";
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -63,12 +67,14 @@ import {
   UpdateCheckoutStatus,
   getDayCheckouts,
   GetDayCheckoutsResponse,
+  DeleteCheckout,
 } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { CheckoutPaymentMethodDialog } from "../CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
 import { AddGearToCheckoutDialog } from "./AddGearToCheckoutDialog";
 import { RemoveBookingFromCheckout } from "@/services/bookings.service";
 import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentStatusBadge";
+import { useAuth } from "@/contexts/auth-provider";
 import { formatDate, formatTime, workingHours } from "../bookingViewHelpers";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
@@ -136,6 +142,11 @@ export function BookingDetailsDialog({
   const [ editingEndHour, setEditingEndHour ] = useState<number | undefined>(
     undefined,
   );
+
+  const { user } = useAuth();
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
 
   const methods = useForm({
     defaultValues: {
@@ -531,6 +542,28 @@ export function BookingDetailsDialog({
     }
   }
 
+  async function handleDeleteCheckout() {
+    if (!selectedCheckout) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await DeleteCheckout(selectedCheckout.checkoutId);
+
+      if (response.statusCode === 200 || response.statusCode === 204) {
+        toast.success("Agendamento excluído com sucesso.");
+        setBookingDetailsDialogOpen(false);
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+      } else {
+        toast.error(response.message || "Erro ao excluir agendamento.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir agendamento.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+    }
+  }
+
   const startDate = selectedCheckout
     ? new Date(selectedCheckout.date)
     : new Date();
@@ -581,6 +614,16 @@ export function BookingDetailsDialog({
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {user?.role === USER_ROLES.MASTER && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:bg-destructive/10"
+                      onClick={ () => setIsDeleteConfirmationDialogOpen(true) }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                   <BookingStatusBadge
                     status={ selectedCheckout.checkoutStatus }
                   />
@@ -1555,6 +1598,40 @@ export function BookingDetailsDialog({
         isOpen={ isAddGearDialogOpen }
         setIsOpen={ setIsAddGearDialogOpen }
       />
+
+      <Dialog
+        open={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+      >
+        <DialogContent className="max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <Trash2 className="h-5 w-5" /> Confirmar Exclusão
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Tem certeza que deseja excluir este agendamento? Esta ação
+              ocultará o agendamento para todos os usuários menos para
+              administradores de nível Master.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={ () => setIsDeleteConfirmationDialogOpen(false) }
+              disabled={ isDeleting }
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={ handleDeleteCheckout }
+              disabled={ isDeleting }
+            >
+              {isDeleting ? "Excluindo..." : "Confirmar Exclusão"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }

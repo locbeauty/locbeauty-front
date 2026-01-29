@@ -1,5 +1,5 @@
 "use client";
-import { Check, Eye, Pencil, X } from "lucide-react";
+import { Check, Eye, Pencil, X, Trash2 } from "lucide-react";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { UpdateGearDialog } from "../update/UpdateGearDialog";
@@ -11,13 +11,27 @@ import { fetchWithToken } from "@/utils/fetchWithToken";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { useAccess } from "@/contexts/access-provider";
+import { DeleteGear } from "@/services/gears.service";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { USER_ROLES } from "@/utils/constants";
+import { toast } from "sonner";
+
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export function GearsTable() {
   const [ gears, setGears ] = useState<Gear[] | null>(null);
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
+  const [ gearToDelete, setGearToDelete ] = useState<Gear | null>(null);
+  const [ refreshCounter, setRefreshCounter ] = useState(0);
 
   const [ isUpdateGearDialogOpen, setIsUpdateGearDialogOpen ] = useState(false);
   const [ isGearDetailsDialogOpen, setIsGearDetailsDialogOpen ] = useState(false);
   const [ selectedGear, setSelectedGear ] = useState<Gear | null>(null);
+
+  const [ isVisible, setIsVisible ] = useState<boolean>(false);
 
   const { user } = useAuth();
   const { accesses } = useAccess();
@@ -57,6 +71,28 @@ export function GearsTable() {
     setIsGearDetailsDialogOpen(openStatus);
   };
 
+  const handleDeleteGear = async () => {
+    if (!gearToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await DeleteGear(gearToDelete.gearId);
+
+      if (response.statusCode === 200 || response.statusCode === 204) {
+        toast.success("Equipamento excluído com sucesso.");
+        setRefreshCounter((prev) => prev + 1);
+      } else {
+        toast.error(response.message || "Erro ao excluir equipamento.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir equipamento.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+      setGearToDelete(null);
+    }
+  };
+
   useEffect(() => {
     async function getGears() {
       const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears`);
@@ -68,16 +104,33 @@ export function GearsTable() {
         );
       }
 
+      if (isVisible) {
+        url.searchParams.append("isVisible", "false");
+      }
+
       const response = await fetchWithToken(url, { credentials: "include" });
 
       const { data } = await response.json();
       setGears(data);
     }
     getGears();
-  }, [ user, accessibleFilialIds ]);
+  }, [ user, accessibleFilialIds, refreshCounter, isVisible ]);
 
   return (
     <>
+      {(user?.role === USER_ROLES.MASTER ||
+        user?.role === USER_ROLES.ADMIN) && (
+        <div className="flex justify-end mb-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="view-deleted-gears"
+              checked={ isVisible }
+              onCheckedChange={ setIsVisible }
+            />
+            <Label htmlFor="view-deleted-gears">Ver Excluídos</Label>
+          </div>
+        </div>
+      )}
       <div className="border rounded-lg max-h-[70vh] w-full overflow-x-auto hidden md:block">
         <table className="w-full">
           <thead className="bg-muted">
@@ -114,7 +167,9 @@ export function GearsTable() {
                   <td className="p-3 text-center text-sm">
                     {gear.availableUnits}
                   </td>
-                  <td className="p-3 text-center text-sm">{gear.outOfServiceUnits}</td>
+                  <td className="p-3 text-center text-sm">
+                    {gear.outOfServiceUnits}
+                  </td>
                   <td className="p-3 justify-center flex items-center gap-4">
                     <Button
                       onClick={ () => handleToggleGearDetailsDialog(true, gear) }
@@ -130,6 +185,19 @@ export function GearsTable() {
                         <Pencil />
                       </Button>
                     </Can>
+
+                    {user?.role === USER_ROLES.MASTER && (
+                      <Button
+                        variant="ghost"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={ () => {
+                          setGearToDelete(gear);
+                          setIsDeleteConfirmationDialogOpen(true);
+                        } }
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))
@@ -191,6 +259,16 @@ export function GearsTable() {
         // setUpdatedGear={ setUpdatedGear }
         setGears={ setGears }
         setSelectedGear={ setSelectedGear }
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+        onConfirm={ handleDeleteGear }
+        title="Confirmar Exclusão"
+        description="Tem certeza que deseja excluir o equipamento"
+        itemName={ gearToDelete?.gearName }
+        isDeleting={ isDeleting }
       />
     </>
   );

@@ -19,8 +19,10 @@ export async function CreateTrainee(body: CreateTraineeFormDataType) {
   return response;
 }
 
-// export async function UpdateCustomer({ body, queryParams }: {body: UpdateCustomerFormSchemaType, queryParams?: Record<string, string>}) {
-//     const response = await apiRequest<Customer[]>({ endpoint: "customers/update", method: "POST", body, queryParams });
-
-//     return response;
-// }
+export async function DeleteTrainee(traineeId: string) {
+  const response = await apiRequest({
+    endpoint: `trainees/${traineeId}`,
+    method: "DELETE",
+  });
+  return response;
+}

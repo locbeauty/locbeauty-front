@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { Eye, Filter, X } from "lucide-react";
+import { Eye, Filter, X, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/auth-provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { DeleteTrainee } from "@/services/trainees.service";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { USER_ROLES } from "@/utils/constants";
+import { toast } from "sonner";
 
 import { Trainee } from "@/utils/@types/trainee";
 import { Training } from "@/utils/@types/training";
@@ -33,6 +39,13 @@ export function TraineesTable({
 }: TraineesTableProps) {
   const [ selectedTrainee, setSelectedTrainee ] = useState<Trainee | null>(null);
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
+  const [ traineeToDelete, setTraineeToDelete ] = useState<Trainee | null>(null);
+
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Filters
   const [ filterName, setFilterName ] = useState("");
@@ -44,6 +57,28 @@ export function TraineesTable({
     setIsDetailsOpen(true);
     if (onViewDetails) {
       onViewDetails(trainee);
+    }
+  };
+
+  const handleDeleteTrainee = async () => {
+    if (!traineeToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await DeleteTrainee(traineeToDelete.traineeId);
+
+      if (response.statusCode === 200 || response.statusCode === 204) {
+        toast.success("Aluno excluído com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
+      } else {
+        toast.error(response.message || "Erro ao excluir aluno.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir aluno.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+      setTraineeToDelete(null);
     }
   };
 
@@ -217,6 +252,19 @@ export function TraineesTable({
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
+                    {user?.role === USER_ROLES.MASTER && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={ () => {
+                          setTraineeToDelete(trainee);
+                          setIsDeleteConfirmationDialogOpen(true);
+                        } }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </td>
                 </tr>
               );
@@ -272,6 +320,16 @@ export function TraineesTable({
         setIsOpen={ setIsDetailsOpen }
         trainee={ selectedTrainee }
         allTrainings={ allTrainings }
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+        onConfirm={ handleDeleteTrainee }
+        title="Confirmar Exclusão"
+        description="Tem certeza que deseja excluir o aluno"
+        itemName={ traineeToDelete?.name }
+        isDeleting={ isDeleting }
       />
     </>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useState, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GetAllTrainees } from "@/services/trainees.service";
@@ -32,22 +34,23 @@ export default function Treinamentos() {
   const [ dialogNewVolunteer, setDialogNewVolunteer ] = useState(false);
   const [ dialogNovoAluno, setDialogNovoAluno ] = useState(false);
   const [ dialogNovoTreinamento, setDialogNovoTreinamento ] = useState(false);
+  const [ isVisible, setIsVisible ] = useState(false);
 
   const traineesData = useQuery<ApiResponse<Trainee[]>, Error>({
-    queryKey: [ "get-all-trainees" ],
-    queryFn: () => GetAllTrainees(),
+    queryKey: [ "get-all-trainees", isVisible ],
+    queryFn: () => GetAllTrainees(isVisible ? { isVisible: "false" } : {}),
     staleTime: 1000 * 60,
   });
 
   const volunteersData = useQuery<ApiResponse<Volunteer[]>, Error>({
-    queryKey: [ "get-all-volunteers" ],
-    queryFn: () => GetAllVolunteers(),
+    queryKey: [ "get-all-volunteers", isVisible ],
+    queryFn: () => GetAllVolunteers(isVisible ? { isVisible: "false" } : {}),
     staleTime: 1000 * 60,
   });
 
   const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
-    queryKey: [ "get-all-trainings" ],
-    queryFn: () => GetAllTrainings(),
+    queryKey: [ "get-all-trainings", isVisible ],
+    queryFn: () => GetAllTrainings(isVisible ? "false" : undefined),
     staleTime: 1000 * 60,
   });
 
@@ -168,6 +171,17 @@ export default function Treinamentos() {
               Gerencie treinamentos, alunos e pacientes modelos
             </p>
           </div>
+          {(user?.role === USER_ROLES.MASTER ||
+            user?.role === USER_ROLES.ADMIN) && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="view-deleted-trainings"
+                checked={ isVisible }
+                onCheckedChange={ setIsVisible }
+              />
+              <Label htmlFor="view-deleted-trainings">Ver Excluídos</Label>
+            </div>
+          )}
         </div>
 
         <Tabs

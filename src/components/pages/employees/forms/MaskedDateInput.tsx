@@ -16,20 +16,20 @@ export function MaskedDateInput({
   error,
   disabled,
 }: MaskedDateInputProps) {
-  const [inputValue, setInputValue] = useState("");
+  const [ inputValue, setInputValue ] = useState("");
 
   // Sync with external value changes (e.g. initial load)
   useEffect(() => {
     if (value instanceof Date) {
       setInputValue(value.toLocaleDateString("pt-BR"));
     } else if (typeof value === "string" && value.match(/^\d{4}-\d{2}-\d{2}/)) {
-      const [y, m, d] = value.split("T")[0].split("-").map(Number);
+      const [ y, m, d ] = value.split("T")[0].split("-").map(Number);
       const date = new Date(y, m - 1, d);
       setInputValue(date.toLocaleDateString("pt-BR"));
     } else if (!value) {
       setInputValue("");
     }
-  }, [value]);
+  }, [ value ]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let input = e.target.value.replace(/\D/g, "");
@@ -69,15 +69,15 @@ export function MaskedDateInput({
 
   return (
     <Input
-      id={id}
-      disabled={disabled}
+      id={ id }
+      disabled={ disabled }
       placeholder="DD/MM/AAAA"
-      value={inputValue}
-      onChange={handleChange}
-      maxLength={10}
-      className={`placeholder:text-muted-foreground/50 ${
+      value={ inputValue }
+      onChange={ handleChange }
+      maxLength={ 10 }
+      className={ `placeholder:text-muted-foreground/50 ${
         error ? "border-destructive focus-visible:ring-destructive" : ""
-      }`}
+      }` }
     />
   );
 }

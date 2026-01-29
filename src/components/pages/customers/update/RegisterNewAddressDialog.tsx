@@ -36,7 +36,7 @@ export function RegisterNewAddressDialog({
     if (isRegisterNewAddressDialogOpen) {
       createAddressMethods.reset();
     }
-  }, [isRegisterNewAddressDialogOpen, createAddressMethods]);
+  }, [ isRegisterNewAddressDialogOpen, createAddressMethods ]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: { customerId: string; body: unknown }) =>
@@ -49,7 +49,7 @@ export function RegisterNewAddressDialog({
 
       // revalida os endereços
       queryClient.invalidateQueries({
-        queryKey: ["get-all-customer-addresses", customerId],
+        queryKey: [ "get-all-customer-addresses", customerId ],
       });
     },
     onError: (error: any) => {
@@ -65,8 +65,8 @@ export function RegisterNewAddressDialog({
 
   return (
     <Dialog
-      open={isRegisterNewAddressDialogOpen}
-      onOpenChange={setIsRegisterNewAddressDialogOpen}
+      open={ isRegisterNewAddressDialogOpen }
+      onOpenChange={ setIsRegisterNewAddressDialogOpen }
     >
       <DialogTrigger asChild className="flex">
         <Button variant="default" className="ml-auto mt-5">
@@ -75,16 +75,16 @@ export function RegisterNewAddressDialog({
       </DialogTrigger>
       <DialogContent
         className="max-w-[90%] md:w-[60%] max-h-[90%] overflow-y-scroll flex flex-col gap-0"
-        aria-describedby={undefined}
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        aria-describedby={ undefined }
+        onOpenAutoFocus={ (e) => e.preventDefault() }
       >
         <DialogTitle className="text-3xl font-bold">
           Cadastre um novo endereço para o cliente:
         </DialogTitle>
         <div className="space-y-6">
-          <FormProvider {...createAddressMethods}>
+          <FormProvider { ...createAddressMethods }>
             <AddCustomerAddressForm
-              handleSaveUpdatedCustomer={handleSaveUpdatedCustomer}
+              handleSaveUpdatedCustomer={ handleSaveUpdatedCustomer }
             />
           </FormProvider>
         </div>

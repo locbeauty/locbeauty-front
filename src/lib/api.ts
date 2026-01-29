@@ -25,7 +25,7 @@ export async function apiRequest<T = unknown>({
   const cleanQueryParams = new URLSearchParams();
 
   if (queryParams) {
-    Object.entries(queryParams).forEach(([key, value]) => {
+    Object.entries(queryParams).forEach(([ key, value ]) => {
       if (value !== undefined && value !== null && value !== "") {
         if (Array.isArray(value)) {
           value.forEach((v) => cleanQueryParams.append(key, String(v)));
@@ -65,6 +65,10 @@ export async function apiRequest<T = unknown>({
         ...(method !== "GET" && body ? { body: JSON.stringify(body) } : {}),
       },
     );
+    if (response.status === 204) {
+      return { statusCode: 204, message: "No Content" } as ApiResponse<T>;
+    }
+
     const data: ApiResponse<T> = await response.json();
 
     if (data.statusCode === 403) {

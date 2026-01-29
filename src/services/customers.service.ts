@@ -36,11 +36,12 @@ export interface GetAllCustomersFilters {
   document?: string;
   phone?: string;
   filialId?: string;
+  isVisible?: string;
 }
 
 export async function GetAllCustomers(
   filters?: GetAllCustomersFilters,
-  pagination?: { page: number; limit: number }
+  pagination?: { page: number; limit: number },
 ) {
   const queryParams: Record<string, string> = {
     ...(filters as Record<string, string>),
@@ -69,7 +70,7 @@ export async function ImportCustomers(formData: FormData) {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: formData,
-      }
+      },
     );
 
     const data = await response.json();
@@ -78,4 +79,12 @@ export async function ImportCustomers(formData: FormData) {
     console.error("Network error:", err);
     return { statusCode: 0, message: "Network error" };
   }
+}
+
+export async function DeleteCustomer(customerId: string) {
+  const response = await apiRequest({
+    endpoint: `customers/${customerId}`,
+    method: "DELETE",
+  });
+  return response;
 }

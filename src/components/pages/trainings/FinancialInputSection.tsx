@@ -57,11 +57,11 @@ export function FinancialInputSection({
   const fieldName =
     type === "trainee" ? "traineePayments" : "volunteerPayments";
 
-  const [selectedParticipantId, setSelectedParticipantId] = useState<
+  const [ selectedParticipantId, setSelectedParticipantId ] = useState<
     string | null
   >(participants.length > 0 ? participants[0].id : null);
 
-  const [isReplicating, setIsReplicating] = useState(false);
+  const [ isReplicating, setIsReplicating ] = useState(false);
 
   useEffect(() => {
     if (participants.length > 0) {
@@ -74,7 +74,7 @@ export function FinancialInputSection({
     } else {
       setSelectedParticipantId(null);
     }
-  }, [participants, selectedParticipantId]);
+  }, [ participants, selectedParticipantId ]);
 
   const selectedIndex = fields.findIndex(
     (field: any) => field.participantId === selectedParticipantId,
@@ -156,14 +156,14 @@ export function FinancialInputSection({
         <div className="space-y-1 max-h-[400px] overflow-y-auto">
           {participants.map((p) => (
             <div
-              key={p.id}
-              onClick={() => setSelectedParticipantId(p.id)}
-              className={cn(
+              key={ p.id }
+              onClick={ () => setSelectedParticipantId(p.id) }
+              className={ cn(
                 "cursor-pointer px-3 py-2 rounded-md text-sm transition-colors flex items-center justify-between",
                 selectedParticipantId === p.id
                   ? "bg-primary/10 text-primary font-medium"
                   : "hover:bg-muted",
-              )}
+              ) }
             >
               <span>{p.name}</span>
             </div>
@@ -182,14 +182,14 @@ export function FinancialInputSection({
 
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id={`replicate-${type}`}
-                  checked={isReplicating}
-                  onCheckedChange={(checked) =>
+                  id={ `replicate-${type}` }
+                  checked={ isReplicating }
+                  onCheckedChange={ (checked) =>
                     setIsReplicating(checked === true)
                   }
                 />
                 <label
-                  htmlFor={`replicate-${type}`}
+                  htmlFor={ `replicate-${type}` }
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Replicar para todos
@@ -202,16 +202,16 @@ export function FinancialInputSection({
               <div className="space-y-2">
                 <Label>Valor Base</Label>
                 <PriceInput
-                  withLabel={false}
-                  register={register(
+                  withLabel={ false }
+                  register={ register(
                     `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
-                  )}
+                  ) }
                   value={
                     watch(
                       `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
                     )?.toString() ?? ""
                   }
-                  setValue={setValue}
+                  setValue={ setValue }
                   name={
                     `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>
                   }
@@ -228,28 +228,28 @@ export function FinancialInputSection({
                     </Label>
                     <div className="grid grid-cols-1 gap-4">
                       <PriceInput
-                        withLabel={false}
-                        register={register(
+                        withLabel={ false }
+                        register={ register(
                           `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
-                        )}
+                        ) }
                         value={
                           watch(
                             `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
                           )?.toString() ?? ""
                         }
-                        setValue={setValue}
+                        setValue={ setValue }
                         name={
                           `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>
                         }
                         placeholder="Valor: R$ 0,00"
                       />
                       <Textarea
-                        {...register(
+                        { ...register(
                           `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
-                        )}
+                        ) }
                         placeholder="Descrição: Taxa de sala, material..."
                         className="resize-none min-h-[40px]"
-                        rows={1}
+                        rows={ 1 }
                         value={
                           (watch(
                             `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
@@ -262,7 +262,7 @@ export function FinancialInputSection({
               )}
               {/* Payment Info Section reused */}
               <TrainingPaymentSection
-                prefix={`${fieldName}.${selectedIndex}`}
+                prefix={ `${fieldName}.${selectedIndex}` }
                 label="D etalhes do Pagamento"
                 totalValue={
                   parseCurrencyToFloat(currentPrice as any) +

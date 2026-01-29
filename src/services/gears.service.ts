@@ -5,13 +5,27 @@ import { Training } from "@/utils/@types/training";
 
 export async function GetAllGears({
   filialId,
+  isVisible,
 }: {
   filialId?: string | undefined;
+  isVisible?: string;
 }) {
+  const queryParams: any = {};
+  if (filialId) queryParams.filialIds = filialId;
+  if (isVisible) queryParams.isVisible = isVisible;
+
   const response = await apiRequest<Gear[]>({
     endpoint: "gears",
-    queryParams: filialId ? { filialIds: filialId } : {},
+    queryParams,
   });
 
+  return response;
+}
+
+export async function DeleteGear(gearId: string) {
+  const response = await apiRequest({
+    endpoint: `gears/${gearId}`,
+    method: "DELETE",
+  });
   return response;
 }
