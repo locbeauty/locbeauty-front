@@ -1,31 +1,49 @@
 import { UpdateTrainingPayload } from "@/components/pages/trainings/TrainingPaymentMethodDialog";
 import { apiRequest } from "@/lib/api";
-import { CreateTrainingDataType, CreateTrainingBackendPayload } from "@/lib/zod/CreateTrainingValidation";
-import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
+import { CreateTrainingBackendPayload } from "@/lib/zod/CreateTrainingValidation";
 import { Training } from "@/utils/@types/training";
 
 interface UpdateTrainingRequest {
-    trainingId: string;
-    body: UpdateTrainingPayload;
+  trainingId: string;
+  body: UpdateTrainingPayload;
 }
 
-export async function GetAllTrainings() {
-  const response = await apiRequest<Training[]>({ endpoint: "trainings" });
+export async function GetAllTrainings(isVisible?: string) {
+  const queryParams = isVisible ? { isVisible } : undefined;
+  const response = await apiRequest<Training[]>({
+    endpoint: "trainings",
+    queryParams,
+  });
   return response;
 }
 export async function CreateTraining(body: CreateTrainingBackendPayload) {
-  const response = await apiRequest({ endpoint: "trainings/create", method: "POST", body });
+  const response = await apiRequest({
+    endpoint: "trainings/create",
+    method: "POST",
+    body,
+  });
 
   return response;
 }
 
-export async function UpdateTraining({ trainingId, body }: UpdateTrainingRequest) {
+export async function UpdateTraining({
+  trainingId,
+  body,
+}: UpdateTrainingRequest) {
   // O Controller espera o ID nos params (URL), ex: /trainings/cl123...
   const response = await apiRequest<Training>({
     endpoint: `trainings/update/${trainingId}`,
     method: "POST", // Mudamos para PUT para bater com a semântica de Update
-    body
+    body,
   });
 
+  return response;
+}
+
+export async function DeleteTraining(trainingId: string) {
+  const response = await apiRequest({
+    endpoint: `trainings/${trainingId}`,
+    method: "DELETE",
+  });
   return response;
 }

@@ -64,7 +64,9 @@ export function VolunteerDetailsDialog({
 
   const trainingsList = useMemo(() => {
     if (!volunteer || !allTrainings) return [];
-    return allTrainings.filter((t) => t.volunteerId === volunteer.volunteerId);
+    return allTrainings.filter((t) =>
+      t.Volunteers?.some((v) => v.volunteerId === volunteer.volunteerId),
+    );
   }, [ volunteer, allTrainings ]);
 
   const filteredTrainings = useMemo(() => {
@@ -249,7 +251,9 @@ export function VolunteerDetailsDialog({
                   {filteredTrainings.map((training) => {
                     // Encontra o pagamento específico do modelo (VOLUNTEER)
                     const payment = training.TrainingPayment?.find(
-                      (p) => p.payerType === "VOLUNTEER",
+                      (p) =>
+                        p.payerType === "VOLUNTEER" &&
+                        p.volunteerId === volunteer.volunteerId,
                     );
 
                     return (

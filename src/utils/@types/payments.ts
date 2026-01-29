@@ -37,4 +37,6 @@ export interface TrainingPayment {
   cancellationDate: string | null;
   cancellationFeePaymentDate: string | null;
   cancellationFeePaymentMethod: string | null;
+  traineeId?: string | null;
+  volunteerId?: string | null;
 }

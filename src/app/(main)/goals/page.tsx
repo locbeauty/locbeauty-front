@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQuery } from "@tanstack/react-query";
 
@@ -14,6 +15,7 @@ import { RouteGuard } from "@/components/auth/RouteGuard";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 
+import { USER_ROLES } from "@/utils/constants";
 import {
   Target,
   TrendingUp,
@@ -69,6 +71,7 @@ function EmptyState({
 
 export default function MetasMensaisPage() {
   const { user } = useAuth();
+  const [ isVisible, setIsVisible ] = useState(false);
   // Removed unused ViewDetails state for now
 
   const filterMethods = useForm<FiltersForm>({
@@ -88,13 +91,14 @@ export default function MetasMensaisPage() {
   const activeTab = watch("tab");
 
   const { data, isLoading } = useQuery<Goal[]>({
-    queryKey: [ "get-all-goals" ],
+    queryKey: [ "get-all-goals", isVisible ],
     queryFn: () =>
       GetAllGoals({
         filialId:
           filterFilial === "all_filials_placeholder" || !filterFilial
             ? undefined
             : filterFilial,
+        isVisible: isVisible ? "false" : undefined,
       }),
     staleTime: 1000 * 60,
   });
@@ -137,7 +141,7 @@ export default function MetasMensaisPage() {
   }, [ filteredGoals ]);
 
   const filiaisList = Array.from(
-    new Set(goals?.map((g) => g.Filial?.filialName).filter(Boolean) ?? [])
+    new Set(goals?.map((g) => g.Filial?.filialName).filter(Boolean) ?? []),
   );
 
   const estatisticas = useMemo(
@@ -155,7 +159,7 @@ export default function MetasMensaisPage() {
             100
           : 0,
     }),
-    [ filteredGoals ]
+    [ filteredGoals ],
   );
 
   return (
@@ -171,6 +175,17 @@ export default function MetasMensaisPage() {
           <Can module={ SYSTEM_MODULES.GOALS } action="canCreate">
             <CreateGoalDialog />
           </Can>
+          {(user?.role === USER_ROLES.MASTER ||
+            user?.role === USER_ROLES.ADMIN) && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="view-deleted-goals"
+                checked={ isVisible }
+                onCheckedChange={ setIsVisible }
+              />
+              <Label htmlFor="view-deleted-goals">Ver Excluídos</Label>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

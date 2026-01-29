@@ -44,17 +44,31 @@ export async function apiRequest<T = unknown>({
       : "";
 
   try {
+    const headers: Record<string, string> = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
+    // Force empty body for DELETE if not provided, to satisfy server requirements
+    if (method === "DELETE" && !body) {
+      body = {};
+    }
+
+    if (method !== "GET" && body) {
+      headers["Content-Type"] = "application/json";
+    }
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SERVER_URL}/${endpoint}${queryString}`,
       {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers,
         ...(method !== "GET" && body ? { body: JSON.stringify(body) } : {}),
-      }
+      },
     );
+    if (response.status === 204) {
+      return { statusCode: 204, message: "No Content" } as ApiResponse<T>;
+    }
+
     const data: ApiResponse<T> = await response.json();
 
     if (data.statusCode === 403) {

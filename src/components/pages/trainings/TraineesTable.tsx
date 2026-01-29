@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { Eye, Filter, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Eye, Filter, X, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/auth-provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { DeleteTrainee } from "@/services/trainees.service";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { USER_ROLES } from "@/utils/constants";
+import { toast } from "sonner";
 
 import { Trainee } from "@/utils/@types/trainee";
 import { Training } from "@/utils/@types/training";
@@ -33,6 +39,13 @@ export function TraineesTable({
 }: TraineesTableProps) {
   const [ selectedTrainee, setSelectedTrainee ] = useState<Trainee | null>(null);
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
+  const [ traineeToDelete, setTraineeToDelete ] = useState<Trainee | null>(null);
+
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Filters
   const [ filterName, setFilterName ] = useState("");
@@ -44,6 +57,28 @@ export function TraineesTable({
     setIsDetailsOpen(true);
     if (onViewDetails) {
       onViewDetails(trainee);
+    }
+  };
+
+  const handleDeleteTrainee = async () => {
+    if (!traineeToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await DeleteTrainee(traineeToDelete.traineeId);
+
+      if (response.statusCode === 200 || response.statusCode === 204) {
+        toast.success("Aluno excluído com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
+      } else {
+        toast.error(response.message || "Erro ao excluir aluno.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir aluno.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+      setTraineeToDelete(null);
     }
   };
 
@@ -60,25 +95,30 @@ export function TraineesTable({
     // Name Filter
     if (filterName) {
       result = result.filter((t) =>
-        t.name.toLowerCase().includes(filterName.toLowerCase())
+        t.name.toLowerCase().includes(filterName.toLowerCase()),
       );
     }
 
     // Pending Payment Filter
     if (filterPending) {
-      // We need to check if this trainee has any training with pending payment.
-      // The `trainees` object itself might not have payment info directly attached in this view unless we cross-reference `allTrainings`.
-      // `allTrainings` contains the payment info linked to `traineeId`.
       const traineesWithPending = new Set<string>();
       allTrainings.forEach((training) => {
-        // Check trainee payments
-        if (
-          training.TrainingPayment?.some(
-            (p) => p.paymentStatus === "Pendente" && p.payerType === "TRAINEE"
-          )
-        ) {
-          if (training.traineeId) traineesWithPending.add(training.traineeId);
-        }
+        training.TrainingPayment?.forEach((p) => {
+          const isPending =
+            p.paymentMode === "AVista"
+              ? p.paymentStatus === "Pendente" ||
+                p.firstPaymentStatus === "Pendente"
+              : p.paymentStatus === "Pendente" ||
+                p.paymentStatus === "Parcial" ||
+                p.firstPaymentStatus === "Pendente" ||
+                p.secondPaymentStatus === "Pendente";
+
+          if (isPending && p.payerType === "TRAINEE") {
+            if (p.traineeId) traineesWithPending.add(p.traineeId);
+            else if (training.traineeId)
+              traineesWithPending.add(training.traineeId);
+          }
+        });
       });
 
       result = result.filter((t) => traineesWithPending.has(t.traineeId));
@@ -89,6 +129,9 @@ export function TraineesTable({
       const traineesInFilial = new Set<string>();
       allTrainings.forEach((training) => {
         if (training.sourceFilialId === filterFilial) {
+          // Check all trainees in this training
+          training.Trainees?.forEach((t) => traineesInFilial.add(t.traineeId));
+          // Fallback to legacy single traineeId
           if (training.traineeId) traineesInFilial.add(training.traineeId);
         }
       });
@@ -187,14 +230,15 @@ export function TraineesTable({
               </tr>
             )}
             {sortedTrainees.map((trainee) => {
-
               return (
                 <tr
                   key={ trainee.traineeId }
                   className="border-t hover:bg-muted/50"
                 >
                   <td className="p-3 text-sm font-medium">{trainee.name}</td>
-                  <td className="p-3 text-sm">{trainee.SourceFilial?.filialName}</td>
+                  <td className="p-3 text-sm">
+                    {trainee.SourceFilial?.filialName}
+                  </td>
                   <td className="p-3 text-sm">{trainee.documentNumber}</td>
                   <td className="p-3 text-sm">{trainee.email}</td>
                   <td className="p-3 text-center text-sm">
@@ -208,6 +252,19 @@ export function TraineesTable({
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
+                    {user?.role === USER_ROLES.MASTER && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={ () => {
+                          setTraineeToDelete(trainee);
+                          setIsDeleteConfirmationDialogOpen(true);
+                        } }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </td>
                 </tr>
               );
@@ -224,8 +281,8 @@ export function TraineesTable({
               allTrainings
                 .filter((t) => t.traineeId === trainee.traineeId)
                 .map((t) => t.SourceFilial?.filialName)
-                .filter(Boolean)
-            )
+                .filter(Boolean),
+            ),
           ).join(", ");
           return (
             <ResponsiveCard
@@ -263,6 +320,16 @@ export function TraineesTable({
         setIsOpen={ setIsDetailsOpen }
         trainee={ selectedTrainee }
         allTrainings={ allTrainings }
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+        onConfirm={ handleDeleteTrainee }
+        title="Confirmar Exclusão"
+        description="Tem certeza que deseja excluir o aluno"
+        itemName={ traineeToDelete?.name }
+        isDeleting={ isDeleting }
       />
     </>
   );
