@@ -134,7 +134,7 @@ export function EmployeeForm({
                 { ...register("fullname") }
                 id="fullname"
                 placeholder="Ex: Maria Silva"
-                disabled={ isEditing }
+                // disabled={ isEditing }
               />
               {errors.fullname && (
                 <p className="text-xs font-medium text-destructive">
