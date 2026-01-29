@@ -90,20 +90,6 @@ export function CalendarControls({
               Ocultar cancelados
             </Label>
           </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center space-x-2 border p-2 rounded-md h-9 bg-background px-3">
-            <Checkbox
-              id="hide-canceled"
-              checked={ hideCanceled }
-              onCheckedChange={ (checked) => setHideCanceled(!!checked) }
-            />
-            <Label
-              htmlFor="hide-canceled"
-              className="text-sm cursor-pointer whitespace-nowrap"
-            >
-              Ocultar cancelados
-            </Label>
-          </div>
           <SelectCalendarViewType
             viewType={ viewType }
             setViewType={ setViewType }
