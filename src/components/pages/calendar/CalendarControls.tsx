@@ -12,6 +12,8 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SelectCalendarViewType } from "./SelectCalendarViewType";
 import { Dispatch, SetStateAction } from "react";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CalendarControlsProps {
   setCurrentDate: Dispatch<SetStateAction<Date>>;
@@ -19,6 +21,8 @@ interface CalendarControlsProps {
   viewType: "dia" | "semana" | "mes";
   setViewType: Dispatch<SetStateAction<"dia" | "semana" | "mes">>;
   hideViewSelect?: boolean;
+  hideCanceled?: boolean;
+  setHideCanceled?: Dispatch<SetStateAction<boolean>>;
 }
 
 export function CalendarControls({
@@ -27,6 +31,8 @@ export function CalendarControls({
   viewType,
   setViewType,
   hideViewSelect = false,
+  hideCanceled = false,
+  setHideCanceled = () => {},
 }: CalendarControlsProps) {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -70,7 +76,20 @@ export function CalendarControls({
       </div>
       {/* TODO: fix select layout */}
       {!hideViewSelect && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-2 border p-2 rounded-md h-9 bg-background px-3">
+            <Checkbox
+              id="hide-canceled"
+              checked={ hideCanceled }
+              onCheckedChange={ (checked) => setHideCanceled(!!checked) }
+            />
+            <Label
+              htmlFor="hide-canceled"
+              className="text-sm cursor-pointer whitespace-nowrap"
+            >
+              Ocultar cancelados
+            </Label>
+          </div>
           <SelectCalendarViewType
             viewType={ viewType }
             setViewType={ setViewType }
