@@ -1,7 +1,13 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Eye, Clock, Calendar, Filter, X } from "lucide-react";
+import { Eye, Clock, Calendar, Filter, X, Trash2 } from "lucide-react";
 import { ptBR } from "date-fns/locale";
+import { useAuth } from "@/contexts/auth-provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { DeleteTraining } from "@/services/trainings.service";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { USER_ROLES } from "@/utils/constants";
+import { toast } from "sonner";
 
 import { Training } from "@/utils/@types/training";
 import { Filial } from "@/utils/@types/filials";
@@ -27,9 +33,18 @@ interface TrainingsTableProps {
 
 export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
   const [ selectedTraining, setSelectedTraining ] = useState<Training | null>(
-    null
+    null,
   );
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
+  const [ trainingToDelete, setTrainingToDelete ] = useState<Training | null>(
+    null,
+  );
+
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Filters state
   const [ searchTerm, setSearchTerm ] = useState("");
@@ -43,6 +58,28 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
   const handleOpenDetails = (training: Training) => {
     setSelectedTraining(training);
     setIsDetailsOpen(true);
+  };
+
+  const handleDeleteTraining = async () => {
+    if (!trainingToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await DeleteTraining(trainingToDelete.trainingId);
+
+      if (response.statusCode === 200 || response.statusCode === 204) {
+        toast.success("Treinamento excluído com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+      } else {
+        toast.error(response.message || "Erro ao excluir treinamento.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir treinamento.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+      setTrainingToDelete(null);
+    }
   };
 
   const clearFilters = () => {
@@ -64,7 +101,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
         (t) =>
           t.trainingId.toLowerCase().includes(lowerSearch) ||
           t.Trainee?.name.toLowerCase().includes(lowerSearch) ||
-          t.Volunteer?.name.toLowerCase().includes(lowerSearch)
+          t.Volunteer?.name.toLowerCase().includes(lowerSearch),
       );
     }
 
@@ -77,7 +114,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
     if (filterPaymentStatus && filterPaymentStatus !== "ALL") {
       if (filterPaymentStatus === "PENDING") {
         result = result.filter((t) =>
-          t.TrainingPayment?.some((p) => p.paymentStatus === "Pendente")
+          t.TrainingPayment?.some((p) => p.paymentStatus === "Pendente"),
         );
       } else if (filterPaymentStatus === "PAID") {
         // Assuming "Paid" means all payments are paid or at least one is "Pago" and none "Pendente"?
@@ -94,12 +131,12 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
             t.TrainingPayment.every(
               (p) =>
                 p.paymentStatus === "Pago" ||
-                (p.paymentStatus as string) === "Confirmado"
-            )
+                (p.paymentStatus as string) === "Confirmado",
+            ),
         );
       } else if (filterPaymentStatus === "CANCELED") {
         result = result.filter((t) =>
-          t.TrainingPayment?.some((p) => p.paymentStatus === "Cancelado")
+          t.TrainingPayment?.some((p) => p.paymentStatus === "Cancelado"),
         );
       }
     }
@@ -117,7 +154,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
     }
 
     return result.sort(
-      (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
+      (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime(),
     );
   }, [
     trainings,
@@ -244,7 +281,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               value={ filterPaymentStatus }
               onValueChange={ (v) =>
                 setFilterPaymentStatus(
-                  v as "ALL" | "PENDING" | "PAID" | "CANCELED"
+                  v as "ALL" | "PENDING" | "PAID" | "CANCELED",
                 )
               }
             >
@@ -279,8 +316,6 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               <th className="text-left p-3 font-medium">Data</th>
               <th className="text-left p-3 font-medium">Filial</th>
               <th className="text-left p-3 font-medium">Equipamento</th>
-              <th className="text-left p-3 font-medium">Aluno</th>
-              <th className="text-left p-3 font-medium">Modelo</th>
               <th className="text-center p-3 font-medium">Horário</th>
               <th className="text-center p-3 font-medium">Status</th>
               <th className="text-center p-3 font-medium">Detalhes</th>
@@ -310,12 +345,6 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 <td className="p-3 text-sm">
                   {training.Gear?.gearName || "N/A"}
                 </td>
-                <td className="p-3 text-sm">
-                  {training.Trainee?.name || "N/A"}
-                </td>
-                <td className="p-3 text-sm">
-                  {training.Volunteer?.name || "N/A"}
-                </td>
                 <td className="p-3 text-center text-sm">
                   {formatDuration(training.hourInMinutes)}
                 </td>
@@ -330,6 +359,19 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
+                  {user?.role === USER_ROLES.MASTER && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:bg-destructive/10"
+                      onClick={ () => {
+                        setTrainingToDelete(training);
+                        setIsDeleteConfirmationDialogOpen(true);
+                      } }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -347,7 +389,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               title: training.Gear?.gearName || "Treinamento",
               description: format(
                 new Date(training.dueDate),
-                "dd/MM/yyyy HH:mm"
+                "dd/MM/yyyy HH:mm",
               ),
               items: [
                 {
@@ -384,6 +426,16 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
           setSelectedTraining={ setSelectedTraining }
         />
       )}
+
+      <DeleteConfirmationDialog
+        isOpen={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+        onConfirm={ handleDeleteTraining }
+        title="Confirmar Exclusão"
+        description="Tem certeza que deseja excluir o treinamento"
+        itemName={ trainingToDelete?.trainingId }
+        isDeleting={ isDeleting }
+      />
     </>
   );
 }

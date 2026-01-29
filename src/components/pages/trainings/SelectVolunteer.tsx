@@ -28,20 +28,22 @@ import { Volunteer } from "@/utils/@types/volunteer";
 import { useQuery } from "@tanstack/react-query";
 import { GetAllVolunteers } from "@/services/volunteers.service";
 import { ApiResponse } from "@/lib/api";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface SelectVolunteerProps {
   disabled?: boolean;
   filialId: string | undefined;
-  // volunteers: Volunteer[] | undefined; // Removed
-  selectedVolunteer: string | undefined;
-  onVolunteerChange: (volunteer: Volunteer) => void;
+  selectedVolunteerIds: string[];
+  onVolunteersChange: (volunteers: Volunteer[]) => void;
 }
 
 export function SelectVolunteer({
   disabled = false,
   filialId,
-  selectedVolunteer,
-  onVolunteerChange,
+  selectedVolunteerIds,
+  onVolunteersChange,
 }: SelectVolunteerProps) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -65,14 +67,14 @@ export function SelectVolunteer({
         <DesktopSelect
           disabled={ disabled || !filialId }
           allVolunteers={ volunteers }
-          selectedVolunteer={ selectedVolunteer }
-          onVolunteerChange={ onVolunteerChange }
+          selectedVolunteerIds={ selectedVolunteerIds }
+          onVolunteersChange={ onVolunteersChange }
         />
       ) : (
         <MobileSelect
           allVolunteers={ volunteers }
-          selectedVolunteer={ selectedVolunteer }
-          onVolunteerChange={ onVolunteerChange }
+          selectedVolunteerIds={ selectedVolunteerIds }
+          onVolunteersChange={ onVolunteersChange }
         />
       )}
     </div>
@@ -82,19 +84,19 @@ export function SelectVolunteer({
 interface SelectProps {
   disabled?: boolean;
   allVolunteers: Volunteer[] | undefined;
-  selectedVolunteer: string | undefined;
-  onVolunteerChange: (volunteer: Volunteer) => void;
+  selectedVolunteerIds: string[];
+  onVolunteersChange: (volunteers: Volunteer[]) => void;
 }
 
 function DesktopSelect({
   disabled,
   allVolunteers,
-  selectedVolunteer,
-  onVolunteerChange,
+  selectedVolunteerIds,
+  onVolunteersChange,
 }: SelectProps) {
   const [ open, setOpen ] = useState(false);
 
-  const selectedValue = getDisplayValue(selectedVolunteer, allVolunteers);
+  const selectedCount = selectedVolunteerIds.length;
 
   return (
     <Popover modal={ true } open={ open } onOpenChange={ setOpen }>
@@ -102,25 +104,27 @@ function DesktopSelect({
         <Button
           disabled={ disabled }
           variant="outline"
-          className="w-full justify-start group cursor-pointer"
+          role="combobox"
+          aria-expanded={ open }
+          className="w-full justify-between"
         >
-          {selectedValue ? (
-            <>
-              {selectedValue.name} -{" "}
-              {hideDocumentNumber(selectedValue.documentNumber)}
-            </>
+          {selectedCount > 0 ? (
+            <div className="flex gap-1 flex-wrap">
+              <Badge variant="secondary">{selectedCount} selecionado(s)</Badge>
+            </div>
           ) : (
-            <span className="text-placeholder group-hover:text-white">
-              Selecione o volunteer
+            <span className="text-muted-foreground">
+              Selecione os pacientes modelo
             </span>
           )}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-full" align="start">
         <VolunteersList
           allVolunteers={ allVolunteers }
-          setOpen={ setOpen }
-          onVolunteerChange={ onVolunteerChange }
+          selectedVolunteerIds={ selectedVolunteerIds }
+          onVolunteersChange={ onVolunteersChange }
         />
       </PopoverContent>
     </Popover>
@@ -129,25 +133,25 @@ function DesktopSelect({
 
 function MobileSelect({
   allVolunteers,
-  selectedVolunteer,
-  onVolunteerChange,
+  selectedVolunteerIds,
+  onVolunteersChange,
 }: Omit<SelectProps, "disabled">) {
   const [ open, setOpen ] = useState(false);
 
-  const selectedValue = getDisplayValue(selectedVolunteer, allVolunteers);
+  const selectedCount = selectedVolunteerIds.length;
 
   return (
     <Drawer open={ open } onOpenChange={ setOpen }>
       <DrawerTrigger asChild>
-        <Button variant="outline" className="w-full justify-start">
-          {selectedValue ? (
-            <>
-              {selectedValue.name} -{" "}
-              {hideDocumentNumber(selectedValue.documentNumber)}
-            </>
+        <Button variant="outline" className="w-full justify-between">
+          {selectedCount > 0 ? (
+            <Badge variant="secondary">{selectedCount} selecionado(s)</Badge>
           ) : (
-            <span className="text-placeholder">Selecione o volunteer</span>
+            <span className="text-muted-foreground">
+              Selecione os pacientes modelo
+            </span>
           )}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </DrawerTrigger>
       <DrawerContent className="w-full" aria-describedby={ undefined }>
@@ -155,8 +159,8 @@ function MobileSelect({
           <div className="mt-4 border-t">
             <VolunteersList
               allVolunteers={ allVolunteers }
-              setOpen={ setOpen }
-              onVolunteerChange={ onVolunteerChange }
+              selectedVolunteerIds={ selectedVolunteerIds }
+              onVolunteersChange={ onVolunteersChange }
             />
           </div>
         </DrawerTitle>
@@ -166,57 +170,66 @@ function MobileSelect({
 }
 
 interface VolunteersListProps {
-  setOpen: (_open: boolean) => void;
-  onVolunteerChange: (volunteer: Volunteer) => void;
   allVolunteers: Volunteer[] | undefined;
+  selectedVolunteerIds: string[];
+  onVolunteersChange: (volunteers: Volunteer[]) => void;
 }
 
 function VolunteersList({
-  setOpen,
-  onVolunteerChange,
   allVolunteers,
+  selectedVolunteerIds,
+  onVolunteersChange,
 }: VolunteersListProps) {
   const handleSelect = (volunteer: Volunteer) => {
-    onVolunteerChange(volunteer);
-    setOpen(false);
+    const isSelected = selectedVolunteerIds.includes(volunteer.volunteerId);
+    let newSelectedIds: string[];
+
+    if (isSelected) {
+      newSelectedIds = selectedVolunteerIds.filter(
+        (id) => id !== volunteer.volunteerId,
+      );
+    } else {
+      newSelectedIds = [ ...selectedVolunteerIds, volunteer.volunteerId ];
+    }
+
+    const newSelectedVolunteers =
+      allVolunteers?.filter((v) => newSelectedIds.includes(v.volunteerId)) ||
+      [];
+
+    onVolunteersChange(newSelectedVolunteers);
   };
 
   return (
     <Command>
-      <CommandInput placeholder="Filtrar volunteeres..." />
+      <CommandInput placeholder="Filtrar pacientes modelo..." />
       <CommandList>
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
         <CommandGroup>
-          {allVolunteers?.map((volunteer) => (
-            <CommandItem
-              key={ volunteer.volunteerId }
-              value={ `${volunteer.name} ${volunteer.documentNumber}` }
-              onSelect={ () => handleSelect(volunteer) }
-            >
-              {volunteer.name} - {hideDocumentNumber(volunteer.documentNumber)}
-            </CommandItem>
-          ))}
+          {allVolunteers?.map((volunteer) => {
+            const isSelected = selectedVolunteerIds.includes(
+              volunteer.volunteerId,
+            );
+            return (
+              <CommandItem
+                key={ volunteer.volunteerId }
+                value={ `${volunteer.name} ${volunteer.documentNumber}` }
+                onSelect={ () => handleSelect(volunteer) }
+              >
+                <Check
+                  className={ cn(
+                    "mr-2 h-4 w-4",
+                    isSelected ? "opacity-100" : "opacity-0",
+                  ) }
+                />
+                {volunteer.name} -{" "}
+                {hideDocumentNumber(volunteer.documentNumber)}
+              </CommandItem>
+            );
+          })}
         </CommandGroup>
       </CommandList>
     </Command>
   );
-}
-
-function getDisplayValue(
-  volunteerName: string | undefined,
-  allVolunteers: Volunteer[] | undefined,
-): { name: string; documentNumber: string } | null {
-  if (!volunteerName || !allVolunteers) return null;
-
-  const volunteer = allVolunteers.find((p) => p.name === volunteerName);
-  if (volunteer) {
-    return {
-      name: volunteer.name,
-      documentNumber: volunteer.documentNumber,
-    };
-  }
-
-  return null;
 }
 
 function hideDocumentNumber(documentNumber: string) {

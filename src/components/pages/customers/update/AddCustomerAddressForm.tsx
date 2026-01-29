@@ -28,10 +28,12 @@ import { toast } from "sonner";
 
 interface AddCustomerAddressFormProps {
   handleSaveUpdatedCustomer: (newAddressData: AddressTypeSchema) => void;
+  hideButton?: boolean;
 }
 
 export function AddCustomerAddressForm({
   handleSaveUpdatedCustomer,
+  hideButton = false,
 }: AddCustomerAddressFormProps) {
   const {
     register,
@@ -141,26 +143,28 @@ export function AddCustomerAddressForm({
             placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
           />
         </div>
-        <div className="flex">
-          <Button
-            type="submit"
-            onClick={ handleSubmit(
-              (data: AddressTypeSchema) => handleSaveUpdatedCustomer(data),
-              (errors) => {
-                const firstError = Object.values(errors)[0];
-                if (firstError) {
-                  toast.warning(firstError.message || "Erro de validação", {
-                    style: { fontSize: "1rem" },
-                  });
-                }
-              },
-            ) }
-            className="ml-auto flex"
-          >
-            Adicionar
-            <Plus />
-          </Button>
-        </div>
+        {!hideButton && (
+          <div className="flex">
+            <Button
+              type="submit"
+              onClick={ handleSubmit(
+                (data: AddressTypeSchema) => handleSaveUpdatedCustomer(data),
+                (errors) => {
+                  const firstError = Object.values(errors)[0];
+                  if (firstError) {
+                    toast.warning(firstError.message || "Erro de validação", {
+                      style: { fontSize: "1rem" },
+                    });
+                  }
+                },
+              ) }
+              className="ml-auto flex"
+            >
+              Adicionar
+              <Plus />
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

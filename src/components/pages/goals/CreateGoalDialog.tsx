@@ -53,6 +53,11 @@ import { Label } from "@/components/ui/label";
 export function CreateGoalDialog() {
   const [ dialogNovaMeta, setDialogNovaMeta ] = useState(false);
   const [ isSubmitting, setIsSubmitting ] = useState(false);
+  const { getAccessibleFilialsForCreate } = useAccess();
+
+  const accessibleFilials = getAccessibleFilialsForCreate(
+    SYSTEM_MODULES.GOALS,
+  ).map((f) => f.filialId);
 
   const {
     control,
@@ -70,7 +75,7 @@ export function CreateGoalDialog() {
       status: "EM_ANDAMENTO",
       goalType: "MONEY",
       targetCents: "",
-      targetQuantity: 0,
+      targetQuantity: undefined, // undefined para placeholder funcionar
       isGlobal: false,
     },
   });
@@ -80,7 +85,7 @@ export function CreateGoalDialog() {
   const watchFilialId = watch("filialId");
   const watchIsGlobal = watch("isGlobal");
   const [ selectedGearName, setSelectedGearName ] = useState<string | undefined>(
-    undefined
+    undefined,
   );
 
   useEffect(() => {
@@ -166,37 +171,20 @@ export function CreateGoalDialog() {
           <div className="grid gap-4 py-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Controller
-                    control={ control }
-                    name="isGlobal"
-                    render={ ({ field }) => (
-                      <Switch
-                        checked={ field.value }
-                        onCheckedChange={ field.onChange }
-                        id="global-mode"
-                      />
-                    ) }
-                  />
-                  <Label htmlFor="global-mode">
-                    Meta Global (Todas as Filiais)
-                  </Label>
+                <Label htmlFor="filial">Filial *</Label>
+                <SelectFilial
+                  control={ control }
+                  name="filialId"
+                  accessibleFilials={ accessibleFilials }
+                />
+                <div className="h-3">
+                  {errors.filialId && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.filialId.message}
+                    </p>
+                  )}
                 </div>
               </div>
-
-              {!watchIsGlobal && (
-                <div className="space-y-2">
-                  <Label htmlFor="filial">Filial *</Label>
-                  <SelectFilial control={ control } name="filialId" />
-                  <div className="h-3">
-                    {errors.filialId && (
-                      <p className="text-xs font-medium text-destructive">
-                        {errors.filialId.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="goalType">Tipo de Meta *</Label>
@@ -209,9 +197,13 @@ export function CreateGoalDialog() {
                       onValueChange={ (value: "MONEY" | "GEAR") => {
                         field.onChange(value);
                         if (value === "MONEY") {
-                          setValue("targetQuantity", 0, {
-                            shouldValidate: true,
-                          });
+                          setValue(
+                            "targetQuantity",
+                            undefined as unknown as number,
+                            {
+                              shouldValidate: true,
+                            },
+                          );
                         } else {
                           setValue("targetCents", "", { shouldValidate: true });
                         }
@@ -258,6 +250,7 @@ export function CreateGoalDialog() {
                 <SelectTrainingGear
                   disabled={ !watchFilialId && !watchIsGlobal }
                   selectedGear={ selectedGearName }
+                  filialId={ watchFilialId }
                   onGearChange={ (gearName) => {
                     setSelectedGearName(gearName);
                   } }
@@ -282,11 +275,31 @@ export function CreateGoalDialog() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="ano">Ano *</Label>
-                <Input
-                  type="number"
-                  defaultValue={ new Date().getFullYear() }
-                  { ...register("year", { valueAsNumber: true }) }
-                  placeholder="Ex: 2025"
+                <Controller
+                  name="year"
+                  control={ control }
+                  render={ ({ field }) => {
+                    const currentYear = new Date().getFullYear();
+                    const nextYear = currentYear + 1;
+                    return (
+                      <Select
+                        value={ field.value.toString() }
+                        onValueChange={ (val) => field.onChange(Number(val)) }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o ano" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={ currentYear.toString() }>
+                            {currentYear}
+                          </SelectItem>
+                          <SelectItem value={ nextYear.toString() }>
+                            {nextYear}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    );
+                  } }
                 />
                 <div className="h-3">
                   {errors.year && (

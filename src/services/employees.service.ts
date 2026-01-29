@@ -22,11 +22,13 @@ export async function GetAllEmployees({
   filialId,
   page,
   limit,
+  isVisible,
 }: {
   employeeRole?: ROLES | undefined;
   filialId?: string;
   page?: number;
   limit?: number;
+  isVisible?: string;
 }) {
   const queryParams: Record<string, string> = {};
 
@@ -34,9 +36,18 @@ export async function GetAllEmployees({
   if (filialId) queryParams.filialId = filialId;
   if (page) queryParams.page = page.toString();
   if (limit) queryParams.limit = limit.toString();
+  if (isVisible) queryParams.isVisible = isVisible;
 
   const response = await apiRequest<
     { items: Employee[]; total: number } | Employee[]
   >({ endpoint: "employees", queryParams });
+  return response;
+}
+
+export async function DeleteEmployee(employeeId: string) {
+  const response = await apiRequest({
+    endpoint: `employees/${employeeId}`,
+    method: "DELETE",
+  });
   return response;
 }

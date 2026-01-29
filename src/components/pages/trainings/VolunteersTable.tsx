@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { Eye, Filter, X } from "lucide-react";
+import { Eye, Filter, X, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/auth-provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { DeleteVolunteer } from "@/services/volunteers.service";
+import { USER_ROLES } from "@/utils/constants";
+import { toast } from "sonner";
 
 import { Volunteer } from "@/utils/@types/volunteer";
 import { Training } from "@/utils/@types/training";
@@ -30,9 +36,18 @@ export function VolunteersTable({
   filials,
 }: VolunteersTableProps) {
   const [ selectedVolunteer, setSelectedVolunteer ] = useState<Volunteer | null>(
-    null
+    null,
   );
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
+  const [ volunteerToDelete, setVolunteerToDelete ] = useState<Volunteer | null>(
+    null,
+  );
+
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Filters
   const [ filterName, setFilterName ] = useState("");
@@ -42,6 +57,28 @@ export function VolunteersTable({
   const handleOpenDetails = (volunteer: Volunteer) => {
     setSelectedVolunteer(volunteer);
     setIsDetailsOpen(true);
+  };
+
+  const handleDeleteVolunteer = async () => {
+    if (!volunteerToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await DeleteVolunteer(volunteerToDelete.volunteerId);
+
+      if (response.statusCode === 200 || response.statusCode === 204) {
+        toast.success("Modelo excluído com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-volunteers" ] });
+      } else {
+        toast.error(response.message || "Erro ao excluir modelo.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir modelo.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+      setVolunteerToDelete(null);
+    }
   };
 
   const clearFilters = () => {
@@ -57,7 +94,7 @@ export function VolunteersTable({
     // Name Filter
     if (filterName) {
       result = result.filter((v) =>
-        v.name.toLowerCase().includes(filterName.toLowerCase())
+        v.name.toLowerCase().includes(filterName.toLowerCase()),
       );
     }
 
@@ -65,20 +102,22 @@ export function VolunteersTable({
     if (filterPending) {
       const volunteersWithPending = new Set<string>();
       allTrainings.forEach((training) => {
-        if (
-          training.TrainingPayment?.some(
-            (p) => p.paymentStatus === "Pendente" && p.payerType === "VOLUNTEER"
-          )
-        ) {
-          // Assuming a training tracks volunteerId. Wait, `Training` type has `Volunteer` relation or `volunteerId`?
-          // The `Training` type usually has `volunteerId` or `Volunteer`.
-          // Let's assume `volunteerId` exists or we check `training.Volunteer?.volunteerId`.
-          // But `Training` type usually has `volunteerId` as FK.
-          // Let's check `training.volunteerId`.
-          // If checking the `allTrainings` confirms `volunteerId`.
-          if (training.volunteerId)
-            volunteersWithPending.add(training.volunteerId);
-        }
+        training.TrainingPayment?.forEach((p) => {
+          const isPending =
+            p.paymentMode === "AVista"
+              ? p.paymentStatus === "Pendente" ||
+                p.firstPaymentStatus === "Pendente"
+              : p.paymentStatus === "Pendente" ||
+                p.paymentStatus === "Parcial" ||
+                p.firstPaymentStatus === "Pendente" ||
+                p.secondPaymentStatus === "Pendente";
+
+          if (isPending && p.payerType === "VOLUNTEER") {
+            if (p.volunteerId) volunteersWithPending.add(p.volunteerId);
+            else if (training.volunteerId)
+              volunteersWithPending.add(training.volunteerId);
+          }
+        });
       });
       result = result.filter((v) => volunteersWithPending.has(v.volunteerId));
     }
@@ -88,6 +127,11 @@ export function VolunteersTable({
       const volunteersInFilial = new Set<string>();
       allTrainings.forEach((training) => {
         if (training.sourceFilialId === filterFilial) {
+          // Check all volunteers in this training
+          training.Volunteers?.forEach((v) =>
+            volunteersInFilial.add(v.volunteerId),
+          );
+          // Fallback to legacy single volunteerId
           if (training.volunteerId)
             volunteersInFilial.add(training.volunteerId);
         }
@@ -186,14 +230,16 @@ export function VolunteersTable({
               </tr>
             )}
             {sortedVolunteers.map((volunteer) => {
-
               return (
                 <tr
                   key={ volunteer.volunteerId }
                   className="border-t hover:bg-muted/50"
+                  onDoubleClick={ () => handleOpenDetails(volunteer) }
                 >
                   <td className="p-3 text-sm font-medium">{volunteer.name}</td>
-                  <td className="p-3 text-sm">{volunteer.SourceFilial?.filialName}</td>
+                  <td className="p-3 text-sm">
+                    {volunteer.SourceFilial?.filialName}
+                  </td>
                   <td className="p-3 text-sm">{volunteer.documentNumber}</td>
                   <td className="p-3 text-center text-sm">
                     {volunteer.cellphone}
@@ -206,6 +252,20 @@ export function VolunteersTable({
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
+                    {user?.role === USER_ROLES.MASTER && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={ (e) => {
+                          e.stopPropagation();
+                          setVolunteerToDelete(volunteer);
+                          setIsDeleteConfirmationDialogOpen(true);
+                        } }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </td>
                 </tr>
               );
@@ -222,8 +282,8 @@ export function VolunteersTable({
               allTrainings
                 .filter((t) => t.volunteerId === volunteer.volunteerId)
                 .map((t) => t.SourceFilial?.filialName)
-                .filter(Boolean)
-            )
+                .filter(Boolean),
+            ),
           ).join(", ");
           return (
             <ResponsiveCard
@@ -261,6 +321,16 @@ export function VolunteersTable({
         setIsOpen={ setIsDetailsOpen }
         volunteer={ selectedVolunteer }
         allTrainings={ allTrainings }
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+        onConfirm={ handleDeleteVolunteer }
+        title="Confirmar Exclusão"
+        description="Tem certeza que deseja excluir o modelo"
+        itemName={ volunteerToDelete?.name }
+        isDeleting={ isDeleting }
       />
     </>
   );

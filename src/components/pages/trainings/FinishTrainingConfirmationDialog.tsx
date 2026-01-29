@@ -22,7 +22,7 @@ interface FinishTrainingConfirmationDialogProps {
     trainingId: string,
     trainingStatus: "Concluido" | "Cancelado",
     wasRefunded?: boolean,
-    cancellationFee?: number | null
+    cancellationFee?: number | null,
   ) => void;
 }
 
@@ -55,9 +55,7 @@ export function FinishTrainingConfirmationDialog({
             Ao confirmar, o status do treinamento será alterado para{" "}
             <span className="font-semibold text-green-600">Concluído</span>.
             <br />
-            <span className="font-bold">
-            Deseja prosseguir?
-            </span>
+            <span className="font-bold">Deseja prosseguir?</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -67,7 +65,7 @@ export function FinishTrainingConfirmationDialog({
               <span className="font-medium text-gray-700 dark:text-gray-200">
                 Aluno:
               </span>{" "}
-              {selectedTraining.Trainee.name}
+              {selectedTraining.Trainees?.[0]?.name || "Desconhecido"}
             </p>
             {selectedTraining.dueDate && (
               <p>

@@ -233,3 +233,11 @@ export async function SyncCheckouts(checkout: Checkout) {
     data: parsedCheckout,
   };
 }
+
+export async function DeleteCheckout(checkoutId: string) {
+  const response = await apiRequest({
+    endpoint: `checkouts/${checkoutId}`,
+    method: "DELETE",
+  });
+  return response;
+}

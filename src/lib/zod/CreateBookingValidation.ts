@@ -90,15 +90,12 @@ export const createCheckoutFormSchema = z
       z.object({
         gearId: z.string({ message: "ID da máquina é obrigatório" }),
         gearName: z.string({ message: "Nome da máquina é obrigatório" }),
-        individualPrice: z
-          .string()
-          .refine((value) => parseStringToCents(value) > 0, {
-            message: "Valor deve ser maior que R$ 0,00.",
-          }),
+        individualPrice: z.string(),
       }),
     ),
 
-    basePrice: z.string().min(1, { message: "Preço base é obrigatório." }),
+    // basePrice: z.string().min(1, { message: "Preço base é obrigatório." }),
+    basePrice: z.string(),
     extraMachineCosts: z.string().optional(),
 
     distanceInKm: z.number().optional(),
@@ -108,6 +105,7 @@ export const createCheckoutFormSchema = z
     additionalTransportCost: z.string().optional(),
 
     consumption: z.number().optional(),
+    isRoundTrip: z.boolean().default(true),
 
     totalPrice: z.string(),
 
@@ -205,7 +203,10 @@ export const createCheckoutFormSchema = z
     let fuelCostCents = 0;
     if (distance > 0 && fuelPriceCents > 0) {
       const litersNeeded = distance / consumption;
-      fuelCostCents = Math.round(litersNeeded * fuelPriceCents);
+      const roundTripMultiplier = data.isRoundTrip ? 2 : 1;
+      fuelCostCents = Math.round(
+        litersNeeded * fuelPriceCents * roundTripMultiplier,
+      );
     }
 
     const computedTotal =
