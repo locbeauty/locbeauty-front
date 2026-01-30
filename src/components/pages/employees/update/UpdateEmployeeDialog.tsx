@@ -117,7 +117,7 @@ export function UpdateEmployeeDialog({
         });
 
         if (onEmployeeUpdated) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
           const { password, ...restData } = updatedEmployeeData;
           const updatedEmployee: Employee = {
             ...selectedEmployee,
