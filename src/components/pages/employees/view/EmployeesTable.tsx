@@ -70,6 +70,15 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
     setIsEmployeeDetailsDialogOpen(openStatus);
   }
 
+  function handleEmployeeUpdated(updatedEmployee: Employee) {
+    setAllEmployees((prev) => {
+      if (!prev) return null;
+      return prev.map((emp) =>
+        emp.employeeId === updatedEmployee.employeeId ? updatedEmployee : emp
+      );
+    });
+  }
+
   async function handleDeleteEmployee() {
     if (!employeeToDelete) return;
 
@@ -177,7 +186,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               allEmployees
                 .filter(
                   (employee) =>
-                    employee.employeeId !== (user?.employeeId || user?.sub),
+                    employee.employeeId !== (user?.employeeId || user?.sub) &&
+                    employee.role !== USER_ROLES.MASTER,
                 )
                 .map((employee) => (
                   <tr
@@ -329,7 +339,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         {allEmployees
           ?.filter(
             (employee) =>
-              employee.employeeId !== (user?.employeeId || user?.sub),
+              employee.employeeId !== (user?.employeeId || user?.sub) &&
+              employee.role !== USER_ROLES.MASTER,
           )
           .map((employee) => (
             <Fragment key={ employee.employeeId }>
@@ -447,6 +458,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         selectedEmployee={ selectedEmployee! }
         setSelectedEmployee={ setSelectedEmployee }
         handleToggleUpdateEmployeeDialog={ handleToggleUpdateEmployeeDialog }
+        onEmployeeUpdated={ handleEmployeeUpdated }
       />
 
       <DeleteConfirmationDialog

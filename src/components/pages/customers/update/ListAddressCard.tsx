@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { Address } from "@/utils/@types/address";
@@ -18,9 +18,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { queryClient } from "@/app/(main)/layout";
-import { useMutation } from "@tanstack/react-query";
-import { DeactivateCustomerAddress } from "@/services/addresses.service";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  ActivateCustomerAddress,
+  DeactivateCustomerAddress,
+} from "@/services/addresses.service";
 
 interface ListCustomerAddressesCardProps {
   customerAddresses: Address[] | null;
@@ -33,30 +35,133 @@ export function ListCustomerAddressesCard({
   const [ isRegisterNewAddressDialogOpen, setIsRegisterNewAddressDialogOpen ] =
     useState(false);
 
-  const { mutateAsync: deactivateAddress, isPending } = useMutation({
-    mutationFn: ({ addressId }: { addressId: string }) =>
-      DeactivateCustomerAddress({ addressId }),
+  const queryClient = useQueryClient();
 
-    onSuccess: (_, variables) => {
-      toast.success("Endereço desativado com sucesso!", {
-        style: { fontSize: "1rem" },
-      });
+  const { mutateAsync: deactivateAddress, isPending: isDeactivating } =
+    useMutation({
+      mutationFn: ({ addressId }: { addressId: string }) =>
+        DeactivateCustomerAddress({ addressId }),
 
-      // revalida os endereços do cliente específico
-      queryClient.invalidateQueries({
-        queryKey: [ "get-all-customer-addresses" ],
-      });
+      onMutate: async ({ addressId }) => {
+        await queryClient.cancelQueries({
+          queryKey: [ "get-all-customer-addresses", customerId ],
+        });
+
+        const previousAddresses = queryClient.getQueryData([
+          "get-all-customer-addresses",
+          customerId,
+        ]);
+
+        queryClient.setQueryData(
+          [ "get-all-customer-addresses", customerId ],
+          (old: any) => {
+            if (!old || !old.data) return old;
+            return {
+              ...old,
+              data: old.data.map((addr: Address) =>
+                addr.addressId === addressId
+                  ? { ...addr, isActive: false }
+                  : addr,
+              ),
+            };
+          },
+        );
+
+        return { previousAddresses };
+      },
+
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-customer-addresses", customerId ],
+        });
+      },
+
+      onSuccess: () => {
+        toast.success("Endereço desativado com sucesso!", {
+          style: { fontSize: "1rem" },
+        });
+      },
+
+      onError: (error: any, _, context) => {
+        if (context?.previousAddresses) {
+          queryClient.setQueryData(
+            [ "get-all-customer-addresses", customerId ],
+            context.previousAddresses,
+          );
+        }
+        toast.warning(error.message, { style: { fontSize: "1rem" } });
+      },
+    });
+
+  const { mutateAsync: activateAddress, isPending: isActivating } = useMutation(
+    {
+      mutationFn: ({ addressId }: { addressId: string }) =>
+        ActivateCustomerAddress({ addressId }),
+
+      onMutate: async ({ addressId }) => {
+        await queryClient.cancelQueries({
+          queryKey: [ "get-all-customer-addresses", customerId ],
+        });
+
+        const previousAddresses = queryClient.getQueryData([
+          "get-all-customer-addresses",
+          customerId,
+        ]);
+
+        queryClient.setQueryData(
+          [ "get-all-customer-addresses", customerId ],
+          (old: any) => {
+            if (!old || !old.data) return old;
+            return {
+              ...old,
+              data: old.data.map((addr: Address) =>
+                addr.addressId === addressId
+                  ? { ...addr, isActive: true }
+                  : addr,
+              ),
+            };
+          },
+        );
+
+        return { previousAddresses };
+      },
+
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-customer-addresses", customerId ],
+        });
+      },
+
+      onSuccess: () => {
+        toast.success("Endereço ativado com sucesso!", {
+          style: { fontSize: "1rem" },
+        });
+      },
+
+      onError: (error: any, _, context) => {
+        if (context?.previousAddresses) {
+          queryClient.setQueryData(
+            [ "get-all-customer-addresses", customerId ],
+            context.previousAddresses,
+          );
+        }
+        toast.warning(error.message, { style: { fontSize: "1rem" } });
+      },
     },
+  );
 
-    onError: (error: any) => {
-      toast.warning(error.message, { style: { fontSize: "1rem" } });
-      window.scroll({ top: 0 });
-    },
-  });
-
-  async function handleDeactivateAddress(addressId: string) {
-    await deactivateAddress({ addressId });
+  async function handleToggleAddressStatus(
+    addressId: string,
+    isActive: boolean,
+  ) {
+    if (isActive) {
+      await deactivateAddress({ addressId });
+    } else {
+      await activateAddress({ addressId });
+    }
   }
+
+  const isLoading = isDeactivating || isActivating;
 
   return (
     <Card className="">
@@ -70,11 +175,8 @@ export function ListCustomerAddressesCard({
           <div className="space-y-3">
             {customerAddresses
               .sort((a, b) => {
-                // First sort by active status (active first), then by street name
-                if (a.isActive === b.isActive) {
-                  return (a.street || "").localeCompare(b.street || "");
-                }
-                return a.isActive ? -1 : 1;
+                // Stable sort by street name, ignoring active status to prevent jumping
+                return (a.street || "").localeCompare(b.street || "");
               })
               .map((addr) => (
                 <div
@@ -87,11 +189,14 @@ export function ListCustomerAddressesCard({
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h4
-                        className={ `font-semibold ${!addr.isActive ? "line-through" : ""}` }
-                      >
-                        {addr.street}, {addr.buildingNumber}
-                      </h4>
+                      <div className="flex flex-col">
+                        <h3 className="font-bold">{addr.zipCode}</h3>
+                        <h4
+                          className={ `font-semibold ${!addr.isActive ? "line-through" : ""}` }
+                        >
+                          {addr.street}, {addr.buildingNumber}
+                        </h4>
+                      </div>
                       {!addr.isActive && (
                         <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-muted-foreground/20 text-muted-foreground">
                           Inativo
@@ -114,23 +219,37 @@ export function ListCustomerAddressesCard({
                         type="button"
                         variant="ghost"
                         size="icon"
+                        disabled={ isLoading }
                         onClick={ () =>
-                          addr.isActive &&
-                          handleDeactivateAddress(addr.addressId)
+                          handleToggleAddressStatus(
+                            addr.addressId,
+                            !!addr.isActive,
+                          )
                         }
                         className={
                           !addr.isActive
-                            ? "pointer-events-none opacity-0"
-                            : "tex t-destructive  hover:text-destructive hover:bg-destructive/10"
+                            ? "text-primary hover:text-primary hover:bg-primary/10"
+                            : "text-destructive hover:text-destructive hover:bg-destructive/10"
                         }
-                        disabled={ !addr.isActive }
                       >
-                        <X className="size-4" />
-                        <span className="sr-only">Desativar endereço</span>
+                        {addr.isActive ? (
+                          <X className="size-4" />
+                        ) : (
+                          <Check className="size-4" />
+                        )}
+                        <span className="sr-only">
+                          {addr.isActive
+                            ? "Desativar endereço"
+                            : "Ativar endereço"}
+                        </span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Desativar endereço</p>
+                      <p>
+                        {addr.isActive
+                          ? "Desativar endereço"
+                          : "Ativar endereço"}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </div>

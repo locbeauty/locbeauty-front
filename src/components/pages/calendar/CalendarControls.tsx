@@ -21,8 +21,8 @@ interface CalendarControlsProps {
   viewType: "dia" | "semana" | "mes";
   setViewType: Dispatch<SetStateAction<"dia" | "semana" | "mes">>;
   hideViewSelect?: boolean;
-  hideCanceled: boolean;
-  setHideCanceled: Dispatch<SetStateAction<boolean>>;
+  hideCanceled?: boolean;
+  setHideCanceled?: Dispatch<SetStateAction<boolean>>;
 }
 
 export function CalendarControls({
@@ -31,8 +31,8 @@ export function CalendarControls({
   viewType,
   setViewType,
   hideViewSelect = false,
-  hideCanceled,
-  setHideCanceled,
+  hideCanceled = false,
+  setHideCanceled = () => {},
 }: CalendarControlsProps) {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-4">

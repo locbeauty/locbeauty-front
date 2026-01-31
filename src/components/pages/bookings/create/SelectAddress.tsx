@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { useQuery } from "@tanstack/react-query";
 
 interface SelectAddressProps {
   setAddressString: Dispatch<SetStateAction<string>>;
@@ -29,14 +30,15 @@ export function SelectAddress({
   const isMounted = useMounted();
   const { control, watch } = useFormContext<CreateCheckoutFormSchemaType>();
 
-  const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(
-    null,
-  );
+  // const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(
+  //   null,
+  // );
 
   const watchCustomer = watch("customer");
 
-  useEffect(() => {
-    async function getCustomerAddresses() {
+  const { data: customerAddresses } = useQuery<Address[], Error>({
+    queryKey: [ "get-all-customer-addresses", watchCustomer?.customerId ],
+    queryFn: async () => {
       const response = await fetchWithToken(
         `${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${watchCustomer.customerId}`,
         {
@@ -44,12 +46,27 @@ export function SelectAddress({
         },
       );
       const { data }: { data: Address[] } = await response.json();
-      setCustomerAddresses(data);
-    }
-    if (watchCustomer && watchCustomer.customerId) {
-      getCustomerAddresses();
-    }
-  }, [ watchCustomer ]);
+      return data;
+    },
+    enabled: !!watchCustomer && !!watchCustomer.customerId,
+    initialData: [],
+  });
+
+  // useEffect(() => {
+  //   async function getCustomerAddresses() {
+  //     const response = await fetchWithToken(
+  //       `${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${watchCustomer.customerId}`,
+  //       {
+  //         credentials: "include",
+  //       },
+  //     );
+  //     const { data }: { data: Address[] } = await response.json();
+  //     setCustomerAddresses(data);
+  //   }
+  //   if (watchCustomer && watchCustomer.customerId) {
+  //     getCustomerAddresses();
+  //   }
+  // }, [ watchCustomer ]);
 
   if (!isMounted) {
     return <div className="h-10 w-full" />;

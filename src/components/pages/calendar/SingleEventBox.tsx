@@ -133,7 +133,7 @@ export function SingleEventBox({
       <div className="flex items-center text-xs gap-1 truncate">
         {!isBirthday && <User className="h-3 w-3" />}
         {isTraining
-          ? training!.Trainee.name
+          ? training!.Trainee?.name || "-"
           : isBirthday
             ? birthday!.role
             : checkout!.Customer.fullname}

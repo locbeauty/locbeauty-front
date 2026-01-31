@@ -105,7 +105,7 @@ export const createCheckoutFormSchema = z
     additionalTransportCost: z.string().optional(),
 
     consumption: z.number().optional(),
-    isRoundTrip: z.boolean().default(true),
+    isRoundTrip: z.boolean(),
 
     totalPrice: z.string(),
 

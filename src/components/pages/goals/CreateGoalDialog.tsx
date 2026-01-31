@@ -250,7 +250,7 @@ export function CreateGoalDialog() {
                 <SelectTrainingGear
                   disabled={ !watchFilialId && !watchIsGlobal }
                   selectedGear={ selectedGearName }
-                  filialId={ watchFilialId }
+                  filialId={ watchFilialId || undefined }
                   onGearChange={ (gearName) => {
                     setSelectedGearName(gearName);
                   } }
@@ -283,7 +283,7 @@ export function CreateGoalDialog() {
                     const nextYear = currentYear + 1;
                     return (
                       <Select
-                        value={ field.value.toString() }
+                        value={ field.value?.toString() ?? "" }
                         onValueChange={ (val) => field.onChange(Number(val)) }
                       >
                         <SelectTrigger>

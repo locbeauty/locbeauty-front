@@ -62,7 +62,22 @@ export async function DeactivateCustomerAddress({
 }) {
   const response = await apiRequest({
     endpoint: "address/deactivate",
-    queryParams: { addressId },
+    body: { addressId },
+    method: "POST",
+  });
+
+  return response;
+}
+
+export async function ActivateCustomerAddress({
+  addressId,
+}: {
+  addressId: string;
+}) {
+  const response = await apiRequest({
+    endpoint: "address/activate",
+    body: { addressId },
+    method: "POST",
   });
 
   return response;

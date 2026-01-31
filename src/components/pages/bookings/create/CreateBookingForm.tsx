@@ -456,7 +456,7 @@ export function CreateBookingForm() {
     <div>
       <div className="space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
         <div className="ml-auto mr-auto w-[50%]">
-          <SelectFilial
+          <SelectFilial<CreateCheckoutFormSchemaType>
             control={ control }
             name="filialId"
             accessibleFilials={ accessibleFilialsIds }
@@ -516,7 +516,7 @@ export function CreateBookingForm() {
                   <Label className="text-sm font-medium flex items-center gap-1">
                     <Truck className="h-5 w-5 text-primary" /> Motorista
                   </Label>
-                  <SelectEmployee
+                  <SelectEmployee<CreateCheckoutFormSchemaType>
                     control={ control }
                     name="driverId"
                     setDriverString={ setDriverString }
@@ -540,14 +540,17 @@ export function CreateBookingForm() {
             </Card>
 
             {/* Seletor de Data e Hora */}
-            <CheckoutTimeSelector
+            <CheckoutTimeSelector<CreateCheckoutFormSchemaType>
               name="date"
               control={ control }
               checkoutSchedule={ checkoutSchedule }
             />
 
             {watchCrossDays && (
-              <CheckoutEndTimeSelector control={ control } name="endDate" />
+              <CheckoutEndTimeSelector<CreateCheckoutFormSchemaType>
+                control={ control }
+                name="endDate"
+              />
             )}
 
             {/* Observações */}

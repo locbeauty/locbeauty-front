@@ -121,7 +121,7 @@ export function CalendarContent({
 
   const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
     queryKey: [ "get-all-trainings" ],
-    queryFn: GetAllTrainings,
+    queryFn: () => GetAllTrainings(),
     staleTime: 1000 * 60, // 1 minuto de cache
   });
 

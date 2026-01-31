@@ -66,7 +66,7 @@ export function CreateCustomerForm() {
     } else {
       queryClient.invalidateQueries({ queryKey: [ "get-birthdays" ] });
       // Invalidate other relevant queries if needed, e.g., customer list
-      // queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+      queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
 
       toast.success(response.message, { style: { fontSize: "1rem" } });
       window.scroll({ top: 0 });
