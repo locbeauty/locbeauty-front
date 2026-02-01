@@ -32,7 +32,7 @@ const LoginSchema = z.object({
 type LoginSchemaType = z.infer<typeof LoginSchema>;
 
 export default function LoginPage() {
-  const [ errorMessage, setErrorMessage ] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const {
     register,
@@ -54,7 +54,7 @@ export default function LoginPage() {
     const loginResponse = await res.json();
 
     if (res.status !== 200) {
-      setErrorMessage(loginResponse.error);
+      setErrorMessage(loginResponse.message || loginResponse.error);
       return;
     }
     // console.log("loginResponse: ", loginResponse);
@@ -105,8 +105,8 @@ export default function LoginPage() {
             <Image
               src="/logo.png"
               alt="log o"
-              width={ 100 }
-              height={ 100 }
+              width={100}
+              height={100}
               className="text-green-500"
             />
           </div>
@@ -121,20 +121,20 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form id="login-form" onSubmit={ handleSubmit(handleLogin) }>
+            <form id="login-form" onSubmit={handleSubmit(handleLogin)}>
               <div className="grid gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="username">Username</Label>
                   <Input
                     className="placeholder:text-placeholder"
                     placeholder="Digite seu username"
-                    { ...register("username") }
+                    {...register("username")}
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="password"> Senha</Label>
                   <Input
-                    { ...register("password") }
+                    {...register("password")}
                     className="placeholder:text-placeholder"
                     placeholder="******"
                     name="password"
@@ -150,7 +150,7 @@ export default function LoginPage() {
               {errorMessage && errorMessage}
             </span>
             <Button
-              disabled={ isSubmitting }
+              disabled={isSubmitting}
               type="submit"
               form="login-form"
               className="w-full cursor-pointer"
