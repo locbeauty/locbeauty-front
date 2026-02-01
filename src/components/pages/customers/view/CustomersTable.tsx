@@ -153,6 +153,8 @@ export function CustomersTable() {
           value={ filters.name }
           onChange={ (e) => setFilters({ ...filters, name: e.target.value }) }
           className="max-w-xs"
+          name="filter-name"
+          autoComplete="off"
         />
         <Input
           placeholder="Filtrar por Email"
@@ -160,12 +162,16 @@ export function CustomersTable() {
           onChange={ (e) => setFilters({ ...filters, email: e.target.value }) }
           className="max-w-xs"
           type="text"
+          name="filter-email"
+          autoComplete="off"
         />
         <Input
           placeholder="Filtrar por Documento"
           value={ filters.document }
           onChange={ (e) => setFilters({ ...filters, document: e.target.value }) }
           className="max-w-xs"
+          name="filter-document"
+          autoComplete="off"
         />
         <FilialFilter
           value={ filters.filialId || "" }

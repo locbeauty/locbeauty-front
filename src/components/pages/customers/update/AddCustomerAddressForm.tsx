@@ -55,116 +55,116 @@ export function AddCustomerAddressForm({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <CEPInput
-          clearErrors={ clearErrors }
-          control={ control }
-          setError={ setError }
-          setValue={ setValue }
-          trigger={ trigger }
-          isUpdateForm={ true }
-          zipCodeError={ errors.zipCode?.message }
-        />
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="cidade">Cidade</Label>
-            <Input
-              { ...register("cityName") }
-              placeholder="Cidade"
-              className="placeholder:text-muted-foreground/50"
-              id="cidade"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="estado">Estado</Label>
-            <Controller
-              name="stateName"
-              control={ control }
-              render={ ({ field }) => (
-                <Select onValueChange={ field.onChange } value={ field.value }>
-                  <SelectTrigger id="estado" className="w-full">
-                    <SelectValue placeholder="Selecione o estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BRAZILIAN_STATES.map((state) => (
-                      <SelectItem key={ state } value={ state }>
-                        {state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) }
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="bairro">Bairro</Label>
-          <Input
-            { ...register("neighborhoodName") }
-            placeholder="Bairro"
-            className="placeholder:text-muted-foreground/50"
-            id="bairro"
+        <form
+          onSubmit={ handleSubmit(
+            (data: AddressTypeSchema) => handleSaveUpdatedCustomer(data),
+            (errors) => {
+              const firstError = Object.values(errors)[0];
+              if (firstError) {
+                toast.warning(firstError.message || "Erro de validação", {
+                  style: { fontSize: "1rem" },
+                });
+              }
+            },
+          ) }
+        >
+          <CEPInput
+            clearErrors={ clearErrors }
+            control={ control }
+            setError={ setError }
+            setValue={ setValue }
+            trigger={ trigger }
+            isUpdateForm={ true }
+            zipCodeError={ errors.zipCode?.message }
           />
-        </div>
-        <div className="flex md:flex-row flex-col md:items-start gap-4">
-          <div className="space-y-2 flex-1">
-            <Label htmlFor="rua">Rua</Label>
-            <Input
-              { ...register("streetName") }
-              id="rua"
-              className="placeholder:text-muted-foreground/50"
-              placeholder="Nome da rua"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="number">Número</Label>
-            <Input
-              { ...register("buildingNumber") }
-              id="number"
-              className="placeholder:text-muted-foreground/50"
-              placeholder="Número"
-            />
-            <div className="min-h-[20px]">
-              {errors.buildingNumber && (
-                <p className="text-sm font-medium text-destructive">
-                  {errors.buildingNumber.message}
-                </p>
-              )}
+
+          <div className="grid gap-4 md:grid-cols-2 mt-6">
+            <div className="space-y-2">
+              <Label htmlFor="cidade">Cidade</Label>
+              <Input
+                { ...register("cityName") }
+                placeholder="Cidade"
+                className="placeholder:text-muted-foreground/50"
+                id="cidade"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="estado">Estado</Label>
+              <Controller
+                name="stateName"
+                control={ control }
+                render={ ({ field }) => (
+                  <Select onValueChange={ field.onChange } value={ field.value }>
+                    <SelectTrigger id="estado" className="w-full">
+                      <SelectValue placeholder="Selecione o estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BRAZILIAN_STATES.map((state) => (
+                        <SelectItem key={ state } value={ state }>
+                          {state}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) }
+              />
             </div>
           </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="number">Complemento</Label>
 
-          <Textarea
-            { ...register("addressComplement") }
-            className="h-[100px] resize-none max-w-[80vw] placeholder:text-muted-foreground/50"
-            placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
-          />
-        </div>
-        {!hideButton && (
-          <div className="flex">
-            <Button
-              type="submit"
-              onClick={ handleSubmit(
-                (data: AddressTypeSchema) => handleSaveUpdatedCustomer(data),
-                (errors) => {
-                  const firstError = Object.values(errors)[0];
-                  if (firstError) {
-                    toast.warning(firstError.message || "Erro de validação", {
-                      style: { fontSize: "1rem" },
-                    });
-                  }
-                },
-              ) }
-              className="ml-auto flex"
-            >
-              Adicionar
-              <Plus />
-            </Button>
+          <div className="space-y-2 mt-6">
+            <Label htmlFor="bairro">Bairro</Label>
+            <Input
+              { ...register("neighborhoodName") }
+              placeholder="Bairro"
+              className="placeholder:text-muted-foreground/50"
+              id="bairro"
+            />
           </div>
-        )}
+          <div className="flex md:flex-row flex-col md:items-start gap-4 mt-6">
+            <div className="space-y-2 flex-1">
+              <Label htmlFor="rua">Rua</Label>
+              <Input
+                { ...register("streetName") }
+                id="rua"
+                className="placeholder:text-muted-foreground/50"
+                placeholder="Nome da rua"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="number">Número</Label>
+              <Input
+                { ...register("buildingNumber") }
+                id="number"
+                className="placeholder:text-muted-foreground/50"
+                placeholder="Número"
+              />
+              <div className="min-h-[20px]">
+                {errors.buildingNumber && (
+                  <p className="text-sm font-medium text-destructive">
+                    {errors.buildingNumber.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2 mt-6">
+            <Label htmlFor="number">Complemento</Label>
+
+            <Textarea
+              { ...register("addressComplement") }
+              className="h-[100px] resize-none max-w-[80vw] placeholder:text-muted-foreground/50"
+              placeholder="Digite detalhes adicionais, como número do apartamento, bloco ou ponto de referência"
+            />
+          </div>
+          {!hideButton && (
+            <div className="flex mt-6">
+              <Button type="submit" className="ml-auto flex">
+                Adicionar
+                <Plus />
+              </Button>
+            </div>
+          )}
+        </form>
       </CardContent>
     </Card>
   );
