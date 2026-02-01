@@ -13,6 +13,12 @@ export const createEmployeeFormSchema = z.object({
     .string({ message: "Username é obrigatório" })
     .min(1, { message: "Username é obrigatório" }),
   role: z.string({ message: "Função é obrigatória" }),
+  documentNumber: z
+    .string()
+    .min(11, { message: "CPF deve ter no mínimo 11 dígitos" })
+    .max(14, { message: "CPF deve ter no máximo 14 dígitos" })
+    .nullable()
+    .optional(),
   cellphone: z
     .string()
     .min(14, { message: "Telefone é obrigatório" })

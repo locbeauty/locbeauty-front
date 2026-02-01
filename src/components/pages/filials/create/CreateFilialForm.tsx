@@ -25,6 +25,7 @@ export function CreateFilialForm() {
     control,
     register,
     formState: { errors },
+    reset,
   } = createFilialMethods;
 
   async function handleCreateFilial(newFilialData: CreateFilialFormSchemaType) {
@@ -45,15 +46,13 @@ export function CreateFilialForm() {
       if (!response.ok) {
         toast.warning(data.message, { style: { fontSize: "1rem" } });
         window.scroll({ top: 0 });
-        // if(response.status === 409) {
-        //     setError("documentNumber", { message: "Documento já cadastrado." });
-        // }
       } else {
         toast.success("Filial criado com sucesso!", {
           style: { fontSize: "1rem" },
         });
         window.scroll({ top: 0 });
-        // reset();
+        window.scroll({ top: 0 });
+        reset();
       }
     } catch {
       toast.error("Erro ao criar filial.");

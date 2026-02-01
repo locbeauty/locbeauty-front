@@ -2,6 +2,7 @@ import { SelectRole } from "@/components/shared/SelectRole";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import { MaskedDateInput } from "./MaskedDateInput";
 import PhoneInput from "../../../shared/PhoneInput";
+import DocumentInput from "../../../shared/DocumentInput";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Controller, useFormContext } from "react-hook-form";
@@ -164,6 +165,20 @@ export function EmployeeForm({
               {errors.username && (
                 <p className="text-xs font-medium text-destructive">
                   {errors.username.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="documentNumber">CPF</Label>
+              <DocumentInput
+                register={ register("documentNumber") }
+                isCPF
+                placeholder="000.000.000-00"
+              />
+              {errors.documentNumber && (
+                <p className="text-xs font-medium text-destructive">
+                  {errors.documentNumber.message}
                 </p>
               )}
             </div>

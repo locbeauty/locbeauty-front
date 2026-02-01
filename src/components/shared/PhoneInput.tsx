@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { UseFormRegisterReturn } from "react-hook-form";
 
 interface PhoneInputProps {
-    register?: UseFormRegisterReturn;
+  register?: UseFormRegisterReturn;
 }
 
 export default function PhoneInput({ register }: PhoneInputProps) {
@@ -17,8 +17,8 @@ export default function PhoneInput({ register }: PhoneInputProps) {
 
     const maskOptions = {
       mask: [
-        { mask: "(00) 0000-0000" },  // fixo
-        { mask: "(00) 0.0000-0000" }, // celular
+        { mask: "(00) 0000-0000" }, // fixo
+        { mask: "(00) 00000-0000" }, // celular
       ],
     };
 
@@ -38,8 +38,8 @@ export default function PhoneInput({ register }: PhoneInputProps) {
     <Input
       { ...register }
       ref={ (el) => {
-        register?.ref(el);  // RHF
-        inputRef.current = el;  // IMask
+        register?.ref(el); // RHF
+        inputRef.current = el; // IMask
       } }
       autoComplete="nope"
       className="placeholder:text-placeholder"

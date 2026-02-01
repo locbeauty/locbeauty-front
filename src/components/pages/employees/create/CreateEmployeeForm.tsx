@@ -52,6 +52,7 @@ export function CreateEmployeeForm() {
   async function handleCreateEmployee(
     newEmployeeData: CreateEmployeeFormSchemaType,
   ) {
+    console.log("Submit data:", newEmployeeData);
     try {
       const response = await fetchWithToken(
         `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/create`,
@@ -89,12 +90,12 @@ export function CreateEmployeeForm() {
       <form
         id="create-employee-form"
         className="space-y-6"
-        onSubmit={ handleSubmit(handleCreateEmployee) }
+        onSubmit={handleSubmit(handleCreateEmployee)}
       >
-        <FormProvider { ...CreateEmployeeMethods }>
+        <FormProvider {...CreateEmployeeMethods}>
           <EmployeeForm
-            accessibleFilialsIds={ accessibleFilialsIds }
-            defaultFilialId={ defaultFilialId }
+            accessibleFilialsIds={accessibleFilialsIds}
+            defaultFilialId={defaultFilialId}
           />
         </FormProvider>
       </form>
