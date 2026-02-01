@@ -213,6 +213,7 @@ export function CustomerGeneralInformationForm({
                     onBlur={ (e) => {
                       if (e.target.value === "") setValue("email", null);
                     } }
+                    className="placeholder:text-placeholder"
                   />
                 </div>
                 <div className="space-y-2 col-span-12 md:col-span-4">
@@ -223,6 +224,7 @@ export function CustomerGeneralInformationForm({
                       if (e.target.value === "")
                         setValue("emailDescription", null);
                     } }
+                    className="placeholder:text-placeholder"
                   />
                 </div>
               </div>
@@ -236,6 +238,7 @@ export function CustomerGeneralInformationForm({
                       if (e.target.value === "")
                         setValue("secondaryEmail", null);
                     } }
+                    className="placeholder:text-placeholder"
                   />
                   {errors.secondaryEmail && (
                     <p className="text-xs font-medium text-destructive">
@@ -251,6 +254,7 @@ export function CustomerGeneralInformationForm({
                       if (e.target.value === "")
                         setValue("secondaryEmailDescription", null);
                     } }
+                    className="placeholder:text-placeholder"
                   />
                 </div>
               </div>
@@ -282,6 +286,7 @@ export function CustomerGeneralInformationForm({
                         if (e.target.value === "")
                           setValue("cellphoneDescription", null);
                       } }
+                      className="placeholder:text-placeholder"
                     />
                   </div>
                 </div>
@@ -302,6 +307,7 @@ export function CustomerGeneralInformationForm({
                         if (e.target.value === "")
                           setValue("secondaryCellphoneDescription", null);
                       } }
+                      className="placeholder:text-placeholder"
                     />
                   </div>
                 </div>
