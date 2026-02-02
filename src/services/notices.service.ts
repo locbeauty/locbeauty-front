@@ -59,3 +59,24 @@ export async function GetNotices({
   });
   return response;
 }
+export async function UpdateNotice(
+  noticeId: string,
+  data: Partial<CreateNoticeInput>,
+): Promise<ApiResponse<Notice>> {
+  const response = await apiRequest<Notice>({
+    endpoint: `notices/${noticeId}`,
+    method: "PATCH",
+    body: data,
+  });
+  return response;
+}
+
+export async function DeleteNotice(
+  noticeId: string,
+): Promise<ApiResponse<void>> {
+  const response = await apiRequest<void>({
+    endpoint: `notices/${noticeId}`,
+    method: "DELETE",
+  });
+  return response;
+}

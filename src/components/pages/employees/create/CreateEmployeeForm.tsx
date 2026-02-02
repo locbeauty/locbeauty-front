@@ -90,12 +90,12 @@ export function CreateEmployeeForm() {
       <form
         id="create-employee-form"
         className="space-y-6"
-        onSubmit={handleSubmit(handleCreateEmployee)}
+        onSubmit={ handleSubmit(handleCreateEmployee) }
       >
-        <FormProvider {...CreateEmployeeMethods}>
+        <FormProvider { ...CreateEmployeeMethods }>
           <EmployeeForm
-            accessibleFilialsIds={accessibleFilialsIds}
-            defaultFilialId={defaultFilialId}
+            accessibleFilialsIds={ accessibleFilialsIds }
+            defaultFilialId={ defaultFilialId }
           />
         </FormProvider>
       </form>

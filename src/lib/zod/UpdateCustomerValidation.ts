@@ -47,7 +47,7 @@ export const updateCustomerFormSchema = z.object({
   secondaryCellphoneDescription: z.string().trim().nullable().optional(),
   instagram: z.string().trim().nullable().optional(),
   customerStatus: z
-    .enum(["Ativo", "Inativo", "Inadimplente", "Bloqueado"])
+    .enum([ "Ativo", "Inativo", "Inadimplente", "Bloqueado" ])
     .optional(),
 });
 
