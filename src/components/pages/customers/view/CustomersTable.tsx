@@ -38,6 +38,7 @@ import { ApiResponse } from "@/lib/api";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { Input } from "@/components/ui/input";
+import DocumentInput from "@/components/shared/DocumentInput";
 import {
   Table,
   TableHeader,
@@ -147,32 +148,63 @@ export function CustomersTable() {
 
   return (
     <>
-      <div className="flex flex-col gap-4 mb-4 md:flex-row">
-        <Input
-          placeholder="Filtrar por Nome"
-          value={ filters.name }
-          onChange={ (e) => setFilters({ ...filters, name: e.target.value }) }
-          className="max-w-xs"
-          name="filter-name"
-          autoComplete="off"
-        />
-        <Input
-          placeholder="Filtrar por Email"
-          value={ filters.email }
-          onChange={ (e) => setFilters({ ...filters, email: e.target.value }) }
-          className="max-w-xs"
-          type="text"
-          name="filter-email"
-          autoComplete="off"
-        />
-        <Input
-          placeholder="Filtrar por Documento"
-          value={ filters.document }
-          onChange={ (e) => setFilters({ ...filters, document: e.target.value }) }
-          className="max-w-xs"
-          name="filter-document"
-          autoComplete="off"
-        />
+      <div className="flex flex-col gap-4 mb-4 md:flex-row items-end">
+        <div className="relative flex-1 max-w-xs">
+          <Input
+            placeholder="Filtrar por Nome"
+            value={ filters.name }
+            onChange={ (e) => setFilters({ ...filters, name: e.target.value }) }
+            className="pr-8"
+            name="filter-name"
+            autoComplete="off"
+          />
+          {filters.name && (
+            <button
+              onClick={ () => setFilters({ ...filters, name: "" }) }
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <div className="relative flex-1 max-w-xs">
+          <Input
+            placeholder="Filtrar por Email"
+            value={ filters.email }
+            onChange={ (e) => setFilters({ ...filters, email: e.target.value }) }
+            className="pr-8"
+            type="text"
+            name="filter-email"
+            autoComplete="off"
+          />
+          {filters.email && (
+            <button
+              onClick={ () => setFilters({ ...filters, email: "" }) }
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <div className="relative flex-1 max-w-xs">
+          <DocumentInput
+            placeholder="Filtrar por documento"
+            value={ filters.document }
+            onChange={ (e) =>
+              setFilters({ ...filters, document: e.target.value })
+            }
+            className="pr-8"
+            name="filter-document"
+          />
+          {filters.document && (
+            <button
+              onClick={ () => setFilters({ ...filters, document: "" }) }
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
         <FilialFilter
           value={ filters.filialId || "" }
           onChange={ (value) =>
@@ -245,8 +277,7 @@ export function CustomersTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Documento</TableHead>
-              <TableHead className="w-[300px]">Email</TableHead>
+              <TableHead className="w-[300px] text-center">Email</TableHead>
               <TableHead className="text-center">Telefone</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-center">Último Agendamento</TableHead>
@@ -283,12 +314,24 @@ export function CustomersTable() {
                     <TableCell className="p-3 text-sm">
                       {customer.fullname || customer.companyName || "N/A"}
                     </TableCell>
-                    <TableCell className="p-3 text-sm">
-                      {customer.documentNumber || "Não informa"}
-                    </TableCell>
-                    <TableCell className="p-3 text-sm">
+                    {/* <TableCell className="p-3 text-sm">
+                      <div className="flex flex-col">
+                        {customer.cpf && (
+                          <span className="text-xs">CPF: {customer.cpf}</span>
+                        )}
+                        {customer.cnpj && (
+                          <span className="text-xs">CNPJ: {customer.cnpj}</span>
+                        )}
+                        {!customer.cpf && !customer.cnpj && (
+                          <span className="text-muted-foreground">
+                            Não informa
+                          </span>
+                        )}
+                      </div>
+                    </TableCell> */}
+                    <TableCell className="p-3 text-sm text-center">
                       <div>
-                        {customer.email}
+                        {customer.email || "--"}
                         {customer.emailDescription && (
                           <span className="text-xs text-muted-foreground ml-1">
                             ({customer.emailDescription})
@@ -308,7 +351,7 @@ export function CustomersTable() {
                     </TableCell>
                     <TableCell className="p-3 text-center text-sm">
                       <div>
-                        {customer.cellphone}
+                        {customer.cellphone || "--"}
                         {customer.cellphoneDescription && (
                           <span className="text-xs text-muted-foreground ml-1">
                             ({customer.cellphoneDescription})
@@ -478,14 +521,24 @@ export function CustomersTable() {
                     items: [
                       {
                         itemLabel: "Documento",
-                        itemInfo: customer.documentNumber || "Não informa",
+                        itemInfo: (
+                          <div className="flex flex-col items-end">
+                            {customer.cpf && <span>CPF: {customer.cpf}</span>}
+                            {customer.cnpj && (
+                              <span>CNPJ: {customer.cnpj}</span>
+                            )}
+                            {!customer.cpf && !customer.cnpj && (
+                              <span>Não informa</span>
+                            )}
+                          </div>
+                        ),
                       },
                       {
                         itemLabel: "Email",
                         itemInfo: (
                           <div className="flex flex-col items-end">
                             <div>
-                              <span>{customer.email || "Não informado"}</span>
+                              <span>{customer.email || "--"}</span>
                               {customer.emailDescription && (
                                 <span className="text-xs text-muted-foreground ml-1">
                                   ({customer.emailDescription})
@@ -510,9 +563,7 @@ export function CustomersTable() {
                         itemInfo: (
                           <div className="flex flex-col items-end">
                             <div>
-                              <span>
-                                {customer.cellphone || "Não informado"}
-                              </span>
+                              <span>{customer.cellphone || "--"}</span>
                               {customer.cellphoneDescription && (
                                 <span className="text-xs text-muted-foreground ml-1">
                                   ({customer.cellphoneDescription})

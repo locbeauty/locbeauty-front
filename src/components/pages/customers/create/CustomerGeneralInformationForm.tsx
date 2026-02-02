@@ -115,12 +115,31 @@ export function CustomerGeneralInformationForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="documentNumber">CPF/CNPJ</Label>
-                <DocumentInput register={ register("documentNumber") } />
+                <Label htmlFor="cpf">CPF</Label>
+                <DocumentInput
+                  register={ register("cpf") }
+                  isCPF
+                  placeholder="000.000.000-00"
+                />
                 <div className="h-3">
-                  {errors.documentNumber && (
+                  {errors.cpf && (
                     <p className="text-xs font-medium text-destructive">
-                      {errors.documentNumber.message}
+                      {errors.cpf.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cnpj">CNPJ</Label>
+                <DocumentInput
+                  register={ register("cnpj") }
+                  placeholder="00.000.000/0000-00"
+                />
+                <div className="h-3">
+                  {errors.cnpj && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.cnpj.message}
                     </p>
                   )}
                 </div>
@@ -160,7 +179,12 @@ export function CustomerGeneralInformationForm({
                   </div>
                 </div>
                 {birthdate && (
-                  <Button size="sm" variant="outline" onClick={ clearBirthdate } className="h-9 w-9 p-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={ clearBirthdate }
+                    className="h-9 w-9 p-0"
+                  >
                     <X className="size-4" />
                   </Button>
                 )}

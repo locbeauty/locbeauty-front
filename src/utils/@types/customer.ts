@@ -9,7 +9,9 @@ export type CUSTOMER_STATUSES =
 export interface Customer {
   customerId: string;
   fullname: string;
-  documentNumber: string;
+  documentNumber: string | null;
+  cpf?: string | null;
+  cnpj?: string | null;
   companyName: string | null;
   email: string | null;
   emailDescription?: string | null;

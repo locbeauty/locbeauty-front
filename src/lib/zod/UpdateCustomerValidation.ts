@@ -2,12 +2,20 @@ import { z } from "zod";
 
 export const updateCustomerFormSchema = z.object({
   fullname: z.string().trim().optional(),
-  documentNumber: z
+  cpf: z
     .string()
-    .max(18, {
-      message: "Número do documento precisa ter no máximo 18 caracteres.",
-    })
-    .optional(),
+    .min(11, { message: "CPF inválido" })
+    .max(14, { message: "CPF inválido" })
+    .nullable()
+    .optional()
+    .or(z.literal("")),
+  cnpj: z
+    .string()
+    .min(14, { message: "CNPJ inválido" })
+    .max(18, { message: "CNPJ inválido" })
+    .nullable()
+    .optional()
+    .or(z.literal("")),
   companyName: z.string().trim().nullable().optional(),
   birthdate: z
     .union([
@@ -39,7 +47,7 @@ export const updateCustomerFormSchema = z.object({
   secondaryCellphoneDescription: z.string().trim().nullable().optional(),
   instagram: z.string().trim().nullable().optional(),
   customerStatus: z
-    .enum([ "Ativo", "Inativo", "Inadimplente", "Bloqueado" ])
+    .enum(["Ativo", "Inativo", "Inadimplente", "Bloqueado"])
     .optional(),
 });
 
