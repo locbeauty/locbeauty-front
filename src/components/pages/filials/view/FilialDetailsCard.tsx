@@ -32,15 +32,15 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
   }
 
   // Endereço completo formatado
-  const fullAddress = `${selectedFilial.Address.street}, ${
-    selectedFilial.Address.buildingNumber
-  }${
-    selectedFilial.Address.addressComplement
-      ? ` - ${selectedFilial.Address.addressComplement}`
-      : ""
-  }, ${selectedFilial.Address.neighborhood}, ${
-    selectedFilial.Address.city
-  }/${selectedFilial.Address.state}`;
+  const fullAddress = [
+    selectedFilial.Address?.street || "--",
+    selectedFilial.Address?.buildingNumber || "--",
+    selectedFilial.Address?.addressComplement,
+    selectedFilial.Address?.neighborhood || "--",
+    `${selectedFilial.Address?.city || "--"}/${selectedFilial.Address?.state || "--"}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <Card>
@@ -67,7 +67,9 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">CNPJ:</Label>
-                <span className="font-mono text-sm">{selectedFilial.CNPJ}</span>
+                <span className="font-mono text-sm">
+                  {selectedFilial.CNPJ || "--"}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Estado:</Label>
@@ -75,19 +77,21 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
                   variant="outline"
                   className="text-blue-600 border-blue-200"
                 >
-                  {selectedFilial.Address.state}
+                  {selectedFilial.Address?.state || "--"}
                 </Badge>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Cidade:</Label>
-                <span className="text-sm">{selectedFilial.Address.city}</span>
+                <span className="text-sm">
+                  {selectedFilial.Address?.city || "--"}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Bairro:</Label>
                 <span className="text-sm">
-                  {selectedFilial.Address.neighborhood}
+                  {selectedFilial.Address?.neighborhood || "--"}
                 </span>
               </div>
             </div>
@@ -125,13 +129,15 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
                 <User className="h-4 w-4 text-muted-foreground" />
                 <Label className="text-sm font-medium">Gerente:</Label>
                 <span className="text-sm font-semibold">
-                  {selectedFilial.managerEmployee.fullname}
+                  {selectedFilial.managerEmployee?.fullname || "--"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <Label className="text-sm font-medium">Telefone:</Label>
-                <span className="text-sm">{selectedFilial.cellphone}</span>
+                <span className="text-sm">
+                  {selectedFilial.cellphone || "--"}
+                </span>
               </div>
             </div>
             <div className="space-y-3">
@@ -139,7 +145,7 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <Label className="text-sm font-medium">Email:</Label>
                 <span className="text-sm text-blue-600">
-                  {selectedFilial.email}
+                  {selectedFilial.email || "--"}
                 </span>
               </div>
             </div>

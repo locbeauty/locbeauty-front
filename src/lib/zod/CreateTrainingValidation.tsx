@@ -74,12 +74,14 @@ export const CreateTrainingSchema = z.object({
   filialId: z.string(),
 
   // Endereço
-  zipCode: z.string().optional(),
+  zipCode: z
+    .string({ message: "CEP é obrigatório" })
+    .min(1, { message: "CEP é obrigatório" }),
   stateName: z.string().optional(),
   cityName: z.string().optional(),
   neighborhoodName: z.string().optional(),
   streetName: z.string().optional(),
-  buildingNumber: z.string().optional(),
+  buildingNumber: z.string().min(1, { message: "Número é obrigatório" }),
   addressComplement: z.string().optional().nullable(),
 
   // Seções de pagamento (Listas)
@@ -107,11 +109,21 @@ type ProcessedPaymentInfo = {
 // Tipo enviado ao backend (omitindo os campos de UI-only e formatando pagamentos)
 export type CreateTrainingBackendPayload = Omit<
   CreateTrainingDataType,
-  "traineePayments" | "volunteerPayments" | "traineeIds" | "volunteerIds"
+  | "traineePayments"
+  | "volunteerPayments"
+  | "traineeIds"
+  | "volunteerIds"
+  | "zipCode"
+  | "stateName"
+  | "cityName"
+  | "neighborhoodName"
+  | "streetName"
+  | "buildingNumber"
+  | "addressComplement"
 > & {
   // Backend espera arrays com IDs explícitos dentro
   traineePayments: {
-    traineeId: string;
+    customerId: string;
     price: number;
     additionalCost: number;
     additionalCostDescription?: string;

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +11,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import { useEffect } from "react";
+import { useForm, FormProvider, Controller } from "react-hook-form";
+import { format, parse } from "date-fns";
+import DateInput from "@/components/shared/DateInput";
 import { useAuth } from "@/contexts/auth-provider";
 import { useAccess } from "@/contexts/access-provider";
 import { USER_ROLES } from "@/utils/constants";
@@ -25,10 +26,11 @@ import { queryClient } from "@/app/(main)/layout";
 import DocumentInput from "@/components/shared/DocumentInput";
 import PhoneInput from "@/components/shared/PhoneInput";
 import {
-  CreateTraineeFormDataType,
-  CreateTraineeSchema,
-} from "@/lib/zod/CreateTraineeValidation";
-import { CreateTrainee } from "@/services/trainees.service";
+  CreateCustomerFormSchemaType,
+  createCustomerFormSchema,
+} from "@/lib/zod/CreateCustomerValidation";
+import { CreateCustomer } from "@/services/customers.service";
+import { CustomerAddressForm } from "@/components/pages/customers/create/CustomerAddressForm";
 
 interface CreateTraineeDialogProps {
   dialogNovoAluno: boolean;
@@ -54,25 +56,71 @@ export function CreateTraineeDialog({
         ? undefined
         : [];
 
-  const traineeForm = useForm<CreateTraineeFormDataType>({
-    resolver: zodResolver(CreateTraineeSchema),
+  const customerForm = useForm<CreateCustomerFormSchemaType>({
+    resolver: zodResolver(createCustomerFormSchema),
     defaultValues: {
-      filialId: user?.sourceFilialId,
+      filialId: user?.sourceFilialId || "",
+      isTrainee: true,
+      address: {
+        zipCode: "",
+        buildingNumber: "",
+        addressComplement: "",
+        stateName: "",
+        cityName: "",
+        neighborhoodName: "",
+        streetName: "",
+      },
+      instagram: null,
+      companyName: null,
+      email: null,
+      secondaryEmail: null,
+      secondaryCellphone: null,
     },
   });
 
-  const onSubmitTrainee = async (data: CreateTraineeFormDataType) => {
-    const response = await CreateTrainee(data);
+  // --- Helper: Scroll to top on error ---
+  const onInvalid = () => {
+    const dialogContent = document.getElementById(
+      "create-training-dialog-content",
+    );
+    if (dialogContent) {
+      dialogContent.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    toast.warning("Verifique os campos obrigatórios.", {
+      style: { fontSize: "1rem" },
+    });
+  };
+
+  useEffect(() => {
+    if (dialogNovoAluno) {
+      customerForm.reset();
+    }
+  }, [ dialogNovoAluno, customerForm ]);
+  const { errors } = customerForm.formState;
+
+  useEffect(() => {
+    console.log("customerForm.formState.errors: ", errors);
+  }, [ errors ]);
+
+  const onSubmitTrainee = async (data: CreateCustomerFormSchemaType) => {
+    // Ensure isTrainee is true
+    data.isTrainee = true;
+
+    const response = await CreateCustomer(data);
 
     if (response.statusCode !== 201) {
       toast.warning(response.message, { style: { fontSize: "1rem" } });
       window.scroll({ top: 0 });
     } else {
+      // Invalidate both trainees and customers queries to keep data sync
       queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
+      queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
 
-      toast.success(response.message, { style: { fontSize: "1rem" } });
+      toast.success("Aluno cadastrado com sucesso!", {
+        style: { fontSize: "1rem" },
+      });
       window.scroll({ top: 0 });
-      traineeForm.reset();
+      customerForm.reset();
       setDialogNovoAluno(false);
     }
   };
@@ -85,93 +133,171 @@ export function CreateTraineeDialog({
           Novo Aluno
         </Button>
       </DialogTrigger>
-      <DialogContent className="md:max-w-[50%] overflow-scroll">
-        <form onSubmit={ traineeForm.handleSubmit(onSubmitTrainee) }>
-          <DialogHeader>
-            <DialogTitle>Cadastrar Novo Aluno</DialogTitle>
-            <DialogDescription>
-              Preencha as informações do aluno
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Filial *</Label>
-              <SelectFilial
-                control={ traineeForm.control }
-                name="filialId"
-                accessibleFilials={ accessibleFilialsIds }
-                defaultFilial={ user?.sourceFilialId }
-              />
-              {traineeForm.formState.errors.filialId && (
-                <p className="text-sm text-destructive">
-                  {traineeForm.formState.errors.filialId.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="traineeName">Nome Completo *</Label>
-              <Input
-                id="traineeName"
-                { ...traineeForm.register("name") }
-                placeholder="Ex: João Pereira"
-                className="placeholder:text-placeholder"
-              />
-              {traineeForm.formState.errors.name && (
-                <p className="text-sm text-red-600">
-                  {traineeForm.formState.errors.name.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="traineeDocument">CPF *</Label>
-              <DocumentInput
-                isCPF={ true }
-                placeholder="Digite o CPF"
-                register={ traineeForm.register("documentNumber") }
-              />
+      <DialogContent className="md:max-w-[800px] h-[90vh] overflow-y-auto">
+        <FormProvider { ...customerForm }>
+          <form onSubmit={ customerForm.handleSubmit(onSubmitTrainee, onInvalid) }>
+            <DialogHeader>
+              <DialogTitle>Cadastrar Novo Aluno</DialogTitle>
+              <DialogDescription>
+                Preencha as informações do aluno. Campos marcados com * são
+                obrigatórios.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Filial *</Label>
+                  <SelectFilial
+                    control={ customerForm.control }
+                    name="filialId"
+                    accessibleFilials={ accessibleFilialsIds }
+                    defaultFilial={ user?.sourceFilialId }
+                  />
+                  {customerForm.formState.errors.filialId && (
+                    <p className="text-sm text-destructive">
+                      {customerForm.formState.errors.filialId.message}
+                    </p>
+                  )}
+                </div>
 
-              {traineeForm.formState.errors.documentNumber && (
-                <p className="text-sm text-red-600">
-                  {traineeForm.formState.errors.documentNumber.message}
-                </p>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="fullname">Nome Completo *</Label>
+                  <Input
+                    id="fullname"
+                    { ...customerForm.register("fullname") }
+                    placeholder="Ex: João Pereira"
+                    className="placeholder:text-placeholder"
+                  />
+                  {customerForm.formState.errors.fullname && (
+                    <p className="text-sm text-destructive">
+                      {customerForm.formState.errors.fullname.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cpf">CPF (ou CNPJ) *</Label>
+                  <DocumentInput
+                    isCPF={ true }
+                    placeholder="000.000.000-00"
+                    register={ customerForm.register("cpf") }
+                  />
+                  {customerForm.formState.errors.cpf && (
+                    <p className="text-sm text-destructive">
+                      {customerForm.formState.errors.cpf.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cnpj">CNPJ (ou CPF)</Label>
+                  <DocumentInput
+                    isCPF={ false }
+                    placeholder="00.000.000/0000-00"
+                    register={ customerForm.register("cnpj") }
+                  />
+                  {customerForm.formState.errors.cnpj && (
+                    <p className="text-sm text-destructive">
+                      {customerForm.formState.errors.cnpj.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="birthdate">Data de Nascimento *</Label>
+                  <Controller
+                    control={ customerForm.control }
+                    name="birthdate"
+                    render={ ({ field }) => (
+                      <DateInput
+                        value={
+                          field.value ? format(field.value, "dd/MM/yyyy") : ""
+                        }
+                        onChange={ (e) => {
+                          const val = e.target.value;
+                          if (val.length === 10) {
+                            const date = parse(val, "dd/MM/yyyy", new Date());
+                            if (!isNaN(date.getTime())) {
+                              field.onChange(date);
+                            } else {
+                              field.onChange(null);
+                            }
+                          } else if (val === "") {
+                            field.onChange(null);
+                          }
+                        } }
+                        placeholder="dd/mm/aaaa"
+                        className="placeholder:text-placeholder"
+                      />
+                    ) }
+                  />
+                  {customerForm.formState.errors.birthdate && (
+                    <p className="text-sm text-destructive">
+                      {customerForm.formState.errors.birthdate.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cellphone">Telefone *</Label>
+                  <PhoneInput register={ customerForm.register("cellphone") } />
+                  {customerForm.formState.errors.cellphone && (
+                    <p className="text-sm text-destructive">
+                      {customerForm.formState.errors.cellphone.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email (Opcional)</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    { ...customerForm.register("email") }
+                    placeholder="aluno@email.com"
+                    className="placeholder:text-placeholder"
+                  />
+                  {customerForm.formState.errors.email && (
+                    <p className="text-sm text-destructive">
+                      {customerForm.formState.errors.email.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="instagram">Instagram (Opcional)</Label>
+                  <Input
+                    id="instagram"
+                    { ...customerForm.register("instagram") }
+                    placeholder="@usuario"
+                    className="placeholder:text-placeholder"
+                  />
+                </div>
+              </div>
+
+              {/* Address Section */}
+              <div className="pt-4 mt-2">
+                <CustomerAddressForm />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="traineeEmail">Email *</Label>
-              <Input
-                className="placeholder:text-placeholder"
-                id="traineeEmail"
-                type="email"
-                { ...traineeForm.register("email") }
-                placeholder="aluno@empresa.com"
-              />
-              {traineeForm.formState.errors.email && (
-                <p className="text-sm text-red-600">
-                  {traineeForm.formState.errors.email.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="traineeCellphone">Telefone *</Label>
-              <PhoneInput register={ traineeForm.register("cellphone") } />
-              {traineeForm.formState.errors.cellphone && (
-                <p className="text-sm text-red-600">
-                  {traineeForm.formState.errors.cellphone.message}
-                </p>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              type="button"
-              onClick={ () => setDialogNovoAluno(false) }
-            >
-              Cancelar
-            </Button>
-            <Button type="submit">Cadastrar Aluno</Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={ () => setDialogNovoAluno(false) }
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">Cadastrar Aluno</Button>
+            </DialogFooter>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

@@ -46,6 +46,8 @@ type SelectEmployeeProps<T extends FieldValues> = {
   filialId?: string;
   setDriverString?: Dispatch<SetStateAction<string>>;
   onEmployeeSelect?: (employee: Employee) => void;
+  currentUserId?: string; // Include this user in results regardless of filters
+  currentUser?: Employee | null;
 };
 
 export function SelectEmployee<T extends FieldValues>({
@@ -55,6 +57,7 @@ export function SelectEmployee<T extends FieldValues>({
   filialId,
   setDriverString,
   onEmployeeSelect,
+  currentUser,
 }: SelectEmployeeProps<T>) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -69,10 +72,17 @@ export function SelectEmployee<T extends FieldValues>({
   });
 
   const responseData = data?.data;
-  const allEmployees =
+  const fetchedEmployees =
     responseData && "items" in responseData
       ? responseData.items
-      : (responseData as Employee[]);
+      : (responseData as Employee[]) || [];
+
+  // Ensure currentUser is in the list if provided
+  const allEmployees =
+    currentUser &&
+    !fetchedEmployees.some((emp) => emp.employeeId === currentUser.employeeId)
+      ? [ currentUser, ...fetchedEmployees ]
+      : fetchedEmployees;
 
   if (!isMounted) {
     return <div className="h-10 w-full animate-pulse bg-muted rounded-md" />;

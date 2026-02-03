@@ -55,19 +55,7 @@ export function AddCustomerAddressForm({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <form
-          onSubmit={ handleSubmit(
-            (data: AddressTypeSchema) => handleSaveUpdatedCustomer(data),
-            (errors) => {
-              const firstError = Object.values(errors)[0];
-              if (firstError) {
-                toast.warning(firstError.message || "Erro de validação", {
-                  style: { fontSize: "1rem" },
-                });
-              }
-            },
-          ) }
-        >
+        <div className="contents">
           <CEPInput
             clearErrors={ clearErrors }
             control={ control }
@@ -86,6 +74,7 @@ export function AddCustomerAddressForm({
                 placeholder="Cidade"
                 className="placeholder:text-muted-foreground/50"
                 id="cidade"
+                disabled={ true }
               />
             </div>
             <div className="space-y-2">
@@ -94,7 +83,7 @@ export function AddCustomerAddressForm({
                 name="stateName"
                 control={ control }
                 render={ ({ field }) => (
-                  <Select onValueChange={ field.onChange } value={ field.value }>
+                  <Select onValueChange={ field.onChange } value={ field.value } disabled={ true }>
                     <SelectTrigger id="estado" className="w-full">
                       <SelectValue placeholder="Selecione o estado" />
                     </SelectTrigger>
@@ -118,6 +107,7 @@ export function AddCustomerAddressForm({
               placeholder="Bairro"
               className="placeholder:text-muted-foreground/50"
               id="bairro"
+              disabled={ true }
             />
           </div>
           <div className="flex md:flex-row flex-col md:items-start gap-4 mt-6">
@@ -128,6 +118,7 @@ export function AddCustomerAddressForm({
                 id="rua"
                 className="placeholder:text-muted-foreground/50"
                 placeholder="Nome da rua"
+                disabled={ true }
               />
             </div>
             <div className="space-y-2">
@@ -164,7 +155,7 @@ export function AddCustomerAddressForm({
               </Button>
             </div>
           )}
-        </form>
+        </div>
       </CardContent>
     </Card>
   );

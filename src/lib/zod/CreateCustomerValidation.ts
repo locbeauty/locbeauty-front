@@ -53,19 +53,39 @@ export const createCustomerFormSchema = z
     secondaryCellphoneDescription: z.string().trim().nullable().optional(),
     instagram: z.string().trim().nullable(),
     filialId: z.string().cuid({ message: "Filial é obrigatória" }),
-    address: addressSchema,
+    isTrainee: z.boolean().default(false).optional(),
+    address: addressSchema.extend({
+      stateName: z.string().optional().or(z.literal("")),
+      cityName: z.string().optional().or(z.literal("")),
+      streetName: z.string().optional().or(z.literal("")),
+      neighborhoodName: z.string().optional().or(z.literal("")),
+      buildingNumber: z.string().optional().or(z.literal("")),
+      zipCode: z.string().optional().or(z.literal("")),
+      addressComplement: z.string().optional().nullable().or(z.literal("")),
+    }),
   })
-  .refine(
-    (data) => {
-      const hasCpf = !!data.cpf;
-      const hasCnpj = !!data.cnpj;
-      return hasCpf || hasCnpj;
-    },
-    {
-      message: "Preencha pelo menos um documento (CPF ou CNPJ).",
-      path: [ "cpf" ],
-    },
-  );
+  .superRefine((data, ctx) => {
+    const hasCpf = !!data.cpf;
+    const hasCnpj = !!data.cnpj;
+
+    if (!hasCpf && !hasCnpj) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Preencha pelo menos um documento (CPF ou CNPJ).",
+        path: [ "cpf" ],
+      });
+    }
+
+    if (data.isTrainee) {
+      if (!data.birthdate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Data de nascimento é obrigatória para alunos.",
+          path: [ "birthdate" ],
+        });
+      }
+    }
+  });
 
 export type CreateCustomerFormSchemaType = z.infer<
   typeof createCustomerFormSchema

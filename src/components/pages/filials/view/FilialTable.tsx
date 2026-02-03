@@ -146,14 +146,16 @@ export function FilialsTable() {
                   <td className="p-3 text-sm truncate max-w-[200px]">
                     {filial.filialName}
                   </td>
-                  <td className="p-3 text-sm">{filial.CNPJ}</td>
+                  <td className="p-3 text-sm">{filial.CNPJ || "--"}</td>
                   <td className="p-3 text-sm">
-                    {filial.managerEmployee?.fullname || "-"}
+                    {filial.managerEmployee?.fullname || "--"}
                   </td>
                   <td className="p-3 text-center text-sm">
-                    {filial.cellphone}
+                    {filial.cellphone || "--"}
                   </td>
-                  <td className="p-3 text-center text-sm">{filial.email}</td>
+                  <td className="p-3 text-center text-sm">
+                    {filial.email || "--"}
+                  </td>
                   <td className="">
                     <div className="flex gap-2 items-center">
                       <Can module={ SYSTEM_MODULES.FILIALS } action="canView">

@@ -38,6 +38,7 @@ export interface GetAllCustomersFilters {
   filialId?: string;
   isVisible?: string;
   status?: "Ativo" | "Inativo";
+  isTrainee?: boolean;
 }
 
 export async function GetAllCustomers(
@@ -45,11 +46,15 @@ export async function GetAllCustomers(
   pagination?: { page: number; limit: number },
 ) {
   const queryParams: Record<string, string> = {
-    ...(filters as Record<string, string>),
+    ...(filters as unknown as Record<string, string>),
     ...(pagination
       ? { page: String(pagination.page), limit: String(pagination.limit) }
       : {}),
   };
+
+  if (filters?.isTrainee !== undefined) {
+    queryParams.isTrainee = String(filters.isTrainee);
+  }
 
   const response = await apiRequest<{ items: Customer[]; total: number }>({
     endpoint: "customers",

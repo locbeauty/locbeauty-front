@@ -32,6 +32,8 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
+// ... imports
+
 interface SelectTraineeProps {
   disabled?: boolean;
   filialId: string | undefined;
@@ -113,7 +115,7 @@ function DesktopSelect({
               <Badge variant="secondary">{selectedCount} selecionado(s)</Badge>
             </div>
           ) : (
-            <span className="text-muted-foreground">Selecione os alunos</span>
+            <span className="text-placeholder">Selecione os alunos</span>
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -177,19 +179,19 @@ function TraineesList({
   onTraineesChange,
 }: TraineesListProps) {
   const handleSelect = (trainee: Trainee) => {
-    const isSelected = selectedTraineeIds.includes(trainee.traineeId);
+    const isSelected = selectedTraineeIds.includes(trainee.customerId);
     let newSelectedIds: string[];
 
     if (isSelected) {
       newSelectedIds = selectedTraineeIds.filter(
-        (id) => id !== trainee.traineeId,
+        (id) => id !== trainee.customerId,
       );
     } else {
-      newSelectedIds = [ ...selectedTraineeIds, trainee.traineeId ];
+      newSelectedIds = [ ...selectedTraineeIds, trainee.customerId ];
     }
 
     const newSelectedTrainees =
-      allTrainees?.filter((t) => newSelectedIds.includes(t.traineeId)) || [];
+      allTrainees?.filter((t) => newSelectedIds.includes(t.customerId)) || [];
 
     onTraineesChange(newSelectedTrainees);
   };
@@ -201,11 +203,14 @@ function TraineesList({
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
         <CommandGroup>
           {allTrainees?.map((trainee) => {
-            const isSelected = selectedTraineeIds.includes(trainee.traineeId);
+            const isSelected = selectedTraineeIds.includes(trainee.customerId);
+            const documentToDisplay =
+              trainee.cpf || trainee.cnpj || trainee.documentNumber;
+
             return (
               <CommandItem
-                key={ trainee.traineeId }
-                value={ `${trainee.name} ${trainee.documentNumber}` }
+                key={ trainee.customerId }
+                value={ `${trainee.fullname} ${documentToDisplay || ""}` }
                 onSelect={ () => handleSelect(trainee) }
               >
                 <Check
@@ -214,7 +219,7 @@ function TraineesList({
                     isSelected ? "opacity-100" : "opacity-0",
                   ) }
                 />
-                {trainee.name} - {hideDocumentNumber(trainee.documentNumber)}
+                {trainee.fullname} - {hideDocumentNumber(documentToDisplay)}
               </CommandItem>
             );
           })}
@@ -224,7 +229,8 @@ function TraineesList({
   );
 }
 
-function hideDocumentNumber(documentNumber: string) {
+function hideDocumentNumber(documentNumber: string | null | undefined) {
+  if (!documentNumber) return "";
   const digits = documentNumber.replace(/\D/g, "");
 
   if (digits.length === 11) {

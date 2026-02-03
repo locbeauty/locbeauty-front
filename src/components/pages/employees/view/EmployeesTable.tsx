@@ -74,7 +74,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
     setAllEmployees((prev) => {
       if (!prev) return null;
       return prev.map((emp) =>
-        emp.employeeId === updatedEmployee.employeeId ? updatedEmployee : emp
+        emp.employeeId === updatedEmployee.employeeId ? updatedEmployee : emp,
       );
     });
   }
@@ -186,8 +186,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               allEmployees
                 .filter(
                   (employee) =>
-                    employee.employeeId !== (user?.employeeId || user?.sub) &&
-                    employee.role !== USER_ROLES.MASTER,
+                    employee.employeeId !== (user?.employeeId || user?.sub),
                 )
                 .map((employee) => (
                   <tr
@@ -339,8 +338,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         {allEmployees
           ?.filter(
             (employee) =>
-              employee.employeeId !== (user?.employeeId || user?.sub) &&
-              employee.role !== USER_ROLES.MASTER,
+              employee.employeeId !== (user?.employeeId || user?.sub),
           )
           .map((employee) => (
             <Fragment key={ employee.employeeId }>

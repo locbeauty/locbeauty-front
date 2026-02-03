@@ -122,7 +122,7 @@ export function FinancialInputSection({
         }
       });
     }
-  }, [ // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
     isReplicating,
     selectedIndex,
     currentPrice,
@@ -154,9 +154,9 @@ export function FinancialInputSection({
           Participantes
         </Label>
         <div className="space-y-1 max-h-[400px] overflow-y-auto">
-          {participants.map((p) => (
+          {participants.map((p, index) => (
             <div
-              key={ p.id }
+              key={ `${p.id}-${index}` }
               onClick={ () => setSelectedParticipantId(p.id) }
               className={ cn(
                 "cursor-pointer px-3 py-2 rounded-md text-sm transition-colors flex items-center justify-between",

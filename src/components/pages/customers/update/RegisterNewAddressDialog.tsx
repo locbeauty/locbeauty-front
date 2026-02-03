@@ -83,9 +83,23 @@ export function RegisterNewAddressDialog({
         </DialogTitle>
         <div className="space-y-6">
           <FormProvider { ...createAddressMethods }>
-            <AddCustomerAddressForm
-              handleSaveUpdatedCustomer={ handleSaveUpdatedCustomer }
-            />
+            <form
+              onSubmit={ createAddressMethods.handleSubmit(
+                handleSaveUpdatedCustomer,
+                (errors) => {
+                  const firstError = Object.values(errors)[0];
+                  if (firstError) {
+                    toast.warning(firstError.message || "Erro de validação", {
+                      style: { fontSize: "1rem" },
+                    });
+                  }
+                },
+              ) }
+            >
+              <AddCustomerAddressForm
+                handleSaveUpdatedCustomer={ handleSaveUpdatedCustomer }
+              />
+            </form>
           </FormProvider>
         </div>
       </DialogContent>

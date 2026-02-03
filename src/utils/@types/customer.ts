@@ -9,7 +9,6 @@ export type CUSTOMER_STATUSES =
 export interface Customer {
   customerId: string;
   fullname: string;
-  documentNumber: string | null;
   cpf?: string | null;
   cnpj?: string | null;
   companyName: string | null;
@@ -34,4 +33,5 @@ export interface Customer {
   createdAt: Date;
   updatedAt: Date;
   Addresses: Address[];
+  isTrainee: boolean;
 }

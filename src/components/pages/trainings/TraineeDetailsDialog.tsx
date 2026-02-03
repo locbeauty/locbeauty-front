@@ -37,12 +37,12 @@ export interface TraineeDetailsDialogProps {
 }
 
 // --- HELPERS ---
-const formatDate = (dateString: string | null) => {
+const formatDate = (dateString: string | null | undefined) => {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleDateString("pt-BR");
 };
 
-const getStatusColorClass = (status: string | null) => {
+const getStatusColorClass = (status: string | null | undefined) => {
   switch (status) {
   case "Pago":
     return "text-green-600 bg-green-50 border-green-200";
@@ -67,7 +67,7 @@ export function TraineeDetailsDialog({
   const trainingsList = useMemo(() => {
     if (!trainee || !allTrainings) return [];
     return allTrainings.filter((t) =>
-      t.Trainees?.some((tr) => tr.traineeId === trainee.traineeId),
+      t.Trainees?.some((tr) => tr.customerId === trainee.customerId),
     );
   }, [ trainee, allTrainings ]);
 
@@ -119,7 +119,7 @@ export function TraineeDetailsDialog({
                 <User className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="text-lg font-bold">{trainee.name}</h3>
+                <h3 className="text-lg font-bold">{trainee.fullname}</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
                     Aluno Ativo
@@ -137,10 +137,16 @@ export function TraineeDetailsDialog({
               </h4>
               <div className="grid grid-cols-1 gap-4">
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium text-muted-foreground">
+                  <span className="font-medium text-muted-foreground w-16">
                     CPF:
                   </span>
-                  <span>{trainee.documentNumber || "Não informado"}</span>
+                  <span>{trainee.cpf || "--"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-muted-foreground w-16">
+                    CNPJ:
+                  </span>
+                  <span>{trainee.cnpj || "--"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <span className="font-medium text-muted-foreground">
@@ -163,13 +169,13 @@ export function TraineeDetailsDialog({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg border">
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-primary/70 shrink-0" />
-                  <span className="truncate" title={ trainee.email }>
-                    {trainee.email}
+                  <span className="truncate" title={ trainee.email || "" }>
+                    {trainee.email || "--"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-primary/70 shrink-0" />
-                  <span>{trainee.cellphone}</span>
+                  <span>{trainee.cellphone || "--"}</span>
                 </div>
               </div>
             </div>
@@ -315,7 +321,7 @@ export function TraineeDetailsDialog({
                     const payment = training.TrainingPayment?.find(
                       (p) =>
                         p.payerType === "TRAINEE" &&
-                        p.traineeId === trainee.traineeId,
+                        p.customerId === trainee.customerId,
                     );
 
                     return (
@@ -405,7 +411,7 @@ export function TraineeDetailsDialog({
                                 )}
                                 <span className="font-medium">
                                   {centsToStringWithCurrencyMark(
-                                    payment.firstPaymentAmount,
+                                    payment.firstPaymentAmount || 0,
                                   )}
                                 </span>
                                 {payment.firstPaymentStatus === "Pago" && (
@@ -415,7 +421,7 @@ export function TraineeDetailsDialog({
                             </div>
 
                             {/* 2ª Parcela */}
-                            {payment.secondPaymentAmount > 0 && (
+                            {(payment.secondPaymentAmount || 0) > 0 && (
                               <>
                                 <Separator className="bg-border/50" />
                                 <div className="flex justify-between items-center text-xs">
@@ -438,7 +444,7 @@ export function TraineeDetailsDialog({
                                     )}
                                     <span className="font-medium">
                                       {centsToStringWithCurrencyMark(
-                                        payment.secondPaymentAmount,
+                                        payment.secondPaymentAmount || 0,
                                       )}
                                     </span>
                                     {payment.secondPaymentStatus === "Pago" ? (

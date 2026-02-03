@@ -516,13 +516,13 @@ export function TrainingPaymentMethodDialog({
     if (payerType === "TRAINEE") {
       if (participantId && selectedTraining.Trainees) {
         return (
-          selectedTraining.Trainees.find((t) => t.traineeId === participantId)
-            ?.name || "Aluno"
+          selectedTraining.Trainees.find((t) => t.customerId === participantId)
+            ?.fullname || "Aluno"
         );
       }
       return (
-        selectedTraining.Trainee?.name ||
-        selectedTraining.Trainees?.[0]?.name ||
+        selectedTraining.Trainee?.fullname ||
+        selectedTraining.Trainees?.[0]?.fullname ||
         "Aluno"
       );
     } else {
@@ -564,7 +564,7 @@ export function TrainingPaymentMethodDialog({
             {dialogTitle}
           </DialogTitle>
           <DialogDescription asChild>
-            <div className="flex flex-col gap-1 pt-2">
+            <div className="flex items-center gap-3 pt-2">
               <span>Gerencie as informações financeiras para:</span>
               <div
                 className={ `flex items-center gap-2 p-2 rounded-md w-fit border ${headerColorClass}` }

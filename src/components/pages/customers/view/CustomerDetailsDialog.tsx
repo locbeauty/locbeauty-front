@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { BookingHistoryCard } from "./BookingHistoryCard";
+import { TrainingHistoryCard } from "./TrainingHistoryCard";
 import { CustomerDetailsCard } from "./CustomerDetailsCard";
 import { Customer } from "@/utils/@types/customer";
 import { Can } from "@/components/auth/Can";
@@ -15,11 +16,11 @@ import { SYSTEM_MODULES } from "@/utils/@types/access";
 interface CustomerDetailsDialogProps {
   handleToggleCustomerDetailsDialog: (
     _openStatus: boolean,
-    _customer: Customer | null
+    _customer: Customer | null,
   ) => void;
   handleToggleUpdateCustomerDialog: (
     _openStatus: boolean,
-    _customer: Customer | null
+    _customer: Customer | null,
   ) => void;
   isCustomerDetailsModalOpen: boolean;
   selectedCustomer: Customer | null;
@@ -61,6 +62,13 @@ export function CustomerDetailsDialog({
             isCustomerDetailsModalOpen={ isCustomerDetailsModalOpen }
             selectedCustomer={ selectedCustomer }
           />
+
+          {selectedCustomer?.isTrainee && (
+            <TrainingHistoryCard
+              isCustomerDetailsModalOpen={ isCustomerDetailsModalOpen }
+              selectedCustomer={ selectedCustomer }
+            />
+          )}
           <DialogFooter className="pt-4">
             <Can module={ SYSTEM_MODULES.CUSTOMERS } action="canEdit">
               <Button

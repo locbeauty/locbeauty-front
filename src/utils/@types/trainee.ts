@@ -1,37 +1,4 @@
-import { Address } from "./address";
-import { Gear } from "./gears";
-import { Training } from "./training";
+import { Customer } from "./customer";
 
-export interface Trainee {
-  traineeId: string;
-  name: string;
-  documentNumber: string;
-  cellphone: string;
-  email: string;
-  Addresses: Address[];
-  Trainings: Training[];
-  sourceFilialId?: string;
-  SourceFilial?: {
-    filialName: string;
-    filialId: string;
-  };
-}
-
-// export interface Training {
-//   trainingId: string
-//   trainingStatus: "Pendente" | "Concluido" | "Cancelado" | string
-//   hourInMinutes: number
-//   price: number
-//   additionalCost: number
-//   additionalCostDescription: string
-//   gearId: string
-//   volunteerId: string
-//   traineeId: string
-//   dueDate: string
-//   sourceFilialId: string
-//   addressId: string
-//   createdAt: string
-//   updatedAt: string
-//   TrainingPayment: TrainingPayment[]
-//   Gear: Gear
-// }
+// Deprecated: Use Customer instead.
+export type Trainee = Customer;

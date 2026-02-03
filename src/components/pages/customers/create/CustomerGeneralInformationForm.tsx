@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
@@ -54,9 +55,25 @@ export function CustomerGeneralInformationForm({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="border p-4 rounded-md">
-          <div className="flex items-center gap-2 mb-4">
-            <User className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-medium">Informações do Cliente</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-medium">Informações do Cliente</h3>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Controller
+                control={ control }
+                name="isTrainee"
+                render={ ({ field }) => (
+                  <Checkbox
+                    id="isTrainee"
+                    checked={ field.value }
+                    onCheckedChange={ field.onChange }
+                  />
+                ) }
+              />
+              <Label htmlFor="isTrainee">É Aluno?</Label>
+            </div>
           </div>
 
           <div className="space-y-4">

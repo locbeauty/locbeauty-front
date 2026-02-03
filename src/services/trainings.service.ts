@@ -8,6 +8,14 @@ interface UpdateTrainingRequest {
   body: UpdateTrainingPayload;
 }
 
+export async function GetCustomerTrainings(customerId: string) {
+  const response = await apiRequest<Training[]>({
+    endpoint: "trainings/customer",
+    queryParams: { customerId },
+  });
+  return response;
+}
+
 export async function GetAllTrainings(isVisible?: string) {
   const queryParams = isVisible ? { isVisible } : undefined;
   const response = await apiRequest<Training[]>({

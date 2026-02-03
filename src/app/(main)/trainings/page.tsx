@@ -120,7 +120,7 @@ export default function Treinamentos() {
       if (accessibleFilialIds.includes(t.sourceFilialId)) {
         if (t.traineeId) visibleTraineeIds.add(t.traineeId);
         t.Trainees?.forEach((trainee) =>
-          visibleTraineeIds.add(trainee.traineeId),
+          visibleTraineeIds.add(trainee.customerId),
         );
       }
     });
@@ -128,7 +128,7 @@ export default function Treinamentos() {
     const filteredTrainees = trainees?.filter(
       (t) =>
         (t.sourceFilialId && accessibleFilialIds.includes(t.sourceFilialId)) ||
-        visibleTraineeIds.has(t.traineeId),
+        visibleTraineeIds.has(t.customerId),
     );
 
     // Filtrar Voluntários

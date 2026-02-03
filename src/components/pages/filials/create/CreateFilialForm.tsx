@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +16,10 @@ import { FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";
 import { toast } from "sonner";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { useAuth } from "@/contexts/auth-provider";
 
 export function CreateFilialForm() {
+  const { user } = useAuth();
   const createFilialMethods = useForm<CreateFilialFormSchemaType>({
     resolver: zodResolver(createFilialFormSchema),
   });
@@ -26,6 +30,7 @@ export function CreateFilialForm() {
     register,
     formState: { errors },
     reset,
+    setValue,
   } = createFilialMethods;
 
   async function handleCreateFilial(newFilialData: CreateFilialFormSchemaType) {
@@ -88,7 +93,11 @@ export function CreateFilialForm() {
 
             <div className="space-y-2">
               <Label htmlFor="gerente"> Gerente </Label>
-              <SelectEmployee control={ control } name="managerEmployeeId" />
+              <SelectEmployee
+                control={ control }
+                name="managerEmployeeId"
+                currentUser={ user as any }
+              />
               {errors.managerEmployeeId && (
                 <p className="text-sm font-medium text-destructive">
                   {errors.managerEmployeeId.message}

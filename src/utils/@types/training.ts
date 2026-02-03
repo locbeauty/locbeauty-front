@@ -1,5 +1,6 @@
 import { Address } from "./address";
 import { Trainee } from "./trainee";
+import { Customer } from "./customer";
 import { Gear } from "./gears";
 import { Volunteer } from "./volunteer";
 import { Filial } from "./filials";
@@ -21,7 +22,7 @@ export interface Training {
   updatedAt: string;
   Gear: Gear;
   Volunteers: Volunteer[];
-  Trainees: Trainee[];
+  Trainees: Customer[];
   Trainee?: Trainee; // Keep for backward compatibility if needed, but likely unused
   Volunteer?: Volunteer; // Keep for backward compatibility if needed, but likely unused
   TrainingPayment: TrainingPayment[];

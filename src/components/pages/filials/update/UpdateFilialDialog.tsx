@@ -68,16 +68,16 @@ export function UpdateFilialDialog({
         // CNPJ: selectedFilial.CNPJ,
         email: selectedFilial.email,
         filialName: selectedFilial.filialName,
-        managerEmployeeId: selectedFilial.managerEmployee.employeeId,
+        managerEmployeeId: selectedFilial.managerEmployee?.employeeId,
         address: {
           addressComplement:
-            selectedFilial.Address.addressComplement ?? undefined,
-          zipCode: selectedFilial.Address.zipCode,
-          cityName: selectedFilial.Address.city ?? undefined,
-          buildingNumber: selectedFilial.Address.buildingNumber,
-          neighborhoodName: selectedFilial.Address.neighborhood ?? undefined,
-          stateName: selectedFilial.Address.state ?? undefined,
-          streetName: selectedFilial.Address.street ?? undefined,
+            selectedFilial.Address?.addressComplement ?? undefined,
+          zipCode: selectedFilial.Address?.zipCode ?? "", // zipCode is required usually, ensuring string
+          cityName: selectedFilial.Address?.city ?? undefined,
+          buildingNumber: selectedFilial.Address?.buildingNumber ?? "",
+          neighborhoodName: selectedFilial.Address?.neighborhood ?? undefined,
+          stateName: selectedFilial.Address?.state ?? undefined,
+          streetName: selectedFilial.Address?.street ?? undefined,
         },
       });
     }

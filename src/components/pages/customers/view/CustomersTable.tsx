@@ -77,6 +77,7 @@ export function CustomersTable() {
     phone: "",
     filialId: "",
     status: undefined,
+    isTrainee: undefined,
   });
 
   const { data, isLoading } = useQuery<
@@ -246,11 +247,25 @@ export function CustomersTable() {
             <Label htmlFor="view-deleted">Ver Excluídos</Label>
           </div>
         )}
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="view-trainees"
+            checked={ filters.isTrainee === true }
+            onCheckedChange={ (checked: boolean) =>
+              setFilters({
+                ...filters,
+                isTrainee: checked ? true : undefined,
+              })
+            }
+          />
+          <Label htmlFor="view-trainees">Alunos</Label>
+        </div>
         {(filters.name ||
           filters.email ||
           filters.document ||
           filters.filialId ||
           filters.status ||
+          filters.isTrainee ||
           filters.isVisible) && (
           <Button
             variant="ghost"
@@ -263,6 +278,7 @@ export function CustomersTable() {
                 filialId: "",
                 isVisible: undefined,
                 status: undefined,
+                isTrainee: undefined,
               })
             }
             className="px-2 lg:px-3"

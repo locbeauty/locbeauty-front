@@ -1,17 +1,25 @@
 import { apiRequest } from "@/lib/api";
-import { CreateTraineeFormDataType } from "@/lib/zod/CreateTraineeValidation";
-import { Trainee } from "@/utils/@types/trainee";
+import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
+import { Customer } from "@/utils/@types/customer";
 
 export async function GetAllTrainees(queryParams?: Record<string, string>) {
-  const response = await apiRequest<Trainee[]>({
-    endpoint: "trainees",
-    queryParams,
+  // Add isTrainee=true to queryParams
+  const params = { ...queryParams, isTrainee: "true" };
+  const response = await apiRequest<{ items: Customer[]; total: number }>({
+    endpoint: "customers",
+    queryParams: params,
   });
-  return response;
+
+  // Transform to match old signature: data should be Customer[]
+  return {
+    ...response,
+    data: response.data?.items || [],
+  };
 }
-export async function CreateTrainee(body: CreateTraineeFormDataType) {
+
+export async function CreateTrainee(body: CreateCustomerFormSchemaType) {
   const response = await apiRequest({
-    endpoint: "trainees/create",
+    endpoint: "customers/create",
     method: "POST",
     body,
   });
@@ -21,7 +29,7 @@ export async function CreateTrainee(body: CreateTraineeFormDataType) {
 
 export async function DeleteTrainee(traineeId: string) {
   const response = await apiRequest({
-    endpoint: `trainees/${traineeId}`,
+    endpoint: `customers/${traineeId}`,
     method: "DELETE",
   });
   return response;
