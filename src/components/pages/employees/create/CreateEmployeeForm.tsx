@@ -52,7 +52,6 @@ export function CreateEmployeeForm() {
   async function handleCreateEmployee(
     newEmployeeData: CreateEmployeeFormSchemaType,
   ) {
-    console.log("Submit data:", newEmployeeData);
     try {
       const response = await fetchWithToken(
         `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/create`,

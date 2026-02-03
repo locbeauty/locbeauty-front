@@ -98,10 +98,6 @@ export function CreateTraineeDialog({
   }, [ dialogNovoAluno, customerForm ]);
   const { errors } = customerForm.formState;
 
-  useEffect(() => {
-    console.log("customerForm.formState.errors: ", errors);
-  }, [ errors ]);
-
   const onSubmitTrainee = async (data: CreateCustomerFormSchemaType) => {
     // Ensure isTrainee is true
     data.isTrainee = true;

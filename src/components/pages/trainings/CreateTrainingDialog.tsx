@@ -386,10 +386,6 @@ export function CreateTrainingDialog({
   };
 
   useEffect(() => {
-    console.log("customerForm.formState.errors: ", errors);
-  }, [ errors ]);
-
-  useEffect(() => {
     if (dialogNovoTreinamento) {
       reset({
         filialId: defaultFilialId || "",

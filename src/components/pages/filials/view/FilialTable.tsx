@@ -122,8 +122,7 @@ export function FilialsTable() {
           <thead className="bg-muted">
             <tr>
               <th className="text-left p-3 font-medium text-sm">Filial</th>
-              <th className="text-left p-3 font-medium text-sm">CNPJ</th>
-              <th className="text-left p-3 font-medium text-sm">Gerente</th>
+              <th className="p-3 font-medium text-sm text-center">Gerente</th>
               <th className="text-center p-3 font-medium text-sm">Telefone</th>
               <th className="text-center p-3 font-medium text-sm">Email</th>
               <th className="text-left p-3 font-medium text-sm">Ações</th>
@@ -146,8 +145,7 @@ export function FilialsTable() {
                   <td className="p-3 text-sm truncate max-w-[200px]">
                     {filial.filialName}
                   </td>
-                  <td className="p-3 text-sm">{filial.CNPJ || "--"}</td>
-                  <td className="p-3 text-sm">
+                  <td className="p-3 text-sm text-center">
                     {filial.managerEmployee?.fullname || "--"}
                   </td>
                   <td className="p-3 text-center text-sm">
@@ -245,6 +243,7 @@ export function FilialsTable() {
         selectedFilial={ selectedFilial! }
         setSelectedFilial={ setSelectedFilial }
         handleToggleUpdateFilialDialog={ handleToggleUpdateFilialDialog }
+        onSuccess={ () => setRefreshCounter((prev) => prev + 1) }
       />
 
       <DeleteConfirmationDialog

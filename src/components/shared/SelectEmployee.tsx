@@ -48,6 +48,8 @@ type SelectEmployeeProps<T extends FieldValues> = {
   onEmployeeSelect?: (employee: Employee) => void;
   currentUserId?: string; // Include this user in results regardless of filters
   currentUser?: Employee | null;
+  modal?: boolean;
+  excludeRoles?: string[];
 };
 
 export function SelectEmployee<T extends FieldValues>({
@@ -58,6 +60,8 @@ export function SelectEmployee<T extends FieldValues>({
   setDriverString,
   onEmployeeSelect,
   currentUser,
+  modal = false,
+  excludeRoles,
 }: SelectEmployeeProps<T>) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -84,6 +88,15 @@ export function SelectEmployee<T extends FieldValues>({
       ? [ currentUser, ...fetchedEmployees ]
       : fetchedEmployees;
 
+  // Filter excluded roles
+  const filteredEmployees = excludeRoles
+    ? allEmployees.filter(
+      (emp) =>
+        (currentUser && emp.employeeId === currentUser.employeeId) ||
+          !excludeRoles.includes(emp.role),
+    )
+    : allEmployees;
+
   if (!isMounted) {
     return <div className="h-10 w-full animate-pulse bg-muted rounded-md" />;
   }
@@ -96,14 +109,15 @@ export function SelectEmployee<T extends FieldValues>({
         render={ ({ field }) =>
           isDesktop ? (
             <DesktopSelect
-              allEmployees={ allEmployees || [] }
+              allEmployees={ filteredEmployees || [] }
               field={ field }
               setDriverString={ setDriverString }
               onEmployeeSelect={ onEmployeeSelect }
+              modal={ modal }
             />
           ) : (
             <MobileSelect
-              allEmployees={ allEmployees || [] }
+              allEmployees={ filteredEmployees || [] }
               field={ field }
               setDriverString={ setDriverString }
               onEmployeeSelect={ onEmployeeSelect }
@@ -120,6 +134,7 @@ interface SelectionProps<T extends FieldValues> {
   field: ControllerRenderProps<T, FieldPath<T>>;
   setDriverString?: Dispatch<SetStateAction<string>>;
   onEmployeeSelect?: (employee: Employee) => void;
+  modal?: boolean;
 }
 
 function DesktopSelect<T extends FieldValues>({
@@ -127,6 +142,7 @@ function DesktopSelect<T extends FieldValues>({
   field,
   setDriverString,
   onEmployeeSelect,
+  modal,
 }: SelectionProps<T>) {
   const [ open, setOpen ] = useState(false);
 
@@ -136,7 +152,7 @@ function DesktopSelect<T extends FieldValues>({
   );
 
   return (
-    <Popover open={ open } onOpenChange={ setOpen }>
+    <Popover open={ open } onOpenChange={ setOpen } modal={ modal }>
       <PopoverTrigger asChild>
         <Button
           variant="outline"

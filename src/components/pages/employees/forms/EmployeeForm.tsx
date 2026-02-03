@@ -230,7 +230,7 @@ export function EmployeeForm({
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="cellphone">Telefone</Label>
-              <PhoneInput register={ register("cellphone") } />
+              <PhoneInput control={ control } name="cellphone" />
               {errors.cellphone && (
                 <p className="text-xs font-medium text-destructive">
                   {errors.cellphone.message}

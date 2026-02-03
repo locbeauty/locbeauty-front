@@ -93,10 +93,6 @@ export function UpdateCustomerDialog({
     }
   };
 
-  useEffect(() => {
-    console.log("selectedCustomer: ", selectedCustomer);
-  }, [ selectedCustomer ]);
-
   return (
     <Dialog
       open={ isUpdateCustomerDialogOpen }

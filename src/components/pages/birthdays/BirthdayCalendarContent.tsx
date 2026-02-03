@@ -96,10 +96,6 @@ export function BirthdayCalendarContent({
   const birthdays = birthdaysData?.data || [];
   const allEvents: CalendarEvent[] = [ ...birthdays ];
 
-  const openDetails = (event: CalendarEvent) => {
-    console.log("Birthday clicked:", event);
-  };
-
   return (
     <Card className="overflow-hidden py-0">
       <CardContent className="p-0">
