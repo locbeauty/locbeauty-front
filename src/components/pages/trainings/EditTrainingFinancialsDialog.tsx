@@ -1,7 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useFieldArray, FormProvider } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -10,33 +8,15 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import PriceInput from "@/components/shared/PriceInput";
 import { Training } from "@/utils/@types/training";
 import { UpdateTraining } from "@/services/trainings.service";
 import { Loader2 } from "lucide-react";
 import { UpdateTrainingPayload } from "./TrainingPaymentMethodDialog";
-import { centsToString } from "@/utils/centsToString";
-import { PaymentModes, PaymentStatuses } from "@/utils/constants";
+import { parseStringToCents } from "@/utils/parseStringToCents";
 import { toast } from "sonner";
 import { queryClient } from "@/app/(main)/layout";
-
-const formSchema = z.object({
-  basePrice: z.number().min(0),
-  totalPrice: z.number().min(0),
-  additionalCost: z.number().min(0),
-  additionalCostDescription: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { FinancialInputSection } from "./FinancialInputSection";
+import { CreateTrainingDataType } from "@/lib/zod/CreateTrainingValidation";
 
 interface EditTrainingFinancialsDialogProps {
   open: boolean;
@@ -44,24 +24,7 @@ interface EditTrainingFinancialsDialogProps {
   training: Training;
   payerType: "TRAINEE" | "VOLUNTEER";
   onSuccess: (updatedTraining: Training) => void;
-  onFinancialUpdate?: (values: {
-    basePrice: number;
-    additionalCost: number;
-    additionalCostDescription: string;
-    totalPrice: number;
-  }) => void;
-  currentValues?: {
-    basePrice: number;
-    additionalCost: number;
-    additionalCostDescription: string;
-    totalPrice: number;
-  };
 }
-
-const parseCurrencyToCents = (val: string) => {
-  const clean = val.replace(/\D/g, "");
-  return parseInt(clean || "0", 10);
-};
 
 export default function EditTrainingFinancialsDialog({
   open,
@@ -69,247 +32,285 @@ export default function EditTrainingFinancialsDialog({
   training,
   payerType,
   onSuccess,
-  onFinancialUpdate,
-  currentValues,
 }: EditTrainingFinancialsDialogProps) {
-  // Find the relevant payment record
-  const paymentRecord = training.TrainingPayment.find(
-    (p) => p.payerType === payerType
-  );
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const methods = useForm<CreateTrainingDataType>({
     defaultValues: {
-      basePrice: 0,
-      totalPrice: 0,
-      additionalCost: 0,
-      additionalCostDescription: "",
+      traineePayments: [],
+      volunteerPayments: [],
     },
   });
 
-  // Reset form when opening or changing training/payerType
+  const {
+    control,
+    handleSubmit,
+    register,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = methods;
+
+  const { fields: traineeFields, replace: replaceTrainees } = useFieldArray({
+    control,
+    name: "traineePayments",
+  });
+
+  const { fields: volunteerFields, replace: replaceVolunteers } = useFieldArray(
+    {
+      control,
+      name: "volunteerPayments",
+    },
+  );
+
+  // Initialize form with training data
   useEffect(() => {
-    if (open) {
-      if (currentValues) {
-        form.reset({
-          basePrice: currentValues.basePrice,
-          totalPrice: currentValues.totalPrice,
-          additionalCost: currentValues.additionalCost,
-          additionalCostDescription: currentValues.additionalCostDescription,
+    if (open && training) {
+      if (payerType === "TRAINEE") {
+        const trainees = training.Trainees || [];
+        const initialTraineePayments = trainees.map((trainee) => {
+          const payment = training.TrainingPayment?.find(
+            (p) =>
+              p.payerType === "TRAINEE" &&
+              (p.traineeId === trainee.customerId ||
+                p.customerId === trainee.customerId),
+          );
+
+          return {
+            participantId: trainee.customerId,
+            price: payment?.basePrice
+              ? (payment.basePrice / 100).toFixed(2).replace(".", ",")
+              : "",
+            additionalCost: payment?.additionalCost
+              ? (payment.additionalCost / 100).toFixed(2).replace(".", ",")
+              : "",
+            additionalCostDescription: payment?.additionalCostDescription || "",
+            paymentInfo: {
+              paymentStatus: payment?.isCourtesy
+                ? "Cortesia"
+                : payment?.paymentStatus || "Pendente",
+              firstPaymentDate: payment?.firstPaymentDate
+                ? new Date(payment.firstPaymentDate)
+                : null,
+              firstPaymentAmount: payment?.firstPaymentAmount
+                ? (payment.firstPaymentAmount / 100)
+                  .toFixed(2)
+                  .replace(".", ",")
+                : "",
+              firstPaymentStatus: payment?.firstPaymentStatus || "Pendente",
+              firstPaymentMethod: payment?.firstPaymentMethod || "",
+              secondPaymentAmount: payment?.secondPaymentAmount
+                ? (payment.secondPaymentAmount / 100)
+                  .toFixed(2)
+                  .replace(".", ",")
+                : "",
+              secondPaymentStatus: payment?.secondPaymentStatus || "Pendente",
+              secondPaymentMethod: payment?.secondPaymentMethod || "",
+              secondPaymentDate: payment?.secondPaymentDate
+                ? new Date(payment.secondPaymentDate)
+                : null,
+            },
+          };
         });
-      } else if (paymentRecord) {
-        form.reset({
-          basePrice: paymentRecord.basePrice,
-          totalPrice: paymentRecord.totalPrice,
-          additionalCost: paymentRecord.additionalCost || 0,
-          additionalCostDescription:
-            paymentRecord.additionalCostDescription || "",
+        replaceTrainees(initialTraineePayments);
+        // Clear volunteers to avoid confusion
+        replaceVolunteers([]);
+      } else {
+        const volunteers = training.Volunteers || [];
+        const initialVolunteerPayments = volunteers.map((volunteer) => {
+          const payment = training.TrainingPayment?.find(
+            (p) =>
+              p.payerType === "VOLUNTEER" &&
+              p.volunteerId === volunteer.volunteerId,
+          );
+
+          return {
+            participantId: volunteer.volunteerId,
+            price: payment?.totalPrice
+              ? (payment.totalPrice / 100).toFixed(2).replace(".", ",")
+              : "",
+            additionalCost: "",
+            additionalCostDescription: "",
+            paymentInfo: {
+              paymentStatus: payment?.isCourtesy
+                ? "Cortesia"
+                : payment?.paymentStatus || "Pendente",
+              firstPaymentDate: payment?.firstPaymentDate
+                ? new Date(payment.firstPaymentDate)
+                : null,
+              firstPaymentAmount: payment?.firstPaymentAmount
+                ? (payment.firstPaymentAmount / 100)
+                  .toFixed(2)
+                  .replace(".", ",")
+                : "",
+              firstPaymentStatus: payment?.firstPaymentStatus || "Pendente",
+              firstPaymentMethod: payment?.firstPaymentMethod || "",
+              secondPaymentAmount: payment?.secondPaymentAmount
+                ? (payment.secondPaymentAmount / 100)
+                  .toFixed(2)
+                  .replace(".", ",")
+                : "",
+              secondPaymentStatus: payment?.secondPaymentStatus || "Pendente",
+              secondPaymentMethod: payment?.secondPaymentMethod || "",
+              secondPaymentDate: payment?.secondPaymentDate
+                ? new Date(payment.secondPaymentDate)
+                : null,
+            },
+          };
         });
+        replaceVolunteers(initialVolunteerPayments);
+        // Clear trainees
+        replaceTrainees([]);
       }
     }
-  }, [ open, paymentRecord, form, payerType, currentValues ]);
+  }, [ open, training, payerType, replaceTrainees, replaceVolunteers ]);
 
-  // Helper to calculate total price dynamically for Trainee
-  const basePrice = form.watch("basePrice");
-  const additionalCost = form.watch("additionalCost");
+  const participants =
+    payerType === "TRAINEE"
+      ? training.Trainees?.map((t) => ({
+        id: t.customerId,
+        name: t.fullname,
+      })) || []
+      : training.Volunteers?.map((v) => ({
+        id: v.volunteerId,
+        name: v.name,
+      })) || [];
 
-  useEffect(() => {
-    if (payerType === "TRAINEE") {
-      const calculatedTotal = (basePrice || 0) + (additionalCost || 0);
-      form.setValue("totalPrice", calculatedTotal);
-    }
-  }, [ basePrice, additionalCost, payerType, form ]);
-
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (data: CreateTrainingDataType) => {
     try {
-      if (!paymentRecord) {
-        console.error("No payment record found");
+      const payments =
+        payerType === "TRAINEE" ? data.traineePayments : data.volunteerPayments;
+
+      if (!payments || payments.length === 0) {
+        toast.info("Nenhum participante para atualizar.");
+        onOpenChange(false);
         return;
       }
 
-      const payload: UpdateTrainingPayload = {
-        trainingStatus: training.trainingStatus,
-        payerType: payerType,
-        isCourtesy: paymentRecord.isCourtesy,
-        wasRefunded: paymentRecord.wasRefunded,
-        cancellationFee: paymentRecord.cancellationFee ?? undefined,
-        TrainingPayment: {
-          // Fields we are editing
-          basePrice: values.basePrice,
-          totalPrice: values.totalPrice,
-          additionalCost: values.additionalCost,
-          additionalCostDescription: values.additionalCostDescription || "",
+      // We need to update each participant individually
+      const updatePromises = payments.map(async (p) => {
+        // Find existing payment to preserve other fields if needed,
+        // essentially we are overwriting financial fields but keeping others safe
+        const existingPayment = training.TrainingPayment?.find(
+          (ep) =>
+            ep.payerType === payerType &&
+            (payerType === "TRAINEE"
+              ? ep.traineeId === p.participantId ||
+                ep.customerId === p.participantId
+              : ep.volunteerId === p.participantId),
+        );
 
-          // Fields we must preserve
-          paymentStatus:
-            (paymentRecord.paymentStatus as PaymentStatuses) || "Pendente",
-          paymentMode: (paymentRecord.paymentMode as PaymentModes) || "AVista",
+        const basePrice = parseStringToCents(p.price || "0");
+        const additionalCost =
+          payerType === "TRAINEE"
+            ? parseStringToCents(p.additionalCost || "0")
+            : 0;
+        const totalPrice = basePrice + additionalCost;
 
-          firstPaymentAmount: paymentRecord.firstPaymentAmount || 0,
-          firstPaymentDate: paymentRecord.firstPaymentDate
-            ? new Date(paymentRecord.firstPaymentDate)
-            : null,
-          firstPaymentMethod: paymentRecord.firstPaymentMethod,
-          firstPaymentStatus: paymentRecord.firstPaymentStatus,
+        const payload: UpdateTrainingPayload = {
+          trainingStatus: training.trainingStatus,
+          payerType: payerType,
+          traineeId: payerType === "TRAINEE" ? p.participantId : undefined,
+          customerId: payerType === "TRAINEE" ? p.participantId : undefined,
+          volunteerId: payerType === "VOLUNTEER" ? p.participantId : undefined,
 
-          secondPaymentAmount: paymentRecord.secondPaymentAmount || 0,
-          secondPaymentDate: paymentRecord.secondPaymentDate
-            ? new Date(paymentRecord.secondPaymentDate)
-            : null,
-          secondPaymentMethod: paymentRecord.secondPaymentMethod,
-          secondPaymentStatus: paymentRecord.secondPaymentStatus,
-        },
-      };
+          TrainingPayment: {
+            basePrice: basePrice,
+            additionalCost: additionalCost,
+            additionalCostDescription: p.additionalCostDescription,
+            totalPrice: totalPrice,
 
-      const response = await UpdateTraining({
-        trainingId: training.trainingId,
-        body: payload,
+            // Payment info
+            paymentStatus: p.paymentInfo.paymentStatus || "Pendente",
+
+            firstPaymentAmount: parseStringToCents(
+              String(p.paymentInfo.firstPaymentAmount || "0"),
+            ),
+            firstPaymentDate: p.paymentInfo.firstPaymentDate
+              ? new Date(p.paymentInfo.firstPaymentDate)
+              : null,
+            firstPaymentMethod: p.paymentInfo.firstPaymentMethod || null,
+            firstPaymentStatus: p.paymentInfo.firstPaymentStatus || "Pendente",
+
+            secondPaymentAmount: parseStringToCents(
+              String(p.paymentInfo.secondPaymentAmount || "0"),
+            ),
+            secondPaymentDate: p.paymentInfo.secondPaymentDate
+              ? new Date(p.paymentInfo.secondPaymentDate)
+              : null,
+            secondPaymentMethod: p.paymentInfo.secondPaymentMethod || null,
+            secondPaymentStatus:
+              p.paymentInfo.secondPaymentStatus || "Pendente",
+
+            // Preserve other fields but update isCourtesy based on selection
+            isCourtesy:
+              p.paymentInfo.paymentStatus === "Cortesia"
+                ? true
+                : p.paymentInfo.paymentStatus === "Pendente" ||
+                    p.paymentInfo.paymentStatus === "Pago" ||
+                    p.paymentInfo.paymentStatus === "Parcial"
+                  ? false // Explicitly false if changed to a paid status
+                  : existingPayment?.isCourtesy || false, // Fallback for other statuses? Actually better to be strict
+            wasRefunded: existingPayment?.wasRefunded || false,
+            paymentMode: existingPayment?.paymentMode || "AVista",
+          },
+        };
+
+        return UpdateTraining({
+          trainingId: training.trainingId,
+          body: payload,
+        });
       });
 
-      if (response.data) {
+      const results = await Promise.all(updatePromises);
+
+      const hasError = results.some((r) => r.statusCode !== 200);
+
+      if (!hasError) {
+        toast.success("Valores atualizados com sucesso!");
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
-        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
-        toast.success("Valores atualizados com sucesso.");
-        onSuccess(response.data);
 
-        // Call the new callback to update parent state immediately
-        if (onFinancialUpdate) {
-          onFinancialUpdate({
-            basePrice: values.basePrice,
-            additionalCost: values.additionalCost,
-            additionalCostDescription: values.additionalCostDescription || "",
-            totalPrice: values.totalPrice,
-          });
+        // Ideally we should merge the results to update the selected training locally
+        // For now, we return the last result's data or trigger a refetch
+        if (results.length > 0 && results[results.length - 1].data) {
+          onSuccess(results[results.length - 1].data!);
         }
-
         onOpenChange(false);
       } else {
-        throw new Error("Falha ao atualizar");
+        toast.warning("Alguns participantes podem não ter sido atualizados.");
       }
     } catch (error) {
       console.error(error);
-      toast.error("Falha ao atualizar valores.");
+      toast.error("Erro ao atualizar valores.");
     }
   };
 
-  const isSubmitting = form.formState.isSubmitting;
-
   return (
     <Dialog open={ open } onOpenChange={ onOpenChange }>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card">
         <DialogHeader>
           <DialogTitle>
-            Editar Valores ({payerType === "TRAINEE" ? "Aluno" : "Modelo"})
+            Gerenciar Financeiro (
+            {payerType === "TRAINEE" ? "Alunos" : "Pacientes Modelo"})
           </DialogTitle>
         </DialogHeader>
 
-        <Form { ...form }>
-          <form onSubmit={ form.handleSubmit(onSubmit) } className="space-y-4">
-            {/* Fields for Trainee */}
-            {payerType === "TRAINEE" && (
-              <>
-                <FormField
-                  control={ form.control }
-                  name="basePrice"
-                  render={ ({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço Base</FormLabel>
-                      <FormControl>
-                        <PriceInput
-                          { ...field }
-                          value={ centsToString(field.value ?? 0) }
-                          onChange={ (val) =>
-                            field.onChange(parseCurrencyToCents(val))
-                          }
-                          withLabel={ false }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  ) }
-                />
-
-                <FormField
-                  control={ form.control }
-                  name="additionalCost"
-                  render={ ({ field }) => (
-                    <FormItem>
-                      <FormLabel>Custos Adicionais</FormLabel>
-                      <FormControl>
-                        <PriceInput
-                          { ...field }
-                          value={ centsToString(field.value ?? 0) }
-                          onChange={ (val) =>
-                            field.onChange(parseCurrencyToCents(val))
-                          }
-                          withLabel={ false }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  ) }
-                />
-
-                <FormField
-                  control={ form.control }
-                  name="additionalCostDescription"
-                  render={ ({ field }) => (
-                    <FormItem>
-                      <FormLabel>Descrição dos Custos (Opcional)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Ex: Material extra, deslocamento..."
-                          className="resize-none"
-                          { ...field }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  ) }
-                />
-
-                <div className="pt-2 border-t mt-4">
-                  <div className="flex justify-between items-center font-bold">
-                    <span>Total Calculado:</span>
-                    <span>
-                      {new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(form.watch("totalPrice") / 100)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    (Preço Base + Custos Adicionais)
-                  </p>
-                </div>
-              </>
-            )}
-
-            {/* Fields for Volunteer */}
-            {payerType === "VOLUNTEER" && (
-              <FormField
-                control={ form.control }
-                name="totalPrice"
-                render={ ({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor Total</FormLabel>
-                    <FormControl>
-                      <PriceInput
-                        { ...field }
-                        value={ centsToString(field.value ?? 0) }
-                        onChange={ (val) =>
-                          field.onChange(parseCurrencyToCents(val))
-                        }
-                        withLabel={ false }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                ) }
+        <FormProvider { ...methods }>
+          <form onSubmit={ handleSubmit(onSubmit) } className="space-y-6">
+            <div className="border rounded-md p-5 bg-muted/10 shadow-sm">
+              <FinancialInputSection
+                control={ control }
+                register={ register }
+                setValue={ setValue }
+                watch={ watch }
+                errors={ errors }
+                participants={ participants }
+                type={ payerType === "TRAINEE" ? "trainee" : "volunteer" }
+                fields={
+                  payerType === "TRAINEE" ? traineeFields : volunteerFields
+                }
               />
-            )}
+            </div>
 
-            <DialogFooter className="pt-4">
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -325,7 +326,7 @@ export default function EditTrainingFinancialsDialog({
               </Button>
             </DialogFooter>
           </form>
-        </Form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

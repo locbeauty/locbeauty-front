@@ -100,26 +100,42 @@ export function FinancialInputSection({
       fields.forEach((field: any, index) => {
         if (index === selectedIndex) return;
 
+        // Check current payment status of the target field
+        // We use fields[index] data if available, but for dynamic form validity we might need to rely on watch if the field data isn't updating in real-time,
+        // HOWEVER, useFieldArray fields are snapshots. Let's try to get the current value from the form state if possible to be safe,
+        // or rely on field.paymentInfo if initialized correctly.
+        // Actually, since we are inside a form, `watch` on specific index is safer for current state.
+
+        // WATCH OUT: We cannot call 'watch' inside this loop (hooks rules).
+        // We need to access the current value using `methods.getValues()` if we had access to methods,
+        // OR we can trust that `field.paymentInfo` has the initial state and if it changed it should be in the form state.
+        // Since we don't have getValues here, we might need to rely on `fields` snapshot which is updated on re-render,
+        // OR pass getValues from parent OR standard solution: use `watch` for the whole array outside the effect?
+        // Watching the whole array might be heavy.
+
+        // Better approach: We can check the defaultValue or the current value if we had it.
+        // But wait, `fields` from useFieldArray contains the values.
+        // Let's check `field.paymentInfo?.paymentStatus`.
+
+        const currentStatus = field.paymentInfo?.paymentStatus;
+        if (currentStatus === "Pago" || currentStatus === "Parcial") {
+          return;
+        }
+
         // Only update if different to avoid potential loops (though hook form is robust)
         setValue(
           `${fieldName}.${index}.price` as Path<CreateTrainingDataType>,
           currentPrice,
         );
-        setValue(
-          `${fieldName}.${index}.paymentInfo` as Path<CreateTrainingDataType>,
-          currentPaymentInfo,
-        );
 
-        if (type === "trainee") {
-          setValue(
-            `${fieldName}.${index}.additionalCost` as Path<CreateTrainingDataType>,
-            currentAddCost,
-          );
-          setValue(
-            `${fieldName}.${index}.additionalCostDescription` as Path<CreateTrainingDataType>,
-            currentAddDesc,
-          );
-        }
+        setValue(
+          `${fieldName}.${index}.additionalCost` as Path<CreateTrainingDataType>,
+          currentAddCost,
+        );
+        setValue(
+          `${fieldName}.${index}.additionalCostDescription` as Path<CreateTrainingDataType>,
+          currentAddDesc,
+        );
       });
     }
   }, [
@@ -190,85 +206,110 @@ export function FinancialInputSection({
                 />
                 <label
                   htmlFor={ `replicate-${type}` }
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-col"
                 >
                   Replicar para todos
+                  <span className="text-xs text-muted-foreground">
+                    (exceto pagos e parciais)
+                  </span>
                 </label>
               </div>
             </div>
 
             <div className="space-y-4">
-              {/* Price */}
-              <div className="space-y-2">
-                <Label>Valor Base</Label>
-                <PriceInput
-                  withLabel={ false }
-                  register={ register(
-                    `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
-                  ) }
-                  value={
-                    watch(
-                      `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
-                    )?.toString() ?? ""
-                  }
-                  setValue={ setValue }
-                  name={
-                    `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>
-                  }
-                  placeholder="R$ 0,00"
-                />
-              </div>
+              {/* Calculate disabled state */}
+              {(() => {
+                const currentStatus = (currentPaymentInfo as any)
+                  ?.paymentStatus;
+                const isDisabled =
+                  currentStatus === "Pago" ||
+                  currentStatus === "Parcial" ||
+                  currentStatus === "Cortesia";
 
-              {/* Additional Costs */}
-              {isSelectedTrainee && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-md border border-yellow-200 dark:border-yellow-900/50 space-y-3">
-                  <div className="space-y-2">
-                    <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">
-                      Custos Operacionais Extras
-                    </Label>
-                    <div className="grid grid-cols-1 gap-4">
+                return (
+                  <>
+                    {/* Price */}
+                    <div className="space-y-2">
+                      <Label>Valor Base</Label>
                       <PriceInput
                         withLabel={ false }
                         register={ register(
-                          `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
+                          `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
                         ) }
                         value={
                           watch(
-                            `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
+                            `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
                           )?.toString() ?? ""
                         }
                         setValue={ setValue }
                         name={
-                          `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>
+                          `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>
                         }
-                        placeholder="Valor: R$ 0,00"
-                      />
-                      <Textarea
-                        { ...register(
-                          `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
-                        ) }
-                        placeholder="Descrição: Taxa de sala, material..."
-                        className="resize-none min-h-[40px]"
-                        rows={ 1 }
-                        value={
-                          (watch(
-                            `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
-                          ) as string) || ""
-                        }
+                        placeholder="R$ 0,00 "
+                        disabled={ isDisabled }
                       />
                     </div>
-                  </div>
-                </div>
-              )}
-              {/* Payment Info Section reused */}
-              <TrainingPaymentSection
-                prefix={ `${fieldName}.${selectedIndex}` }
-                label="Detalhes do Pagamento"
-                totalValue={
-                  parseCurrencyToFloat(currentPrice as unknown as string) +
-                  parseCurrencyToFloat(currentAddCost as unknown as string)
-                }
-              />
+
+                    {/* Additional Costs */}
+                    {isSelectedTrainee && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-md border border-yellow-200 dark:border-yellow-900/50 space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">
+                            Custos Operacionais Extras
+                          </Label>
+                          <div className="grid grid-cols-1 gap-4">
+                            <PriceInput
+                              withLabel={ false }
+                              register={ register(
+                                `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
+                              ) }
+                              value={
+                                watch(
+                                  `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
+                                )?.toString() ?? ""
+                              }
+                              setValue={ setValue }
+                              name={
+                                `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>
+                              }
+                              placeholder="Valor:  R$ 0,00"
+                              disabled={ isDisabled }
+                            />
+                            <Textarea
+                              { ...register(
+                                `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
+                              ) }
+                              placeholder="Descrição: Taxa de sala, material..."
+                              className="resize-none min-h-[40px]"
+                              rows={ 1 }
+                              disabled={ isDisabled }
+                              value={
+                                (watch(
+                                  `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
+                                ) as string) || ""
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {/* Payment Info Section reused */}
+                    <TrainingPaymentSection
+                      prefix={ `${fieldName}.${selectedIndex}` }
+                      label="Detalhes do Pagamento"
+                      totalValue={
+                        parseCurrencyToFloat(
+                          currentPrice as unknown as string,
+                        ) +
+                        parseCurrencyToFloat(
+                          currentAddCost as unknown as string,
+                        )
+                      }
+                      disabled={ isDisabled }
+                    />
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}

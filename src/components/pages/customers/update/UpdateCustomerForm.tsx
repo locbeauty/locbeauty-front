@@ -247,7 +247,7 @@ export function UpdateCustomerForm({
                   <Label>Telefones</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <PhoneInput register={ register("cellphone") } />
+                      <PhoneInput control={ control } name="cellphone" />
                       <div className="h-3">
                         {errors.cellphone && (
                           <p className="text-xs font-medium text-destructive">
@@ -270,7 +270,7 @@ export function UpdateCustomerForm({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <PhoneInput register={ register("secondaryCellphone") } />
+                      <PhoneInput control={ control } name="secondaryCellphone" />
                       {errors.secondaryCellphone && (
                         <p className="text-xs font-medium text-destructive">
                           {errors.secondaryCellphone.message}

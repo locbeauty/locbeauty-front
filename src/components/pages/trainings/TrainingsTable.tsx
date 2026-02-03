@@ -100,7 +100,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
       result = result.filter(
         (t) =>
           t.trainingId.toLowerCase().includes(lowerSearch) ||
-          t.Trainee?.name.toLowerCase().includes(lowerSearch) ||
+          t.Trainee?.fullname.toLowerCase().includes(lowerSearch) ||
           t.Volunteer?.name.toLowerCase().includes(lowerSearch),
       );
     }
@@ -117,14 +117,6 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
           t.TrainingPayment?.some((p) => p.paymentStatus === "Pendente"),
         );
       } else if (filterPaymentStatus === "PAID") {
-        // Assuming "Paid" means all payments are paid or at least one is "Pago" and none "Pendente"?
-        // Or simply has "Pago" payments? The user request was "status de pagamento".
-        // Let's implement logical interpretations.
-        // "Pendente" usually means user wants to see what is missing money.
-        // "Pago" might mean fully paid.
-        // For now simple logic: Has any Paid payment? Or Strict?
-        // Let's go with: All payments are "Pago" OR (has "Pago" and no "Pendente").
-        // Actually, typically in grids: 'Pending' shows if ANY is pending. 'Paid' shows if ALL are paid.
         result = result.filter(
           (t) =>
             t.TrainingPayment?.length > 0 &&
@@ -136,7 +128,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
         );
       } else if (filterPaymentStatus === "CANCELED") {
         result = result.filter((t) =>
-          t.TrainingPayment?.some((p) => p.paymentStatus === "Cancelado"),
+          t.TrainingPayment?.some((p) => p.paymentStatus === "Cancelado")
         );
       }
     }
@@ -298,14 +290,20 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
           </div>
         </div>
         <div className="flex justify-end pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={ clearFilters }
-            className="text-muted-foreground h-9"
-          >
-            <X className="h-3 w-3 mr-1" /> Limpar Todos os Filtros
-          </Button>
+          {(searchTerm ||
+            filterStatus !== "ALL" ||
+            filterPaymentStatus !== "ALL" ||
+            filterDate ||
+            filterFilial !== "ALL") && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={ clearFilters }
+              className="text-muted-foreground h-9"
+            >
+              <X className="h-3 w-3 mr-1" /> Limpar Todos os Filtros
+            </Button>
+          )}
         </div>
       </div>
 
@@ -317,6 +315,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               <th className="text-left p-3 font-medium">Filial</th>
               <th className="text-left p-3 font-medium">Equipamento</th>
               <th className="text-center p-3 font-medium">Horário</th>
+              <th className="text-center p-3 font-medium">Pagamento</th>
               <th className="text-center p-3 font-medium">Status</th>
               <th className="text-center p-3 font-medium">Detalhes</th>
             </tr>
@@ -324,7 +323,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
           <tbody>
             {sortedTrainings.length === 0 && (
               <tr>
-                <td className="text-center p-4" colSpan={ 8 }>
+                <td className="text-center p-4" colSpan={ 7 }>
                   {trainings
                     ? "Nenhum treinamento encontrado."
                     : "Carregando..."}
@@ -347,6 +346,42 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 </td>
                 <td className="p-3 text-center text-sm">
                   {formatDuration(training.hourInMinutes)}
+                </td>
+                <td className="p-3 text-center text-sm">
+                  {(() => {
+                    const payments = training.TrainingPayment || [];
+                    if (payments.length === 0)
+                      return (
+                        <Badge
+                          variant="outline"
+                          className="text-muted-foreground"
+                        >
+                          N/A
+                        </Badge>
+                      );
+
+                    const hasPending = payments.some(
+                      (p) => p.paymentStatus === "Pendente",
+                    );
+                    if (hasPending) {
+                      return (
+                        <Badge
+                          variant="outline"
+                          className="bg-yellow-100 text-yellow-800 border-yellow-200"
+                        >
+                          Pendente
+                        </Badge>
+                      );
+                    }
+                    return (
+                      <Badge
+                        variant="outline"
+                        className="bg-green-100 text-green-800 border-green-200"
+                      >
+                        Pago
+                      </Badge>
+                    );
+                  })()}
                 </td>
                 <td className="p-3 text-center text-sm">
                   {getStatusBadge(training.trainingStatus)}
@@ -398,7 +433,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 },
                 {
                   itemLabel: "Aluno: ",
-                  itemInfo: training.Trainee?.name || "N/A",
+                  itemInfo: training.Trainee?.fullname || "N/A",
                 },
                 {
                   itemLabel: "Modelo: ",
@@ -408,7 +443,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               ],
             } }
             rawData={ training }
-            handleToggleDialog={ handleToggleDialog }
+            handleToggleDialog={ handleOpenDetails }
           />
         ))}
         {sortedTrainings.length === 0 && (

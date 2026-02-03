@@ -83,7 +83,7 @@ export function CreateFilialForm() {
             </div>
             <div className="space-y-2 w-[196px]">
               <Label htmlFor="telefone">Telefone</Label>
-              <PhoneInput register={ register("cellphone") } />
+              <PhoneInput control={ control } name="cellphone" />
               {errors.cellphone && (
                 <p className="text-sm font-medium text-destructive">
                   {errors.cellphone.message}

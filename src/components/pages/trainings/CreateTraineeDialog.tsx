@@ -131,7 +131,9 @@ export function CreateTraineeDialog({
       </DialogTrigger>
       <DialogContent className="md:max-w-[800px] h-[90vh] overflow-y-auto">
         <FormProvider { ...customerForm }>
-          <form onSubmit={ customerForm.handleSubmit(onSubmitTrainee, onInvalid) }>
+          <form
+            onSubmit={ customerForm.handleSubmit(onSubmitTrainee, onInvalid) }
+          >
             <DialogHeader>
               <DialogTitle>Cadastrar Novo Aluno</DialogTitle>
               <DialogDescription>
@@ -241,7 +243,7 @@ export function CreateTraineeDialog({
 
                 <div className="space-y-2">
                   <Label htmlFor="cellphone">Telefone *</Label>
-                  <PhoneInput register={ customerForm.register("cellphone") } />
+                  <PhoneInput control={ customerForm.control } name="cellphone" />
                   {customerForm.formState.errors.cellphone && (
                     <p className="text-sm text-destructive">
                       {customerForm.formState.errors.cellphone.message}

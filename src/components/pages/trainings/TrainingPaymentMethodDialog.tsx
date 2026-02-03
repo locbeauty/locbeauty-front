@@ -87,6 +87,7 @@ export type UpdateTrainingPayload = {
     | "Dinheiro"
     | null;
   traineeId?: string;
+  customerId?: string;
   volunteerId?: string;
   addedTrainees?: string[];
   removedTrainees?: string[];
@@ -107,6 +108,7 @@ export type UpdateTrainingPayload = {
     secondPaymentDate: Date | null;
     secondPaymentMethod: string | null;
     secondPaymentStatus: InstallmentStatus;
+    refundAmount?: number | null;
   };
 };
 
@@ -153,6 +155,8 @@ function getStatusColor(status: string) {
     return "bg-yellow-500";
   case "Pendente":
     return "bg-red-500";
+  case "Cortesia":
+    return "bg-blue-500";
   default:
     return "bg-gray-500";
   }
@@ -209,6 +213,8 @@ export function TrainingPaymentMethodDialog({
   const [ isCourtesy, setIsCourtesy ] = useState(false);
   const [ wasRefunded, setWasRefunded ] = useState(false);
   const [ cancellationFee, setCancellationFee ] = useState<string>("0,00");
+  const [ isRefunded, setIsRefunded ] = useState(false);
+  const [ refundAmount, setRefundAmount ] = useState("0,00");
 
   const [ errors, setErrors ] = useState<LocalErrorsType>(initialErrors);
   const [ isSubmitting, setIsSubmitting ] = useState(false);
@@ -226,7 +232,10 @@ export function TrainingPaymentMethodDialog({
         if (!participantId) return matchesType; // Legacy fallback or general payment
 
         if (payerType === "TRAINEE") {
-          return matchesType && p.traineeId === participantId;
+          return (
+            matchesType &&
+            (p.traineeId === participantId || p.customerId === participantId)
+          );
         } else {
           return matchesType && p.volunteerId === participantId;
         }
@@ -243,7 +252,11 @@ export function TrainingPaymentMethodDialog({
       ? selectedTraining.TrainingPayment
       : [];
     const sameTypePayment = otherPayments.find(
-      (p) => p.payerType === payerType && (p.totalPrice || 0) > 0,
+      (p) =>
+        p.payerType === payerType &&
+        (p.totalPrice || 0) > 0 &&
+        !p.isCourtesy &&
+        p.paymentStatus !== "Cortesia",
     );
     return sameTypePayment?.totalPrice || 0;
   }, [ selectedTraining, payerType ]);
@@ -253,21 +266,30 @@ export function TrainingPaymentMethodDialog({
     payerType === "TRAINEE"
       ? traineeTotalPrice ||
         (currentPaymentData
-          ? currentPaymentData.totalPrice ||
-            (currentPaymentData.basePrice || 0) +
-              (currentPaymentData.additionalCost || 0)
+          ? currentPaymentData.isCourtesy ||
+            currentPaymentData.paymentStatus === "Cortesia"
+            ? 0
+            : currentPaymentData.totalPrice ||
+              (currentPaymentData.basePrice || 0) +
+                (currentPaymentData.additionalCost || 0)
           : suggestedPriceFromOthers)
       : volunteerTotalPrice ||
         (currentPaymentData
-          ? currentPaymentData.totalPrice ||
-            (currentPaymentData.basePrice || 0) +
-              (currentPaymentData.additionalCost || 0)
+          ? currentPaymentData.isCourtesy ||
+            currentPaymentData.paymentStatus === "Cortesia"
+            ? 0
+            : currentPaymentData.totalPrice ||
+              (currentPaymentData.basePrice || 0) +
+                (currentPaymentData.additionalCost || 0)
           : suggestedPriceFromOthers);
 
   // Lógica de desabilitação
   const areDetailsDisabled = useMemo(() => {
-    const isSavedAsPaid = currentPaymentData?.paymentStatus === "Pago";
-    const isLocallyPaid = paymentStatus === "Pago";
+    const isSavedAsPaid =
+      currentPaymentData?.paymentStatus === "Pago" ||
+      currentPaymentData?.paymentStatus === "Cortesia";
+    const isLocallyPaid =
+      paymentStatus === "Pago" || paymentStatus === "Cortesia";
 
     return isSavedAsPaid && isLocallyPaid;
   }, [ currentPaymentData, paymentStatus ]);
@@ -279,12 +301,18 @@ export function TrainingPaymentMethodDialog({
 
     const payment = currentPaymentData;
 
+    // Determine the effective payment status from the database
+    // If isCourtesy is true, the effective status is "Cortesia", otherwise use the stored status
+    const effectiveDbPaymentStatus = payment.isCourtesy
+      ? "Cortesia"
+      : payment.paymentStatus;
+
     const isSame =
       trainingStatus === selectedTraining.trainingStatus &&
       isCourtesy === (payment.isCourtesy || false) &&
       wasRefunded === (payment.wasRefunded || false) &&
       cancellationFee === centsToString(payment.cancellationFee || 0) &&
-      paymentStatus === payment.paymentStatus &&
+      paymentStatus === effectiveDbPaymentStatus &&
       paymentMode === payment.paymentMode &&
       firstPaymentAmount === centsToString(payment.firstPaymentAmount || 0) &&
       firstPaymentDate === formatDateForInput(payment.firstPaymentDate) &&
@@ -293,7 +321,11 @@ export function TrainingPaymentMethodDialog({
       secondPaymentAmount === centsToString(payment.secondPaymentAmount || 0) &&
       secondPaymentDate === formatDateForInput(payment.secondPaymentDate) &&
       secondPaymentMethod === payment.secondPaymentMethod &&
-      secondPaymentStatus === (payment.secondPaymentStatus || "Pendente");
+      secondPaymentStatus === (payment.secondPaymentStatus || "Pendente") &&
+      isRefunded === (payment.wasRefunded || false) &&
+      (isRefunded
+        ? refundAmount === centsToString(payment.refundAmount || 0)
+        : true);
 
     return !isSame;
   }, [
@@ -314,6 +346,8 @@ export function TrainingPaymentMethodDialog({
     isCourtesy,
     wasRefunded,
     cancellationFee,
+    isRefunded,
+    refundAmount,
   ]);
 
   // 3. Preencher formulário ao abrir
@@ -324,14 +358,23 @@ export function TrainingPaymentMethodDialog({
       setIsCourtesy(false);
       setWasRefunded(false);
       setCancellationFee("0,00");
+      setIsRefunded(currentPaymentData?.wasRefunded || false);
+      setRefundAmount(centsToString(currentPaymentData?.refundAmount || 0));
 
       if (currentPaymentData) {
         // MODO EDIÇÃO
         const payment = currentPaymentData;
-        setPaymentStatus(payment.paymentStatus);
-        setPaymentMode(payment.paymentMode);
 
-        setIsCourtesy(payment.isCourtesy);
+        // Correctly set payment status: if it's stored as 'Pago' but isCourtesy is true, show 'Cortesia'
+        if (payment.isCourtesy) {
+          setPaymentStatus("Cortesia");
+          setIsCourtesy(true);
+        } else {
+          setPaymentStatus(payment.paymentStatus);
+          setIsCourtesy(false);
+        }
+
+        setPaymentMode(payment.paymentMode);
         setWasRefunded(payment.wasRefunded);
         setCancellationFee(centsToString(payment.cancellationFee || 0));
 
@@ -340,8 +383,14 @@ export function TrainingPaymentMethodDialog({
         setFirstPaymentMethod(payment.firstPaymentMethod);
         setFirstPaymentStatus(payment.firstPaymentStatus || "Pendente");
 
+        // Logic synced with CheckoutPaymentMethodDialog
+        const pendingValue =
+          (payment.totalPrice || 0) - (payment.firstPaymentAmount || 0);
+        const secondPaymentAmountInputDisplayValue =
+          payment.paymentMode === "Parcelado" ? pendingValue : 0;
+
         setSecondPaymentAmount(
-          centsToString(payment.totalPrice - payment.firstPaymentAmount || 0),
+          centsToString(secondPaymentAmountInputDisplayValue),
         );
         setSecondPaymentDate(formatDateForInput(payment.secondPaymentDate));
         setSecondPaymentMethod(payment.secondPaymentMethod);
@@ -379,6 +428,26 @@ export function TrainingPaymentMethodDialog({
       paymentMode === "AVista"
     ) {
       setFirstPaymentAmount(centsToString(displayPrice));
+      if (!firstPaymentDate) {
+        setFirstPaymentDate(new Date().toISOString().split("T")[0]);
+      }
+    }
+  }, [
+    paymentStatus,
+    displayPrice,
+    paymentMode,
+    selectedTraining,
+    firstPaymentDate,
+  ]);
+
+  // Auto-fill payment details when status is "Cortesia"
+  useEffect(() => {
+    if (
+      paymentStatus === "Cortesia" &&
+      selectedTraining &&
+      paymentMode === "AVista"
+    ) {
+      setFirstPaymentAmount("0,00");
       if (!firstPaymentDate) {
         setFirstPaymentDate(new Date().toISOString().split("T")[0]);
       }
@@ -450,6 +519,13 @@ export function TrainingPaymentMethodDialog({
         payerType === "TRAINEE"
           ? ((participantId || currentPaymentData?.traineeId) ?? undefined)
           : undefined,
+      customerId:
+        payerType === "TRAINEE"
+          ? ((participantId ||
+              currentPaymentData?.traineeId ||
+              currentPaymentData?.customerId) ??
+            undefined)
+          : undefined,
       volunteerId:
         payerType === "VOLUNTEER"
           ? ((participantId || currentPaymentData?.volunteerId) ?? undefined)
@@ -458,25 +534,31 @@ export function TrainingPaymentMethodDialog({
         additionalCost: currentPaymentData?.additionalCost || 0,
         additionalCostDescription:
           currentPaymentData?.additionalCostDescription || "",
-        paymentStatus:
-          paymentStatus === "Cortesia"
-            ? "Pago"
-            : firstPaymentMethod && secondPaymentMethod
-              ? "Pago"
-              : paymentStatus,
+        paymentStatus: paymentStatus === "Cortesia" ? "Pago" : paymentStatus,
         paymentMode,
         totalPrice: totalCents,
         basePrice: currentPaymentData?.basePrice || -1,
         firstPaymentAmount: parseStringToCents(firstPaymentAmount),
         firstPaymentDate: firstPaymentDate ? new Date(firstPaymentDate) : null,
         firstPaymentMethod,
-        firstPaymentStatus: "Pago",
+        firstPaymentStatus:
+          paymentStatus === "Pago" ||
+          paymentStatus === "Cortesia" ||
+          paymentStatus === "Parcial"
+            ? "Pago"
+            : firstPaymentStatus,
         secondPaymentAmount: parseStringToCents(secondPaymentAmount),
         secondPaymentDate: secondPaymentDate
           ? new Date(secondPaymentDate)
           : null,
         secondPaymentMethod,
-        secondPaymentStatus: secondPaymentMethod ? "Pago" : "Pendente",
+        secondPaymentStatus:
+          secondPaymentDate &&
+          secondPaymentMethod &&
+          parseStringToCents(secondPaymentAmount) > 0
+            ? "Pago"
+            : secondPaymentStatus,
+        refundAmount: isRefunded ? parseStringToCents(refundAmount) : null,
       },
     };
 
@@ -487,7 +569,7 @@ export function TrainingPaymentMethodDialog({
       });
 
       if (response.statusCode !== 200) {
-        toast.warning(response.message || "Erro ao  atualizar pagamento .");
+        toast.warning(response.message || "Erro ao atualizar pagamento.");
       } else {
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
         queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
@@ -582,21 +664,26 @@ export function TrainingPaymentMethodDialog({
               <div className="space-y-2 w-full">
                 <Label className="text-sm font-medium flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  Status do Pagamento
+                  Status do pagamento
                 </Label>
                 <Select
                   onValueChange={ (value: PaymentStatuses) => {
                     setPaymentStatus(value);
-                    if (value === "Pago") {
+                    if (value === "Cortesia") {
+                      setIsCourtesy(true);
                       setPaymentMode("AVista");
-                      setFirstPaymentAmount(centsToString(displayPrice));
-                      if (!firstPaymentDate) {
-                        setFirstPaymentDate(
-                          new Date().toISOString().split("T")[0],
-                        );
-                      }
-                    } else if (value === "Parcial") {
+                    } else {
+                      setIsCourtesy(false);
+                    }
+
+                    if (value === "Parcial") {
                       setPaymentMode("Parcelado");
+                      setFirstPaymentAmount("0,00");
+                      setFirstPaymentDate(
+                        new Date().toISOString().split("T")[0],
+                      );
+                    } else if (value === "Pago" || value === "Cortesia") {
+                      setPaymentMode("AVista");
                     }
                   } }
                   value={ paymentStatus }
@@ -606,7 +693,7 @@ export function TrainingPaymentMethodDialog({
                     disabled={
                       areDetailsDisabled ||
                       (paymentStatus === "Parcial" &&
-                        firstPaymentStatus === "Pago")
+                        isFirstInstallmentSavedAsPaid)
                     }
                   >
                     <SelectValue placeholder="Selecione..." />
@@ -667,7 +754,7 @@ export function TrainingPaymentMethodDialog({
                     <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs">
                         1
                     </div>
-                      Primeira Parcela / Entrada
+                      Primeira parcela
                   </Label>
                   <BookingPaymentStatusBadge status={ firstPaymentStatus } />
                 </div>
@@ -680,10 +767,10 @@ export function TrainingPaymentMethodDialog({
                     <PriceInput
                       disabled={
                         areDetailsDisabled ||
-                          (paymentMode === "Parcelado" &&
-                            firstPaymentStatus === "Pago") ||
-                          isFirstInstallmentSavedAsPaid ||
-                          paymentStatus === "Pago"
+                          currentPaymentData?.paymentStatus === "Pago" ||
+                          paymentStatus === "Pago" ||
+                          // paymentMode === "Parcelado" ||
+                          isFirstInstallmentSavedAsPaid
                       }
                       withLabel={ false }
                       value={ firstPaymentAmount || "0,00" }
@@ -698,12 +785,15 @@ export function TrainingPaymentMethodDialog({
 
                   <div className="sm:col-span-4">
                     <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                      <CalendarIcon className="w-3 h-3" /> Data do Pagamento
+                      <CalendarIcon className="w-3 h-3" /> Data do pagamento
                     </Label>
                     <Input
                       type="date"
                       disabled={
-                        areDetailsDisabled || isFirstInstallmentSavedAsPaid
+                        areDetailsDisabled ||
+                          currentPaymentData?.paymentStatus === "Pago" ||
+                          // paymentMode === "Parcelado" ||
+                          isFirstInstallmentSavedAsPaid
                       }
                       value={ firstPaymentDate }
                       onChange={ (e) => setFirstPaymentDate(e.target.value) }
@@ -717,7 +807,7 @@ export function TrainingPaymentMethodDialog({
 
                   <div className="sm:col-span-4">
                     <Label className="text-xs text-muted-foreground">
-                        Forma de Pagamento
+                        Forma de pagamento
                     </Label>
                     <Select
                       onValueChange={ (value) => setFirstPaymentMethod(value) }
@@ -725,7 +815,9 @@ export function TrainingPaymentMethodDialog({
                     >
                       <SelectTrigger
                         disabled={
-                          areDetailsDisabled || isFirstInstallmentSavedAsPaid
+                          areDetailsDisabled ||
+                            currentPaymentData?.paymentStatus === "Pago" ||
+                            isFirstInstallmentSavedAsPaid
                         }
                         className={
                           errors.paymentInfo?.firstPaymentMethod
@@ -766,7 +858,7 @@ export function TrainingPaymentMethodDialog({
                         <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-xs">
                               2
                         </div>
-                            Segunda Parcela / Restante
+                            Segunda parcela
                       </Label>
                       <BookingPaymentStatusBadge
                         status={ secondPaymentStatus }
@@ -775,7 +867,7 @@ export function TrainingPaymentMethodDialog({
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                       <div className="sm:col-span-4">
                         <Label className="text-xs text-muted-foreground">
-                              Valor Restante
+                              Valor restante
                         </Label>
                         <PriceInput
                           disabled={ true }
@@ -794,11 +886,15 @@ export function TrainingPaymentMethodDialog({
 
                       <div className="sm:col-span-4">
                         <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                          <CalendarIcon className="w-3 h-3" /> Data Prevista
+                          <CalendarIcon className="w-3 h-3" /> Data do
+                              segundo pagamento
                         </Label>
                         <Input
                           type="date"
-                          disabled={ isSecondInstallmentSavedAsPaid }
+                          disabled={
+                            areDetailsDisabled ||
+                                secondPaymentStatus === "Pago"
+                          }
                           value={ secondPaymentDate }
                           onChange={ (e) =>
                             setSecondPaymentDate(e.target.value)
@@ -813,7 +909,7 @@ export function TrainingPaymentMethodDialog({
 
                       <div className="sm:col-span-4">
                         <Label className="text-xs text-muted-foreground">
-                              Forma Prevista
+                              Forma de pagamento
                         </Label>
                         <Select
                           onValueChange={ (value) =>
@@ -822,12 +918,15 @@ export function TrainingPaymentMethodDialog({
                           value={ secondPaymentMethod || "" }
                         >
                           <SelectTrigger
+                            disabled={
+                              areDetailsDisabled ||
+                                  secondPaymentStatus === "Pago"
+                            }
                             className={
                               errors.paymentInfo?.secondPaymentMethod
                                 ? "border-red-500"
                                 : ""
                             }
-                            disabled={ isSecondInstallmentSavedAsPaid }
                           >
                             <SelectValue placeholder="Selecione (opcional)..." />
                           </SelectTrigger>
@@ -857,59 +956,38 @@ export function TrainingPaymentMethodDialog({
 
           {/* Refund Section */}
           {(currentPaymentData?.paymentStatus === "Pago" ||
-            currentPaymentData?.firstPaymentStatus === "Pago" ||
-            currentPaymentData?.secondPaymentStatus === "Pago") &&
-            (trainingStatus !== "Concluido" ||
-              wasRefunded ||
-              currentPaymentData?.wasRefunded) && (
+            isFirstInstallmentSavedAsPaid ||
+            isSecondInstallmentSavedAsPaid) &&
+            paymentStatus !== "Cortesia" &&
+            (trainingStatus !== "Concluido" || isRefunded) && (
             <div className="bg-red-50/50 p-4 rounded-lg border border-dashed border-red-200 mt-4">
               <div className="flex items-center space-x-2 mb-2">
                 <Checkbox
                   id="refunded"
-                  checked={ wasRefunded }
-                  disabled={
-                    currentPaymentData?.paymentStatus === "Reembolsado" ||
-                      trainingStatus === "Cancelado"
+                  checked={ isRefunded }
+                  disabled={ paymentStatus === "Reembolsado" }
+                  onCheckedChange={ (checked) =>
+                    setIsRefunded(checked as boolean)
                   }
-                  onCheckedChange={ (checked) => {
-                    setWasRefunded(checked as boolean);
-                    if (!checked) {
-                      setCancellationFee("0,00");
-                    }
-                  } }
-                  className="data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                 />
                 <Label
                   htmlFor="refunded"
-                  className="text-sm font-semibold text-red-900 cursor-pointer"
+                  className="text-xs text-red-600 font-medium"
                 >
-                    Houve Reembolso / Cancelamento?
+                    Houve Reembolso?
                 </Label>
               </div>
 
-              {wasRefunded && (
-                <div className="pl-6 space-y-2 animate-in slide-in-from-top-2 duration-200">
-                  <DialogDescription className="text-red-800/80 text-xs text-justify">
-                      Ao marcar como reembolsado, o status financeiro do
-                      pagamento será alterado para &quot;Reembolsado&quot;. Se
-                      houver uma taxa de cancelamento, informe o valor abaixo (o
-                      valor que foi RETIDO/COBRADO do cliente). Se o reembolso
-                      foi total, a taxa é 0.
-                  </DialogDescription>
-
-                  <div className="pt-2">
-                    <Label className="text-xs text-red-900 font-medium">
-                        Taxa de Cancelamento (Valor Retido)
-                    </Label>
-                    <PriceInput
-                      value={ cancellationFee }
-                      onChange={ (v) => setCancellationFee(v) }
-                    />
-                    <p className="text-[10px] text-red-700 mt-1">
-                        Ex: Se o cliente pagou R$ 100,00 e você devolveu R$
-                        80,00, a taxa de cancelamento foi R$ 20,00.
-                    </p>
-                  </div>
+              {isRefunded && (
+                <div className="pl-6 w-full sm:w-1/2">
+                  <Label className="text-xs text-muted-foreground">
+                      Valor do Reembolso
+                  </Label>
+                  <PriceInput
+                    disabled={ paymentStatus === "Reembolsado" }
+                    value={ refundAmount }
+                    onChange={ (value) => setRefundAmount(value) }
+                  />
                 </div>
               )}
             </div>
@@ -930,7 +1008,12 @@ export function TrainingPaymentMethodDialog({
           >
             Cancelar
           </Button>
-          <Button onClick={ handleSave } disabled={ isSubmitting || !hasChanged }>
+          <Button
+            onClick={ handleSave }
+            disabled={
+              isSubmitting || !hasChanged || currentPaymentData?.isCourtesy
+            }
+          >
             {isSubmitting ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

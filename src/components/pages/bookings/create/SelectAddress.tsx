@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { CreateCheckoutFormSchemaType } from "@/lib/zod/CreateBookingValidation";
+import { GetAllCustomerAddresses } from "@/services/addresses.service";
 import { useQuery } from "@tanstack/react-query";
 
 interface SelectAddressProps {
@@ -39,14 +40,11 @@ export function SelectAddress({
   const { data: customerAddresses } = useQuery<Address[], Error>({
     queryKey: [ "get-all-customer-addresses", watchCustomer?.customerId ],
     queryFn: async () => {
-      const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/customer/addresses?customerId=${watchCustomer.customerId}`,
-        {
-          credentials: "include",
-        },
-      );
-      const { data }: { data: Address[] } = await response.json();
-      return data;
+      if (!watchCustomer?.customerId) return [];
+      const response = await GetAllCustomerAddresses({
+        customerId: watchCustomer.customerId,
+      });
+      return response.data || [];
     },
     enabled: !!watchCustomer && !!watchCustomer.customerId,
     initialData: [],
@@ -100,7 +98,7 @@ export function SelectAddress({
               />
             </SelectTrigger>
             <SelectContent>
-              {customerAddresses &&
+              {Array.isArray(customerAddresses) &&
                 customerAddresses.map((addr) => {
                   if (!addr.isActive) return null;
                   return (

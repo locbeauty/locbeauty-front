@@ -94,7 +94,8 @@ export function TrainingPaymentSection({
   prefix,
   label,
   totalValue = 0,
-}: TrainingPaymentSectionProps) {
+  disabled,
+}: TrainingPaymentSectionProps & { disabled?: boolean }) {
   const {
     control,
     watch,
@@ -144,7 +145,7 @@ export function TrainingPaymentSection({
         setValue(`${prefix}.paymentInfo.secondPaymentAmount` as any, null);
       }
     }
-  }, [ paymentStatus, totalValue, setValue, prefix, getValues ]); // getValues is stable
+  }, [paymentStatus, totalValue, setValue, prefix, getValues]); // getValues is stable
 
   // Efeito 2: Calcular valor da 2ª parcela se for "Parcial"
   useEffect(() => {
@@ -199,17 +200,18 @@ export function TrainingPaymentSection({
           </Label>
 
           <FormField
-            control={ control }
-            name={ `${prefix}.paymentInfo.paymentStatus` as any }
-            render={ ({ field }) => (
+            control={control}
+            name={`${prefix}.paymentInfo.paymentStatus` as any}
+            render={({ field }) => (
               <FormItem>
                 <Select
-                  onValueChange={ field.onChange }
-                  value={ (field.value as string) || "Pendente" }
+                  disabled={disabled}
+                  onValueChange={field.onChange}
+                  value={(field.value as string) || "Pendente"}
                 >
                   <FormControl>
                     <SelectTrigger
-                      className={ statusError ? "border-red-500" : "" }
+                      className={statusError ? "border-red-500" : ""}
                     >
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
@@ -228,12 +230,12 @@ export function TrainingPaymentSection({
                         return true;
                       })
                       .map((status) => (
-                        <SelectItem key={ status } value={ status }>
+                        <SelectItem key={status} value={status}>
                           <div className="flex items-center gap-2">
                             <div
-                              className={ `w-2 h-2 rounded-full ${getStatusColor(
+                              className={`w-2 h-2 rounded-full ${getStatusColor(
                                 status,
-                              )}` }
+                              )}`}
                             />
                             {status}
                           </div>
@@ -243,7 +245,7 @@ export function TrainingPaymentSection({
                 </Select>
                 <FormMessage />
               </FormItem>
-            ) }
+            )}
           />
         </div>
       </div>
@@ -267,66 +269,68 @@ export function TrainingPaymentSection({
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
               <div className="sm:col-span-4">
                 <FormField
-                  control={ control }
-                  name={ `${prefix}.paymentInfo.firstPaymentAmount` as any }
-                  render={ ({ field }) => (
+                  control={control}
+                  name={`${prefix}.paymentInfo.firstPaymentAmount` as any}
+                  render={({ field }) => (
                     <FormItem>
                       <Label className="text-xs text-muted-foreground">
                         Valor
                       </Label>
                       <FormControl>
                         <PriceInput
-                          { ...field }
-                          withLabel={ false }
+                          {...field}
+                          withLabel={false}
                           value={
                             field.value != null
                               ? String(field.value)
                               : undefined
                           }
-                          // Desabilita edição se estiver "Pago" (pois o useEffect fixa o valor total)
-                          disabled={ paymentStatus === "Pago" }
+                          // Desabilita edição se estiver "Pago" (pois o useEffect fixa o valor total) ou se toda a seção estiver desabilitada
+                          disabled={disabled || paymentStatus === "Pago"}
                         />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
-                  ) }
+                  )}
                 />
               </div>
 
               <div className="sm:col-span-4">
                 <FormField
-                  control={ control }
-                  name={ `${prefix}.paymentInfo.firstPaymentDate` as any }
-                  render={ ({ field }) => (
+                  control={control}
+                  name={`${prefix}.paymentInfo.firstPaymentDate` as any}
+                  render={({ field }) => (
                     <FormItem>
                       <Label className="text-xs text-muted-foreground flex items-center gap-1">
                         <CalendarIcon className="w-3 h-3" /> Data do Pagamento
                       </Label>
                       <FormControl>
-                          <DatePicker
-                              value={ field.value ? new Date(field.value) : null }
-                              onChange={ field.onChange }
-                              placeholder="Selecione a data"
-                            />
+                        <DatePicker
+                          disabled={disabled}
+                          value={field.value ? new Date(field.value) : null}
+                          onChange={field.onChange}
+                          placeholder="Selecione a data"
+                        />
                       </FormControl>
                       <FormMessage className="text-xs" />
-                     </FormItem>
-                  ) }
+                    </FormItem>
+                  )}
                 />
               </div>
 
               <div className="sm:col-span-4">
                 <FormField
-                  control={ control }
-                  name={ `${prefix}.paymentInfo.firstPaymentMethod` as any }
-                  render={ ({ field }) => (
+                  control={control}
+                  name={`${prefix}.paymentInfo.firstPaymentMethod` as any}
+                  render={({ field }) => (
                     <FormItem>
                       <Label className="text-xs text-muted-foreground">
                         Forma de Pagamento
                       </Label>
                       <Select
-                        onValueChange={ field.onChange }
-                        value={ (field.value as string) ?? undefined }
+                        disabled={disabled}
+                        onValueChange={field.onChange}
+                        value={(field.value as string) ?? undefined}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -335,7 +339,7 @@ export function TrainingPaymentSection({
                         </FormControl>
                         <SelectContent>
                           {paymentMethods.map((method) => (
-                            <SelectItem key={ method } value={ method }>
+                            <SelectItem key={method} value={method}>
                               <div className="flex items-center gap-2">
                                 {getPaymentIcon(method)}
                                 <span>{method}</span>
@@ -346,7 +350,7 @@ export function TrainingPaymentSection({
                       </Select>
                       <FormMessage className="text-xs" />
                     </FormItem>
-                  ) }
+                  )}
                 />
               </div>
             </div>
@@ -369,61 +373,63 @@ export function TrainingPaymentSection({
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div className="sm:col-span-4">
                     <FormField
-                      control={ control }
-                      name={ `${prefix}.paymentInfo.secondPaymentAmount` as any }
-                      render={ ({ field }) => (
+                      control={control}
+                      name={`${prefix}.paymentInfo.secondPaymentAmount` as any}
+                      render={({ field }) => (
                         <FormItem>
                           <Label className="text-xs text-muted-foreground">
                             Valor Restante
                           </Label>
                           <FormControl>
                             <PriceInput
-                              { ...field }
-                              withLabel={ false }
-                              disabled={ true } // Sempre calculado automaticamente
-                              value={ field.value ? String(field.value) : "" }
+                              {...field}
+                              withLabel={false}
+                              disabled={true} // Sempre calculado automaticamente
+                              value={field.value ? String(field.value) : ""}
                             />
                           </FormControl>
                           <FormMessage className="text-xs" />
                         </FormItem>
-                      ) }
+                      )}
                     />
                   </div>
 
                   <div className="sm:col-span-4">
                     <FormField
-                      control={ control }
-                      name={ `${prefix}.paymentInfo.secondPaymentDate` as any }
-                      render={ ({ field }) => (
+                      control={control}
+                      name={`${prefix}.paymentInfo.secondPaymentDate` as any}
+                      render={({ field }) => (
                         <FormItem>
                           <Label className="text-xs text-muted-foreground flex items-center gap-1">
                             <CalendarIcon className="w-3 h-3" /> Data Prevista
                           </Label>
                           <FormControl>
                             <DatePicker
-                              value={ field.value ? new Date(field.value) : null }
-                              onChange={ field.onChange }
+                              disabled={disabled}
+                              value={field.value ? new Date(field.value) : null}
+                              onChange={field.onChange}
                               placeholder="Selecione a data"
                             />
                           </FormControl>
                           <FormMessage className="text-xs" />
                         </FormItem>
-                      ) }
+                      )}
                     />
                   </div>
 
                   <div className="sm:col-span-4">
                     <FormField
-                      control={ control }
-                      name={ `${prefix}.paymentInfo.secondPaymentMethod` as any }
-                      render={ ({ field }) => (
+                      control={control}
+                      name={`${prefix}.paymentInfo.secondPaymentMethod` as any}
+                      render={({ field }) => (
                         <FormItem>
                           <Label className="text-xs text-muted-foreground">
                             Forma Prevista
                           </Label>
                           <Select
-                            onValueChange={ field.onChange }
-                            value={ (field.value as string) ?? undefined }
+                            disabled={disabled}
+                            onValueChange={field.onChange}
+                            value={(field.value as string) ?? undefined}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -432,7 +438,7 @@ export function TrainingPaymentSection({
                             </FormControl>
                             <SelectContent>
                               {paymentMethods.map((method) => (
-                                <SelectItem key={ method } value={ method }>
+                                <SelectItem key={method} value={method}>
                                   <div className="flex items-center gap-2">
                                     {getPaymentIcon(method)}
                                     <span>{method}</span>
@@ -443,7 +449,7 @@ export function TrainingPaymentSection({
                           </Select>
                           <FormMessage className="text-xs" />
                         </FormItem>
-                      ) }
+                      )}
                     />
                   </div>
                 </div>

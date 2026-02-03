@@ -310,7 +310,7 @@ export function CustomerGeneralInformationForm({
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="space-y-2 col-span-12 md:col-span-8">
-                    <PhoneInput register={ register("cellphone") } />
+                    <PhoneInput control={ control } name="cellphone" />
                     <div className="h-3">
                       {errors.cellphone && (
                         <p className="text-xs font-medium text-destructive">
@@ -333,7 +333,7 @@ export function CustomerGeneralInformationForm({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="space-y-2 col-span-12 md:col-span-8">
-                    <PhoneInput register={ register("secondaryCellphone") } />
+                    <PhoneInput control={ control } name="secondaryCellphone" />
                     {errors.secondaryCellphone && (
                       <p className="text-xs font-medium text-destructive">
                         {errors.secondaryCellphone.message}

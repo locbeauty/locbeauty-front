@@ -3,21 +3,30 @@ import { z } from "zod";
 // --- Schemas Auxiliares ---
 
 const currencyFieldSchema = z
-  .union([ z.string(), z.number() ])
+  .union([z.string(), z.number()])
   .optional()
   .nullable();
 
 // Schema base para os dados de pagamento
 const basePaymentInfoSchema = z.object({
-  paymentStatus: z.enum([ "Pendente", "Pago", "Parcial" ]).optional(),
+  paymentStatus: z
+    .enum([
+      "Pendente",
+      "Pago",
+      "Parcial",
+      "Cancelado",
+      "Reembolsado",
+      "Cortesia",
+    ])
+    .optional(),
 
   firstPaymentAmount: currencyFieldSchema,
-  firstPaymentDate: z.union([ z.date(), z.string() ]).optional().nullable(),
+  firstPaymentDate: z.union([z.date(), z.string()]).optional().nullable(),
   firstPaymentMethod: z.string().optional().nullable(),
   firstPaymentStatus: z.string().optional().nullable(),
 
   secondPaymentAmount: currencyFieldSchema,
-  secondPaymentDate: z.union([ z.date(), z.string() ]).optional().nullable(),
+  secondPaymentDate: z.union([z.date(), z.string()]).optional().nullable(),
   secondPaymentMethod: z.string().optional().nullable(),
   secondPaymentStatus: z.string().optional().nullable(),
 });
@@ -42,14 +51,14 @@ export const IndividualPaymentSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Data é obrigatória",
-          path: [ "paymentInfo", "firstPaymentDate" ],
+          path: ["paymentInfo", "firstPaymentDate"],
         });
       }
       if (!data.paymentInfo.firstPaymentMethod) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Método é obrigatório",
-          path: [ "paymentInfo", "firstPaymentMethod" ],
+          path: ["paymentInfo", "firstPaymentMethod"],
         });
       }
     }

@@ -195,14 +195,16 @@ export function TraineesTable({
             </Label>
           </div>
           <div className="flex-1 flex justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={ clearFilters }
-              className="text-muted-foreground h-9"
-            >
-              <X className="h-3 w-3 mr-1" /> Limpar
-            </Button>
+            {(filterName || filterPending || filterFilial !== "all") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={ clearFilters }
+                className="text-muted-foreground h-9"
+              >
+                <X className="h-3 w-3 mr-1" /> Limpar
+              </Button>
+            )}
           </div>
         </div>
       </div>
