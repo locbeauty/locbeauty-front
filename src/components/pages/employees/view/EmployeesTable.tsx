@@ -133,15 +133,22 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         },
       );
 
-      const { data } = await response.json();
+      const jsonResponse = await response.json();
+      const { data } = jsonResponse;
 
-      if (data.items) {
-        setAllEmployees(data.items);
-        setTotalEmployees(data.total);
+      if (response.ok && data) {
+        if (data.items) {
+          setAllEmployees(data.items);
+          setTotalEmployees(data.total);
+        } else {
+          // Fallback for safety or old cache
+          setAllEmployees(data);
+          setTotalEmployees(data.length || 0);
+        }
       } else {
-        // Fallback for safety or old cache
-        setAllEmployees(data);
-        setTotalEmployees(data.length || 0);
+        console.error("Failed to fetch employees:", jsonResponse);
+        toast.error("Erro ao buscar funcionários.");
+        setAllEmployees([]);
       }
     }
     getEmployees();
