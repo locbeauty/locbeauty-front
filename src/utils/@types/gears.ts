@@ -8,4 +8,5 @@ export type Gear = {
     filialId: string;
     filialName: string;
   };
+  isVisible: boolean;
 };

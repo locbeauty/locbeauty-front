@@ -19,4 +19,5 @@ export interface Employee {
       };
     };
   };
+  isVisible?: boolean;
 }

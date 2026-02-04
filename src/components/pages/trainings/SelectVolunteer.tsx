@@ -113,7 +113,7 @@ function DesktopSelect({
               <Badge variant="secondary">{selectedCount} selecionado(s)</Badge>
             </div>
           ) : (
-            <span className="text-muted-foreground">
+            <span className="text-placeholder">
               Selecione os pacientes modelo
             </span>
           )}

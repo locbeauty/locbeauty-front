@@ -125,15 +125,31 @@ export function UpdateCustomerForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="documentNumber">CPF/CNPJ</Label>
+                <Label htmlFor="cpf">CPF</Label>
                 <DocumentInput
-                  disabled={ true }
-                  register={ register("documentNumber") }
+                  register={ register("cpf") }
+                  isCPF
+                  placeholder="000.000.000-00"
                 />
                 <div className="h-3">
-                  {errors.documentNumber && (
+                  {errors.cpf && (
                     <p className="text-xs font-medium text-destructive">
-                      {errors.documentNumber.message}
+                      {errors.cpf.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cnpj">CNPJ</Label>
+                <DocumentInput
+                  register={ register("cnpj") }
+                  placeholder="00.000.000/0000-00"
+                />
+                <div className="h-3">
+                  {errors.cnpj && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.cnpj.message}
                     </p>
                   )}
                 </div>
@@ -231,7 +247,7 @@ export function UpdateCustomerForm({
                   <Label>Telefones</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <PhoneInput register={ register("cellphone") } />
+                      <PhoneInput control={ control } name="cellphone" />
                       <div className="h-3">
                         {errors.cellphone && (
                           <p className="text-xs font-medium text-destructive">
@@ -254,7 +270,7 @@ export function UpdateCustomerForm({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <PhoneInput register={ register("secondaryCellphone") } />
+                      <PhoneInput control={ control } name="secondaryCellphone" />
                       {errors.secondaryCellphone && (
                         <p className="text-xs font-medium text-destructive">
                           {errors.secondaryCellphone.message}

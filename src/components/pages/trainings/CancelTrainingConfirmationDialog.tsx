@@ -159,7 +159,7 @@ export function CancelTrainingConfirmationDialog({
               <span className="font-medium text-gray-700 dark:text-gray-200">
                 Aluno:
               </span>{" "}
-              {selectedTraining.Trainees?.[0]?.name || "Desconhecido"}
+              {selectedTraining.Trainees?.[0]?.fullname || "Desconhecido"}
             </p>
             {selectedTraining.dueDate && (
               <p>

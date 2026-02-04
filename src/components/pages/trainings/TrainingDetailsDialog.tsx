@@ -24,6 +24,9 @@ import {
   Building,
   Plus,
   X,
+  Pencil,
+  Copy,
+  RefreshCcw,
 } from "lucide-react";
 
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
@@ -43,6 +46,10 @@ import { toast } from "sonner";
 import { FinishTrainingConfirmationDialog } from "./FinishTrainingConfirmationDialog";
 import { queryClient } from "@/app/(main)/layout";
 import { AddParticipantDialog } from "./AddParticipantDialog";
+// import { UpdateParticipantValuesDialog } from "./UpdateParticipantValuesDialog";
+import EditTrainingFinancialsDialog from "./EditTrainingFinancialsDialog";
+import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 
 interface TrainingDetailsDialogProps {
   open: boolean;
@@ -63,6 +70,8 @@ export function TrainingDetailsDialog({
     isTrainingPaymentMethodDialogOpen,
     setIsTrainingPaymentMethodDialogOpen,
   ] = useState(false);
+  const [ isUpdateValuesDialogOpen, setIsUpdateValuesDialogOpen ] =
+    useState(false);
   const [
     isCancelTrainingConfirmationDialogOpen,
     setCancelTrainingConfirmationDialogOpen,
@@ -83,11 +92,46 @@ export function TrainingDetailsDialog({
   const [ participantTypeToAdd, setParticipantTypeToAdd ] =
     useState<PayerType>("TRAINEE");
 
+  const [ isEditFinancialsDialogOpen, setIsEditFinancialsDialogOpen ] =
+    useState(false);
+  const [ financialPayerTypeToEdit, setFinancialPayerTypeToEdit ] =
+    useState<PayerType>("TRAINEE");
+
+  const { user } = useAuth();
+  const [ isRestoring, setIsRestoring ] = useState(false);
+
+  const handleRestore = async () => {
+    setIsRestoring(true);
+    try {
+      const response = await UpdateTraining({
+        trainingId: selectedTraining.trainingId,
+        body: {
+          trainingStatus: selectedTraining.trainingStatus,
+          payerType: "TRAINEE",
+          isVisible: true,
+        },
+      });
+
+      if (response && response.data?.isVisible) {
+        toast.success("Treinamento restaurado com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        if (onOpenChange) onOpenChange(false);
+      } else {
+        toast.error("Erro ao restaurar treinamento.");
+      }
+    } catch (error) {
+      toast.error("Erro ao restaurar treinamento.");
+      console.error(error);
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentTrainingStatus(selectedTraining.trainingStatus);
   }, [ selectedTraining ]);
 
-  // --- Extrair os pagamentos do Array ---
+  // --- Extrair os pagamentos do Array (APENAS PARA USO GERAL/LEGADO) ---
   const { traineePayment, volunteerPayment } = useMemo(() => {
     const payments = Array.isArray(selectedTraining.TrainingPayment)
       ? selectedTraining.TrainingPayment
@@ -113,27 +157,43 @@ export function TrainingDetailsDialog({
     setIsTrainingPaymentMethodDialogOpen(true);
   };
 
-  const getSafePaymentData = (type: PayerType) => {
-    const payment = type === "TRAINEE" ? traineePayment : volunteerPayment;
+  const handleOpenUpdateValuesDialog = (
+    type: PayerType,
+    participantId?: string,
+  ) => {
+    setSelectedPayerType(type);
+    setSelectedParticipantId(participantId || null);
+    setIsUpdateValuesDialogOpen(true);
+  };
 
-    // Suggest a price based on other participants of the same type if current is empty/zero
-    let suggestedPrice = 0;
-    if (!payment || !payment.totalPrice) {
-      const otherPayments = Array.isArray(selectedTraining.TrainingPayment)
-        ? selectedTraining.TrainingPayment
-        : [];
-      const sameTypePayment = otherPayments.find(
-        (p) => p.payerType === type && p.totalPrice > 0,
-      );
-      if (sameTypePayment) {
-        suggestedPrice = sameTypePayment.totalPrice;
-      }
-    }
+  const handleOpenEditFinancials = (type: PayerType) => {
+    setFinancialPayerTypeToEdit(type);
+    setIsEditFinancialsDialogOpen(true);
+  };
+
+  const getSafePaymentData = (
+    type: PayerType,
+    participantId?: string | null,
+  ) => {
+    const payments = Array.isArray(selectedTraining.TrainingPayment)
+      ? selectedTraining.TrainingPayment
+      : [];
+
+    // Find specific payment if ID provided
+    const payment = participantId
+      ? payments.find(
+        (p) =>
+          p.payerType === type &&
+            (type === "TRAINEE"
+              ? p.traineeId === participantId || p.customerId === participantId
+              : p.volunteerId === participantId),
+      )
+      : null; // Do NOT default to "first found"
 
     if (payment) {
       return {
-        totalPrice: payment.totalPrice || suggestedPrice,
-        basePrice: payment.basePrice || suggestedPrice,
+        totalPrice: payment.totalPrice,
+        basePrice: payment.basePrice,
         paymentStatus: payment.paymentStatus || "Pendente",
         paymentMode: payment.paymentMode,
         firstPaymentAmount: payment.firstPaymentAmount || 0,
@@ -156,8 +216,8 @@ export function TrainingDetailsDialog({
     return {
       paymentStatus: "Pendente" as const,
       paymentMode: "AVista" as const,
-      totalPrice: suggestedPrice,
-      basePrice: suggestedPrice,
+      totalPrice: 0,
+      basePrice: 0,
       firstPaymentAmount: 0,
       firstPaymentDate: null,
       firstPaymentMethod: null,
@@ -179,20 +239,14 @@ export function TrainingDetailsDialog({
   const onAddParticipant = async (id: string) => {
     const type = participantTypeToAdd;
     try {
-      const anchorType: PayerType = traineePayment ? "TRAINEE" : "VOLUNTEER";
-      const anchorPayment = traineePayment || volunteerPayment;
-      const anchorId =
-        anchorType === "TRAINEE"
-          ? anchorPayment?.traineeId
-          : anchorPayment?.volunteerId;
-
       const payload: UpdateTrainingPayload = {
         trainingStatus: selectedTraining.trainingStatus,
         payerType: type,
         traineeId: type === "TRAINEE" ? id : undefined,
+        customerId: type === "TRAINEE" ? id : undefined,
         volunteerId: type === "VOLUNTEER" ? id : undefined,
 
-        TrainingPayment: getSafePaymentData(type),
+        TrainingPayment: getSafePaymentData(type, null),
 
         addedTrainees: type === "TRAINEE" ? [ id ] : undefined,
         addedVolunteers: type === "VOLUNTEER" ? [ id ] : undefined,
@@ -204,7 +258,7 @@ export function TrainingDetailsDialog({
       });
 
       if (response && response.statusCode === 200) {
-        toast.success("Participante adicionado com sucesso!");
+        toast.success("Participante adicionado com  sucesso!");
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
         if (setSelectedTraining && response.data) {
           setSelectedTraining(response.data);
@@ -229,7 +283,9 @@ export function TrainingDetailsDialog({
     const participantPayment = payments.find(
       (p) =>
         p.payerType === type &&
-        (type === "TRAINEE" ? p.traineeId === id : p.volunteerId === id),
+        (type === "TRAINEE"
+          ? p.traineeId === id || p.customerId === id
+          : p.volunteerId === id),
     );
 
     // Permitir se não tiver pagamento (recém adicionado) ou se status for Pendente
@@ -245,19 +301,13 @@ export function TrainingDetailsDialog({
     if (!window.confirm("Tem certeza que deseja remover este participante?"))
       return;
 
-    const anchorType: PayerType = traineePayment ? "TRAINEE" : "VOLUNTEER";
-    const anchorPayment = traineePayment || volunteerPayment;
-    const anchorId =
-      anchorType === "TRAINEE"
-        ? anchorPayment?.traineeId
-        : anchorPayment?.volunteerId;
-
     const payload: UpdateTrainingPayload = {
       trainingStatus: selectedTraining.trainingStatus,
       payerType: type,
       traineeId: type === "TRAINEE" ? id : undefined,
+      customerId: type === "TRAINEE" ? id : undefined,
       volunteerId: type === "VOLUNTEER" ? id : undefined,
-      TrainingPayment: getSafePaymentData(type),
+      TrainingPayment: getSafePaymentData(type, id),
       removedTrainees: type === "TRAINEE" ? [ id ] : undefined,
       removedVolunteers: type === "VOLUNTEER" ? [ id ] : undefined,
     };
@@ -310,7 +360,9 @@ export function TrainingDetailsDialog({
           paymentStatus:
               trainingStatus === "Cancelado"
                 ? "Cancelado"
-                : targetPayment.paymentStatus || "Pendente",
+                : targetPayment.paymentStatus === "Cortesia"
+                  ? "Pago"
+                  : targetPayment.paymentStatus || "Pendente",
           paymentMode: targetPayment.paymentMode,
           firstPaymentAmount: targetPayment.firstPaymentAmount || 0,
           firstPaymentDate: targetPayment.firstPaymentDate
@@ -350,12 +402,14 @@ export function TrainingDetailsDialog({
           ? targetPayment?.volunteerId ||
             selectedTraining.Volunteers?.[0]?.volunteerId
           : targetPayment?.traineeId ||
-            selectedTraining.Trainees?.[0]?.traineeId;
+            targetPayment?.customerId ||
+            selectedTraining.Trainees?.[0]?.customerId;
 
       const payload: UpdateTrainingPayload = {
         trainingStatus,
         payerType: targetPayerType,
         traineeId: targetPayerType === "TRAINEE" ? targetId : undefined,
+        customerId: targetPayerType === "TRAINEE" ? targetId : undefined,
         volunteerId: targetPayerType === "VOLUNTEER" ? targetId : undefined,
         TrainingPayment: paymentData,
         isCourtesy: traineePayment?.isCourtesy ?? false,
@@ -375,45 +429,8 @@ export function TrainingDetailsDialog({
             trainingStatus === "Cancelado" ? "cancelado" : "concluído"
           } com sucesso!`,
         );
-        if (setSelectedTraining) {
-          setSelectedTraining((prev) =>
-            prev
-              ? {
-                ...prev,
-                trainingStatus,
-                wasRefunded: wasRefunded || false,
-                TrainingPayment: prev.TrainingPayment.map((p) => {
-                  let updatedPayment = { ...p };
-
-                  // 1. Update cancellation specific fields if this is the payer
-                  if (p.payerType === (canceledBy || "TRAINEE")) {
-                    updatedPayment = {
-                      ...updatedPayment,
-                      cancellationFee: cancellationFee || null,
-                      cancellationDate:
-                          cancellationDate?.toISOString() || null,
-                      cancellationFeePaymentDate:
-                          cancellationFeePaymentDate?.toISOString() || null,
-                      cancellationFeePaymentMethod:
-                          cancellationFeePaymentMethod || null,
-                    };
-                  }
-
-                  // 2. If Training is Cancelado, ensure any pending payment becomes Cancelado
-                  if (
-                    trainingStatus === "Cancelado" &&
-                      (updatedPayment.paymentStatus === "Pendente" ||
-                        updatedPayment.paymentStatus === "Parcial" ||
-                        !updatedPayment.paymentStatus)
-                  ) {
-                    updatedPayment.paymentStatus = "Cancelado";
-                  }
-
-                  return updatedPayment;
-                }),
-              }
-              : null,
-          );
+        if (setSelectedTraining && response.data) {
+          setSelectedTraining(response.data);
         }
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
         queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
@@ -427,7 +444,7 @@ export function TrainingDetailsDialog({
     }
   };
 
-  // Estados para os valores financeiros
+  // Esta dos para os valores financeiros
   const [ traineeBasePrice, setTraineeBasePrice ] = useState(0);
   const [ traineeAdditionalCost, setTraineeAdditionalCost ] = useState(0);
   const [
@@ -437,34 +454,35 @@ export function TrainingDetailsDialog({
   const [ traineeTotalPrice, setTraineeTotalPrice ] = useState(0);
   const [ volunteerTotalPrice, setVolunteerTotalPrice ] = useState(0);
 
-  // Atualiza os estados quando o selectedTraining mudar
-  useEffect(() => {
-    if (traineePayment) {
-      setTraineeBasePrice(traineePayment.basePrice || 0);
-      setTraineeAdditionalCost(traineePayment.additionalCost || 0);
-      setTraineeAdditionalCostDescription(
-        traineePayment.additionalCostDescription || "",
-      );
-      setTraineeTotalPrice(traineePayment.totalPrice || 0);
-    } else {
-      setTraineeBasePrice(0);
-      setTraineeAdditionalCost(0);
-      setTraineeAdditionalCostDescription("");
-      setTraineeTotalPrice(0);
-    }
-
-    if (volunteerPayment) {
-      setVolunteerTotalPrice(volunteerPayment.totalPrice || 0);
-    } else {
-      setVolunteerTotalPrice(0);
-    }
-  }, [ traineePayment, volunteerPayment ]);
   // Helper para formatar moeda
   const formatCurrency = (val: number) => `R$ ${centsToString(val)}`;
 
   const canEditParticipants =
     currentTrainingStatus !== "Concluido" &&
     currentTrainingStatus !== "Cancelado";
+
+  const handleCopySummary = () => {
+    // Calculate start time
+    const start = new Date(selectedTraining.dueDate);
+    start.setHours(Math.floor(selectedTraining.hourInMinutes / 60));
+    start.setMinutes(selectedTraining.hourInMinutes % 60);
+
+    // Format times
+    const formatTime = (date: Date) =>
+      `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+
+    const lines = [
+      "*Resumo do Treinamento*",
+      `Equipamento: ${selectedTraining.Gear.gearName}`,
+      `Data: ${new Date(selectedTraining.dueDate).toLocaleDateString("pt-BR")}`,
+      `Horário: ${formatTime(start)}`,
+      `Endereço: ${selectedTraining.Address.street}, ${selectedTraining.Address.buildingNumber} - ${selectedTraining.Address.neighborhood}, ${selectedTraining.Address.city}/${selectedTraining.Address.state}`,
+    ];
+
+    const summary = lines.join("\n");
+    navigator.clipboard.writeText(summary);
+    toast.success("Resumo copiado para a área de transferência!");
+  };
 
   return (
     <Dialog open={ open } onOpenChange={ onOpenChange }>
@@ -509,6 +527,15 @@ export function TrainingDetailsDialog({
                 </div>
               </div>
               <div className="flex gap-2 ml-auto items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 h-8"
+                  onClick={ handleCopySummary }
+                >
+                  <Copy className="h-3 w-3" />
+                  <span className="hidden sm:inline">Copiar Resumo</span>
+                </Button>
                 <BookingStatusBadge status={ currentTrainingStatus } />
               </div>
             </div>
@@ -548,8 +575,11 @@ export function TrainingDetailsDialog({
                     ) ? (
                         selectedTraining.TrainingPayment.filter(
                           (p) => (p.cancellationFee || 0) > 0,
-                        ).map((p, index) => (
-                          <div key={ index } className="space-y-2">
+                        ).map((p) => (
+                          <div
+                            key={ `$ {p.payerType}-${p.traineeId || p.volunteerId}` }
+                            className="space-y-2"
+                          >
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">
                               Taxa (
@@ -612,7 +642,50 @@ export function TrainingDetailsDialog({
 
             <Separator />
 
-            {/* 2. PARTICIPANTES */}
+            {/* FILIAL E LOCALIZAÇÃO */}
+            <div className="space-y-3">
+              <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <Building className="h-3 w-3" /> Filial e Localização
+              </h4>
+              <div className="p-4 rounded-lg border bg-muted/20 text-sm space-y-4">
+                {/* Filial Info */}
+                <div className="flex gap-3 items-center">
+                  <Building className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-base">
+                      {selectedTraining.SourceFilial.filialName}
+                    </p>
+                  </div>
+                </div>
+
+                <Separator className="my-3" />
+
+                {/* Address Info */}
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-md bg-green-100 dark:bg-green-900/20">
+                    <MapPin className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold">
+                      {selectedTraining.Address.street},{" "}
+                      {selectedTraining.Address.buildingNumber}
+                    </p>
+                    <p className="text-muted-foreground text-xs mt-0.5">
+                      {selectedTraining.Address.neighborhood} •{" "}
+                      {selectedTraining.Address.city}/
+                      {selectedTraining.Address.state}
+                    </p>
+                    <p className="text-muted-foreground text-xs mt-0.5">
+                      CEP: {selectedTraining.Address.zipCode}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* 2.5 PARTICIPANTES */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Aluno */}
               <div className="space-y-2">
@@ -622,53 +695,72 @@ export function TrainingDetailsDialog({
                     {selectedTraining.Trainees?.length || 0})
                   </h4>
                   {canEditParticipants && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-xs"
-                      onClick={ () => handleAddParticipantClick("TRAINEE") }
-                    >
-                      <Plus className="h-3 w-3 mr-1" /> Adicionar
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs flex gap-1"
+                        onClick={ () => handleOpenEditFinancials("TRAINEE") }
+                      >
+                        <DollarSign className="h-3 w-3 mr-1" />
+                        Valores
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs flex gap-1"
+                        onClick={ () => handleAddParticipantClick("TRAINEE") }
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Adicionar
+                      </Button>
+                    </div>
                   )}
                 </div>
-                <div className=" flex flex-col gap -2">
+                <div className="flex flex-col gap-2">
                   {selectedTraining.Trainees?.length ? (
                     selectedTraining.Trainees.map((trainee) => {
                       const payment = selectedTraining.TrainingPayment?.find(
                         (p) =>
                           p.payerType === "TRAINEE" &&
-                          p.traineeId === trainee.traineeId,
+                          (p.traineeId === trainee.customerId ||
+                            p.customerId === trainee.customerId),
                       );
-                      const status = payment?.paymentStatus || "Pendente";
+                      const isPartialFullyPaid =
+                        payment?.paymentStatus === "Parcial" &&
+                        payment?.firstPaymentStatus === "Pago" &&
+                        payment?.secondPaymentStatus === "Pago";
+                      const status = isPartialFullyPaid
+                        ? "Pago"
+                        : payment?.paymentStatus || "Pendente";
                       const canRemove =
                         canEditParticipants && status === "Pendente";
 
                       return (
                         <div
-                          key={ trainee.traineeId }
+                          key={ trainee.customerId }
                           className="p-3 rounded-lg border bg-card flex items-center justify-between gap-3"
                         >
                           <div className="flex items-center gap-3 overflow-hidden">
                             <div className="h-8 w-8 min-w-[2rem] rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
                               <span className="font-bold text-xs text-orange-600">
-                                {trainee.name.charAt(0)}
+                                {trainee.fullname?.charAt(0) || "?"}
                               </span>
                             </div>
                             <div className="text-sm overflow-hidden">
                               <p className="font-medium truncate">
-                                {trainee.name}
+                                {trainee.fullname}
                               </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <FileText className="h-3 w-3 min-w-[0.75rem]" />{" "}
                                 <span className="truncate">
-                                  {trainee.documentNumber || "N/A"}
+                                  {trainee.cpf || trainee.cnpj}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <Phone className="h-3 w-3 min-w-[0.75rem]" />{" "}
                                 <span className="truncate">
-                                  {trainee.cellphone || "N/A"}
+                                  {trainee.cellphone}
                                 </span>
                               </div>
                             </div>
@@ -678,6 +770,7 @@ export function TrainingDetailsDialog({
                               status={ status }
                               isCourtesy={ payment?.isCourtesy }
                               wasRefunded={ payment?.wasRefunded }
+                              small
                             />
                           </div>
 
@@ -689,7 +782,7 @@ export function TrainingDetailsDialog({
                               onClick={ () =>
                                 handleOpenPaymentDialog(
                                   "TRAINEE",
-                                  trainee.traineeId,
+                                  trainee.customerId,
                                 )
                               }
                             >
@@ -706,7 +799,7 @@ export function TrainingDetailsDialog({
                                 onClick={ () =>
                                   onRemoveParticipant(
                                     "TRAINEE",
-                                    trainee.traineeId,
+                                    trainee.customerId,
                                   )
                                 }
                               >
@@ -733,14 +826,24 @@ export function TrainingDetailsDialog({
                     {selectedTraining.Volunteers?.length || 0})
                   </h4>
                   {canEditParticipants && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-xs"
-                      onClick={ () => handleAddParticipantClick("VOLUNTEER") }
-                    >
-                      <Plus className="h-3 w-3 mr-1" /> Adicionar
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={ () => handleOpenEditFinancials("VOLUNTEER") }
+                      >
+                        <DollarSign className="h-3 w-3 mr-1" /> Valores
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={ () => handleAddParticipantClick("VOLUNTEER") }
+                      >
+                        <Plus className="h-3 w-3 mr-1" /> Adicionar
+                      </Button>
+                    </div>
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
@@ -751,7 +854,13 @@ export function TrainingDetailsDialog({
                           p.payerType === "VOLUNTEER" &&
                           p.volunteerId === volunteer.volunteerId,
                       );
-                      const status = payment?.paymentStatus || "Pendente";
+                      const isPartialFullyPaid =
+                        payment?.paymentStatus === "Parcial" &&
+                        payment?.firstPaymentStatus === "Pago" &&
+                        payment?.secondPaymentStatus === "Pago";
+                      const status = isPartialFullyPaid
+                        ? "Pago"
+                        : payment?.paymentStatus || "Pendente";
                       const canRemove =
                         canEditParticipants && status === "Pendente";
 
@@ -763,12 +872,12 @@ export function TrainingDetailsDialog({
                           <div className="flex items-center gap-3 overflow-hidden">
                             <div className="h-8 w-8 min-w-[2rem] rounded-full bg-primary/10 flex items-center justify-center">
                               <span className="font-bold text-xs text-primary">
-                                {volunteer.name.charAt(0)}
+                                {volunteer.name?.charAt(0) || "?"}
                               </span>
                             </div>
                             <div className="text-sm overflow-hidden">
                               <p className="font-medium truncate">
-                                {volunteer.name}
+                                {volunteer.name || "N/A"}
                               </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <FileText className="h-3 w-3 min-w-[0.75rem]" />{" "}
@@ -789,6 +898,7 @@ export function TrainingDetailsDialog({
                               status={ status }
                               isCourtesy={ payment?.isCourtesy }
                               wasRefunded={ payment?.wasRefunded }
+                              small
                             />
                           </div>
                           <div className="flex items-center gap-1">
@@ -838,42 +948,6 @@ export function TrainingDetailsDialog({
             </div>
 
             <Separator />
-
-            {/* 2.5 FILIAL */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                <Building className="h-3 w-3" /> Unidade / Filial
-              </h4>
-              <div className="p-4 rounded-lg border bg-muted/20 text-sm">
-                <p className="font-medium">
-                  {selectedTraining.SourceFilial.filialName}
-                </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                  <FileText className="h-3 w-3" />
-                  CNPJ: {selectedTraining.SourceFilial.CNPJ}
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* 3. LOCALIZAÇÃO (Mantido) */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                <MapPin className="h-3 w-3" /> Localização
-              </h4>
-              <div className="p-4 rounded-lg border bg-muted/20 text-sm">
-                <p className="font-medium">
-                  {selectedTraining.Address.street},{" "}
-                  {selectedTraining.Address.buildingNumber}
-                </p>
-                <p className="text-muted-foreground mt-1">
-                  {selectedTraining.Address.neighborhood} -{" "}
-                  {selectedTraining.Address.city}/
-                  {selectedTraining.Address.state}
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -953,9 +1027,21 @@ export function TrainingDetailsDialog({
         onAdd={ onAddParticipant }
         filialId={ selectedTraining.sourceFilialId }
         excludeIds={ [
-          ...(selectedTraining.Trainees?.map((t) => t.traineeId) || []),
+          ...(selectedTraining.Trainees?.map((t) => t.customerId) || []),
           ...(selectedTraining.Volunteers?.map((v) => v.volunteerId) || []),
         ] }
+      />
+
+      <EditTrainingFinancialsDialog
+        open={ isEditFinancialsDialogOpen }
+        onOpenChange={ setIsEditFinancialsDialogOpen }
+        training={ selectedTraining }
+        payerType={ financialPayerTypeToEdit }
+        onSuccess={ (updated) => {
+          if (setSelectedTraining) {
+            setSelectedTraining(updated);
+          }
+        } }
       />
     </Dialog>
   );

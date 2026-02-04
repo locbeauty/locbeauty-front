@@ -48,7 +48,7 @@ export function FinishTrainingConfirmationDialog({
     >
       <DialogContent className="max-h-[90vh] w-[90vw] md:w-[500px] overflow-hidden dark:bg-gray-900">
         <DialogHeader className="space-y-2 text-center">
-          <DialogTitle className="text-2xl font-semibold text-green-600">
+          <DialogTitle className="text-2xl text-center font-semibold text-green-600">
             Confirmar conclusão
           </DialogTitle>
           <DialogDescription className="text-base text-center text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -61,12 +61,6 @@ export function FinishTrainingConfirmationDialog({
 
         <CardContent className="mt-6 flex flex-col items-center justify-center space-y-2">
           <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
-            <p>
-              <span className="font-medium text-gray-700 dark:text-gray-200">
-                Aluno:
-              </span>{" "}
-              {selectedTraining.Trainees?.[0]?.name || "Desconhecido"}
-            </p>
             {selectedTraining.dueDate && (
               <p>
                 <span className="font-medium text-gray-700 dark:text-gray-200">
@@ -78,7 +72,7 @@ export function FinishTrainingConfirmationDialog({
           </div>
         </CardContent>
 
-        <DialogFooter className="flex justify-end gap-3 mt-4">
+        <DialogFooter className="flex justify-center!">
           <Button
             variant="outline"
             onClick={ () => setFinishTrainingConfirmationDialogOpen(false) }

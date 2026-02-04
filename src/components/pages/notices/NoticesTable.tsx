@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { GetNotices } from "@/services/notices.service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { GetNotices, DeleteNotice } from "@/services/notices.service";
 import { ApiResponse } from "@/lib/api";
 import { Notice } from "@/utils/@types/notice";
 import {
@@ -21,19 +21,24 @@ import { useAuth } from "@/contexts/auth-provider";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { NoticeDetailsDialog } from "@/components/pages/calendar/DetailsDialog/NoticeDetailsDialog";
+import { UpdateNoticeDialog } from "@/components/pages/notices/UpdateNoticeDialog";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
 import { useAccess } from "@/contexts/access-provider";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { SelectFilial } from "@/components/shared/SelectFilial";
+import { toast } from "sonner";
+import { Can } from "@/components/auth/Can";
+import { USER_ROLES } from "@/utils/constants";
 
 export function NoticesTable() {
   const { user } = useAuth();
   const { accesses } = useAccess();
+  const queryClient = useQueryClient();
 
   const [ startDate, setStartDate ] = useState<Date | undefined>(undefined);
-
   const [ filialId, setFilialId ] = useState<string | undefined>();
 
   const accessibleFilialsIds = useMemo(() => {
@@ -50,7 +55,14 @@ export function NoticesTable() {
   const [ selectedNotice, setSelectedNotice ] = useState<Notice | null>(null);
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
 
-  const { data, isLoading, error } = useQuery<ApiResponse<Notice[]>, Error>({
+  const [ isUpdateDialogOpen, setIsUpdateDialogOpen ] = useState(false);
+  const [ noticeToUpdate, setNoticeToUpdate ] = useState<Notice | null>(null);
+
+  const [ isDeleteDialogOpen, setIsDeleteDialogOpen ] = useState(false);
+  const [ noticeToDelete, setNoticeToDelete ] = useState<Notice | null>(null);
+  const [ isDeleting, setIsDeleting ] = useState(false);
+
+  const { data, isLoading } = useQuery<ApiResponse<Notice[]>, Error>({
     queryKey: [ "get-notices", startDate, filialId ],
     queryFn: () => {
       const computedEndDate = startDate ? endOfMonth(startDate) : undefined;
@@ -62,6 +74,27 @@ export function NoticesTable() {
       });
     },
   });
+
+  const handleDeleteNotice = async () => {
+    if (!noticeToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await DeleteNotice(noticeToDelete.noticeId);
+      if (response.statusCode === 200) {
+        toast.success("Aviso excluído com sucesso!");
+        queryClient.invalidateQueries({ queryKey: [ "get-notices" ] });
+      } else {
+        toast.error(response.message || "Erro ao excluir aviso");
+      }
+    } catch (error) {
+      toast.error("Erro inesperado ao excluir aviso");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setNoticeToDelete(null);
+    }
+  };
 
   const notices = data?.data || [];
 
@@ -94,7 +127,7 @@ export function NoticesTable() {
               <TableHead>Horário</TableHead>
               <TableHead>Filial</TableHead>
               <TableHead>Criado Por</TableHead>
-              <TableHead className="w-[100px]">Detalhes</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -136,17 +169,47 @@ export function NoticesTable() {
                 </TableCell>
                 <TableCell>{notice.filial?.filialName || "-"}</TableCell>
                 <TableCell>{notice.createdBy?.fullname || "-"}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={ () => {
-                      setSelectedNotice(notice);
-                      setIsDetailsOpen(true);
-                    } }
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={ () => {
+                        setSelectedNotice(notice);
+                        setIsDetailsOpen(true);
+                      } }
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+
+                    <Can module={ SYSTEM_MODULES.NOTICES } action="canEdit">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={ () => {
+                          setNoticeToUpdate(notice);
+                          setIsUpdateDialogOpen(true);
+                        } }
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </Can>
+
+                    {(user?.role === USER_ROLES.MASTER ||
+                      user?.role === USER_ROLES.ADMIN) && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={ () => {
+                          setNoticeToDelete(notice);
+                          setIsDeleteDialogOpen(true);
+                        } }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -205,6 +268,21 @@ export function NoticesTable() {
         open={ isDetailsOpen }
         onOpenChange={ setIsDetailsOpen }
         notice={ selectedNotice }
+      />
+
+      <UpdateNoticeDialog
+        open={ isUpdateDialogOpen }
+        onOpenChange={ setIsUpdateDialogOpen }
+        notice={ noticeToUpdate }
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={ isDeleteDialogOpen }
+        onOpenChange={ setIsDeleteDialogOpen }
+        onConfirm={ handleDeleteNotice }
+        title="Confirmar Exclusão"
+        description="Tem certeza que deseja excluir este aviso?"
+        isDeleting={ isDeleting }
       />
     </div>
   );

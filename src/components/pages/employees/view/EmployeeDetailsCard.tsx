@@ -191,12 +191,6 @@ export function EmployeeDetailsCard({
                 <span>Performance mensal: +8%</span>
               </div>
             </div>
-            {/* <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Clock className="h-4 w-4" />
-                                <span>Próximo treinamento: em 15 dias</span>
-                            </div>
-                        </div> */}
           </div>
         </div>
         {/* Última Atualização */}

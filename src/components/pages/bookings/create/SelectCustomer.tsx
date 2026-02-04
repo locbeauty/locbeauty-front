@@ -53,7 +53,7 @@ export function SelectCustomer({ disabled = false }: { disabled?: boolean }) {
     queryKey: [ "get-all-customers", filialId, debouncedSearchTerm ],
     queryFn: () =>
       GetAllCustomers(
-        { filialId, name: debouncedSearchTerm },
+        { filialId, name: debouncedSearchTerm, includeAllTrainees: true },
         { page: 1, limit: 100 },
       ),
     staleTime: 1000 * 60, // 1 minuto de cache
@@ -123,7 +123,9 @@ function DesktopSelect({
           {selectedCustomer ? (
             <>
               {selectedCustomer.fullname} -{" "}
-              {hideDocumentNumber(selectedCustomer.documentNumber)}
+              {hideDocumentNumber(
+                selectedCustomer.cpf || selectedCustomer.cnpj,
+              )}
             </>
           ) : (
             <span className="text-placeholder group-hover:text-white">
@@ -167,7 +169,10 @@ function MobileSelect({
         <Button variant="outline" className="w-full justify-start">
           {selectedCustomer ? (
             <>
-              {selectedCustomer.fullname} - {selectedCustomer.documentNumber}
+              {selectedCustomer.fullname} -{" "}
+              {hideDocumentNumber(
+                selectedCustomer.cpf || selectedCustomer.cnpj,
+              )}
             </>
           ) : (
             <span className="text-placeholder">Selecione o cliente</span>
@@ -203,14 +208,16 @@ function CustomersList({
   onChange: (_value: {
     customerId: string;
     fullname: string;
-    documentNumber: string;
+    cpf: string | null;
+    cnpj: string | null;
     cellphone: string;
   }) => void;
   value?:
     | {
         customerId: string;
         fullname: string;
-        documentNumber: string;
+        cpf?: string | null;
+        cnpj?: string | null;
         cellphone: string;
       }
     | undefined;
@@ -237,14 +244,15 @@ function CustomersList({
                 onChange({
                   customerId: customer.customerId,
                   fullname: customer.fullname,
-                  documentNumber: customer.documentNumber,
+                  cpf: customer.cpf ?? null,
+                  cnpj: customer.cnpj ?? null,
                   cellphone: customer.cellphone ?? "",
                 });
                 setOpen(false);
               } }
             >
               {customer.fullname} -{" "}
-              {hideDocumentNumber(customer.documentNumber)}
+              {hideDocumentNumber(customer.cpf || customer.cnpj)}
             </CommandItem>
           ))}
         </CommandGroup>

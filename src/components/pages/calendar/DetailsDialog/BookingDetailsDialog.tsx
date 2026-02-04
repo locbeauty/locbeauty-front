@@ -85,6 +85,7 @@ import { SelectAddress } from "../../bookings/create/SelectAddress";
 import PriceInput from "@/components/shared/PriceInput";
 import { Address } from "@/utils/@types/address";
 import { Employee } from "@/utils/@types/employee";
+import { User as UserData } from "@/utils/@types/user";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -115,9 +116,9 @@ export function BookingDetailsDialog({
   ] = useState(false);
   const [ checkoutCanBeUpdated, setCheckoutCanBeUpdated ] = useState(true);
   const [ isEditingDriver, setIsEditingDriver ] = useState(false);
-  const [ selectedDriverData, setSelectedDriverData ] = useState<Employee | null>(
-    null,
-  );
+  const [ selectedDriverData, setSelectedDriverData ] = useState<
+    Employee | UserData | null
+  >(null);
   const [ isEditingAddress, setIsEditingAddress ] = useState(false);
   const [ selectedAddressString, setSelectedAddressString ] = useState("");
   const [ selectedAddressData, setSelectedAddressData ] =
@@ -680,7 +681,15 @@ export function BookingDetailsDialog({
                         </span>
                         <span className="flex items-center gap-1">
                           <FileText className="h-3.5 w-3.5" />
-                          {selectedCheckout.Customer.documentNumber || "—"}
+                          {selectedCheckout.Customer.cpf || ""}{" "}
+                          {selectedCheckout.Customer.cnpj &&
+                            selectedCheckout.Customer.cpf && (
+                            <span className="font-bold">|</span>
+                          )}{" "}
+                          {selectedCheckout.Customer.cnpj || ""}
+                          {!selectedCheckout.Customer.cnpj &&
+                            !selectedCheckout.Customer.cpf &&
+                            "Não informado"}
                         </span>
                       </div>
                     </div>
@@ -1432,32 +1441,38 @@ export function BookingDetailsDialog({
                       variant="secondary"
                       className="w-full"
                       onClick={ () => {
+                        const customer = selectedCheckout.Customer;
+
+                        const cpfCnpjLine =
+                          customer.cpf && customer.cnpj
+                            ? `CPF / CNPJ: ${customer.cpf} / ${customer.cnpj}`
+                            : customer.cpf
+                              ? `CPF: ${customer.cpf}`
+                              : customer.cnpj
+                                ? `CNPJ: ${customer.cnpj}`
+                                : "—";
+
                         const lines = [
                           "*Resumo do Agendamento*",
+                          `Cliente: ${customer.fullname}`,
+                          cpfCnpjLine,
                           `Máquina: ${selectedCheckout.Bookings.map(
                             (b) => b.Gear.gearName,
                           ).join(", ")}`,
-                          `Data: ${new Date(
-                            selectedCheckout.date,
-                          ).toLocaleDateString("pt-BR")}`,
-                          `Horário: ${formatTime(startDate)} - ${formatTime(
-                            endDate,
-                          )}`,
-                          ` Valor: ${centsToStringWithCurrencyMark(
+                          `Data: ${new Date(selectedCheckout.date).toLocaleDateString("pt-BR")}`,
+                          `Horário: ${formatTime(startDate)} - ${formatTime(endDate)}`,
+                          `Valor: ${centsToStringWithCurrencyMark(
                             selectedCheckout.totalPrice,
                           )}`,
                           "(Pagamento de locação somente por pix ou transferência bancária).",
-                          `Cliente: ${selectedCheckout.Customer.fullname}`,
-                          `Contato: ${selectedCheckout.Customer.cellphone}`,
+                          `Contato: ${customer.cellphone}`,
                           `Endereço: ${selectedCheckout.Address.street}, ${selectedCheckout.Address.buildingNumber} - ${selectedCheckout.Address.neighborhood}, ${selectedCheckout.Address.city}`,
                           `Estado: ${selectedCheckout.Address.state}`,
-                          ` CPF/CNPJ: ${
-                            selectedCheckout.Customer.documentNumber || "—"
-                          }`,
                           `MOTORISTA: ${
                             selectedCheckout.driver?.fullname || "A definir"
                           }`,
                         ];
+
                         navigator.clipboard.writeText(lines.join("\n"));
                         toast.success("Resumo copiado!");
                       } }

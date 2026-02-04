@@ -29,6 +29,7 @@ import {
 import { CreateVolunteer } from "@/services/volunteers.service";
 import DocumentInput from "@/components/shared/DocumentInput";
 import PhoneInput from "@/components/shared/PhoneInput";
+import { useEffect } from "react";
 
 interface CreateVolunteerDialogProps {
   dialogNewVolunteer: boolean;
@@ -65,6 +66,13 @@ export function CreateVolunteerDialog({
     reset,
     formState: { errors, isSubmitting },
   } = volunteerForm;
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!dialogNewVolunteer) {
+      reset();
+    }
+  }, [ dialogNewVolunteer, reset ]);
 
   const onSubmitVolunteer = async (data: CreateVolunteerFormDataType) => {
     const response = await CreateVolunteer(data);
@@ -142,7 +150,7 @@ export function CreateVolunteerDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="cellphone">Telefone *</Label>
-              <PhoneInput register={ volunteerForm.register("cellphone") } />
+              <PhoneInput control={ volunteerForm.control } name="cellphone" />
 
               {volunteerForm.formState.errors.cellphone && (
                 <p className="text-sm text-red-600">

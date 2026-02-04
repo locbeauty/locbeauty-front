@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  Control,
   UseFormRegister,
   UseFormSetValue,
   UseFormWatch,
-  FieldErrors,
   Path,
+  Control,
+  FieldErrors,
 } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,14 @@ import { cn } from "@/lib/utils";
 import PriceInput from "@/components/shared/PriceInput";
 import { Textarea } from "@/components/ui/textarea";
 import { TrainingPaymentSection } from "./TrainingPaymentSection";
-import { CreateTrainingDataType } from "@/lib/zod/CreateTrainingValidation";
+import {
+  CreateTrainingDataType,
+  IndividualPaymentSchema,
+} from "@/lib/zod/CreateTrainingValidation";
+import { AlertCircle } from "lucide-react";
+import { z } from "zod";
+
+type IndividualPayment = z.infer<typeof IndividualPaymentSchema>;
 
 interface Participant {
   id: string;
@@ -28,7 +35,7 @@ interface FinancialInputSectionProps {
   errors: FieldErrors<CreateTrainingDataType>;
   participants: Participant[];
   type: "trainee" | "volunteer";
-  fields: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  fields: IndividualPayment[];
 }
 
 // Helper para tratar string de moeda (ex: "1.000,00")
@@ -43,11 +50,9 @@ const parseCurrencyToFloat = (
 };
 
 export function FinancialInputSection({
-  control,
   register,
   setValue,
   watch,
-  errors,
   participants,
   type,
   fields,
@@ -75,8 +80,7 @@ export function FinancialInputSection({
   }, [ participants, selectedParticipantId ]);
 
   const selectedIndex = fields.findIndex(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (field: any) => field.participantId === selectedParticipantId,
+    (field) => field.participantId === selectedParticipantId,
   );
 
   // Watch current participant's values
@@ -91,49 +95,43 @@ export function FinancialInputSection({
   );
   const currentPaymentInfo = watch(
     `${fieldName}.${selectedIndex}.paymentInfo` as Path<CreateTrainingDataType>,
-  );
+  ) as IndividualPayment["paymentInfo"];
 
   // Replicate effect
   useEffect(() => {
     if (isReplicating && selectedIndex !== -1) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      fields.forEach((field: any, index) => {
+      fields.forEach((field, index) => {
         if (index === selectedIndex) return;
 
-        // Only update if different to avoid potential loops (though hook form is robust)
+        const currentStatus = field.paymentInfo?.paymentStatus;
+        if (currentStatus === "Pago" || currentStatus === "Parcial") {
+          return;
+        }
+
         setValue(
           `${fieldName}.${index}.price` as Path<CreateTrainingDataType>,
           currentPrice,
         );
-        setValue(
-          `${fieldName}.${index}.paymentInfo` as Path<CreateTrainingDataType>,
-          currentPaymentInfo,
-        );
 
-        if (type === "trainee") {
-          setValue(
-            `${fieldName}.${index}.additionalCost` as Path<CreateTrainingDataType>,
-            currentAddCost,
-          );
-          setValue(
-            `${fieldName}.${index}.additionalCostDescription` as Path<CreateTrainingDataType>,
-            currentAddDesc,
-          );
-        }
+        setValue(
+          `${fieldName}.${index}.additionalCost` as Path<CreateTrainingDataType>,
+          currentAddCost,
+        );
+        setValue(
+          `${fieldName}.${index}.additionalCostDescription` as Path<CreateTrainingDataType>,
+          currentAddDesc,
+        );
       });
     }
-  }, [ // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
     isReplicating,
     selectedIndex,
     currentPrice,
     currentAddCost,
     currentAddDesc,
-    // JSON.stringify(currentPaymentInfo), - disabling deps check to avoid complexity warning
     fields,
     fieldName,
     setValue,
-
-    // currentPaymentInfo - omitted from strict dep check due to deep object comparison complexity, handled by re-renders
   ]);
 
   if (participants.length === 0) {
@@ -154,9 +152,9 @@ export function FinancialInputSection({
           Participantes
         </Label>
         <div className="space-y-1 max-h-[400px] overflow-y-auto">
-          {participants.map((p) => (
+          {participants.map((p, index) => (
             <div
-              key={ p.id }
+              key={ `${p.id}-${index}` }
               onClick={ () => setSelectedParticipantId(p.id) }
               className={ cn(
                 "cursor-pointer px-3 py-2 rounded-md text-sm transition-colors flex items-center justify-between",
@@ -190,85 +188,101 @@ export function FinancialInputSection({
                 />
                 <label
                   htmlFor={ `replicate-${type}` }
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex flex-col"
                 >
                   Replicar para todos
+                  <span className="text-xs text-muted-foreground">
+                    (exceto pagos e parciais)
+                  </span>
                 </label>
               </div>
             </div>
 
             <div className="space-y-4">
-              {/* Price */}
-              <div className="space-y-2">
-                <Label>Valor Base</Label>
-                <PriceInput
-                  withLabel={ false }
-                  register={ register(
-                    `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
-                  ) }
-                  value={
-                    watch(
-                      `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
-                    )?.toString() ?? ""
-                  }
-                  setValue={ setValue }
-                  name={
-                    `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>
-                  }
-                  placeholder="R$ 0,00"
-                />
-              </div>
+              {/* Calculate disabled state */}
+              {(() => {
+                const currentStatus = currentPaymentInfo?.paymentStatus;
+                const isDisabled =
+                  currentStatus === "Pago" ||
+                  currentStatus === "Parcial" ||
+                  currentStatus === "Cortesia";
 
-              {/* Additional Costs */}
-              {isSelectedTrainee && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-md border border-yellow-200 dark:border-yellow-900/50 space-y-3">
-                  <div className="space-y-2">
-                    <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">
-                      Custos Operacionais Extras
-                    </Label>
-                    <div className="grid grid-cols-1 gap-4">
+                return (
+                  <>
+                    {/* Price */}
+                    <div className="space-y-2">
+                      <Label>Valor Base</Label>
                       <PriceInput
                         withLabel={ false }
                         register={ register(
-                          `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
+                          `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
                         ) }
                         value={
                           watch(
-                            `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
+                            `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>,
                           )?.toString() ?? ""
                         }
                         setValue={ setValue }
                         name={
-                          `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>
+                          `${fieldName}.${selectedIndex}.price` as Path<CreateTrainingDataType>
                         }
-                        placeholder="Valor: R$ 0,00"
-                      />
-                      <Textarea
-                        { ...register(
-                          `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
-                        ) }
-                        placeholder="Descrição: Taxa de sala, material..."
-                        className="resize-none min-h-[40px]"
-                        rows={ 1 }
-                        value={
-                          (watch(
-                            `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
-                          ) as string) || ""
-                        }
+                        placeholder="R$ 0,00 "
+                        disabled={ isDisabled }
                       />
                     </div>
-                  </div>
-                </div>
-              )}
-              {/* Payment Info Section reused */}
-              <TrainingPaymentSection
-                prefix={ `${fieldName}.${selectedIndex}` }
-                label="Detalhes do Pagamento"
-                totalValue={
-                  parseCurrencyToFloat(currentPrice as unknown as string) +
-                  parseCurrencyToFloat(currentAddCost as unknown as string)
-                }
-              />
+
+                    {/* Additional Costs */}
+                    {isSelectedTrainee && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-md border border-yellow-200 dark:border-yellow-900/50 space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-yellow-800 dark:text-yellow-200 text-xs font-bold uppercase tracking-wide">
+                            Custos Operacionais Extras
+                          </Label>
+                          <div className="grid grid-cols-1 gap-4">
+                            <PriceInput
+                              withLabel={ false }
+                              register={ register(
+                                `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
+                              ) }
+                              value={
+                                watch(
+                                  `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>,
+                                )?.toString() ?? ""
+                              }
+                              setValue={ setValue }
+                              name={
+                                `${fieldName}.${selectedIndex}.additionalCost` as Path<CreateTrainingDataType>
+                              }
+                              placeholder="Valor:  R$ 0,00"
+                              disabled={ isDisabled }
+                            />
+                            <div className="flex flex-col gap-2">
+                              <Label className="text-sm font-medium flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 text-red-500" />
+                                Descrição dos Adicionais
+                              </Label>
+                              <Textarea
+                                { ...register(
+                                  `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
+                                ) }
+                                placeholder="Descrição: Taxa de sala, material..."
+                                className="resize-none min-h-[40px]"
+                                rows={ 1 }
+                                disabled={ isDisabled }
+                                value={
+                                  (watch(
+                                    `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
+                                  ) as string) || ""
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}

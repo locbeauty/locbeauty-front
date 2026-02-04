@@ -1,7 +1,7 @@
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { Checkout } from "../@types/checkouts";
 import { Training } from "../@types/training"; // Importar o tipo Training
-import { LocalErrorsType } from "@/components/pages/calendar/CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
+import { LocalErrorsType } from "@/components/pages/trainings/TrainingPaymentMethodDialog";
 
 interface ValidateFormParams {
   paymentStatus: string;
@@ -177,10 +177,7 @@ export function validateCheckoutForm({
       if (isRefunded) {
         newErrors.paymentInfo.secondPaymentAmount = "";
         newErrors.paymentInfo.secondPaymentDate = "";
-        // If it was marked invalid solely due to second parcel logic which is bypassed, we might need to rely on the fact that we didn't set isValid=false in skipped blocks.
-        // However, if we entered blocks that set isValid=false, we are in trouble.
-        // With current logic, we wrap setting isValid=false in `if (!isRefunded)`.
-        // So we are safe.
+        newErrors.paymentInfo.secondPaymentMethod = "";
       }
     }
     // Se pendingValue for 0 (primeira parcela cobriu tudo), teoricamente não deveria estar aqui ou status seria Pago.
@@ -191,7 +188,7 @@ export function validateCheckoutForm({
   }
 
   // --- Segunda parcela já paga (Validação extra se o status da segunda for marcado como Pago manual, se houver essa opção) ---
-  if (isParcelledMode && secondPaymentStatus === "Pago") {
+  if (isParcelledMode && secondPaymentStatus === "Pago" && !isRefunded) {
     if (parseStringToCents(secondPaymentAmount) === 0) {
       newErrors.paymentInfo.secondPaymentAmount =
         "O valor da 2ª parcela é obrigatório.";

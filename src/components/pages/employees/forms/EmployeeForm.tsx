@@ -2,6 +2,7 @@ import { SelectRole } from "@/components/shared/SelectRole";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import { MaskedDateInput } from "./MaskedDateInput";
 import PhoneInput from "../../../shared/PhoneInput";
+import DocumentInput from "../../../shared/DocumentInput";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Controller, useFormContext } from "react-hook-form";
@@ -32,11 +33,9 @@ export function EmployeeForm({
     control,
     setError,
     clearErrors,
-    formState: { errors, isSubmitSuccessful },
+    formState: { errors },
   } = useFormContext<CreateEmployeeFormSchemaType>();
 
-  const [ confirmPassword, setConfirmPassword ] = useState("");
-  const password = watch("password");
   const username = watch("username");
 
   const [ debouncedUsername ] = useDebounceValue(username, 500);
@@ -82,20 +81,6 @@ export function EmployeeForm({
     checkUsername();
   }, [ debouncedUsername, setError, clearErrors, currentUsername ]);
 
-  useEffect(() => {
-    if (isSubmitSuccessful) {
-      setConfirmPassword("");
-    }
-  }, [ isSubmitSuccessful ]);
-
-  useEffect(() => {
-    if (password !== confirmPassword && confirmPassword.length > 0) {
-      setError("password", { message: "Senhas não batem." });
-    } else {
-      clearErrors("password");
-    }
-  }, [ setError, clearErrors, password, confirmPassword ]);
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Column */}
@@ -134,6 +119,7 @@ export function EmployeeForm({
                 { ...register("fullname") }
                 id="fullname"
                 placeholder="Ex: Maria Silva"
+                className="placeholder:text-placeholder"
                 // disabled={ isEditing }
               />
               {errors.fullname && (
@@ -150,6 +136,7 @@ export function EmployeeForm({
                   { ...register("username") }
                   id="username"
                   placeholder="Ex: mariasilva"
+                  className="placeholder:text-placeholder"
                 />
                 <div className="absolute right-3 top-2.5">
                   {isCheckingUsername ? (
@@ -164,6 +151,20 @@ export function EmployeeForm({
               {errors.username && (
                 <p className="text-xs font-medium text-destructive">
                   {errors.username.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="documentNumber">CPF</Label>
+              <DocumentInput
+                register={ register("documentNumber") }
+                isCPF
+                placeholder="000.000.000-00"
+              />
+              {errors.documentNumber && (
+                <p className="text-xs font-medium text-destructive">
+                  {errors.documentNumber.message}
                 </p>
               )}
             </div>
@@ -215,7 +216,7 @@ export function EmployeeForm({
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="cellphone">Telefone</Label>
-              <PhoneInput register={ register("cellphone") } />
+              <PhoneInput control={ control } name="cellphone" />
               {errors.cellphone && (
                 <p className="text-xs font-medium text-destructive">
                   {errors.cellphone.message}
@@ -230,6 +231,7 @@ export function EmployeeForm({
                 id="email"
                 type="email"
                 placeholder="exemplo@email.com"
+                className="placeholder:text-placeholder"
               />
               {errors.email && (
                 <p className="text-xs font-medium text-destructive">
@@ -255,20 +257,22 @@ export function EmployeeForm({
                 id="password"
                 type="password"
                 placeholder="Senha de acesso"
+                className="placeholder:text-placeholder"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar Senha</Label>
               <Input
-                onChange={ (e) => setConfirmPassword(e.target.value) }
+                { ...register("confirmPassword") }
                 id="confirmPassword"
                 type="password"
                 placeholder="Repita a senha"
+                className="placeholder:text-placeholder"
               />
-              {errors.password && (
+              {errors.confirmPassword && (
                 <p className="text-xs font-medium text-destructive">
-                  {errors.password.message}
+                  {errors.confirmPassword.message}
                 </p>
               )}
             </div>

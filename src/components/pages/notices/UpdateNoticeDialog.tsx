@@ -9,22 +9,21 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-provider";
-import { CreateNotice } from "@/services/notices.service";
-import { useMemo, useState, useEffect } from "react";
+import { UpdateNotice } from "@/services/notices.service";
+import { useMemo, useEffect } from "react";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
-import { Plus } from "lucide-react";
 import { queryClient } from "@/app/(main)/layout";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import { useAccess } from "@/contexts/access-provider";
 import { USER_ROLES } from "@/utils/constants";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { Notice } from "@/utils/@types/notice";
 
 const TimeGrid = ({
   value,
@@ -56,11 +55,10 @@ const TimeGrid = ({
   );
 };
 
-const createNoticeSchema = z
+const updateNoticeSchema = z
   .object({
     description: z.string().min(1, "Descrição é obrigatória"),
     filialId: z.string().optional(),
-
     /* eslint-disable camelcase */
     startDate: z.date({ required_error: "Data de início é obrigatória" }),
     endDate: z.date({ required_error: "Data de término é obrigatória" }),
@@ -71,7 +69,6 @@ const createNoticeSchema = z
       required_error: "Horário de término é obrigatório",
     }),
     /* eslint-enable camelcase */
-
   })
   .refine(
     (data) => {
@@ -87,12 +84,21 @@ const createNoticeSchema = z
     },
   );
 
-type CreateNoticeSchemaType = z.infer<typeof createNoticeSchema>;
+type UpdateNoticeSchemaType = z.infer<typeof updateNoticeSchema>;
 
-export function CreateNoticeDialog() {
+interface UpdateNoticeDialogProps {
+  notice: Notice | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function UpdateNoticeDialog({
+  notice,
+  open,
+  onOpenChange,
+}: UpdateNoticeDialogProps) {
   const { user } = useAuth();
   const { getAccessibleFilialsForCreate } = useAccess();
-  const [ open, setOpen ] = useState(false);
 
   const accessibleFilialsObjects =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
@@ -106,22 +112,27 @@ export function CreateNoticeDialog() {
         ? undefined
         : [];
 
-  const defaultFilialId = user?.sourceFilialId;
-
   const {
     control,
     handleSubmit,
     reset,
-    setValue,
     formState: { errors },
-    watch,
-  } = useForm<CreateNoticeSchemaType>({
-    resolver: zodResolver(createNoticeSchema),
-    defaultValues: {
-      description: "",
-      filialId: defaultFilialId,
-    },
+  } = useForm<UpdateNoticeSchemaType>({
+    resolver: zodResolver(updateNoticeSchema),
   });
+
+  useEffect(() => {
+    if (notice) {
+      reset({
+        description: notice.description,
+        filialId: notice.filialId,
+        startDate: new Date(notice.startDate),
+        endDate: new Date(notice.endDate),
+        startHourInMinutes: notice.startHourInMinutes,
+        endHourInMinutes: notice.endHourInMinutes,
+      });
+    }
+  }, [ notice, reset ]);
 
   const timeOptions = useMemo(() => {
     const opts = [];
@@ -131,65 +142,41 @@ export function CreateNoticeDialog() {
         label: minutesToHHMM(i),
       });
     }
-    // Add 23:49 specifically as requested
     opts.push({
       value: 1429,
       label: "23:49",
     });
-    // Sort by value
     return opts.sort((a, b) => a.value - b.value);
   }, []);
 
-  const startDate = watch("startDate");
-  const endDate = watch("endDate");
+  const onSubmit: SubmitHandler<UpdateNoticeSchemaType> = async (data) => {
+    if (!notice) return;
 
-  const startHour = watch("startHourInMinutes");
-  const endHour = watch("endHourInMinutes");
-
-  useEffect(() => {
-    if (startDate && startHour === undefined) {
-      setValue("startHourInMinutes", 0);
-    }
-  }, [ startDate, startHour, setValue ]);
-
-  useEffect(() => {
-    if (endDate && endHour === undefined) {
-      setValue("endHourInMinutes", 1429);
-    }
-  }, [ endDate, endHour, setValue ]);
-
-  const onSubmit: SubmitHandler<CreateNoticeSchemaType> = async (data) => {
     const payload = {
       description: data.description,
-      filialId: data.filialId || user?.sourceFilialId,
+      filialId: data.filialId,
       startDate: data.startDate.toISOString(),
       endDate: data.endDate.toISOString(),
       startHourInMinutes: data.startHourInMinutes,
       endHourInMinutes: data.endHourInMinutes,
     };
 
-    const response = await CreateNotice(payload);
+    const response = await UpdateNotice(notice.noticeId, payload);
 
-    if (response.statusCode === 201 || response.statusCode === 200) {
-      toast.success("Aviso criado com sucesso!");
-      setOpen(false);
-      reset();
+    if (response.statusCode === 200) {
+      toast.success("Aviso atualizado com sucesso!");
+      onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: [ "get-notices" ] });
     } else {
-      toast.error(response.message || "Erro ao criar aviso");
+      toast.error(response.message || "Erro ao atualizar aviso");
     }
   };
 
   return (
-    <Dialog open={ open } onOpenChange={ setOpen }>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Criar Aviso
-        </Button>
-      </DialogTrigger>
+    <Dialog open={ open } onOpenChange={ onOpenChange }>
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>Criar Novo Aviso</DialogTitle>
+          <DialogTitle>Editar Aviso</DialogTitle>
         </DialogHeader>
         <form onSubmit={ handleSubmit(onSubmit) } className="space-y-4">
           <div className="space-y-2">
@@ -198,7 +185,6 @@ export function CreateNoticeDialog() {
               control={ control }
               name="filialId"
               accessibleFilials={ accessibleFilialsIds }
-              defaultFilial={ defaultFilialId }
             />
           </div>
 
@@ -310,7 +296,7 @@ export function CreateNoticeDialog() {
           </div>
 
           <Button type="submit" className="w-full" size="lg">
-            Criar Aviso
+            Atualizar Aviso
           </Button>
         </form>
       </DialogContent>

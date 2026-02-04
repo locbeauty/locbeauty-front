@@ -33,10 +33,13 @@ export interface TrainingPayment {
   secondPaymentStatus: "Pendente" | "Pago";
   isCourtesy: boolean;
   wasRefunded: boolean;
+  refundAmount: number | null;
+  refundedAmount: number | null;
   cancellationFee: number | null;
   cancellationDate: string | null;
   cancellationFeePaymentDate: string | null;
   cancellationFeePaymentMethod: string | null;
   traineeId?: string | null;
+  customerId?: string | null;
   volunteerId?: string | null;
 }

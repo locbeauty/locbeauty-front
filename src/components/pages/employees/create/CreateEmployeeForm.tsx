@@ -2,6 +2,7 @@
 
 import { CardContent } from "@/components/ui/card";
 import { Controller, FormProvider, useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/auth-provider";
 import { useAccess } from "@/contexts/access-provider";
 import { USER_ROLES } from "@/utils/constants";
@@ -44,10 +45,17 @@ export function CreateEmployeeForm() {
     resolver: zodResolver(createEmployeeFormSchema),
     defaultValues: {
       sourceFilialId: defaultFilialId || "",
+      confirmPassword: "",
     },
   });
 
-  const { handleSubmit, reset, setError } = CreateEmployeeMethods;
+  const { handleSubmit, reset, setError, setValue } = CreateEmployeeMethods;
+
+  useEffect(() => {
+    if (defaultFilialId) {
+      setValue("sourceFilialId", defaultFilialId);
+    }
+  }, [ defaultFilialId, setValue ]);
 
   async function handleCreateEmployee(
     newEmployeeData: CreateEmployeeFormSchemaType,

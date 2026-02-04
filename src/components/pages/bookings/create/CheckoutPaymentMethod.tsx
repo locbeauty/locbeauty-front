@@ -113,8 +113,6 @@ export function CheckoutPaymentMethod() {
     case "Crédito":
     case "Débito":
       return <CreditCard className="h-4 w-4 text-violet-600" />;
-    case "NaoInformado":
-      return <HelpCircle className="h-4 w-4 text-gray-400" />;
     default:
       return <CreditCard className="h-4 w-4" />;
     }
@@ -169,7 +167,15 @@ export function CheckoutPaymentMethod() {
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {paymentStatuses.map((status) => (
+                    {paymentStatuses.filter((status) => {
+                      if (
+                        status === "Reembolsado" ||
+                          status === "Cancelado"
+                      ) {
+                        return field.value === status;
+                      }
+                      return true;
+                    }).map((status) => (
                       <SelectItem key={ status } value={ status }>
                         <div className="flex items-center gap-2">
                           <div
@@ -190,7 +196,7 @@ export function CheckoutPaymentMethod() {
             )}
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
               Status da Reserva
@@ -220,7 +226,7 @@ export function CheckoutPaymentMethod() {
                 {errors.checkoutStatus.message}
               </p>
             )}
-          </div>
+          </div> */}
         </div>
 
         <div
@@ -312,11 +318,7 @@ export function CheckoutPaymentMethod() {
                           <SelectItem key={ method } value={ method }>
                             <div className="flex items-center gap-2">
                               {getPaymentIcon(method)}
-                              <span>
-                                {method === "NaoInformado"
-                                  ? "Não informado"
-                                  : method}
-                              </span>
+                              <span>{method}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -332,96 +334,6 @@ export function CheckoutPaymentMethod() {
               </div>
             </div>
           </div>
-
-          {watchedPaymentStatus === "Parcial" && (
-            <>
-              <div className="h-px bg-border border-dashed" />
-              <div className="space-y-3 opacity-90">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-bold flex items-center gap-2 text-orange-600">
-                    <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-xs">
-                      2
-                    </div>
-                    Segunda Parcela / Restante
-                  </Label>
-                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-medium">
-                    Pendente
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                  <div className="sm:col-span-4">
-                    <Label className="text-xs text-muted-foreground">
-                      Valor Restante
-                    </Label>
-                    <Controller
-                      name="paymentInfo.secondPaymentAmount"
-                      control={ control }
-                      render={ ({ field }) => (
-                        <PriceInput
-                          withLabel={ false }
-                          value={ field.value || "0,00" }
-                          onChange={ field.onChange }
-                          disabled={ true }
-                        />
-                      ) }
-                    />
-                  </div>
-
-                  <div className="sm:col-span-4">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                      <CalendarIcon className="w-3 h-3" /> Data Prevista
-                    </Label>
-                    <Controller
-                      name="paymentInfo.secondPaymentDate"
-                      control={ control }
-                      render={ ({ field }) => (
-                        <DatePicker
-                          value={ field.value || null }
-                          onChange={ field.onChange }
-                          placeholder="Selecione a data"
-                          clearable
-                        />
-                      ) }
-                    />
-                  </div>
-
-                  <div className="sm:col-span-4">
-                    <Label className="text-xs text-muted-foreground">
-                      Forma Prevista
-                    </Label>
-                    <Controller
-                      name="paymentInfo.secondPaymentMethod"
-                      control={ control }
-                      render={ ({ field }) => (
-                        <Select
-                          onValueChange={ field.onChange }
-                          value={ field.value || "" }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione (opcional)..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PaymentMethods.map((method) => (
-                              <SelectItem key={ method } value={ method }>
-                                <div className="flex items-center gap-2">
-                                  {getPaymentIcon(method)}
-                                  <span>
-                                    {method === "NaoInformado"
-                                      ? "Não informado"
-                                      : method}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) }
-                    />
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </div>
 
         {errors.paymentInfo &&

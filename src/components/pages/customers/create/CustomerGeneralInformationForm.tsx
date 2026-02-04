@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
@@ -54,9 +55,25 @@ export function CustomerGeneralInformationForm({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="border p-4 rounded-md">
-          <div className="flex items-center gap-2 mb-4">
-            <User className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-medium">Informações do Cliente</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-medium">Informações do Cliente</h3>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Controller
+                control={ control }
+                name="isTrainee"
+                render={ ({ field }) => (
+                  <Checkbox
+                    id="isTrainee"
+                    checked={ field.value }
+                    onCheckedChange={ field.onChange }
+                  />
+                ) }
+              />
+              <Label htmlFor="isTrainee">É Aluno?</Label>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -115,12 +132,31 @@ export function CustomerGeneralInformationForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="documentNumber">CPF/CNPJ</Label>
-                <DocumentInput register={ register("documentNumber") } />
+                <Label htmlFor="cpf">CPF</Label>
+                <DocumentInput
+                  register={ register("cpf") }
+                  isCPF
+                  placeholder="000.000.000-00"
+                />
                 <div className="h-3">
-                  {errors.documentNumber && (
+                  {errors.cpf && (
                     <p className="text-xs font-medium text-destructive">
-                      {errors.documentNumber.message}
+                      {errors.cpf.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cnpj">CNPJ</Label>
+                <DocumentInput
+                  register={ register("cnpj") }
+                  placeholder="00.000.000/0000-00"
+                />
+                <div className="h-3">
+                  {errors.cnpj && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.cnpj.message}
                     </p>
                   )}
                 </div>
@@ -160,7 +196,12 @@ export function CustomerGeneralInformationForm({
                   </div>
                 </div>
                 {birthdate && (
-                  <Button size="sm" variant="outline" onClick={ clearBirthdate } className="h-9 w-9 p-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={ clearBirthdate }
+                    className="h-9 w-9 p-0"
+                  >
                     <X className="size-4" />
                   </Button>
                 )}
@@ -213,6 +254,7 @@ export function CustomerGeneralInformationForm({
                     onBlur={ (e) => {
                       if (e.target.value === "") setValue("email", null);
                     } }
+                    className="placeholder:text-placeholder"
                   />
                 </div>
                 <div className="space-y-2 col-span-12 md:col-span-4">
@@ -223,6 +265,7 @@ export function CustomerGeneralInformationForm({
                       if (e.target.value === "")
                         setValue("emailDescription", null);
                     } }
+                    className="placeholder:text-placeholder"
                   />
                 </div>
               </div>
@@ -236,6 +279,7 @@ export function CustomerGeneralInformationForm({
                       if (e.target.value === "")
                         setValue("secondaryEmail", null);
                     } }
+                    className="placeholder:text-placeholder"
                   />
                   {errors.secondaryEmail && (
                     <p className="text-xs font-medium text-destructive">
@@ -251,6 +295,7 @@ export function CustomerGeneralInformationForm({
                       if (e.target.value === "")
                         setValue("secondaryEmailDescription", null);
                     } }
+                    className="placeholder:text-placeholder"
                   />
                 </div>
               </div>
@@ -265,7 +310,7 @@ export function CustomerGeneralInformationForm({
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="space-y-2 col-span-12 md:col-span-8">
-                    <PhoneInput register={ register("cellphone") } />
+                    <PhoneInput control={ control } name="cellphone" />
                     <div className="h-3">
                       {errors.cellphone && (
                         <p className="text-xs font-medium text-destructive">
@@ -282,12 +327,13 @@ export function CustomerGeneralInformationForm({
                         if (e.target.value === "")
                           setValue("cellphoneDescription", null);
                       } }
+                      className="placeholder:text-placeholder"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="space-y-2 col-span-12 md:col-span-8">
-                    <PhoneInput register={ register("secondaryCellphone") } />
+                    <PhoneInput control={ control } name="secondaryCellphone" />
                     {errors.secondaryCellphone && (
                       <p className="text-xs font-medium text-destructive">
                         {errors.secondaryCellphone.message}
@@ -302,6 +348,7 @@ export function CustomerGeneralInformationForm({
                         if (e.target.value === "")
                           setValue("secondaryCellphoneDescription", null);
                       } }
+                      className="placeholder:text-placeholder"
                     />
                   </div>
                 </div>

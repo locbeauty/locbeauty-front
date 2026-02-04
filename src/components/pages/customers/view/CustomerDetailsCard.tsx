@@ -87,10 +87,22 @@ export function CustomerDetailsCard({
                 <FileText className="h-4 w-4 text-primary mt-1 shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-sm font-medium text-muted-foreground">
-                    Documento
+                    CPF
                   </span>
                   <span className="font-mono truncate">
-                    {selectedCustomer?.documentNumber || "Não informado"}
+                    {selectedCustomer?.cpf || "--"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <FileText className="h-4 w-4 text-primary mt-1 shrink-0" />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    CNPJ
+                  </span>
+                  <span className="font-mono truncate">
+                    {selectedCustomer?.cnpj || "--"}
                   </span>
                 </div>
               </div>
@@ -168,7 +180,7 @@ export function CustomerDetailsCard({
                       className="text-blue-600 truncate block"
                       title={ selectedCustomer?.email || "" }
                     >
-                      {selectedCustomer?.email}
+                      {selectedCustomer?.email || "--"}
                       {selectedCustomer?.emailDescription && (
                         <span className="text-muted-foreground text-xs ml-1 font-normal">
                           ({selectedCustomer.emailDescription})
@@ -200,7 +212,7 @@ export function CustomerDetailsCard({
                   </span>
                   <div className="flex flex-col min-w-0">
                     <span className="truncate block">
-                      {selectedCustomer?.cellphone || "Não informado"}
+                      {selectedCustomer?.cellphone || "--"}
                       {selectedCustomer?.cellphoneDescription && (
                         <span className="text-muted-foreground text-xs ml-1 font-normal">
                           ({selectedCustomer.cellphoneDescription})

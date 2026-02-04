@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable indent */
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   CheckCircle,
@@ -11,6 +10,7 @@ import {
   Banknote,
   QrCode,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   FormControl,
@@ -38,28 +37,28 @@ import {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "Pago":
-      return "bg-green-500";
-    case "Parcial":
-      return "bg-orange-500";
-    case "Cortesia":
-      return "bg-blue-500";
-    default:
-      return "bg-gray-300";
+  case "Pago":
+    return "bg-green-500";
+  case "Parcial":
+    return "bg-orange-500";
+  case "Cortesia":
+    return "bg-blue-500";
+  default:
+    return "bg-gray-300";
   }
 };
 
 const getPaymentIcon = (method: string) => {
   switch (method) {
-    case "Pix":
-      return <QrCode className="w-4 h-4" />;
-    case "Dinheiro":
-      return <Banknote className="w-4 h-4" />;
-    case "Cartão de Crédito":
-    case "Cartão de Débito":
-      return <CreditCard className="w-4 h-4" />;
-    default:
-      return <Banknote className="w-4 h-4" />;
+  case "Pix":
+    return <QrCode className="w-4 h-4" />;
+  case "Dinheiro":
+    return <Banknote className="w-4 h-4" />;
+  case "Cartão de Crédito":
+  case "Cartão de Débito":
+    return <CreditCard className="w-4 h-4" />;
+  default:
+    return <Banknote className="w-4 h-4" />;
   }
 };
 
@@ -86,6 +85,7 @@ interface TrainingPaymentSectionProps {
   prefix: string;
   label?: string;
   totalValue?: number;
+  disabled?: boolean;
 }
 
 import { CreateTrainingDataType } from "@/lib/zod/CreateTrainingValidation";
@@ -94,6 +94,7 @@ export function TrainingPaymentSection({
   prefix,
   label,
   totalValue = 0,
+  disabled,
 }: TrainingPaymentSectionProps) {
   const {
     control,
@@ -177,8 +178,6 @@ export function TrainingPaymentSection({
     getValues,
   ]);
 
-  // ...
-
   // Helper para verificar erro no select de status
   // Acessa errors['traineePayment']['paymentInfo']['paymentStatus'] de forma segura
   const statusError = (errors as any)?.[prefix]?.paymentInfo?.paymentStatus;
@@ -204,6 +203,7 @@ export function TrainingPaymentSection({
             render={ ({ field }) => (
               <FormItem>
                 <Select
+                  disabled={ disabled }
                   onValueChange={ field.onChange }
                   value={ (field.value as string) || "Pendente" }
                 >
@@ -283,8 +283,8 @@ export function TrainingPaymentSection({
                               ? String(field.value)
                               : undefined
                           }
-                          // Desabilita edição se estiver "Pago" (pois o useEffect fixa o valor total)
-                          disabled={ paymentStatus === "Pago" }
+                          // Desabilita edição se estiver "Pago" (pois o useEffect fixa o valor total) ou se toda a seção estiver desabilitada
+                          disabled={ disabled || paymentStatus === "Pago" }
                         />
                       </FormControl>
                       <FormMessage className="text-xs" />
@@ -303,14 +303,15 @@ export function TrainingPaymentSection({
                         <CalendarIcon className="w-3 h-3" /> Data do Pagamento
                       </Label>
                       <FormControl>
-                          <DatePicker
-                              value={ field.value ? new Date(field.value) : null }
-                              onChange={ field.onChange }
-                              placeholder="Selecione a data"
-                            />
+                        <DatePicker
+                          disabled={ disabled }
+                          value={ field.value ? new Date(field.value) : null }
+                          onChange={ field.onChange }
+                          placeholder="Selecione a data"
+                        />
                       </FormControl>
                       <FormMessage className="text-xs" />
-                     </FormItem>
+                    </FormItem>
                   ) }
                 />
               </div>
@@ -325,6 +326,7 @@ export function TrainingPaymentSection({
                         Forma de Pagamento
                       </Label>
                       <Select
+                        disabled={ disabled }
                         onValueChange={ field.onChange }
                         value={ (field.value as string) ?? undefined }
                       >
@@ -401,6 +403,7 @@ export function TrainingPaymentSection({
                           </Label>
                           <FormControl>
                             <DatePicker
+                              disabled={ disabled }
                               value={ field.value ? new Date(field.value) : null }
                               onChange={ field.onChange }
                               placeholder="Selecione a data"
@@ -422,6 +425,7 @@ export function TrainingPaymentSection({
                             Forma Prevista
                           </Label>
                           <Select
+                            disabled={ disabled }
                             onValueChange={ field.onChange }
                             value={ (field.value as string) ?? undefined }
                           >
@@ -450,6 +454,65 @@ export function TrainingPaymentSection({
               </div>
             </>
           )}
+          {/* --- REEMBOLSO --- */}
+          <div className="h-px bg-border border-dashed" />
+          <div className="space-y-4">
+            <FormField
+              control={ control }
+              name={ `${prefix}.paymentInfo.wasRefunded` as any }
+              render={ ({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 bg-red-50 dark:bg-red-900/10 rounded-md border border-red-100 dark:border-red-900/30">
+                  <FormControl>
+                    <Checkbox
+                      checked={ field.value }
+                      onCheckedChange={ field.onChange }
+                      disabled={ disabled }
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <Label className="text-sm font-bold text-red-700 dark:text-red-400 cursor-pointer">
+                      Este pagamento foi reembolsado?
+                    </Label>
+                    <p className="text-xs text-red-600/70 dark:text-red-400/70">
+                      Marque para registrar a devolução de valores.
+                    </p>
+                  </div>
+                </FormItem>
+              ) }
+            />
+
+            {watch(`${prefix}.paymentInfo.wasRefunded` as any) && (
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 animate-in fade-in slide-in-from-top-2">
+                <div className="sm:col-span-12">
+                  <FormField
+                    control={ control }
+                    name={ `${prefix}.paymentInfo.refundAmount` as any }
+                    render={ ({ field }) => (
+                      <FormItem>
+                        <Label className="text-xs text-muted-foreground">
+                          Valor Reembolsado
+                        </Label>
+                        <FormControl>
+                          <PriceInput
+                            { ...field }
+                            withLabel={ false }
+                            disabled={ disabled }
+                            placeholder="R$ 0,00"
+                            value={
+                              field.value != null
+                                ? String(field.value)
+                                : undefined
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    ) }
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

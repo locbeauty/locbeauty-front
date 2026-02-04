@@ -18,6 +18,7 @@ import {
   updateFilialFormSchema,
   UpdateFilialFormSchemaType,
 } from "@/lib/zod/UpdateFilialValidation";
+import { formatPhone } from "@/utils/formatPhone";
 
 interface UpdateFilialDialogProps {
   isUpdateFilialDialogOpen: boolean;
@@ -27,31 +28,17 @@ interface UpdateFilialDialogProps {
     _openStatus: boolean,
     _filial: Filial | null,
   ) => void;
+  onSuccess?: () => void;
 }
 
 export function UpdateFilialDialog({
   isUpdateFilialDialogOpen,
   selectedFilial,
   handleToggleUpdateFilialDialog,
+  onSuccess,
 }: UpdateFilialDialogProps) {
   const updateFilialMethods = useForm<UpdateFilialFormSchemaType>({
     resolver: zodResolver(updateFilialFormSchema),
-    // defaultValues: {
-    //     cellphone: selectedFilial.cellphone,
-    //     // CNPJ: selectedFilial.CNPJ,
-    //     email: selectedFilial.email,
-    //     filialName: selectedFilial.filialName,
-    //     managerEmployeeId: selectedFilial.managerEmployee.employeeId,
-    //     address: {
-    //         addressComplement: selectedFilial.Address.addressComplement,
-    //         zipCode: selectedFilial.Address.zipCode,
-    //         cityName: selectedFilial.Address.City.cityName,
-    //         buildingNumber: selectedFilial.Address.buildingNumber,
-    //         neighborhoodName: selectedFilial.Address.Neighborhood.neighborhoodName,
-    //         stateName: selectedFilial.Address.State.stateName,
-    //         streetName: selectedFilial.Address.Street.streetName,
-    //     },
-    // },
   });
   const {
     handleSubmit,
@@ -64,21 +51,9 @@ export function UpdateFilialDialog({
   useEffect(() => {
     if (selectedFilial) {
       reset({
-        cellphone: selectedFilial.cellphone, // só números
-        // CNPJ: selectedFilial.CNPJ,
-        email: selectedFilial.email,
+        cellphone: formatPhone(selectedFilial.cellphone), // masked value
         filialName: selectedFilial.filialName,
-        managerEmployeeId: selectedFilial.managerEmployee.employeeId,
-        address: {
-          addressComplement:
-            selectedFilial.Address.addressComplement ?? undefined,
-          zipCode: selectedFilial.Address.zipCode,
-          cityName: selectedFilial.Address.city ?? undefined,
-          buildingNumber: selectedFilial.Address.buildingNumber,
-          neighborhoodName: selectedFilial.Address.neighborhood ?? undefined,
-          stateName: selectedFilial.Address.state ?? undefined,
-          streetName: selectedFilial.Address.street ?? undefined,
-        },
+        managerEmployeeId: selectedFilial.managerEmployee?.employeeId,
       });
     }
   }, [ selectedFilial, reset ]);
@@ -86,9 +61,8 @@ export function UpdateFilialDialog({
   async function handleUpdateFilial(
     updatedFilialData: UpdateFilialFormSchemaType,
   ) {
-    // console.log("Filial editada com sucesso!", updatedFilialData);
     const response = await fetchWithToken(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/filials/update?filialId=${selectedFilial.filialId}`,
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/filials/update/${selectedFilial.filialId}`,
       {
         method: "POST",
         headers: {
@@ -108,6 +82,9 @@ export function UpdateFilialDialog({
       });
       handleToggleUpdateFilialDialog(false, null);
       reset();
+      if (onSuccess) {
+        onSuccess();
+      }
     }
   }
   return (

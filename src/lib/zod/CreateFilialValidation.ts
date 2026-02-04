@@ -1,18 +1,12 @@
 import { z } from "zod";
 
 export const createFilialFormSchema = z.object({
-  // CNPJ: z.string(),
-  // email: z
-  //   .string()
-  //   .min(1, { message: "Email é obrigatório" })
-  //   .email({ message: "Email inválido" }),
   cellphone: z
     .string()
-    .min(15, { message: "Celular deve conter DDD e número" })
-    .max(16, { message: "Celular deve conter no máximo 11 dígitos" }),
+    .min(14, { message: "Telefone deve conter DDD e número" })
+    .max(15, { message: "Telefone deve conter no máximo 15 dígitos" }),
   filialName: z.string(),
-  managerEmployeeId: z.string({ message: "Gerente é obrigatório." }),
-  // address: addressSchema,
+  managerEmployeeId: z.string().nullable().optional(),
 });
 
 export type CreateFilialFormSchemaType = z.infer<typeof createFilialFormSchema>;

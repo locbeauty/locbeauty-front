@@ -54,7 +54,7 @@ export default function LoginPage() {
     const loginResponse = await res.json();
 
     if (res.status !== 200) {
-      setErrorMessage(loginResponse.error);
+      setErrorMessage(loginResponse.message || loginResponse.error);
       return;
     }
     // console.log("loginResponse: ", loginResponse);

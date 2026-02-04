@@ -81,7 +81,7 @@ export function AddParticipantDialog({
     (opt) =>
       !excludeIds.includes(
         type === "TRAINEE"
-          ? (opt as Trainee).traineeId
+          ? (opt as Trainee).customerId
           : (opt as Volunteer).volunteerId,
       ),
   );
@@ -109,9 +109,12 @@ export function AddParticipantDialog({
                 filteredOptions.map((option) => {
                   const id =
                     type === "TRAINEE"
-                      ? (option as Trainee).traineeId
+                      ? (option as Trainee).customerId
                       : (option as Volunteer).volunteerId;
-                  const name = option.name;
+                  const name =
+                    type === "TRAINEE"
+                      ? (option as Trainee).fullname
+                      : (option as Volunteer).name;
                   const isSelected = selectedId === id;
 
                   return (

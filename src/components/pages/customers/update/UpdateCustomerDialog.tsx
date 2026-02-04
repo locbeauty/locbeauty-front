@@ -56,7 +56,8 @@ export function UpdateCustomerDialog({
         secondaryCellphone: selectedCustomer.secondaryCellphone,
         secondaryCellphoneDescription:
           selectedCustomer.secondaryCellphoneDescription,
-        documentNumber: selectedCustomer.documentNumber,
+        cpf: selectedCustomer.cpf,
+        cnpj: selectedCustomer.cnpj,
         companyName: selectedCustomer.companyName,
         customerStatus: selectedCustomer.customerStatus,
         fullname: selectedCustomer.fullname,
@@ -125,13 +126,11 @@ export function UpdateCustomerDialog({
                   Cancelar
                 </Button>
                 <Button disabled={ !isDirty || isSubmitting || isLoading }>
-                  {
-                    isSubmitting || isLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Save className="mr-2 h-4 w-4" />
-                    )
-                  }
+                  {isSubmitting || isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
                   Salvar alterações
                 </Button>
               </DialogFooter>

@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 import { Eye, Filter, X, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-provider";
@@ -7,12 +9,12 @@ import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmation
 import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
 
-import { Trainee } from "@/utils/@types/trainee";
+import { Customer } from "@/utils/@types/customer";
 import { Training } from "@/utils/@types/training";
 import { Filial } from "@/utils/@types/filials";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
-import { TraineeDetailsDialog } from "./TraineeDetailsDialog";
+import { CustomerDetailsDialog } from "@/components/pages/customers/view/CustomerDetailsDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -25,10 +27,10 @@ import {
 } from "@/components/ui/select";
 
 interface TraineesTableProps {
-  trainees: Trainee[] | undefined;
+  trainees: Customer[] | undefined;
   allTrainings: Training[];
   filials?: Filial[];
-  onViewDetails?: (trainee: Trainee) => void;
+  onViewDetails?: (trainee: Customer) => void;
 }
 
 export function TraineesTable({
@@ -37,12 +39,12 @@ export function TraineesTable({
   filials,
   onViewDetails,
 }: TraineesTableProps) {
-  const [ selectedTrainee, setSelectedTrainee ] = useState<Trainee | null>(null);
+  const [ selectedTrainee, setSelectedTrainee ] = useState<Customer | null>(null);
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
   const [ isDeleting, setIsDeleting ] = useState(false);
   const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
-  const [ traineeToDelete, setTraineeToDelete ] = useState<Trainee | null>(null);
+  const [ traineeToDelete, setTraineeToDelete ] = useState<Customer | null>(null);
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -52,7 +54,7 @@ export function TraineesTable({
   const [ filterPending, setFilterPending ] = useState(false);
   const [ filterFilial, setFilterFilial ] = useState<string>("all");
 
-  const handleOpenDetails = (trainee: Trainee) => {
+  const handleOpenDetails = (trainee: Customer) => {
     setSelectedTrainee(trainee);
     setIsDetailsOpen(true);
     if (onViewDetails) {
@@ -65,7 +67,7 @@ export function TraineesTable({
 
     setIsDeleting(true);
     try {
-      const response = await DeleteTrainee(traineeToDelete.traineeId);
+      const response = await DeleteTrainee(traineeToDelete.customerId);
 
       if (response.statusCode === 200 || response.statusCode === 204) {
         toast.success("Aluno excluído com sucesso.");
@@ -95,7 +97,7 @@ export function TraineesTable({
     // Name Filter
     if (filterName) {
       result = result.filter((t) =>
-        t.name.toLowerCase().includes(filterName.toLowerCase()),
+        t.fullname.toLowerCase().includes(filterName.toLowerCase()),
       );
     }
 
@@ -114,14 +116,12 @@ export function TraineesTable({
                 p.secondPaymentStatus === "Pendente";
 
           if (isPending && p.payerType === "TRAINEE") {
-            if (p.traineeId) traineesWithPending.add(p.traineeId);
-            else if (training.traineeId)
-              traineesWithPending.add(training.traineeId);
+            if (p.customerId) traineesWithPending.add(p.customerId);
           }
         });
       });
 
-      result = result.filter((t) => traineesWithPending.has(t.traineeId));
+      result = result.filter((t) => traineesWithPending.has(t.customerId));
     }
 
     // Filial Filter
@@ -130,20 +130,18 @@ export function TraineesTable({
       allTrainings.forEach((training) => {
         if (training.sourceFilialId === filterFilial) {
           // Check all trainees in this training
-          training.Trainees?.forEach((t) => traineesInFilial.add(t.traineeId));
-          // Fallback to legacy single traineeId
-          if (training.traineeId) traineesInFilial.add(training.traineeId);
+          training.Trainees?.forEach((t) => traineesInFilial.add(t.customerId));
         }
       });
-      result = result.filter((t) => traineesInFilial.has(t.traineeId));
+      result = result.filter((t) => traineesInFilial.has(t.customerId));
     }
 
-    return result.sort((a, b) => a.name.localeCompare(b.name));
+    return result.sort((a, b) => a.fullname.localeCompare(b.fullname));
   }, [ trainees, filterName, filterPending, filterFilial, allTrainings ]);
 
   const handleToggleDialog = (open: boolean, data: unknown) => {
     if (open && data) {
-      handleOpenDetails(data as Trainee);
+      handleOpenDetails(data as Customer);
     } else {
       setIsDetailsOpen(open);
     }
@@ -197,14 +195,16 @@ export function TraineesTable({
             </Label>
           </div>
           <div className="flex-1 flex justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={ clearFilters }
-              className="text-muted-foreground h-9"
-            >
-              <X className="h-3 w-3 mr-1" /> Limpar
-            </Button>
+            {(filterName || filterPending || filterFilial !== "all") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={ clearFilters }
+                className="text-muted-foreground h-9"
+              >
+                <X className="h-3 w-3 mr-1" /> Limpar
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -215,7 +215,7 @@ export function TraineesTable({
             <tr>
               <th className="text-left p-3 font-medium">Nome</th>
               <th className="text-left p-3 font-medium">Filiais</th>
-              <th className="text-left p-3 font-medium">CPF</th>
+              <th className="text-left p-3 font-medium">CPF / CNPJ</th>
               <th className="text-left p-3 font-medium">Email</th>
               <th className="text-center p-3 font-medium">Telefone</th>
               <th className="text-center p-3 font-medium">Detalhes</th>
@@ -232,17 +232,21 @@ export function TraineesTable({
             {sortedTrainees.map((trainee) => {
               return (
                 <tr
-                  key={ trainee.traineeId }
+                  key={ trainee.customerId }
                   className="border-t hover:bg-muted/50"
                 >
-                  <td className="p-3 text-sm font-medium">{trainee.name}</td>
+                  <td className="p-3 text-sm font-medium">
+                    {trainee.fullname}
+                  </td>
                   <td className="p-3 text-sm">
                     {trainee.SourceFilial?.filialName}
                   </td>
-                  <td className="p-3 text-sm">{trainee.documentNumber}</td>
-                  <td className="p-3 text-sm">{trainee.email}</td>
+                  <td className="p-3 text-sm">
+                    {trainee.cpf || trainee.cnpj || "--"}
+                  </td>
+                  <td className="p-3 text-sm">{trainee.email || "--"}</td>
                   <td className="p-3 text-center text-sm">
-                    {trainee.cellphone}
+                    {trainee.cellphone || "--"}
                   </td>
                   <td className="p-3 flex justify-center items-center gap-2">
                     <Button
@@ -279,17 +283,21 @@ export function TraineesTable({
           const traineeFilials = Array.from(
             new Set(
               allTrainings
-                .filter((t) => t.traineeId === trainee.traineeId)
+                .filter((t) =>
+                  t.Trainees?.some(
+                    (tr) => tr.customerId === trainee.customerId,
+                  ),
+                )
                 .map((t) => t.SourceFilial?.filialName)
                 .filter(Boolean),
             ),
           ).join(", ");
           return (
             <ResponsiveCard
-              key={ trainee.traineeId }
+              key={ trainee.customerId }
               cardData={ {
-                id: trainee.traineeId,
-                title: trainee.name,
+                id: trainee.customerId,
+                title: trainee.fullname,
                 description: "Aluno",
                 items: [
                   {
@@ -297,10 +305,10 @@ export function TraineesTable({
                     itemInfo: traineeFilials || "N/A",
                   },
                   {
-                    itemLabel: "CPF: ",
-                    itemInfo: trainee.documentNumber || "N/A",
+                    itemLabel: "Documento: ",
+                    itemInfo: trainee.cpf || trainee.cnpj || "--",
                   },
-                  { itemLabel: "Tel: ", itemInfo: trainee.cellphone },
+                  { itemLabel: "Tel: ", itemInfo: trainee.cellphone || "--" },
                 ],
               } }
               rawData={ trainee }
@@ -315,11 +323,11 @@ export function TraineesTable({
         )}
       </div>
 
-      <TraineeDetailsDialog
-        isOpen={ isDetailsOpen }
-        setIsOpen={ setIsDetailsOpen }
-        trainee={ selectedTrainee }
-        allTrainings={ allTrainings }
+      <CustomerDetailsDialog
+        isCustomerDetailsModalOpen={ isDetailsOpen }
+        handleToggleCustomerDetailsDialog={ (open) => setIsDetailsOpen(open) }
+        handleToggleUpdateCustomerDialog={ () => {} }
+        selectedCustomer={ selectedTrainee }
       />
 
       <DeleteConfirmationDialog
@@ -328,7 +336,7 @@ export function TraineesTable({
         onConfirm={ handleDeleteTrainee }
         title="Confirmar Exclusão"
         description="Tem certeza que deseja excluir o aluno"
-        itemName={ traineeToDelete?.name }
+        itemName={ traineeToDelete?.fullname }
         isDeleting={ isDeleting }
       />
     </>

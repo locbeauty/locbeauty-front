@@ -2,7 +2,14 @@
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { Button } from "@/components/ui/button";
 import { Employee } from "@/utils/@types/employee";
-import { Eye, Pencil, ChevronLeft, ChevronsLeft, Trash2 } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  ChevronLeft,
+  ChevronsLeft,
+  Trash2,
+  RefreshCcw,
+} from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import { UpdateEmployeeDialog } from "../update/UpdateEmployeeDialog";
 import { EmployeeDetailsDialog } from "./EmployeeDetailsDialog";
@@ -10,8 +17,9 @@ import { fetchWithToken } from "@/utils/fetchWithToken";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { useAuth } from "@/contexts/auth-provider";
-import { DeleteEmployee } from "@/services/employees.service";
+import { DeleteEmployee, UpdateEmployee } from "@/services/employees.service";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
@@ -38,7 +46,13 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
   const [ employeeToDelete, setEmployeeToDelete ] = useState<Employee | null>(
     null,
   );
+  const [ employeeToRestore, setEmployeeToRestore ] = useState<Employee | null>(
+    null,
+  );
   const [ refreshCounter, setRefreshCounter ] = useState(0);
+  const [ isRestoring, setIsRestoring ] = useState(false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
+    useState(false);
 
   const [ isEmployeeDetailsDialogOpen, setIsEmployeeDetailsDialogOpen ] =
     useState(false);
@@ -74,7 +88,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
     setAllEmployees((prev) => {
       if (!prev) return null;
       return prev.map((emp) =>
-        emp.employeeId === updatedEmployee.employeeId ? updatedEmployee : emp
+        emp.employeeId === updatedEmployee.employeeId ? updatedEmployee : emp,
       );
     });
   }
@@ -88,7 +102,11 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
 
       if (response.statusCode === 200 || response.statusCode === 204) {
         toast.success("Funcionário excluído com sucesso.");
-        setRefreshCounter((prev) => prev + 1);
+        setAllEmployees(
+          (prev) =>
+            prev?.filter((e) => e.employeeId !== employeeToDelete.employeeId) ??
+            null,
+        );
       } else {
         toast.error(response.message || "Erro ao excluir funcionário.");
       }
@@ -100,6 +118,46 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
       setEmployeeToDelete(null);
     }
   }
+
+  const handleRestoreEmployee = (employee: Employee) => {
+    setEmployeeToRestore(employee);
+    setIsRestoreConfirmationDialogOpen(true);
+  };
+
+  const confirmRestoreEmployee = async () => {
+    if (!employeeToRestore) return;
+    const targetId = employeeToRestore.employeeId;
+
+    setIsRestoring(true);
+    try {
+      const response = await UpdateEmployee({
+        employeeId: targetId,
+        data: { isVisible: true },
+      });
+
+      if (
+        response.statusCode === 200 ||
+        response.statusCode === 201 ||
+        response.statusCode === 204
+      ) {
+        toast.success("Funcionário restaurado com sucesso.");
+        setAllEmployees((prev) => {
+          if (!prev) return null;
+          return prev.filter((e) => String(e.employeeId) !== String(targetId));
+        });
+      } else {
+        toast.error(response.message || "Erro ao restaurar funcionário.");
+      }
+    } catch (error) {
+      toast.error("Erro ao restaurar funcionário.");
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreConfirmationDialogOpen(false);
+      if (employeeToRestore?.employeeId === targetId) {
+        setEmployeeToRestore(null);
+      }
+    }
+  };
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, page: 1 }));
@@ -123,6 +181,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
 
       queryParams.append("page", pagination.page.toString());
       queryParams.append("limit", pagination.limit.toString());
+      queryParams.append("excludeMaster", "true");
 
       const response = await fetchWithToken(
         `${
@@ -130,18 +189,26 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         }/employees?${queryParams.toString()}`,
         {
           credentials: "include",
+          cache: "no-store",
         },
       );
 
-      const { data } = await response.json();
+      const jsonResponse = await response.json();
+      const { data } = jsonResponse;
 
-      if (data.items) {
-        setAllEmployees(data.items);
-        setTotalEmployees(data.total);
+      if (response.ok && data) {
+        if (data.items) {
+          setAllEmployees(data.items);
+          setTotalEmployees(data.total);
+        } else {
+          // Fallback for safety or old cache
+          setAllEmployees(data);
+          setTotalEmployees(data.length || 0);
+        }
       } else {
-        // Fallback for safety or old cache
-        setAllEmployees(data);
-        setTotalEmployees(data.length || 0);
+        console.error("Failed to fetch employees:", jsonResponse);
+        toast.error("Erro ao buscar funcionários.");
+        setAllEmployees([]);
       }
     }
     getEmployees();
@@ -186,8 +253,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               allEmployees
                 .filter(
                   (employee) =>
-                    employee.employeeId !== (user?.employeeId || user?.sub) &&
-                    employee.role !== USER_ROLES.MASTER,
+                    employee.employeeId !== (user?.employeeId || user?.sub),
                 )
                 .map((employee) => (
                   <tr
@@ -225,18 +291,28 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                           <Pencil />
                         </Button>
                       </Can>
-                      {user?.role === USER_ROLES.MASTER && (
-                        <Button
-                          variant="ghost"
-                          className="text-destructive hover:bg-destructive/10"
-                          onClick={ () => {
-                            setEmployeeToDelete(employee);
-                            setIsDeleteConfirmationDialogOpen(true);
-                          } }
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
+                      {user?.role === USER_ROLES.MASTER &&
+                        (isVisible ? (
+                          <Button
+                            variant="ghost"
+                            className="text-green-600 hover:bg-green-50"
+                            onClick={ () => handleRestoreEmployee(employee) }
+                            disabled={ isRestoring }
+                          >
+                            <RefreshCcw className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={ () => {
+                              setEmployeeToDelete(employee);
+                              setIsDeleteConfirmationDialogOpen(true);
+                            } }
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        ))}
                     </td>
                   </tr>
                 ))
@@ -339,8 +415,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         {allEmployees
           ?.filter(
             (employee) =>
-              employee.employeeId !== (user?.employeeId || user?.sub) &&
-              employee.role !== USER_ROLES.MASTER,
+              employee.employeeId !== (user?.employeeId || user?.sub),
           )
           .map((employee) => (
             <Fragment key={ employee.employeeId }>
@@ -469,6 +544,16 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         description="Tem certeza que deseja excluir o funcionário"
         itemName={ employeeToDelete?.fullname }
         isDeleting={ isDeleting }
+      />
+
+      <RestoreConfirmationDialog
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onOpenChange={ setIsRestoreConfirmationDialogOpen }
+        onConfirm={ confirmRestoreEmployee }
+        title="Confirmar Restauração"
+        description="Tem certeza que deseja restaurar o funcionário"
+        itemName={ employeeToRestore?.fullname }
+        isRestoring={ isRestoring }
       />
     </>
   );
