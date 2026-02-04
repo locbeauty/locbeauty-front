@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { SelectEmployee } from "../../../shared/SelectEmployee";
 import { Textarea } from "@/components/ui/textarea";
 import { Filial } from "@/utils/@types/filials";
-import { FilialUpdateAddressForm } from "./FilialUpdateAddressForm";
+import { USER_ROLES } from "@/utils/constants";
+
 import { UpdateFilialFormSchemaType } from "@/lib/zod/UpdateFilialValidation";
 
 interface UpdateFilialFormProps {
@@ -22,53 +23,46 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
 
   return (
     <CardContent className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="filialName">Nome</Label>
+        <Textarea
+          { ...register("filialName") }
+          placeholder="Informações adicionais sobre a filial"
+          className="placeholder:text-placeholder max-h-[200px]"
+        />
+        {errors.filialName && (
+          <p className="text-sm font-medium text-destructive">
+            {errors.filialName.message}
+          </p>
+        )}
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="telefone">Telefone</Label>
-          <PhoneInput register={ register("cellphone") } />
+          <PhoneInput control={ control } name="cellphone" />
           {errors.cellphone && (
             <p className="text-sm font-medium text-destructive">
               {errors.cellphone.message}
             </p>
           )}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            { ...register("email") }
-            id="email"
-            type="email"
-            placeholder="email@exemplo.com"
-            className="placeholder:text-placeholder"
-          />
-          {errors.email && (
-            <p className="text-sm font-medium text-destructive">
-              {errors.email.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="email">Descrição</Label>
-        <Textarea
-          { ...register("filialName") }
-          placeholder="Informações adicionais sobre a filial"
-          className="placeholder:text-placeholder max-h-[200px]"
-        />
-        {errors.email && (
-          <p className="text-sm font-medium text-destructive">
-            {errors.email.message}
-          </p>
-        )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="gerente">Gerente</Label>
         <SelectEmployee
-          // managerEmployeeId={ selectedFilial.managerEmployee.employeeId }
           control={ control }
           name="managerEmployeeId"
+          // currentUser={
+          //   selectedFilial.managerEmployee
+          //     ? ({
+          //       ...selectedFilial.managerEmployee,
+          //       documentNumber: "",
+          //     } as any)
+          //     : null
+          // }
+          modal={ true }
+          excludeRoles={ [ USER_ROLES.MASTER ] }
         />
         {errors.managerEmployeeId && (
           <p className="text-sm font-medium text-destructive">
@@ -76,7 +70,6 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
           </p>
         )}
       </div>
-      <FilialUpdateAddressForm />
     </CardContent>
   );
 }

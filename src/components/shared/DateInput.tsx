@@ -5,32 +5,29 @@ import IMask from "imask";
 import { Input } from "@/components/ui/input";
 import { UseFormRegisterReturn } from "react-hook-form";
 
-interface DocumentInputProps {
+interface DateInputProps {
   register?: UseFormRegisterReturn;
   disabled?: boolean;
-  placeholder?: string;
-  isCPF?: boolean;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   name?: string;
   className?: string;
+  placeholder?: string;
 }
 
-export default function DocumentInput({
+export default function DateInput({
   register,
   disabled = false,
-  isCPF = false,
-  placeholder = "000.000.000-00 ou 00.000.000/0000-00",
   value,
   onChange,
   name,
   className,
-}: DocumentInputProps) {
+  placeholder = "dd/mm/aaaa",
+}: DateInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const maskRef = useRef<any>(null);
 
-  // Extract register props to handle them manually
   const {
     ref: registerRef,
     onChange: registerOnChange,
@@ -41,20 +38,53 @@ export default function DocumentInput({
   useEffect(() => {
     if (!inputRef.current) return;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const maskOptions: any = {
-      mask: isCPF
-        ? "000.000.000-00"
-        : [ { mask: "000.000.000-00" }, { mask: "00.000.000/0000-00" } ],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      dispatch: (appended: string, dynamicMasked: any) => {
-        const number = (dynamicMasked.value + appended).replace(/\D/g, "");
-        if (number.length <= 11) return dynamicMasked.compiledMasks[0];
-        return dynamicMasked.compiledMasks[1];
+    const maskOptions = {
+      mask: Date,
+      pattern: "d`/m`/Y",
+      blocks: {
+        d: {
+          mask: IMask.MaskedRange,
+          from: 1,
+          to: 31,
+          maxLength: 2,
+        },
+        m: {
+          mask: IMask.MaskedRange,
+          from: 1,
+          to: 12,
+          maxLength: 2,
+        },
+        Y: {
+          mask: IMask.MaskedRange,
+          from: 1900,
+          to: 2100,
+          maxLength: 4,
+        },
       },
+      format: (date: Date) => {
+        let day: string | number = date.getDate();
+        let month: string | number = date.getMonth() + 1;
+        const year = date.getFullYear();
+
+        if (day < 10) day = "0" + day;
+        if (month < 10) month = "0" + month;
+
+        return [ day, month, year ].join("/");
+      },
+      parse: (str: string) => {
+        const yearMonthDay = str.split("/");
+        return new Date(
+          parseInt(yearMonthDay[2], 10),
+          parseInt(yearMonthDay[1], 10) - 1,
+          parseInt(yearMonthDay[0], 10),
+        );
+      },
+      autofix: true,
+      overwrite: true,
     };
 
-    maskRef.current = IMask(inputRef.current, maskOptions);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    maskRef.current = IMask(inputRef.current, maskOptions as any);
 
     maskRef.current.on("accept", () => {
       const event = {
@@ -64,15 +94,8 @@ export default function DocumentInput({
         },
       } as React.ChangeEvent<HTMLInputElement>;
 
-      // Call the external onChange if provided
-      if (onChange) {
-        onChange(event);
-      }
-
-      // Call react-hook-form's onChange if provided
-      if (registerOnChange) {
-        registerOnChange(event);
-      }
+      if (onChange) onChange(event);
+      if (registerOnChange) registerOnChange(event);
     });
 
     return () => {
@@ -81,7 +104,7 @@ export default function DocumentInput({
         maskRef.current = null;
       }
     };
-  }, [ isCPF, name, onChange, registerOnChange, registerName ]);
+  }, [ name, onChange, registerOnChange, registerName ]);
 
   useEffect(() => {
     if (
@@ -89,7 +112,7 @@ export default function DocumentInput({
       value !== undefined &&
       maskRef.current.value !== value
     ) {
-      maskRef.current.value = value;
+      maskRef.current.value = value || "";
     }
   }, [ value ]);
 

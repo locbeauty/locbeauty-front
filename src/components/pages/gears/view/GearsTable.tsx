@@ -1,5 +1,5 @@
 "use client";
-import { Check, Eye, Pencil, X, Trash2 } from "lucide-react";
+import { Check, Eye, Pencil, X, Trash2, RefreshCcw } from "lucide-react";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { UpdateGearDialog } from "../update/UpdateGearDialog";
@@ -11,20 +11,24 @@ import { fetchWithToken } from "@/utils/fetchWithToken";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { useAccess } from "@/contexts/access-provider";
-import { DeleteGear } from "@/services/gears.service";
+import { DeleteGear, UpdateGear } from "@/services/gears.service";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
 
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { queryClient } from "@/app/(main)/layout";
 
 export function GearsTable() {
   const [ gears, setGears ] = useState<Gear[] | null>(null);
   const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isRestoring, setIsRestoring ] = useState(false);
   const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
   const [ gearToDelete, setGearToDelete ] = useState<Gear | null>(null);
+  const [ gearToRestore, setGearToRestore ] = useState<Gear | null>(null);
   const [ refreshCounter, setRefreshCounter ] = useState(0);
 
   const [ isUpdateGearDialogOpen, setIsUpdateGearDialogOpen ] = useState(false);
@@ -32,6 +36,8 @@ export function GearsTable() {
   const [ selectedGear, setSelectedGear ] = useState<Gear | null>(null);
 
   const [ isVisible, setIsVisible ] = useState<boolean>(false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
+    useState(false);
 
   const { user } = useAuth();
   const { accesses } = useAccess();
@@ -80,7 +86,11 @@ export function GearsTable() {
 
       if (response.statusCode === 200 || response.statusCode === 204) {
         toast.success("Equipamento excluído com sucesso.");
-        setRefreshCounter((prev) => prev + 1);
+        setGears(
+          (prev) =>
+            prev?.filter((g) => g.gearId !== gearToDelete.gearId) ?? null,
+        );
+        // setRefreshCounter((prev) => prev + 1); // Removed to prevent unnecessary re-fetch and flickering
       } else {
         toast.error(response.message || "Erro ao excluir equipamento.");
       }
@@ -90,6 +100,56 @@ export function GearsTable() {
       setIsDeleting(false);
       setIsDeleteConfirmationDialogOpen(false);
       setGearToDelete(null);
+    }
+  };
+
+  const handleRestoreGear = (gear: Gear) => {
+    setGearToRestore(gear);
+    setIsRestoreConfirmationDialogOpen(true);
+  };
+
+  const confirmRestoreGear = async () => {
+    if (!gearToRestore) return;
+    const targetId = gearToRestore.gearId;
+    console.log("Starting restore for gear:", targetId);
+
+    setIsRestoring(true);
+    try {
+      const response = await UpdateGear({
+        gearId: targetId,
+        data: { isVisible: true },
+      });
+
+      console.log("Restore response status:", response.statusCode);
+
+      if (response.statusCode === 200 || response.statusCode === 204) {
+        toast.success("Equipamento restaurado com sucesso.");
+        setGears((prev) => {
+          if (!prev) {
+            console.log("Previous gears state is null");
+            return null;
+          }
+          const filtered = prev.filter(
+            (g) => String(g.gearId) !== String(targetId),
+          );
+          console.log("Gears after filter:", filtered.length);
+          return filtered;
+        });
+        // We explicitly close dialog here to ensure state consistency
+        setIsRestoreConfirmationDialogOpen(false);
+      } else {
+        console.error("Restore failed with status:", response.statusCode);
+        toast.error(response.message || "Erro ao restaurar equipamento.");
+      }
+    } catch (error) {
+      console.error("Restore error:", error);
+      toast.error("Erro ao restaurar equipamento.");
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreConfirmationDialogOpen(false);
+      if (gearToRestore?.gearId === targetId) {
+        setGearToRestore(null);
+      }
     }
   };
 
@@ -108,7 +168,10 @@ export function GearsTable() {
         url.searchParams.append("isVisible", "false");
       }
 
-      const response = await fetchWithToken(url, { credentials: "include" });
+      const response = await fetchWithToken(url, {
+        credentials: "include",
+        cache: "no-store",
+      });
 
       const { data } = await response.json();
       setGears(data);
@@ -186,18 +249,28 @@ export function GearsTable() {
                       </Button>
                     </Can>
 
-                    {user?.role === USER_ROLES.MASTER && (
-                      <Button
-                        variant="ghost"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={ () => {
-                          setGearToDelete(gear);
-                          setIsDeleteConfirmationDialogOpen(true);
-                        } }
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
+                    {user?.role === USER_ROLES.MASTER &&
+                      (isVisible ? (
+                        <Button
+                          variant="ghost"
+                          className="text-green-600 hover:bg-green-50"
+                          onClick={ () => handleRestoreGear(gear) }
+                          disabled={ isRestoring }
+                        >
+                          <RefreshCcw className="w-4 h-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={ () => {
+                            setGearToDelete(gear);
+                            setIsDeleteConfirmationDialogOpen(true);
+                          } }
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      ))}
                   </td>
                 </tr>
               ))
@@ -269,6 +342,18 @@ export function GearsTable() {
         description="Tem certeza que deseja excluir o equipamento"
         itemName={ gearToDelete?.gearName }
         isDeleting={ isDeleting }
+      />
+
+      <RestoreConfirmationDialog
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onOpenChange={ setIsRestoreConfirmationDialogOpen }
+        onConfirm={ confirmRestoreGear }
+        title="Confirmar Restauração"
+        description="Tem certeza que deseja restaurar o equipamento"
+        itemName={ gearToRestore?.gearName }
+        itemId={ gearToRestore?.gearId }
+        setGears={ setGears }
+        isRestoring={ isRestoring }
       />
     </>
   );

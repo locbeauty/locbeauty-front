@@ -14,6 +14,7 @@ interface BookingPaymentStatusBadgeProps {
   shrink?: boolean;
   isCourtesy?: boolean;
   wasRefunded?: boolean;
+  small?: boolean;
 }
 
 export function BookingPaymentStatusBadge({
@@ -21,13 +22,15 @@ export function BookingPaymentStatusBadge({
   shrink = false,
   isCourtesy = false,
   wasRefunded = false,
+  small = false,
 }: BookingPaymentStatusBadgeProps) {
   if (isCourtesy || status === "Cortesia") {
     return (
       <Badge
         className={ cn(
           "border-1 border-green-800 bg-green-100 text-green-800 hover:bg-green-200",
-          shrink ? "whitespace-normal" : "whitespace-nowrap"
+          shrink ? "whitespace-normal" : "whitespace-nowrap",
+          small ? "text-xs" : "text-sm"
         ) }
         variant="secondary"
       >
@@ -41,7 +44,8 @@ export function BookingPaymentStatusBadge({
       <Badge
         className={ cn(
           "border-1 border-red-800 bg-red-100 text-red-800 hover:bg-red-200",
-          shrink ? "whitespace-normal" : "whitespace-nowrap"
+          shrink ? "whitespace-normal" : "whitespace-nowrap",
+          small ? "text-xs" : "text-sm"
         ) }
         variant="secondary"
       >
@@ -69,12 +73,13 @@ export function BookingPaymentStatusBadge({
     <Badge
       className={ cn(
         variants[parsedStatus],
-        shrink ? "whitespace-normal" : "whitespace-nowrap"
+        shrink ? "whitespace-normal" : "whitespace-nowrap",
+        small ? "text-xs" : "text-sm"
       ) }
       variant="secondary"
     >
       {parsedStatus !== "Pago" && (
-        <span className="hidden md:inline">Pagamento </span>
+        <span className="hidden md:inline">{small ? "Pgto" : "Pagamento"} </span>
       )}
       {parsedStatus}
     </Badge>

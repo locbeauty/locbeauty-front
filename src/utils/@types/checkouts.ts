@@ -1,6 +1,7 @@
 import { CheckoutStatuses } from "../constants";
 import { Address } from "./address";
 import { CheckoutPayment } from "./payments";
+export type { CheckoutPayment } from "./payments";
 
 export type Checkout = {
   checkoutId: string;
@@ -47,7 +48,8 @@ export type Checkout = {
   Customer: {
     customerId: string;
     fullname: string;
-    documentNumber: string;
+    cpf: string;
+    cnpj: string;
     email: string;
     instagram: string;
     cellphone: string;
@@ -61,4 +63,5 @@ export type Checkout = {
     filialName: string;
   };
   Address: Address;
+  isVisible?: boolean;
 };

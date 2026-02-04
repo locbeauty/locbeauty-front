@@ -69,6 +69,8 @@ import {
 import { Gear } from "@/utils/@types/gears";
 import { ApiResponse } from "@/lib/api";
 import { Address } from "@/utils/@types/address";
+import { Customer } from "@/utils/@types/customer";
+import { Volunteer } from "@/utils/@types/volunteer";
 
 interface CreateTrainingDialogProps {
   dialogNovoTreinamento: boolean;
@@ -128,6 +130,8 @@ export function CreateTrainingDialog({
 
   const createTrainingMethods = useForm<CreateTrainingDataType>({
     resolver: zodResolver(CreateTrainingSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
     defaultValues: {
       filialId: defaultFilialId || "",
       traineeIds: [],
@@ -171,12 +175,8 @@ export function CreateTrainingDialog({
   });
 
   // --- UI States for Participant Names ---
-  const [ selectedTrainees, setSelectedTrainees ] = useState<
-    { traineeId: string; name: string }[]
-  >([]);
-  const [ selectedVolunteers, setSelectedVolunteers ] = useState<
-    { volunteerId: string; name: string }[]
-  >([]);
+  const [ selectedTrainees, setSelectedTrainees ] = useState<Customer[]>([]);
+  const [ selectedVolunteers, setSelectedVolunteers ] = useState<Volunteer[]>([]);
 
   // --- Watchers ---
   const watchSelectedTraineeIds = watch("traineeIds") || [];
@@ -188,24 +188,23 @@ export function CreateTrainingDialog({
 
   // --- Handlers de Sincronização (Select -> Field Array) ---
 
-  const handleTraineesChange = (
-    trainees: { traineeId: string; name: string }[],
-  ) => {
+  const handleTraineesChange = (trainees: Customer[]) => {
     setSelectedTrainees(trainees);
     // Atualiza campo de IDs para validação
     setValue(
       "traineeIds",
-      trainees.map((t) => t.traineeId),
+      trainees.map((t) => t.customerId),
+      { shouldValidate: true },
     );
 
     // Sync Array: Adicionar novos
     trainees.forEach((t) => {
       const exists = traineeFields.some(
-        (field) => field.participantId === t.traineeId,
+        (field) => field.participantId === t.customerId,
       );
       if (!exists) {
         appendTrainee({
-          participantId: t.traineeId,
+          participantId: t.customerId,
           price: "",
           additionalCost: "",
           additionalCostDescription: "",
@@ -218,7 +217,7 @@ export function CreateTrainingDialog({
     // Precisamos iterar ao contrário ou buscar índices cuidadosamente
     // O jeito mais seguro é reconstruir ou filtrar.
     // Mas removeTrainee usa index.
-    const idsToKeep = new Set(trainees.map((t) => t.traineeId));
+    const idsToKeep = new Set(trainees.map((t) => t.customerId));
 
     // Encontrar indices para remover (do maior para o menor para não afetar indices subsequentes)
     const indicesToRemove: number[] = [];
@@ -232,13 +231,12 @@ export function CreateTrainingDialog({
     indicesToRemove.reverse().forEach((index) => removeTrainee(index));
   };
 
-  const handleVolunteersChange = (
-    volunteers: { volunteerId: string; name: string }[],
-  ) => {
+  const handleVolunteersChange = (volunteers: Volunteer[]) => {
     setSelectedVolunteers(volunteers);
     setValue(
       "volunteerIds",
       volunteers.map((v) => v.volunteerId),
+      { shouldValidate: true },
     );
 
     volunteers.forEach((v) => {
@@ -278,7 +276,10 @@ export function CreateTrainingDialog({
         : 0,
       additionalCostDescription: additionalCostDesc,
       paymentInfo: {
-        paymentStatus: paymentInfo.paymentStatus || "Pendente",
+        paymentStatus:
+          paymentInfo.paymentStatus === "Cortesia"
+            ? "Pago"
+            : paymentInfo.paymentStatus || "Pendente",
         firstPaymentDate: paymentInfo.firstPaymentDate
           ? new Date(paymentInfo.firstPaymentDate)
           : null,
@@ -295,6 +296,10 @@ export function CreateTrainingDialog({
           : 0,
         secondPaymentMethod: paymentInfo.secondPaymentMethod || null,
         secondPaymentStatus: paymentInfo.secondPaymentStatus || "Pendente",
+        wasRefunded: paymentInfo.wasRefunded || false,
+        refundedAmount: paymentInfo.refundedAmount
+          ? parseStringToCents(String(paymentInfo.refundedAmount))
+          : 0,
       },
     };
   };
@@ -334,7 +339,7 @@ export function CreateTrainingDialog({
 
       // Preparar Arrays de Pagamento Backend
       const formattedTraineePayments = data.traineePayments.map((p) => ({
-        traineeId: p.participantId,
+        customerId: p.participantId,
         ...formatPaymentPayload(
           p.price,
           p.paymentInfo,
@@ -387,16 +392,55 @@ export function CreateTrainingDialog({
     }
   };
 
+  useEffect(() => {
+    if (dialogNovoTreinamento) {
+      reset({
+        filialId: defaultFilialId || "",
+        traineeIds: [],
+        volunteerIds: [],
+        gearId: "",
+        addressId: "",
+        traineePayments: [],
+        volunteerPayments: [],
+      });
+      setSelectedTrainees([]);
+      setSelectedVolunteers([]);
+    }
+  }, [ dialogNovoTreinamento, reset, defaultFilialId ]);
+
   // --- Queries ---
   // Use first trainee for address hint (legacy behavior maintained)
   const firstTraineeId = watchSelectedTraineeIds[0];
 
   const addressesData = useQuery<ApiResponse<Address[]>, Error>({
     queryKey: [ "get-all-trainee-addresses", firstTraineeId ],
-    queryFn: () => GetAllTraineeAddresses({ traineeId: firstTraineeId }),
+    queryFn: () => GetAllTraineeAddresses({ customerId: firstTraineeId }),
     enabled: !!firstTraineeId,
     staleTime: 1000 * 60,
   });
+
+  // --- Helper: Scroll to top on error ---
+  const onInvalid = () => {
+    const dialogContent = document.getElementById(
+      "create-training-dialog-content",
+    );
+    if (dialogContent) {
+      // Small delay to let React render error messages
+      setTimeout(() => {
+        const firstError = dialogContent.querySelector(
+          "p.text-red-600, p.text-destructive",
+        );
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+        } else {
+          dialogContent.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }, 100);
+    }
+    toast.warning("Verifique os campos obrigatórios.", {
+      style: { fontSize: "1rem" },
+    });
+  };
 
   const availableGears = gears;
   const params = {
@@ -435,8 +479,11 @@ export function CreateTrainingDialog({
           Novo Treinamento
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-card">
-        <form onSubmit={ handleSubmit(onSubmitTraining) }>
+      <DialogContent
+        id="create-training-dialog-content"
+        className="max-w-6xl max-h-[90vh] overflow-y-auto bg-card"
+      >
+        <form onSubmit={ handleSubmit(onSubmitTraining, onInvalid) }>
           <FormProvider { ...createTrainingMethods }>
             <DialogHeader>
               <DialogTitle>Criar Nova Sessão</DialogTitle>
@@ -469,7 +516,7 @@ export function CreateTrainingDialog({
                       filialId={ watchFilialId }
                       selectedGear={ watchSelectedGear }
                       onGearChange={ (gearId) => {
-                        setValue("gearId", gearId);
+                        setValue("gearId", gearId, { shouldValidate: true });
                       } }
                     />
                     {errors.gearId && (
@@ -531,7 +578,6 @@ export function CreateTrainingDialog({
                           value={ field.value! }
                           onChange={ (e) => {
                             field.onChange(e);
-                            if (e) setValue("dueDate", e);
                           } }
                           placeholder="Selecione a data"
                           clearable
@@ -576,7 +622,9 @@ export function CreateTrainingDialog({
                             size="sm"
                             disabled={ !hasSomeAvailableGapTime }
                             onClick={ () =>
-                              setValue("hourInMinutes", hour.hourInMinutes)
+                              setValue("hourInMinutes", hour.hourInMinutes, {
+                                shouldValidate: true,
+                              })
                             }
                             className={ `text-xs h-9 transition-all ${
                               watchHour === hour.hourInMinutes
@@ -647,8 +695,8 @@ export function CreateTrainingDialog({
                       watch={ watch }
                       errors={ errors }
                       participants={ selectedTrainees.map((t) => ({
-                        id: t.traineeId,
-                        name: t.name,
+                        id: t.customerId,
+                        name: t.fullname,
                       })) }
                       type="trainee"
                       fields={ traineeFields }

@@ -597,7 +597,7 @@ Horário: ${minutesToHHMM(startHour)} - ${minutesToHHMM(
               )}
 Duração: ${watchTotalDurationInMinutes / 60}h
 Preço: R$ ${watchTotalPrice}
-Cliente: ${watchCustomer.fullname} - ${watchCustomer.documentNumber}
+Cliente: ${watchCustomer.fullname} - ${watchCustomer.cpf || watchCustomer.cnpj}
 Contato: ${watchCustomer.cellphone}
 Endereço: ${addressString}
 Motorista: ${driverString || "A definir"}
@@ -653,7 +653,7 @@ Motorista: ${driverString || "A definir"}
                     <span className="text-muted-foreground">Cliente:</span>
                     <span className="font-medium">
                       {watchCustomer.fullname} -{" "}
-                      {watchCustomer.documentNumber}
+                      {watchCustomer.cpf || watchCustomer.cnpj}
                     </span>
                   </div>
                   <div className="flex justify-between">

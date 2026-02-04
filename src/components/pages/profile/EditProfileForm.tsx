@@ -38,6 +38,7 @@ export function EditProfileForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     setError,
@@ -65,7 +66,7 @@ export function EditProfileForm() {
           `${process.env.NEXT_PUBLIC_SERVER_URL}/me`,
           {
             credentials: "include",
-          }
+          },
         );
         const { user: currentEmployee } = await response.json();
 
@@ -111,7 +112,7 @@ export function EditProfileForm() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -159,8 +160,22 @@ export function EditProfileForm() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="documentNumber">CPF</Label>
+              <Input
+                disabled
+                value={ employeeData?.documentNumber || "" }
+                className="placeholder:text-placeholder"
+                placeholder="Insira um CPF"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input { ...register("username") } id="username" />
+              <Input
+                { ...register("username") }
+                id="username"
+                className="placeholder:text-placeholder"
+                placeholder="Insira um username"
+              />
               {errors.username && (
                 <p className="text-sm text-destructive">
                   {errors.username.message}
@@ -180,7 +195,7 @@ export function EditProfileForm() {
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="cellphone">Telefone</Label>
-              <PhoneInput register={ register("cellphone") } />
+              <PhoneInput control={ control } name="cellphone" />
               {errors.cellphone && (
                 <p className="text-sm text-destructive">
                   {errors.cellphone.message}
@@ -191,7 +206,13 @@ export function EditProfileForm() {
               <Label htmlFor="email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" /> Email
               </Label>
-              <Input { ...register("email") } id="email" type="email" />
+              <Input
+                { ...register("email") }
+                id="email"
+                type="email"
+                className="placeholder:text-placeholder"
+                placeholder="Insira um email"
+              />
               {errors.email && (
                 <p className="text-sm text-destructive">
                   {errors.email.message}
@@ -216,6 +237,7 @@ export function EditProfileForm() {
                 id="password"
                 type="password"
                 placeholder="Preencha apenas se quiser alterar"
+                className="placeholder:text-placeholder"
               />
               {errors.password && (
                 <p className="text-sm text-destructive">
@@ -231,6 +253,7 @@ export function EditProfileForm() {
                 id="confirmPassword"
                 type="password"
                 placeholder="Confirme a nova senha"
+                className="placeholder:text-placeholder"
               />
             </div>
           </CardContent>

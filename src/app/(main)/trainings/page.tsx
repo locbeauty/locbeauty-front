@@ -34,23 +34,23 @@ export default function Treinamentos() {
   const [ dialogNewVolunteer, setDialogNewVolunteer ] = useState(false);
   const [ dialogNovoAluno, setDialogNovoAluno ] = useState(false);
   const [ dialogNovoTreinamento, setDialogNovoTreinamento ] = useState(false);
-  const [ isVisible, setIsVisible ] = useState(false);
+  const [ isVisible, setIsVisible ] = useState(true);
 
   const traineesData = useQuery<ApiResponse<Trainee[]>, Error>({
-    queryKey: [ "get-all-trainees", isVisible ],
-    queryFn: () => GetAllTrainees(isVisible ? { isVisible: "false" } : {}),
+    queryKey: [ "get-all-trainees" ],
+    queryFn: () => GetAllTrainees({}),
     staleTime: 1000 * 60,
   });
 
   const volunteersData = useQuery<ApiResponse<Volunteer[]>, Error>({
-    queryKey: [ "get-all-volunteers", isVisible ],
-    queryFn: () => GetAllVolunteers(isVisible ? { isVisible: "false" } : {}),
+    queryKey: [ "get-all-volunteers" ],
+    queryFn: () => GetAllVolunteers({}),
     staleTime: 1000 * 60,
   });
 
   const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
     queryKey: [ "get-all-trainings", isVisible ],
-    queryFn: () => GetAllTrainings(isVisible ? "false" : undefined),
+    queryFn: () => GetAllTrainings(isVisible ? "true" : "false"),
     staleTime: 1000 * 60,
   });
 
@@ -120,7 +120,7 @@ export default function Treinamentos() {
       if (accessibleFilialIds.includes(t.sourceFilialId)) {
         if (t.traineeId) visibleTraineeIds.add(t.traineeId);
         t.Trainees?.forEach((trainee) =>
-          visibleTraineeIds.add(trainee.traineeId),
+          visibleTraineeIds.add(trainee.customerId),
         );
       }
     });
@@ -128,7 +128,7 @@ export default function Treinamentos() {
     const filteredTrainees = trainees?.filter(
       (t) =>
         (t.sourceFilialId && accessibleFilialIds.includes(t.sourceFilialId)) ||
-        visibleTraineeIds.has(t.traineeId),
+        visibleTraineeIds.has(t.customerId),
     );
 
     // Filtrar Voluntários
@@ -171,17 +171,6 @@ export default function Treinamentos() {
               Gerencie treinamentos, alunos e pacientes modelos
             </p>
           </div>
-          {(user?.role === USER_ROLES.MASTER ||
-            user?.role === USER_ROLES.ADMIN) && (
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="view-deleted-trainings"
-                checked={ isVisible }
-                onCheckedChange={ setIsVisible }
-              />
-              <Label htmlFor="view-deleted-trainings">Ver Excluídos</Label>
-            </div>
-          )}
         </div>
 
         <Tabs
@@ -226,6 +215,8 @@ export default function Treinamentos() {
             <TrainingsTable
               trainings={ filteredData.trainings }
               filials={ accessibleFilials }
+              isVisible={ isVisible }
+              setIsVisible={ setIsVisible }
             />
           </TabsContent>
 

@@ -15,13 +15,13 @@ export async function GetAllCustomerAddresses({
 }
 
 export async function GetAllTraineeAddresses({
-  traineeId,
+  customerId,
 }: {
-  traineeId: string;
+  customerId: string;
 }) {
   const response = await apiRequest<Address[]>({
     endpoint: "trainee/addresses",
-    queryParams: { traineeId },
+    queryParams: { customerId },
   });
 
   return response;

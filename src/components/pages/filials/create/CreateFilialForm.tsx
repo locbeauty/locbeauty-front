@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +16,10 @@ import { FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";
 import { toast } from "sonner";
 import { fetchWithToken } from "@/utils/fetchWithToken";
+import { useAuth } from "@/contexts/auth-provider";
 
 export function CreateFilialForm() {
+  const { user } = useAuth();
   const createFilialMethods = useForm<CreateFilialFormSchemaType>({
     resolver: zodResolver(createFilialFormSchema),
   });
@@ -25,6 +29,8 @@ export function CreateFilialForm() {
     control,
     register,
     formState: { errors },
+    reset,
+    setValue,
   } = createFilialMethods;
 
   async function handleCreateFilial(newFilialData: CreateFilialFormSchemaType) {
@@ -45,15 +51,13 @@ export function CreateFilialForm() {
       if (!response.ok) {
         toast.warning(data.message, { style: { fontSize: "1rem" } });
         window.scroll({ top: 0 });
-        // if(response.status === 409) {
-        //     setError("documentNumber", { message: "Documento já cadastrado." });
-        // }
       } else {
         toast.success("Filial criado com sucesso!", {
           style: { fontSize: "1rem" },
         });
         window.scroll({ top: 0 });
-        // reset();
+        window.scroll({ top: 0 });
+        reset();
       }
     } catch {
       toast.error("Erro ao criar filial.");
@@ -79,7 +83,7 @@ export function CreateFilialForm() {
             </div>
             <div className="space-y-2 w-[196px]">
               <Label htmlFor="telefone">Telefone</Label>
-              <PhoneInput register={ register("cellphone") } />
+              <PhoneInput control={ control } name="cellphone" />
               {errors.cellphone && (
                 <p className="text-sm font-medium text-destructive">
                   {errors.cellphone.message}
@@ -89,7 +93,11 @@ export function CreateFilialForm() {
 
             <div className="space-y-2">
               <Label htmlFor="gerente"> Gerente </Label>
-              <SelectEmployee control={ control } name="managerEmployeeId" />
+              <SelectEmployee
+                control={ control }
+                name="managerEmployeeId"
+                currentUser={ user }
+              />
               {errors.managerEmployeeId && (
                 <p className="text-sm font-medium text-destructive">
                   {errors.managerEmployeeId.message}

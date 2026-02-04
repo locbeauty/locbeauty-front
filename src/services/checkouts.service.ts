@@ -85,6 +85,7 @@ export type UpdateCheckoutBody = {
   date?: Date;
   startHourInMinutes?: number;
   totalDurationInMinutes?: number;
+  isVisible?: boolean;
 };
 
 export async function UpdateCheckout({
@@ -240,4 +241,50 @@ export async function DeleteCheckout(checkoutId: string) {
     method: "DELETE",
   });
   return response;
+}
+
+export interface AddCheckoutPaymentBody {
+  checkoutId: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  paymentDate: Date;
+  amount: number;
+  observation?: string;
+  transactionId?: string;
+}
+
+export async function AddCheckoutPayment(body: AddCheckoutPaymentBody) {
+  const response = await apiRequest<ApiResponse<unknown>>({
+    endpoint: "checkouts/payments",
+    method: "POST",
+    body,
+  });
+  return response as ApiResponse<unknown>;
+}
+
+export interface UpdateCheckoutPaymentBody {
+  checkoutPaymentId: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  paymentDate?: Date;
+  amount?: number;
+  observation?: string;
+  transactionId?: string;
+}
+
+export async function UpdateCheckoutPayment(body: UpdateCheckoutPaymentBody) {
+  const response = await apiRequest<ApiResponse<unknown>>({
+    endpoint: `checkouts/payments/${body.checkoutPaymentId}`,
+    method: "PATCH",
+    body,
+  });
+  return response as ApiResponse<unknown>;
+}
+
+export async function DeleteCheckoutPayment(checkoutPaymentId: string) {
+  const response = await apiRequest<ApiResponse<unknown>>({
+    endpoint: `checkouts/payments/${checkoutPaymentId}`,
+    method: "DELETE",
+  });
+  return response as ApiResponse<unknown>;
 }

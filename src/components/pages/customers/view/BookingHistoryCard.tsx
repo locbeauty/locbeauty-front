@@ -9,11 +9,12 @@ import {
   Fingerprint,
   Loader2,
   MapPin,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentStatusBadge";
 import { BookingStatusBadge } from "../../bookings/common/BookingStatusBadge";
 import { Button } from "@/components/ui/button";
@@ -40,9 +41,58 @@ export function BookingHistoryCard({
   const [ isLoadingBookings, setIsLoadingBookings ] = useState(false);
   const [ allBookings, setAllBookings ] = useState<BookingWithCheckout[]>([]);
 
-  const displayedBookings = allBookings?.slice(0, visibleBookings);
-  const hasMoreBookings = visibleBookings < allBookings?.length;
-  const remainingBookings = allBookings?.length - visibleBookings;
+  const [ filterDate, setFilterDate ] = useState<string>("");
+  const [ filterGearId, setFilterGearId ] = useState<string>("all");
+  const [ filterPaymentStatus, setFilterPaymentStatus ] = useState<string>("all");
+  const [ filterId, setFilterId ] = useState<string>("");
+
+  const filteredBookings = useMemo(() => {
+    let result = allBookings || [];
+
+    if (filterDate) {
+      result = result.filter((booking) => {
+        const bookingDate = new Date(booking.date);
+        bookingDate.setHours(0, 0, 0, 0);
+        const selectedDate = new Date(filterDate + "T00:00:00");
+        selectedDate.setHours(0, 0, 0, 0);
+        return bookingDate.getTime() === selectedDate.getTime();
+      });
+    }
+
+    if (filterGearId !== "all") {
+      result = result.filter((booking) => booking.gear.gearId === filterGearId);
+    }
+
+    if (filterPaymentStatus !== "all") {
+      result = result.filter(
+        (booking) => booking.paymentStatus === filterPaymentStatus,
+      );
+    }
+
+    if (filterId) {
+      result = result.filter(
+        (booking) =>
+          booking.bookingId.toLowerCase().includes(filterId.toLowerCase()) ||
+          booking.checkoutId.toLowerCase().includes(filterId.toLowerCase()),
+      );
+    }
+
+    return result;
+  }, [ allBookings, filterDate, filterGearId, filterPaymentStatus, filterId ]);
+
+  const availableGears = useMemo(() => {
+    const gearsMap = new Map();
+    allBookings.forEach((b) => {
+      if (!gearsMap.has(b.gear.gearId)) {
+        gearsMap.set(b.gear.gearId, b.gear.gearName);
+      }
+    });
+    return Array.from(gearsMap.entries()).map(([ id, name ]) => ({ id, name }));
+  }, [ allBookings ]);
+
+  const displayedBookings = filteredBookings?.slice(0, visibleBookings);
+  const hasMoreBookings = visibleBookings < filteredBookings?.length;
+  const remainingBookings = filteredBookings?.length - visibleBookings;
 
   useEffect(() => {
     async function GetAllCustomerBookings() {
@@ -103,21 +153,101 @@ export function BookingHistoryCard({
     );
   };
 
+  const clearFilters = () => {
+    setFilterDate("");
+    setFilterGearId("all");
+    setFilterPaymentStatus("all");
+    setFilterId("");
+  };
+
+  const isFiltered =
+    filterDate !== "" ||
+    filterGearId !== "all" ||
+    filterPaymentStatus !== "all" ||
+    filterId !== "";
+
   return (
     <Card className="pb-0">
       <CardHeader>
-        <CardTitle className="flex items-center md:flex-row md:items-center flex-col">
-          <div className="flex items-center gap-2 mb-3">
-            <Calendar className="h-5 w-5 shrink-0" />
-            Histórico de Agendamentos
-            <Badge variant="secondary">{allBookings?.length}</Badge>
+        <CardTitle className="flex flex-col gap-4">
+          <div className="flex items-center justify-between md:flex-row flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 shrink-0" />
+              Histórico de Agendamentos
+              <Badge variant="secondary">{filteredBookings?.length}</Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              {isFiltered && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={ clearFilters }
+                  className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Limpar Filtros
+                </Button>
+              )}
+              {visibleBookings < filteredBookings?.length && (
+                <Badge variant="outline" className="text-xs">
+                  Mostrando {visibleBookings} de {filteredBookings?.length}
+                </Badge>
+              )}
+            </div>
           </div>
-          <div className="flex">
-            {visibleBookings < allBookings?.length && (
-              <Badge variant="outline" className="text-xs">
-                Mostrando {visibleBookings} de {allBookings?.length}
-              </Badge>
-            )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="relative">
+              <Fingerprint className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="ID Agendamento/Checkout"
+                className="w-full pl-8 pr-2 py-1.5 text-xs rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                value={ filterId }
+                onChange={ (e) => setFilterId(e.target.value) }
+              />
+            </div>
+
+            <div className="relative">
+              <Calendar className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                type="date"
+                className="w-full pl-8 pr-2 py-1.5 text-xs rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                value={ filterDate }
+                onChange={ (e) => setFilterDate(e.target.value) }
+              />
+            </div>
+
+            <div className="relative">
+              <FileText className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <select
+                className="w-full pl-8 pr-2 py-1.5 text-xs rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+                value={ filterGearId }
+                onChange={ (e) => setFilterGearId(e.target.value) }
+              >
+                <option value="all">Todos os Equipamentos</option>
+                {availableGears.map((gear) => (
+                  <option key={ gear.id } value={ gear.id }>
+                    {gear.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="relative">
+              <DollarSign className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <select
+                className="w-full pl-8 pr-2 py-1.5 text-xs rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+                value={ filterPaymentStatus }
+                onChange={ (e) => setFilterPaymentStatus(e.target.value) }
+              >
+                <option value="all">Todos os Status de Pagamento</option>
+                <option value="Pago">Pago</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Parcial">Parcial</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
           </div>
         </CardTitle>
       </CardHeader>

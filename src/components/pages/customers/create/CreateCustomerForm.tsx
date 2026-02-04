@@ -55,13 +55,22 @@ export function CreateCustomerForm() {
   async function handleCreateCustomer(
     newCustomerData: CreateCustomerFormSchemaType,
   ) {
-    const response = await CreateCustomer(newCustomerData);
+    const payload = {
+      ...newCustomerData,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await CreateCustomer(payload as any);
 
     if (response.statusCode !== 201) {
       toast.warning(response.message, { style: { fontSize: "1rem" } });
       window.scroll({ top: 0 });
       if (response.statusCode === 409) {
-        setError("documentNumber", { message: "Documento já cadastrado." });
+        if (newCustomerData.cpf) {
+          setError("cpf", { message: "CPF já cadastrado." });
+        } else if (newCustomerData.cnpj) {
+          setError("cnpj", { message: "CNPJ já cadastrado." });
+        }
       }
     } else {
       queryClient.invalidateQueries({ queryKey: [ "get-birthdays" ] });

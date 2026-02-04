@@ -69,7 +69,12 @@ export async function apiRequest<T = unknown>({
       return { statusCode: 204, message: "No Content" } as ApiResponse<T>;
     }
 
-    const data: ApiResponse<T> = await response.json();
+    const json = await response.json();
+    const data: ApiResponse<T> = json as ApiResponse<T>;
+
+    if (data && typeof data === "object" && data.statusCode === undefined) {
+      data.statusCode = response.status;
+    }
 
     if (data.statusCode === 403) {
       localStorage.removeItem("accessToken");

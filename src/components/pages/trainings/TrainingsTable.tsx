@@ -1,16 +1,28 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Eye, Clock, Calendar, Filter, X, Trash2 } from "lucide-react";
+import {
+  Eye,
+  Clock,
+  Calendar,
+  Filter,
+  X,
+  Trash2,
+  Search,
+  RefreshCcw,
+} from "lucide-react";
+import { TrainingParticipantsDialog } from "./TrainingParticipantsDialog";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
-import { DeleteTraining } from "@/services/trainings.service";
+import { DeleteTraining, UpdateTraining } from "@/services/trainings.service";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
 
 import { Training } from "@/utils/@types/training";
 import { Filial } from "@/utils/@types/filials";
+import { UpdateTrainingPayload } from "./TrainingPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { Badge } from "@/components/ui/badge";
@@ -25,13 +37,21 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface TrainingsTableProps {
   trainings: Training[] | undefined;
   filials?: Filial[];
+  isVisible: boolean;
+  setIsVisible: (value: boolean) => void;
 }
 
-export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
+export function TrainingsTable({
+  trainings,
+  filials,
+  isVisible,
+  setIsVisible,
+}: TrainingsTableProps) {
   const [ selectedTraining, setSelectedTraining ] = useState<Training | null>(
     null,
   );
@@ -42,6 +62,23 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
   const [ trainingToDelete, setTrainingToDelete ] = useState<Training | null>(
     null,
   );
+  const [ trainingToRestore, setTrainingToRestore ] = useState<Training | null>(
+    null,
+  );
+  const [ isRestoring, setIsRestoring ] = useState(false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
+    useState(false);
+
+  // Participants Dialog State
+  const [ isParticipantsDialogOpen, setIsParticipantsDialogOpen ] =
+    useState(false);
+  const [ participantsDialogTraining, setParticipantsDialogTraining ] =
+    useState<Training | null>(null);
+
+  const handleOpenParticipants = (training: Training) => {
+    setParticipantsDialogTraining(training);
+    setIsParticipantsDialogOpen(true);
+  };
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -60,6 +97,51 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
     setIsDetailsOpen(true);
   };
 
+  const handleRestoreTraining = (training: Training) => {
+    setTrainingToRestore(training);
+    setIsRestoreConfirmationDialogOpen(true);
+  };
+
+  const confirmRestoreTraining = async () => {
+    if (!trainingToRestore) return;
+    const targetId = trainingToRestore.trainingId;
+
+    setIsRestoring(true);
+    try {
+      const response = await UpdateTraining({
+        trainingId: targetId,
+        body: {
+          isVisible: true,
+        },
+      });
+
+      if (
+        response.statusCode === 200 ||
+        response.statusCode === 201 ||
+        response.statusCode === 204
+      ) {
+        toast.success("Treinamento restaurado com sucesso.");
+        // Invalidate both visibility states to ensure UI updates correctly
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainings", true ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainings", false ],
+        });
+      } else {
+        toast.error(response.message || "Erro ao restaurar treinamento.");
+      }
+    } catch (error) {
+      toast.error("Erro ao restaurar treinamento.");
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreConfirmationDialogOpen(false);
+      if (trainingToRestore?.trainingId === targetId) {
+        setTrainingToRestore(null);
+      }
+    }
+  };
+
   const handleDeleteTraining = async () => {
     if (!trainingToDelete) return;
 
@@ -69,7 +151,13 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
 
       if (response.statusCode === 200 || response.statusCode === 204) {
         toast.success("Treinamento excluído com sucesso.");
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        // Invalidate both visibility states to ensure UI updates correctly
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainings", true ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainings", false ],
+        });
       } else {
         toast.error(response.message || "Erro ao excluir treinamento.");
       }
@@ -100,7 +188,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
       result = result.filter(
         (t) =>
           t.trainingId.toLowerCase().includes(lowerSearch) ||
-          t.Trainee?.name.toLowerCase().includes(lowerSearch) ||
+          t.Trainee?.fullname.toLowerCase().includes(lowerSearch) ||
           t.Volunteer?.name.toLowerCase().includes(lowerSearch),
       );
     }
@@ -117,14 +205,6 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
           t.TrainingPayment?.some((p) => p.paymentStatus === "Pendente"),
         );
       } else if (filterPaymentStatus === "PAID") {
-        // Assuming "Paid" means all payments are paid or at least one is "Pago" and none "Pendente"?
-        // Or simply has "Pago" payments? The user request was "status de pagamento".
-        // Let's implement logical interpretations.
-        // "Pendente" usually means user wants to see what is missing money.
-        // "Pago" might mean fully paid.
-        // For now simple logic: Has any Paid payment? Or Strict?
-        // Let's go with: All payments are "Pago" OR (has "Pago" and no "Pendente").
-        // Actually, typically in grids: 'Pending' shows if ANY is pending. 'Paid' shows if ALL are paid.
         result = result.filter(
           (t) =>
             t.TrainingPayment?.length > 0 &&
@@ -261,7 +341,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
             <Label className="text-xs">Filial</Label>
             <Select value={ filterFilial } onValueChange={ setFilterFilial }>
               <SelectTrigger className="h-9 bg-background">
-                <SelectValue placeholder="Todas" />
+                <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Todas</SelectItem>
@@ -297,15 +377,39 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
             </Select>
           </div>
         </div>
-        <div className="flex justify-end pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={ clearFilters }
-            className="text-muted-foreground h-9"
-          >
-            <X className="h-3 w-3 mr-1" /> Limpar Todos os Filtros
-          </Button>
+        <div className="flex justify-between items-center pt-2">
+          <div>
+            {(searchTerm ||
+              filterStatus !== "ALL" ||
+              filterPaymentStatus !== "ALL" ||
+              filterDate ||
+              filterFilial !== "ALL") && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={ clearFilters }
+                className="text-muted-foreground h-9"
+              >
+                <X className="h-3 w-3 mr-1" /> Limpar Todos os Filtros
+              </Button>
+            )}
+          </div>
+          {(user?.role === USER_ROLES.MASTER ||
+            user?.role === USER_ROLES.ADMIN) && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-deleted-trainings"
+                checked={ !isVisible }
+                onCheckedChange={ (checked) => setIsVisible(!checked) }
+              />
+              <Label
+                htmlFor="show-deleted-trainings"
+                className="text-sm cursor-pointer"
+              >
+                Ver Excluídos
+              </Label>
+            </div>
+          )}
         </div>
       </div>
 
@@ -317,6 +421,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               <th className="text-left p-3 font-medium">Filial</th>
               <th className="text-left p-3 font-medium">Equipamento</th>
               <th className="text-center p-3 font-medium">Horário</th>
+              <th className="text-center p-3 font-medium">Pagamento</th>
               <th className="text-center p-3 font-medium">Status</th>
               <th className="text-center p-3 font-medium">Detalhes</th>
             </tr>
@@ -324,7 +429,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
           <tbody>
             {sortedTrainings.length === 0 && (
               <tr>
-                <td className="text-center p-4" colSpan={ 8 }>
+                <td className="text-center p-4" colSpan={ 7 }>
                   {trainings
                     ? "Nenhum treinamento encontrado."
                     : "Carregando..."}
@@ -349,28 +454,87 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                   {formatDuration(training.hourInMinutes)}
                 </td>
                 <td className="p-3 text-center text-sm">
+                  {(() => {
+                    const payments = training.TrainingPayment || [];
+                    if (payments.length === 0)
+                      return (
+                        <Badge
+                          variant="outline"
+                          className="text-muted-foreground"
+                        >
+                          N/A
+                        </Badge>
+                      );
+
+                    const hasPending = payments.some(
+                      (p) => p.paymentStatus === "Pendente",
+                    );
+                    if (hasPending) {
+                      return (
+                        <Badge
+                          variant="outline"
+                          className="bg-yellow-100 text-yellow-800 border-yellow-200"
+                        >
+                          Pendente
+                        </Badge>
+                      );
+                    }
+                    return (
+                      <Badge
+                        variant="outline"
+                        className="bg-green-100 text-green-800 border-green-200"
+                      >
+                        Pago
+                      </Badge>
+                    );
+                  })()}
+                </td>
+                <td className="p-3 text-center text-sm">
                   {getStatusBadge(training.trainingStatus)}
                 </td>
                 <td className="p-3 flex justify-center items-center gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
+                    title="Ver Participantes"
+                    onClick={ () => handleOpenParticipants(training) }
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Ver Detalhes"
                     onClick={ () => handleOpenDetails(training) }
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
                   {user?.role === USER_ROLES.MASTER && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:bg-destructive/10"
-                      onClick={ () => {
-                        setTrainingToDelete(training);
-                        setIsDeleteConfirmationDialogOpen(true);
-                      } }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <>
+                      {!isVisible ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Restaurar"
+                          onClick={ () => handleRestoreTraining(training) }
+                          disabled={ isRestoring }
+                        >
+                          <RefreshCcw className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={ () => {
+                            setTrainingToDelete(training);
+                            setIsDeleteConfirmationDialogOpen(true);
+                          } }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </>
                   )}
                 </td>
               </tr>
@@ -398,7 +562,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 },
                 {
                   itemLabel: "Aluno: ",
-                  itemInfo: training.Trainee?.name || "N/A",
+                  itemInfo: training.Trainee?.fullname || "N/A",
                 },
                 {
                   itemLabel: "Modelo: ",
@@ -427,6 +591,14 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
         />
       )}
 
+      {participantsDialogTraining && (
+        <TrainingParticipantsDialog
+          open={ isParticipantsDialogOpen }
+          onOpenChange={ setIsParticipantsDialogOpen }
+          training={ participantsDialogTraining }
+        />
+      )}
+
       <DeleteConfirmationDialog
         isOpen={ isDeleteConfirmationDialogOpen }
         onOpenChange={ setIsDeleteConfirmationDialogOpen }
@@ -435,6 +607,19 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
         description="Tem certeza que deseja excluir o treinamento"
         itemName={ trainingToDelete?.trainingId }
         isDeleting={ isDeleting }
+      />
+
+      <RestoreConfirmationDialog
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onOpenChange={ (open) => {
+          setIsRestoreConfirmationDialogOpen(open);
+          if (!open) setTrainingToRestore(null);
+        } }
+        onConfirm={ confirmRestoreTraining }
+        isRestoring={ isRestoring }
+        title="Confirmar Restauração"
+        description="Tem certeza que deseja restaurar o treinamento de"
+        itemName={ trainingToRestore?.Trainee?.fullname || "treinamento" }
       />
     </>
   );

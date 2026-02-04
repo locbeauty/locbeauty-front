@@ -4,7 +4,6 @@ import {
   Mail,
   Phone,
   User,
-  MapPin,
   Building,
   Users,
   TrendingUp,
@@ -14,13 +13,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { Filial } from "@/utils/@types/filials";
+import { Filial, FilialStats } from "@/utils/@types/filials";
+import { useEffect, useState } from "react";
+import { getFilialStats } from "@/services/filials.service";
 
 interface FilialDetailsCardProps {
   selectedFilial: Filial | null;
 }
 
 export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
+  const [ stats, setStats ] = useState<FilialStats | null>(null);
+
+  useEffect(() => {
+    if (selectedFilial) {
+      getFilialStats(selectedFilial.filialId)
+        .then(setStats)
+        .catch(console.error);
+    } else {
+      setStats(null);
+    }
+  }, [ selectedFilial ]);
+
   if (!selectedFilial) {
     return (
       <Card>
@@ -30,17 +43,6 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
       </Card>
     );
   }
-
-  // Endereço completo formatado
-  const fullAddress = `${selectedFilial.Address.street}, ${
-    selectedFilial.Address.buildingNumber
-  }${
-    selectedFilial.Address.addressComplement
-      ? ` - ${selectedFilial.Address.addressComplement}`
-      : ""
-  }, ${selectedFilial.Address.neighborhood}, ${
-    selectedFilial.Address.city
-  }/${selectedFilial.Address.state}`;
 
   return (
     <Card>
@@ -65,48 +67,7 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
                   {selectedFilial.filialId}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">CNPJ:</Label>
-                <span className="font-mono text-sm">{selectedFilial.CNPJ}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Estado:</Label>
-                <Badge
-                  variant="outline"
-                  className="text-blue-600 border-blue-200"
-                >
-                  {selectedFilial.Address.state}
-                </Badge>
-              </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Cidade:</Label>
-                <span className="text-sm">{selectedFilial.Address.city}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Bairro:</Label>
-                <span className="text-sm">
-                  {selectedFilial.Address.neighborhood}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Endereço Completo */}
-        <div>
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            Localização
-          </h4>
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <p className="text-sm leading-relaxed">
-              <MapPin className="h-4 w-4 inline mr-1 text-muted-foreground" />
-              {fullAddress}
-            </p>
           </div>
         </div>
 
@@ -121,17 +82,18 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                {/* TODO: fetch employee data */}
                 <User className="h-4 w-4 text-muted-foreground" />
                 <Label className="text-sm font-medium">Gerente:</Label>
                 <span className="text-sm font-semibold">
-                  {selectedFilial.managerEmployee.fullname}
+                  {selectedFilial.managerEmployee?.fullname || "--"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <Label className="text-sm font-medium">Telefone:</Label>
-                <span className="text-sm">{selectedFilial.cellphone}</span>
+                <span className="text-sm">
+                  {selectedFilial.cellphone || "--"}
+                </span>
               </div>
             </div>
             <div className="space-y-3">
@@ -139,7 +101,7 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <Label className="text-sm font-medium">Email:</Label>
                 <span className="text-sm text-blue-600">
-                  {selectedFilial.email}
+                  {selectedFilial.email || "--"}
                 </span>
               </div>
             </div>
@@ -154,28 +116,28 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
             <TrendingUp className="h-4 w-4" />
             Estatísticas Operacionais
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">45</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats?.totalEquipment ?? "--"}
+              </div>
               <div className="text-xs text-muted-foreground">
                 Equipamentos Totais
               </div>
             </div>
             <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">38</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats?.availableEquipment ?? "--"}
+              </div>
               <div className="text-xs text-muted-foreground">
                 Equipamentos Disponíveis
               </div>
             </div>
             <div className="text-center p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">7</div>
-              <div className="text-xs text-muted-foreground">Em Uso</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 border border-purple-200 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">84%</div>
-              <div className="text-xs text-muted-foreground">
-                Taxa Disponibilidade
+              <div className="text-2xl font-bold text-orange-600">
+                {stats?.inUseEquipment ?? "--"}
               </div>
+              <div className="text-xs text-muted-foreground">Em Uso</div>
             </div>
           </div>
         </div>
@@ -192,15 +154,22 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Users className="h-4 w-4" />
-                <span>Clientes ativos: 125</span>
+                <span>Clientes ativos: {stats?.activeCustomers ?? "--"}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                <span>Agendamentos este mês: 78</span>
+                <span>
+                  Agendamentos este mês: {stats?.appointmentsThisMonth ?? "--"}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <TrendingUp className="h-4 w-4" />
-                <span>Crescimento mensal: +12%</span>
+                <span>
+                  Crescimento mensal:{" "}
+                  {stats?.monthlyGrowth !== undefined
+                    ? `${stats.monthlyGrowth > 0 ? "+" : ""}${stats.monthlyGrowth.toFixed(1)}%`
+                    : "--"}
+                </span>
               </div>
             </div>
           </div>

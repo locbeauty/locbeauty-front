@@ -5,7 +5,22 @@ import { Training } from "@/utils/@types/training";
 
 interface UpdateTrainingRequest {
   trainingId: string;
-  body: UpdateTrainingPayload;
+  body: Partial<UpdateTrainingPayload>;
+}
+
+export async function GetCustomerTrainings(customerId: string) {
+  const response = await apiRequest<Training[]>({
+    endpoint: "trainings/customer",
+    queryParams: { customerId },
+  });
+  return response;
+}
+
+export async function GetTrainingById(trainingId: string) {
+  const response = await apiRequest<Training>({
+    endpoint: `trainings/${trainingId}`,
+  });
+  return response;
 }
 
 export async function GetAllTrainings(isVisible?: string) {

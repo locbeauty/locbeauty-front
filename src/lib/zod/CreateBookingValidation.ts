@@ -79,9 +79,20 @@ export const createCheckoutFormSchema = z
     customer: z.object({
       customerId: z.string({ message: "ID do cliente é obrigatório" }),
       fullname: z.string({ message: "Nome do cliente é obrigatório" }),
-      documentNumber: z.string({
-        message: "Documento do cliente é obrigatório",
-      }),
+      cpf: z
+        .string()
+        .min(11, { message: "CPF inválido" })
+        .max(14, { message: "CPF inválido" })
+        .nullable()
+        .optional()
+        .or(z.literal("")),
+      cnpj: z
+        .string()
+        .min(14, { message: "CNPJ inválido" })
+        .max(18, { message: "CNPJ inválido" })
+        .nullable()
+        .optional()
+        .or(z.literal("")),
       cellphone: z.string(),
     }),
     addressId: z.string(),
@@ -170,6 +181,17 @@ export const createCheckoutFormSchema = z
             message: "A data/hora final deve ser posterior à inicial.",
           });
         }
+      }
+
+      const hasCpf = !!data.customer.cpf;
+      const hasCnpj = !!data.customer.cnpj;
+
+      if (!hasCpf && !hasCnpj) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Preencha pelo menos um documento (CPF ou CNPJ).",
+          path: [ "customer", "cpf" ],
+        });
       }
     }
 

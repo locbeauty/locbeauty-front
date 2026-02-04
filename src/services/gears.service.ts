@@ -29,3 +29,20 @@ export async function DeleteGear(gearId: string) {
   });
   return response;
 }
+export async function UpdateGear({
+  gearId,
+  data,
+}: {
+  gearId: string;
+  data: Partial<Gear>;
+}) {
+  const response = await apiRequest<{
+    message: string;
+    gear: Gear;
+  }>({
+    endpoint: `gears/update?gearId=${gearId}`,
+    method: "POST",
+    body: data,
+  });
+  return response;
+}

@@ -71,7 +71,7 @@ export function DatePicker({
   >(false);
   const initDate = useMemo(
     () => (value ? new TZDate(value, timezone) : null),
-    [value, timezone]
+    [value, timezone],
   );
 
   const [month, setMonth] = useState<Date>(initDate || new Date());
@@ -79,11 +79,11 @@ export function DatePicker({
 
   const minDate = useMemo(
     () => (min ? new TZDate(min, timezone) : undefined),
-    [min, timezone]
+    [min, timezone],
   );
   const maxDate = useMemo(
     () => (max ? new TZDate(max, timezone) : undefined),
-    [max, timezone]
+    [max, timezone],
   );
 
   const onDayChanged = useCallback(
@@ -94,7 +94,7 @@ export function DatePicker({
         setOpen(false);
       }
     },
-    [setDate, onChange, setOpen]
+    [setDate, onChange, setOpen],
   );
 
   const onMonthYearChanged = useCallback(
@@ -106,7 +106,7 @@ export function DatePicker({
         setMonthYearPicker(false);
       }
     },
-    [setMonth, setMonthYearPicker]
+    [setMonth, setMonthYearPicker],
   );
 
   const onNextMonth = useCallback(() => {
@@ -152,15 +152,15 @@ export function DatePicker({
               "flex md:w-fit w-full justify-center cursor-pointer items-center h-9 ps-3 pe-1 font-normal border border-input rounded-md text-sm shadow-sm",
               !displayValue && "text-muted-foreground",
               (!clearable || !value) && "pe-3",
-              disabled && "opacity-50 cursor-not-allowed",
-              classNames?.trigger
+              disabled && "opacity-50 cursor-not-allowed pointer-events-none",
+              classNames?.trigger,
             )}
             tabIndex={0}
           >
             <div
               className={cn(
                 "flex items-center cursor-pointer",
-                !value && "text-placeholder"
+                !value && "text-placeholder",
               )}
             >
               <CalendarIcon className="mr-2 size-4" />
@@ -194,7 +194,7 @@ export function DatePicker({
               <span
                 onClick={() =>
                   setMonthYearPicker(
-                    monthYearPicker === "month" ? false : "month"
+                    monthYearPicker === "month" ? false : "month",
                   )
                 }
               >
@@ -204,7 +204,7 @@ export function DatePicker({
                 className="ms-1"
                 onClick={() =>
                   setMonthYearPicker(
-                    monthYearPicker === "year" ? false : "year"
+                    monthYearPicker === "year" ? false : "year",
                   )
                 }
               >
@@ -258,7 +258,7 @@ export function DatePicker({
           <div
             className={cn(
               "absolute top-0 left-0 bottom-0 right-0",
-              monthYearPicker ? "bg-popover" : "hidden"
+              monthYearPicker ? "bg-popover" : "hidden",
             )}
           ></div>
           <MonthYearPicker
@@ -269,7 +269,7 @@ export function DatePicker({
             maxDate={maxDate}
             className={cn(
               "absolute top-0 left-0 bottom-0 right-0",
-              monthYearPicker ? "" : "hidden"
+              monthYearPicker ? "" : "hidden",
             )}
           />
         </div>

@@ -108,7 +108,7 @@ export function MobileDayView({
               endDate.setMinutes(endDate.getMinutes() + durationInHours * 60);
 
               title = training.Gear.gearName;
-              personName = training.Trainee?.name || "";
+              personName = training.Trainee?.fullname || "";
               location = training.SourceFilial.filialName;
               price = centsToStringWithCurrencyMark(
                 training.TrainingPayment?.reduce((acc, payment) => acc + payment.totalPrice, 0) || 0
