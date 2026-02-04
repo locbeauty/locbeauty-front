@@ -50,7 +50,7 @@ export const createEmployeeFormSchema = baseEmployeeSchema.superRefine(
       ctx.addIssue({
         code: "custom",
         message: "Senhas não conferem",
-        path: ["confirmPassword"],
+        path: [ "confirmPassword" ],
       });
     }
   },
