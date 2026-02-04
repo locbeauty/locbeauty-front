@@ -104,7 +104,6 @@ export function TrainingDetailsDialog({
     setIsRestoring(true);
     try {
       const response = await UpdateTraining({
-        //@ts-expect-error trainingId is not defined in Training type
         trainingId: selectedTraining.trainingId,
         body: {
           trainingStatus: selectedTraining.trainingStatus,

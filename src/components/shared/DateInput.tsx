@@ -83,7 +83,8 @@ export default function DateInput({
       overwrite: true,
     };
 
-    maskRef.current = IMask(inputRef.current, maskOptions);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    maskRef.current = IMask(inputRef.current, maskOptions as any);
 
     maskRef.current.on("accept", () => {
       const event = {
