@@ -229,6 +229,8 @@ export function CustomersTable() {
             <SelectItem value="ALL">Todos os Status</SelectItem>
             <SelectItem value="Ativo">Ativo</SelectItem>
             <SelectItem value="Inativo">Inativo</SelectItem>
+            <SelectItem value="Inadimplente">Inadimplente</SelectItem>
+            <SelectItem value="Bloqueado">Bloqueado</SelectItem>
           </SelectContent>
         </Select>
         {(user?.role === USER_ROLES.MASTER ||
