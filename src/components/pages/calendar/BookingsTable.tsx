@@ -518,10 +518,14 @@ export function BookingsTable({ filters }: BookingsTableProps) {
 
       <RestoreConfirmationDialog
         isOpen={ isRestoreConfirmationDialogOpen }
-        onClose={ () => {
-          setIsRestoreConfirmationDialogOpen(false);
-          setCheckoutToRestore(null);
+        onOpenChange={ (open) => {
+          setIsRestoreConfirmationDialogOpen(open);
+          if (!open) {
+            setCheckoutToRestore(null);
+          }
         } }
+        title="Restaurar Agendamento"
+        description="Tem certeza que deseja restaurar este agendamento?"
         onConfirm={ confirmRestoreCheckout }
         isRestoring={ isRestoring }
         itemName={ checkoutToRestore?.Customer?.fullname || "agendamento" }
