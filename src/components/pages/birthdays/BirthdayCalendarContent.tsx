@@ -102,7 +102,7 @@ export function BirthdayCalendarContent({
         <MonthView
           currentDate={ currentDate }
           events={ allEvents }
-          openDetails={ openDetails }
+          openDetails={ () => { } }
         />
         {isLoading && <div className="p-4 text-center">Carregando...</div>}
         {!isLoading && allEvents.length === 0 && (
