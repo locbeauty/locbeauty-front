@@ -104,7 +104,7 @@ export function TrainingDetailsDialog({
     setIsRestoring(true);
     try {
       const response = await UpdateTraining({
-        //@ts-ignore
+        //@ts-expect-error
         trainingId: selectedTraining.trainingId,
         body: {
           trainingStatus: selectedTraining.trainingStatus,
