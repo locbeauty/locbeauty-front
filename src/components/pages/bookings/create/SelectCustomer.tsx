@@ -216,8 +216,8 @@ function CustomersList({
     | {
         customerId: string;
         fullname: string;
-        cpf: string | null;
-        cnpj: string | null;
+        cpf?: string | null;
+        cnpj?: string | null;
         cellphone: string;
       }
     | undefined;
@@ -244,8 +244,8 @@ function CustomersList({
                 onChange({
                   customerId: customer.customerId,
                   fullname: customer.fullname,
-                  cpf: customer.cpf || null,
-                  cnpj: customer.cnpj || null,
+                  cpf: customer.cpf ?? null,
+                  cnpj: customer.cnpj ?? null,
                   cellphone: customer.cellphone ?? "",
                 });
                 setOpen(false);
