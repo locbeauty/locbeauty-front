@@ -41,7 +41,7 @@ export const updateCustomerFormSchema = z.object({
     })
     .optional(),
   secondaryEmailDescription: z.string().trim().nullable().optional(),
-  cellphone: z.string().max(20).nullable().optional(),
+  cellphone: z.string().min(14, { message: "Telefone é obrigatório" }),
   cellphoneDescription: z.string().trim().nullable().optional(),
   secondaryCellphone: z.string().max(20).nullable().optional(),
   secondaryCellphoneDescription: z.string().trim().nullable().optional(),

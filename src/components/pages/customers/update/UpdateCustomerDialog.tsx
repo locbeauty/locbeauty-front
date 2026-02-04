@@ -51,7 +51,7 @@ export function UpdateCustomerDialog({
         birthdate: selectedCustomer.birthdate
           ? new Date(selectedCustomer.birthdate)
           : null,
-        cellphone: selectedCustomer.cellphone,
+        cellphone: selectedCustomer.cellphone ?? "",
         cellphoneDescription: selectedCustomer.cellphoneDescription,
         secondaryCellphone: selectedCustomer.secondaryCellphone,
         secondaryCellphoneDescription:
