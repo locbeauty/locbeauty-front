@@ -21,10 +21,8 @@ const baseEmployeeSchema = z.object({
     .nullable()
     .optional(),
   cellphone: z
-    .string()
-    .min(14, { message: "Telefone é obrigatório" })
-    .nullable()
-    .optional(),
+    .string({ message: "Telefone é obrigatório" })
+    .min(14, { message: "Telefone é obrigatório" }),
   sourceFilialId: z.string().min(1, { message: "Filial é obrigatória" }),
   email: z
     .string()
@@ -40,8 +38,12 @@ const baseEmployeeSchema = z.object({
     })
     .nullable()
     .optional(),
-  password: z.string({ message: "Senha é obrigatória." }).optional(),
-  confirmPassword: z.string().optional(),
+  password: z
+    .string({ message: "Senha é obrigatória." })
+    .min(1, { message: "Senha é obrigatória." }),
+  confirmPassword: z
+    .string({ message: "Confirmação de senha é obrigatória." })
+    .min(1, { message: "Confirmação de senha é obrigatória." }),
 });
 
 export const createEmployeeFormSchema = baseEmployeeSchema.superRefine(
