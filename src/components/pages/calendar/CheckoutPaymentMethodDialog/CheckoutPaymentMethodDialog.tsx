@@ -57,31 +57,31 @@ interface CheckoutPaymentMethodDialogProps {
 
 function getPaymentIcon(method: string) {
   switch (method) {
-    case "Dinheiro":
-      return <Coins className="h-4 w-4 text-green-600" />;
-    case "Transferência bancária":
-    case "Transferência":
-      return <Banknote className="h-4 w-4 text-blue-600" />;
-    case "Crédito":
-    case "Débito":
-      return <CreditCard className="h-4 w-4 text-violet-600" />;
-    default:
-      return <CreditCard className="h-4 w-4" />;
+  case "Dinheiro":
+    return <Coins className="h-4 w-4 text-green-600" />;
+  case "Transferência bancária":
+  case "Transferência":
+    return <Banknote className="h-4 w-4 text-blue-600" />;
+  case "Crédito":
+  case "Débito":
+    return <CreditCard className="h-4 w-4 text-violet-600" />;
+  default:
+    return <CreditCard className="h-4 w-4" />;
   }
 }
 
 function getStatusColor(status: string) {
   switch (status) {
-    case "Pago":
-      return "bg-green-500";
-    case "Parcial":
-      return "bg-yellow-500";
-    case "Pendente":
-      return "bg-red-500";
-    case "Cortesia":
-      return "bg-blue-500";
-    default:
-      return "bg-gray-500";
+  case "Pago":
+    return "bg-green-500";
+  case "Parcial":
+    return "bg-yellow-500";
+  case "Pendente":
+    return "bg-red-500";
+  case "Cortesia":
+    return "bg-blue-500";
+  default:
+    return "bg-gray-500";
   }
 }
 
@@ -96,12 +96,12 @@ export function CheckoutPaymentMethodDialog({
   checkout,
 }: CheckoutPaymentMethodDialogProps) {
   const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localPayments, setLocalPayments] = useState<CheckoutPayment[]>([]);
+  const [ isSubmitting, setIsSubmitting ] = useState(false);
+  const [ localPayments, setLocalPayments ] = useState<CheckoutPayment[]>([]);
 
   // Form states for new payment
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newPayment, setNewPayment] = useState({
+  const [ showAddForm, setShowAddForm ] = useState(false);
+  const [ newPayment, setNewPayment ] = useState({
     paymentMethod: "Dinheiro" as PaymentMethodsType,
     paymentStatus: "Pago" as PaymentStatuses,
     paymentDate: new Date().toISOString().split("T")[0],
@@ -111,7 +111,7 @@ export function CheckoutPaymentMethodDialog({
   });
 
   // Editing state
-  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
+  const [ editingPaymentId, setEditingPaymentId ] = useState<string | null>(null);
 
   useEffect(() => {
     if (checkout?.CheckoutPayment) {
@@ -125,12 +125,12 @@ export function CheckoutPaymentMethodDialog({
       setLocalPayments(
         Array.isArray(checkout.CheckoutPayment)
           ? checkout.CheckoutPayment
-          : [checkout.CheckoutPayment],
+          : [ checkout.CheckoutPayment ],
       );
     } else {
       setLocalPayments([]);
     }
-  }, [checkout]);
+  }, [ checkout ]);
 
   const totalPaid = localPayments.reduce((acc, p) => acc + (p?.amount || 0), 0);
   const totalAmount = checkout?.totalPrice || 0;
@@ -164,8 +164,8 @@ export function CheckoutPaymentMethodDialog({
 
       if (response.statusCode === 201) {
         toast.success("Pagamento adicionado com sucesso");
-        queryClient.invalidateQueries({ queryKey: ["get-all-checkouts"] });
-        queryClient.invalidateQueries({ queryKey: ["get-checkout-details"] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-checkout-details" ] });
         setShowAddForm(false);
         setNewPayment({
           paymentMethod: "Dinheiro",
@@ -200,8 +200,8 @@ export function CheckoutPaymentMethodDialog({
 
       if (response.statusCode === 200) {
         toast.success("Pagamento atualizado");
-        queryClient.invalidateQueries({ queryKey: ["get-all-checkouts"] });
-        queryClient.invalidateQueries({ queryKey: ["get-checkout-details"] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-checkout-details" ] });
         setEditingPaymentId(null);
       } else {
         toast.error(response.message || "Erro ao atualizar");
@@ -222,8 +222,8 @@ export function CheckoutPaymentMethodDialog({
       const response = await DeleteCheckoutPayment(paymentId);
       if (response.statusCode === 200) {
         toast.success("Pagamento excluído");
-        queryClient.invalidateQueries({ queryKey: ["get-all-checkouts"] });
-        queryClient.invalidateQueries({ queryKey: ["get-checkout-details"] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-checkout-details" ] });
       } else {
         toast.error(response.message || "Erro ao excluir");
       }
@@ -236,7 +236,7 @@ export function CheckoutPaymentMethodDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={ open } onOpenChange={ onOpenChange }>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
@@ -276,7 +276,7 @@ export function CheckoutPaymentMethodDialog({
                 </div>
                 <div className="flex items-end">
                   <BookingPaymentStatusBadge
-                    status={(checkout as any)?.paymentStatus || "Pendente"}
+                    status={ (checkout as any)?.paymentStatus || "Pendente" }
                   />
                 </div>
               </div>
@@ -292,8 +292,8 @@ export function CheckoutPaymentMethodDialog({
               </h3>
               <Button
                 size="sm"
-                variant={showAddForm ? "ghost" : "default"}
-                onClick={() => setShowAddForm(!showAddForm)}
+                variant={ showAddForm ? "ghost" : "default" }
+                onClick={ () => setShowAddForm(!showAddForm) }
                 className="gap-2"
               >
                 {showAddForm ? (
@@ -323,8 +323,8 @@ export function CheckoutPaymentMethodDialog({
                     <div className="space-y-2">
                       <Label>Forma de Pagamento</Label>
                       <Select
-                        value={newPayment.paymentMethod}
-                        onValueChange={(v) =>
+                        value={ newPayment.paymentMethod }
+                        onValueChange={ (v) =>
                           setNewPayment({
                             ...newPayment,
                             paymentMethod: v as PaymentMethodsType,
@@ -342,7 +342,7 @@ export function CheckoutPaymentMethodDialog({
                             "Crédito",
                             "Dinheiro",
                           ].map((method) => (
-                            <SelectItem key={method} value={method}>
+                            <SelectItem key={ method } value={ method }>
                               <div className="flex items-center gap-2">
                                 {getPaymentIcon(method)}
                                 {method}
@@ -361,8 +361,8 @@ export function CheckoutPaymentMethodDialog({
                         <Input
                           className="pl-8"
                           placeholder="0,00"
-                          value={newPayment.amount}
-                          onChange={(e) =>
+                          value={ newPayment.amount }
+                          onChange={ (e) =>
                             setNewPayment({
                               ...newPayment,
                               amount: e.target.value,
@@ -378,8 +378,8 @@ export function CheckoutPaymentMethodDialog({
                       <Label>Data</Label>
                       <Input
                         type="date"
-                        value={newPayment.paymentDate}
-                        onChange={(e) =>
+                        value={ newPayment.paymentDate }
+                        onChange={ (e) =>
                           setNewPayment({
                             ...newPayment,
                             paymentDate: e.target.value,
@@ -390,8 +390,8 @@ export function CheckoutPaymentMethodDialog({
                     <div className="space-y-2">
                       <Label>Status</Label>
                       <Select
-                        value={newPayment.paymentStatus}
-                        onValueChange={(v) =>
+                        value={ newPayment.paymentStatus }
+                        onValueChange={ (v) =>
                           setNewPayment({
                             ...newPayment,
                             paymentStatus: v as PaymentStatuses,
@@ -413,8 +413,8 @@ export function CheckoutPaymentMethodDialog({
                     <Label>Observação (Opcional)</Label>
                     <Input
                       placeholder="Ex: Pago via app, desconto aplicado..."
-                      value={newPayment.observation}
-                      onChange={(e) =>
+                      value={ newPayment.observation }
+                      onChange={ (e) =>
                         setNewPayment({
                           ...newPayment,
                           observation: e.target.value,
@@ -427,14 +427,14 @@ export function CheckoutPaymentMethodDialog({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setShowAddForm(false)}
+                      onClick={ () => setShowAddForm(false) }
                     >
                       Cancelar
                     </Button>
                     <Button
                       size="sm"
-                      onClick={handleAddPayment}
-                      disabled={isSubmitting}
+                      onClick={ handleAddPayment }
+                      disabled={ isSubmitting }
                     >
                       {isSubmitting ? (
                         <Loader2 className="animate-spin h-4 w-4" />
@@ -459,15 +459,15 @@ export function CheckoutPaymentMethodDialog({
                     .filter(Boolean)
                     .map((payment: CheckoutPayment) => (
                       <Card
-                        key={payment.checkoutPaymentId}
+                        key={ payment.checkoutPaymentId }
                         className="overflow-hidden group hover:border-primary/30 transition-all shadow-sm"
                       >
                         <div className="flex h-full">
                           <div
-                            className={cn(
+                            className={ cn(
                               "w-1.5",
                               getStatusColor(payment.paymentStatus),
-                            )}
+                            ) }
                           />
                           <CardContent className="flex-1 p-4">
                             <div className="flex items-center justify-between">
@@ -520,7 +520,7 @@ export function CheckoutPaymentMethodDialog({
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                    onClick={() =>
+                                    onClick={ () =>
                                       setEditingPaymentId(
                                         payment.checkoutPaymentId,
                                       )
@@ -532,7 +532,7 @@ export function CheckoutPaymentMethodDialog({
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8 text-muted-foreground hover:text-red-600"
-                                    onClick={() =>
+                                    onClick={ () =>
                                       handleDeletePayment(
                                         payment.checkoutPaymentId,
                                       )
@@ -553,10 +553,10 @@ export function CheckoutPaymentMethodDialog({
                                   <Input
                                     type="date"
                                     size="sm"
-                                    value={formatDateForInput(
+                                    value={ formatDateForInput(
                                       payment.paymentDate,
-                                    )}
-                                    onChange={(e) =>
+                                    ) }
+                                    onChange={ (e) =>
                                       handleUpdatePayment(
                                         payment.checkoutPaymentId,
                                         {
@@ -569,8 +569,8 @@ export function CheckoutPaymentMethodDialog({
                                 <div className="space-y-2">
                                   <Label className="text-xs">Status</Label>
                                   <Select
-                                    value={payment.paymentStatus}
-                                    onValueChange={(v) =>
+                                    value={ payment.paymentStatus }
+                                    onValueChange={ (v) =>
                                       handleUpdatePayment(
                                         payment.checkoutPaymentId,
                                         { paymentStatus: v as PaymentStatuses },
@@ -592,7 +592,7 @@ export function CheckoutPaymentMethodDialog({
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => setEditingPaymentId(null)}
+                                    onClick={ () => setEditingPaymentId(null) }
                                   >
                                     Fechar
                                   </Button>
@@ -658,7 +658,7 @@ export function CheckoutPaymentMethodDialog({
         </div>
 
         <div className="flex justify-end pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={ () => onOpenChange(false) }>
             Fechar Janela
           </Button>
         </div>

@@ -1,11 +1,22 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Eye, Clock, Calendar, Filter, X, Trash2 } from "lucide-react";
+import {
+  Eye,
+  Clock,
+  Calendar,
+  Filter,
+  X,
+  Trash2,
+  Search,
+  RefreshCcw,
+} from "lucide-react";
+import { TrainingParticipantsDialog } from "./TrainingParticipantsDialog";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
-import { DeleteTraining } from "@/services/trainings.service";
+import { DeleteTraining, UpdateTraining } from "@/services/trainings.service";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
 
@@ -25,6 +36,7 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface TrainingsTableProps {
   trainings: Training[] | undefined;
@@ -42,6 +54,24 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
   const [ trainingToDelete, setTrainingToDelete ] = useState<Training | null>(
     null,
   );
+  const [ trainingToRestore, setTrainingToRestore ] = useState<Training | null>(
+    null,
+  );
+  const [ isRestoring, setIsRestoring ] = useState (false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
+    useState(false);
+  const [ isVisible, setIsVisible ] =  useState(true);
+
+  // Participants Dialog State
+  const [ isParticipantsDialogOpen, setIsParticipantsDialogOpen ] =
+    useState(false);
+  const [ participantsDialogTraining, setParticipantsDialogTraining ] =
+    useState<Training | null>(null);
+
+  const handleOpenParticipants = (training: Training) => {
+    setParticipantsDialogTraining(training);
+    setIsParticipantsDialogOpen(true);
+  };
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -50,14 +80,53 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
   const [ searchTerm, setSearchTerm ] = useState("");
   const [ filterStatus, setFilterStatus ] = useState<"ALL" | string>("ALL");
   const [ filterPaymentStatus, setFilterPaymentStatus ] = useState<
-    "ALL" | "PENDING" | "PAID" | "CANCELED"
-  >("ALL");
-  const [ filterDate, setFilterDate ] = useState<Date | undefined>(undefined);
+    "ALL"  | "PENDING" | "PAID" | " CANCELED"
+  >("ALL" );
+  const [ filterDate, setFilterDate ] = useState<Date  | undefined>(undefined);
   const [ filterFilial, setFilterFilial ] = useState<string>("ALL");
 
   const handleOpenDetails = (training: Training) => {
     setSelectedTraining(training);
     setIsDetailsOpen(true);
+  };
+
+  const handleRestoreTraining = (training: Training) => {
+    setTrainingToRestore(training);
+    setIsRestoreConfirmationDialogOpen(true);
+  };
+
+  const confirmRestoreTraining = async () => {
+    if (!trainingToRestore) return;
+    const targetId = trainingToRestore.trainingId;
+
+    setIsRestoring(true);
+    try {
+      const response = await UpdateTraining({
+        trainingId: targetId,
+        body: {
+          isVisible: true,
+        } as any, // Type assertion for partial update
+      });
+
+      if (
+        response.statusCode === 200 ||
+        response.statusCode === 201 ||
+        response.statusCode === 204
+      ) {
+        toast.success("Treinamento restaurado com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+      } else {
+        toast.error(response.message || "Erro ao restaurar treinamento.");
+      }
+    } catch (error) {
+      toast.error("Erro ao restaurar treinamento.");
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreConfirmationDialogOpen(false);
+      if (trainingToRestore?.trainingId === targetId) {
+        setTrainingToRestore(null);
+      }
+    }
   };
 
   const handleDeleteTraining = async () => {
@@ -95,7 +164,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
     let result = [ ...trainings ];
 
     // General Search Filter (ID, Trainee, Volunteer)
-    if (searchTerm) {
+    if (searchTerm ) {
       const lowerSearch = searchTerm.toLowerCase();
       result = result.filter(
         (t) =>
@@ -128,7 +197,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
         );
       } else if (filterPaymentStatus === "CANCELED") {
         result = result.filter((t) =>
-          t.TrainingPayment?.some((p) => p.paymentStatus === "Cancelado")
+          t.TrainingPayment?.some((p) => p.paymentStatus === "Cancelado"),
         );
       }
     }
@@ -206,7 +275,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 onChange={ (e) => setSearchTerm(e.target.value) }
                 className="h-9 bg-background pr-8"
               />
-              {searchTerm && (
+              {searchTerm  && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -214,7 +283,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                   onClick={ () => setSearchTerm("") }
                 >
                   <X className="h-3 w-3 text-muted-foreground" />
-                  <span className="sr-only">Limpar busca</span>
+                  <span cla ssName="sr-only">Limpar  busca</span>
                 </Button>
               )}
             </div>
@@ -253,7 +322,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
             <Label className="text-xs">Filial</Label>
             <Select value={ filterFilial } onValueChange={ setFilterFilial }>
               <SelectTrigger className="h-9 bg-background">
-                <SelectValue placeholder="Todas" />
+                <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Todas</SelectItem>
@@ -273,7 +342,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               value={ filterPaymentStatus }
               onValueChange={ (v) =>
                 setFilterPaymentStatus(
-                  v as "ALL" | "PENDING" | "PAID" | "CANCELED",
+                  v as "ALL" | "PENDING"  | "PAID" | "CANCELED",
                 )
               }
             >
@@ -289,20 +358,38 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
             </Select>
           </div>
         </div>
-        <div className="flex justify-end pt-2">
-          {(searchTerm ||
-            filterStatus !== "ALL" ||
-            filterPaymentStatus !== "ALL" ||
-            filterDate ||
-            filterFilial !== "ALL") && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={ clearFilters }
-              className="text-muted-foreground h-9"
-            >
-              <X className="h-3 w-3 mr-1" /> Limpar Todos os Filtros
-            </Button>
+        <div className="flex justify-between items-center pt-2">
+          <div>
+            {(searchTerm ||
+              filterStatus !== "ALL" ||
+              filterPaymentStatus !== "ALL" ||
+              filterDate ||
+              filterFilial !== "ALL") && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={ clearFilters }
+                className="text-muted-foreground h-9"
+              >
+                <X className="h-3 w-3  mr-1" /> Limpar Todos os Filtros
+              </Button>
+            )}
+          </div>
+          {(user?.role === USER_ROLES.MASTER ||
+            user?.role === USER_ROLES.ADMIN) && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-deleted-trainings"
+                checked={ !isVisible }
+                onCheckedChange={ (checked) => setIsVisible(!checked) }
+              />
+              <Label
+                htmlFor="show-del eted-trainings"
+                className="text-sm cursor-pointer"
+              >
+                Ver Excluídos
+              </Label>
+            </div>
           )}
         </div>
       </div>
@@ -390,22 +477,45 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                   <Button
                     variant="ghost"
                     size="icon"
+                    title="Ver Participantes"
+                    onClick={ () => handleOpenParticipants(training) }
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Ver Detalhes"
                     onClick={ () => handleOpenDetails(training) }
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
                   {user?.role === USER_ROLES.MASTER && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:bg-destructive/10"
-                      onClick={ () => {
-                        setTrainingToDelete(training);
-                        setIsDeleteConfirmationDialogOpen(true);
-                      } }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <>
+                      {!isVisible ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Restaurar"
+                          onClick={ () => handleRestoreTraining(training) }
+                          disabled={ isRestoring }
+                        >
+                          <RefreshCcw className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={ () => {
+                            setTrainingToDelete(training);
+                            setIsDeleteConfirmationDialogOpen(true);
+                          } }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </>
                   )}
                 </td>
               </tr>
@@ -443,7 +553,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               ],
             } }
             rawData={ training }
-            handleToggleDialog={ handleOpenDetails }
+            handleToggleDialog={ handleToggleDialog }
           />
         ))}
         {sortedTrainings.length === 0 && (
@@ -462,6 +572,14 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
         />
       )}
 
+      {participantsDialogTraining && (
+        <TrainingParticipantsDialog
+          open={ isParticipantsDialogOpen }
+          onOpenChange={ setIsParticipantsDialogOpen }
+          training={ participantsDialogTraining }
+        />
+      )}
+
       <DeleteConfirmationDialog
         isOpen={ isDeleteConfirmationDialogOpen }
         onOpenChange={ setIsDeleteConfirmationDialogOpen }
@@ -470,6 +588,19 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
         description="Tem certeza que deseja excluir o treinamento"
         itemName={ trainingToDelete?.trainingId }
         isDeleting={ isDeleting }
+      />
+
+      <RestoreConfirmationDialog
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onOpenChange={ (open) => {
+          setIsRestoreConfirmationDialogOpen(open);
+          if (!open) setTrainingToRestore(null);
+        } }
+        onConfirm={ confirmRestoreTraining }
+        isRestoring={ isRestoring }
+        title="Confirmar Restauração"
+        description="Tem certeza que deseja restaurar o treinamento de"
+        itemName={ trainingToRestore?.Trainee?.fullname || "treinamento" }
       />
     </>
   );

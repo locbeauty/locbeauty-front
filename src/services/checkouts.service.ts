@@ -85,6 +85,7 @@ export type UpdateCheckoutBody = {
   date?: Date;
   startHourInMinutes?: number;
   totalDurationInMinutes?: number;
+  isVisible?: boolean;
 };
 
 export async function UpdateCheckout({

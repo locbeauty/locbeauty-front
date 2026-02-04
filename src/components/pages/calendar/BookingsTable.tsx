@@ -7,12 +7,27 @@ import { Checkout } from "@/utils/@types/checkouts";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
-import { GetAllCheckouts } from "@/services/checkouts.service";
+import {
+  GetAllCheckouts,
+  UpdateCheckout,
+  DeleteCheckout,
+} from "@/services/checkouts.service";
 import { BookingDetailsDialog } from "./DetailsDialog/BookingDetailsDialog";
-import { ChevronLeft, ChevronsLeft, Eye, Pencil } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronsLeft,
+  Eye,
+  Pencil,
+  RefreshCcw,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
+import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface BookingsTableProps {
   filters?: BookingsTableFilters;
@@ -43,6 +58,14 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     null,
   );
   const [ pagination, setPagination ] = useState({ page: 1, limit: 10 });
+  const [ isVisible, setIsVisible ] = useState(true);
+  const [ checkoutToRestore, setCheckoutToRestore ] = useState<Checkout | null>(
+    null,
+  );
+  const [ isRestoring, setIsRestoring ] = useState(false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
+    useState(false);
+  const [ allCheckouts, setAllCheckouts ] = useState<Checkout[] | null>(null);
 
   const accessibleFilialIds = useMemo(() => {
     // Superusers can view all filials
@@ -93,7 +116,15 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     filialIds: finalFilialIds,
     page: pagination.page,
     limit: pagination.limit,
+    isVisible,
   };
+
+  console.log(
+    "[DEBUG] BookingsTable isVisible:",
+    isVisible,
+    "queryParams:",
+    queryParams,
+  );
 
   const { data, isLoading } = useQuery<
     ApiResponse<{ items: Checkout[]; total: number }>,
@@ -105,15 +136,82 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     enabled: !!user, // só executa a query quando user estiver disponível
   });
 
-  const checkouts = data?.data?.items;
+  const checkouts = allCheckouts ?? data?.data?.items;
   const totalCheckouts = data?.data?.total || 0;
   const totalPages = Math.ceil(totalCheckouts / pagination.limit);
+
+  // Update local state when data changes
+  if (data?.data?.items && !allCheckouts) {
+    setAllCheckouts(data.data.items);
+  }
 
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
   const isEmpty = !isLoading && (!checkouts || checkouts.length === 0);
+
+  const handleRestoreCheckout = (checkout: Checkout) => {
+    setCheckoutToRestore(checkout);
+    setIsRestoreConfirmationDialogOpen(true);
+  };
+
+  const confirmRestoreCheckout = async () => {
+    if (!checkoutToRestore) return;
+    const targetId = checkoutToRestore.checkoutId;
+
+    setIsRestoring(true);
+    try {
+      const response = await UpdateCheckout({
+        checkoutId: targetId,
+        body: { isVisible: true },
+      });
+
+      if (
+        response.statusCode === 200 ||
+        response.statusCode === 201 ||
+        response.statusCode === 204
+      ) {
+        toast.success("Agendamento restaurado com sucesso.");
+        // Force data re-fetch by setting to null
+        setAllCheckouts((prev) => {
+          if (!prev) return null;
+          return prev.filter((e) => String(e.checkoutId) !== String(targetId));
+        });
+      } else {
+        toast.error(response.message || "Erro ao restaurar agendamento.");
+      }
+    } catch (error) {
+      toast.error("Erro ao restaurar agendamento.");
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreConfirmationDialogOpen(false);
+      if (checkoutToRestore?.checkoutId === targetId) {
+        setCheckoutToRestore(null);
+      }
+    }
+  };
+
+  const handleDeleteCheckout = async (checkoutId: string) => {
+    try {
+      const response = await DeleteCheckout(checkoutId);
+      if (
+        response.statusCode === 200 ||
+        response.statusCode === 201 ||
+        response.statusCode === 204
+      ) {
+        toast.success("Agendamento excluído com sucesso.");
+        setAllCheckouts((prev) => {
+          if (!prev) return null;
+          return prev.filter((c) => c.checkoutId !== checkoutId);
+        });
+      } else {
+        toast.error(response.message || "Erro ao excluir agendamento.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir agendamento.");
+    }
+  };
 
   const openCheckoutDetails = ({ checkoutId }: { checkoutId: string }) => {
     if (!checkouts) return;
@@ -134,6 +232,22 @@ export function BookingsTable({ filters }: BookingsTableProps) {
 
   return (
     <>
+      {/* Ver Excluídos Toggle */}
+      {(user?.role === USER_ROLES.MASTER ||
+        user?.role === USER_ROLES.ADMIN) && (
+        <div className="flex items-center space-x-2 mb-4">
+          <Switch
+            id="show-deleted"
+            checked={ !isVisible }
+            onCheckedChange={ (checked) => {
+              setIsVisible(!checked);
+              setAllCheckouts(null);
+            } }
+          />
+          <Label htmlFor="show-deleted">Ver Excluídos</Label>
+        </div>
+      )}
+
       <div className="border rounded-lg max-h-[70vh] lg:w-full w-[89vw] overflow-x-auto hidden md:block">
         <table className="w-full">
           <thead className="bg-muted">
@@ -151,6 +265,10 @@ export function BookingsTable({ filters }: BookingsTableProps) {
               <th className="p-3 font-medium text-center">Status</th>
               <th className="p-3 font-medium text-center">Pagamento</th>
               <th className="p-3 font-medium text-center">Detalhes</th>
+              {(user?.role === USER_ROLES.MASTER ||
+                user?.role === USER_ROLES.ADMIN) && (
+                <th className="p-3 font-medium text-center">Ações</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -212,6 +330,31 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                         <Eye />
                       </Button>
                     </td>
+                    {(user?.role === USER_ROLES.MASTER ||
+                      user?.role === USER_ROLES.ADMIN) && (
+                      <td className="p-3 text-center">
+                        {!isVisible ? (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={ () => handleRestoreCheckout(checkout) }
+                            disabled={ isRestoring }
+                          >
+                            <RefreshCcw className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={ () =>
+                              handleDeleteCheckout(checkout.checkoutId)
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })
@@ -229,8 +372,8 @@ export function BookingsTable({ filters }: BookingsTableProps) {
         </table>
       </div>
 
-      {/* Mobile View */}
-      <div className="md:hidden space-y-4">
+      {/* Mobile  View */}
+      <div className=" md:hidden space-y-4">
         {isEmpty && (
           <div className="text-center p-4 text-muted-foreground bg-white rounded-lg border">
             Nada a mostrar por aqui.
@@ -378,6 +521,17 @@ export function BookingsTable({ filters }: BookingsTableProps) {
         setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
         selectedCheckout={ selectedCheckout }
         setSelectedCheckout={ setSelectedCheckout }
+      />
+
+      <RestoreConfirmationDialog
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onClose={ () => {
+          setIsRestoreConfirmationDialogOpen(false);
+          setCheckoutToRestore(null);
+        } }
+        onConfirm={ confirmRestoreCheckout }
+        isRestoring={ isRestoring }
+        itemName={ checkoutToRestore?.Customer?.fullname || "agendamento" }
       />
     </>
   );

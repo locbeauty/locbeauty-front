@@ -680,7 +680,7 @@ export function BookingDetailsDialog({
                         </span>
                         <span className="flex items-center gap-1">
                           <FileText className="h-3.5 w-3.5" />
-                          {selectedCheckout.Customer.documentNumber || "—"}
+                          {selectedCheckout.Customer.cpf || "—"} {selectedCheckout.Customer.cnpj && <span className="font-bold">|</span>} {selectedCheckout.Customer.cnpj || ""}
                         </span>
                       </div>
                     </div>

@@ -113,8 +113,6 @@ export function CheckoutPaymentMethod() {
     case "Crédito":
     case "Débito":
       return <CreditCard className="h-4 w-4 text-violet-600" />;
-    case "NaoInformado":
-      return <HelpCircle className="h-4 w-4 text-gray-400" />;
     default:
       return <CreditCard className="h-4 w-4" />;
     }
@@ -312,11 +310,7 @@ export function CheckoutPaymentMethod() {
                           <SelectItem key={ method } value={ method }>
                             <div className="flex items-center gap-2">
                               {getPaymentIcon(method)}
-                              <span>
-                                {method === "NaoInformado"
-                                  ? "Não informado"
-                                  : method}
-                              </span>
+                              <span>{method}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -406,9 +400,7 @@ export function CheckoutPaymentMethod() {
                                 <div className="flex items-center gap-2">
                                   {getPaymentIcon(method)}
                                   <span>
-                                    {method === "NaoInformado"
-                                      ? "Não informado"
-                                      : method}
+                                    {method}
                                   </span>
                                 </div>
                               </SelectItem>

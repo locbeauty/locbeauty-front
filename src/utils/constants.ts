@@ -1,10 +1,9 @@
 export const PaymentMethods = [
   "PIX",
-  "Transferência",
-  "Débito",
-  "Crédito",
+  "Transferencia",
+  "Debito",
+  "Credito",
   "Dinheiro",
-  "NaoInformado",
 ] as const;
 export const paymentModes = [ "Parcelado", "AVista" ] as const;
 export const paymentStatuses = [

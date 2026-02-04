@@ -30,38 +30,37 @@ import { useAuth } from "@/contexts/auth-provider";
 import { useAccess } from "@/contexts/access-provider";
 
 export default function Treinamentos() {
-  const [ activeTab, setActiveTab ] = useState("treinamentos");
-  const [ dialogNewVolunteer, setDialogNewVolunteer ] = useState(false);
-  const [ dialogNovoAluno, setDialogNovoAluno ] = useState(false);
-  const [ dialogNovoTreinamento, setDialogNovoTreinamento ] = useState(false);
-  const [ isVisible, setIsVisible ] = useState(false);
+  const [activeTab, setActiveTab] = useState("treinamentos");
+  const [dialogNewVolunteer, setDialogNewVolunteer] = useState(false);
+  const [dialogNovoAluno, setDialogNovoAluno] = useState(false);
+  const [dialogNovoTreinamento, setDialogNovoTreinamento] = useState(false);
 
   const traineesData = useQuery<ApiResponse<Trainee[]>, Error>({
-    queryKey: [ "get-all-trainees", isVisible ],
-    queryFn: () => GetAllTrainees(isVisible ? { isVisible: "false" } : {}),
+    queryKey: ["get-all-trainees"],
+    queryFn: () => GetAllTrainees({}),
     staleTime: 1000 * 60,
   });
 
   const volunteersData = useQuery<ApiResponse<Volunteer[]>, Error>({
-    queryKey: [ "get-all-volunteers", isVisible ],
-    queryFn: () => GetAllVolunteers(isVisible ? { isVisible: "false" } : {}),
+    queryKey: ["get-all-volunteers"],
+    queryFn: () => GetAllVolunteers({}),
     staleTime: 1000 * 60,
   });
 
   const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
-    queryKey: [ "get-all-trainings", isVisible ],
-    queryFn: () => GetAllTrainings(isVisible ? "false" : undefined),
+    queryKey: ["get-all-trainings"],
+    queryFn: () => GetAllTrainings(),
     staleTime: 1000 * 60,
   });
 
   const gearsData = useQuery<ApiResponse<Gear[]>, Error>({
-    queryKey: [ "get-all-gears" ],
+    queryKey: ["get-all-gears"],
     queryFn: () => GetAllGears({}),
     staleTime: 1000 * 60,
   });
 
   const filialsData = useQuery<Filial[], Error>({
-    queryKey: [ "get-all-filials" ],
+    queryKey: ["get-all-filials"],
     queryFn: () => findAllFilials(),
     staleTime: 1000 * 60,
   });
@@ -86,7 +85,7 @@ export default function Treinamentos() {
       .map((a) => a.filialId);
 
     return filials.filter((f) => accessibleFilialIds.includes(f.filialId));
-  }, [ filials, user, accesses ]);
+  }, [filials, user, accesses]);
 
   // Filtrar dados baseado nas filiais acessíveis
   const filteredData = useMemo(() => {
@@ -153,14 +152,14 @@ export default function Treinamentos() {
       trainees: filteredTrainees,
       volunteers: filteredVolunteers,
     };
-  }, [ trainings, trainees, volunteers, accessibleFilials, user ]);
+  }, [trainings, trainees, volunteers, accessibleFilials, user]);
 
   // Filter Logic removed from here, to be handled in child components or similar if desired.
   // Actually, for cleaner Props drilling, we might want to keep the data passing simple.
   // User asked to remove the Summary section and 'just leave the tabs'.
 
   return (
-    <RouteGuard module={ SYSTEM_MODULES.TRAININGS }>
+    <RouteGuard module={SYSTEM_MODULES.TRAININGS}>
       <div className="container mx-auto py-4 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -171,22 +170,11 @@ export default function Treinamentos() {
               Gerencie treinamentos, alunos e pacientes modelos
             </p>
           </div>
-          {(user?.role === USER_ROLES.MASTER ||
-            user?.role === USER_ROLES.ADMIN) && (
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="view-deleted-trainings"
-                checked={ isVisible }
-                onCheckedChange={ setIsVisible }
-              />
-              <Label htmlFor="view-deleted-trainings">Ver Excluídos</Label>
-            </div>
-          )}
         </div>
 
         <Tabs
-          value={ activeTab }
-          onValueChange={ setActiveTab }
+          value={activeTab}
+          onValueChange={setActiveTab}
           className="space-y-4"
         >
           <div className="flex justify-between items-center">
@@ -196,27 +184,27 @@ export default function Treinamentos() {
               <TabsTrigger value="Volunteeres">Pacientes modelo</TabsTrigger>
             </TabsList>
             {activeTab === "treinamentos" && (
-              <Can module={ SYSTEM_MODULES.TRAININGS } action="canCreate">
+              <Can module={SYSTEM_MODULES.TRAININGS} action="canCreate">
                 <CreateTrainingDialog
-                  dialogNovoTreinamento={ dialogNovoTreinamento }
-                  setDialogNovoTreinamento={ setDialogNovoTreinamento }
-                  gears={ gears }
+                  dialogNovoTreinamento={dialogNovoTreinamento}
+                  setDialogNovoTreinamento={setDialogNovoTreinamento}
+                  gears={gears}
                 />
               </Can>
             )}
             {activeTab === "alunos" && (
-              <Can module={ SYSTEM_MODULES.TRAININGS } action="canCreate">
+              <Can module={SYSTEM_MODULES.TRAININGS} action="canCreate">
                 <CreateTraineeDialog
-                  dialogNovoAluno={ dialogNovoAluno }
-                  setDialogNovoAluno={ setDialogNovoAluno }
+                  dialogNovoAluno={dialogNovoAluno}
+                  setDialogNovoAluno={setDialogNovoAluno}
                 />
               </Can>
             )}
             {activeTab === "Volunteeres" && (
-              <Can module={ SYSTEM_MODULES.TRAININGS } action="canCreate">
+              <Can module={SYSTEM_MODULES.TRAININGS} action="canCreate">
                 <CreateVolunteerDialog
-                  dialogNewVolunteer={ dialogNewVolunteer }
-                  setDialogNewVolunteer={ setDialogNewVolunteer }
+                  dialogNewVolunteer={dialogNewVolunteer}
+                  setDialogNewVolunteer={setDialogNewVolunteer}
                 />
               </Can>
             )}
@@ -224,26 +212,26 @@ export default function Treinamentos() {
           {/* Tab Treinamentos */}
           <TabsContent value="treinamentos" className="space-y-4">
             <TrainingsTable
-              trainings={ filteredData.trainings }
-              filials={ accessibleFilials }
+              trainings={filteredData.trainings}
+              filials={accessibleFilials}
             />
           </TabsContent>
 
           {/* Tab Alunos */}
           <TabsContent value="alunos" className="space-y-4">
             <TraineesTable
-              trainees={ filteredData.trainees }
-              allTrainings={ filteredData.trainings || [] }
-              filials={ accessibleFilials }
+              trainees={filteredData.trainees}
+              allTrainings={filteredData.trainings || []}
+              filials={accessibleFilials}
             />
           </TabsContent>
 
           {/* Tab Volunteeres */}
           <TabsContent value="Volunteeres" className="space-y-4">
             <VolunteersTable
-              volunteers={ filteredData.volunteers }
-              allTrainings={ filteredData.trainings || [] }
-              filials={ accessibleFilials }
+              volunteers={filteredData.volunteers}
+              allTrainings={filteredData.trainings || []}
+              filials={accessibleFilials}
             />
           </TabsContent>
         </Tabs>

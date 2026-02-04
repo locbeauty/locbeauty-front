@@ -11,6 +11,7 @@ export interface Filial {
   Address: Address;
   cellphone: string;
   email: string;
+  isVisible?: boolean;
 }
 
 export interface FilialStats {

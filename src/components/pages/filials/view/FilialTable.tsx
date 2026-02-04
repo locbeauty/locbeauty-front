@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, RefreshCcw } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { FilialDetailsDialog } from "./FilialDetailsDialog";
@@ -11,8 +11,9 @@ import { fetchWithToken } from "@/utils/fetchWithToken";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { useAuth } from "@/contexts/auth-provider";
-import { DeleteFilial } from "@/services/filials.service";
+import { DeleteFilial, UpdateFilial } from "@/services/filials.service";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
+import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
@@ -30,7 +31,11 @@ export function FilialsTable() {
   const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
   const [ filialToDelete, setFilialToDelete ] = useState<Filial | null>(null);
+  const [ filialToRestore, setFilialToRestore ] = useState<Filial | null>(null);
   const [ refreshCounter, setRefreshCounter ] = useState(0);
+  const [ isRestoring, setIsRestoring ] = useState(false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
+    useState(false);
 
   const [ isVisible, setIsVisible ] = useState<boolean>(false);
 
@@ -64,7 +69,10 @@ export function FilialsTable() {
 
       if (response.statusCode === 200 || response.statusCode === 204) {
         toast.success("Filial excluída com sucesso.");
-        setRefreshCounter((prev) => prev + 1);
+        setAllFilials(
+          (prev) =>
+            prev?.filter((f) => f.filialId !== filialToDelete.filialId) ?? null,
+        );
       } else {
         toast.error(response.message || "Erro ao excluir filial.");
       }
@@ -74,6 +82,59 @@ export function FilialsTable() {
       setIsDeleting(false);
       setIsDeleteConfirmationDialogOpen(false);
       setFilialToDelete(null);
+    }
+  };
+
+  const handleRestoreFilial = (filial: Filial) => {
+    setFilialToRestore(filial);
+    setIsRestoreConfirmationDialogOpen(true);
+  };
+
+  const confirmRestoreFilial = async () => {
+    if (!filialToRestore) return;
+    const targetId = filialToRestore.filialId;
+    console.log("Starting restore for filial:", targetId);
+
+    setIsRestoring(true);
+    try {
+      const response = await UpdateFilial({
+        filialId: targetId,
+        data: { isVisible: true },
+      });
+
+      console.log("Restore response status:", response.statusCode);
+
+      if (
+        response.statusCode === 200 ||
+        response.statusCode === 201 ||
+        response.statusCode === 204
+      ) {
+        toast.success("Filial restaurada com sucesso.");
+        setAllFilials((prev) => {
+          if (!prev) {
+            console.log("Previous filials state is null");
+            return null;
+          }
+          const filtered = prev.filter(
+            (f) => String(f.filialId) !== String(targetId),
+          );
+          console.log("Filials before filter:", prev.length);
+          console.log("Filials after filter:", filtered.length);
+          return filtered;
+        });
+      } else {
+        console.error("Restore failed with status:", response.statusCode);
+        toast.error(response.message || "Erro ao restaurar filial.");
+      }
+    } catch (error) {
+      console.error("Restore error:", error);
+      toast.error("Erro ao restaurar filial.");
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreConfirmationDialogOpen(false);
+      if (filialToRestore?.filialId === targetId) {
+        setFilialToRestore(null);
+      }
     }
   };
 
@@ -89,6 +150,7 @@ export function FilialsTable() {
         `${process.env.NEXT_PUBLIC_SERVER_URL}/filials?${queryParams.toString()}`,
         {
           credentials: "include",
+          cache: "no-store",
           next: {
             tags: [ "get-all-filials" ],
           },
@@ -106,8 +168,8 @@ export function FilialsTable() {
     <>
       {(user?.role === USER_ROLES.MASTER ||
         user?.role === USER_ROLES.ADMIN) && (
-        <div className="flex justify-end mb-4">
-          <div className="flex items-center space-x-2">
+        <div className= "flex jus tify-end mb-4">
+          <div className="flex  items-center  space-x-2">
             <Switch
               id="view-deleted-filials"
               checked={ isVisible }
@@ -176,18 +238,28 @@ export function FilialsTable() {
                         </Button>
                       </Can>
 
-                      {user?.role === USER_ROLES.MASTER && (
-                        <Button
-                          variant="ghost"
-                          className="text-destructive hover:bg-destructive/10"
-                          onClick={ () => {
-                            setFilialToDelete(filial);
-                            setIsDeleteConfirmationDialogOpen(true);
-                          } }
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
+                      {user?.role === USER_ROLES.MASTER &&
+                        (isVisible ?  (
+                          <Button
+                            variant="ghost"
+                            className="text-green-600 hover:bg-green-50"
+                            onClick={ () => handleRestoreFilial(filial) }
+                            disabled={ isRestoring }
+                          >
+                            <RefreshCcw className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={ () => {
+                              setFilialToDelete(filial);
+                              setIsDeleteConfirmationDialogOpen(true);
+                            } }
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        ))}
                     </div>
                   </td>
                 </tr>
@@ -206,7 +278,7 @@ export function FilialsTable() {
         </table>
       </div>
 
-      <div className="md:hidden flex flex-col gap-4">
+      <div className="md:hi dden flex flex-col gap -4">
         {allFilials &&
           allFilials.map((filial) => (
             <Fragment key={ filial.filialId }>
@@ -219,7 +291,7 @@ export function FilialsTable() {
                       { itemLabel: "Email: ", itemInfo: filial.email },
                       {
                         itemLabel: "Telefone: ",
-                        itemInfo: filial.cellphone,
+                        itemInfo:  filial.cellphone,
                       },
                     ],
                   } }
@@ -254,6 +326,16 @@ export function FilialsTable() {
         description="Tem certeza que deseja excluir a filial"
         itemName={ filialToDelete?.filialName }
         isDeleting={ isDeleting }
+      />
+
+      <RestoreConfirmationDialog
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onOpenChange={ setIsRestoreConfirmationDialogOpen }
+        onConfirm={ confirmRestoreFilial }
+        title="Confirmar Restauração"
+        description="Tem certeza que deseja restaurar a filial"
+        itemName={ filialToRestore?.filialName }
+        isRestoring={ isRestoring }
       />
     </>
   );

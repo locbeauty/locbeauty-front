@@ -43,17 +43,17 @@ export function SelectCustomer({ disabled = false }: { disabled?: boolean }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const filialId = watch("filialId");
 
-  const [ searchTerm, setSearchTerm ] = useState("");
-  const [ debouncedSearchTerm ] = useDebounceValue(searchTerm, 500);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm] = useDebounceValue(searchTerm, 500);
 
   const { data } = useQuery<
     ApiResponse<{ items: Customer[]; total: number }>,
     Error
   >({
-    queryKey: [ "get-all-customers", filialId, debouncedSearchTerm ],
+    queryKey: ["get-all-customers", filialId, debouncedSearchTerm],
     queryFn: () =>
       GetAllCustomers(
-        { filialId, name: debouncedSearchTerm },
+        { filialId, name: debouncedSearchTerm, includeAllTrainees: true },
         { page: 1, limit: 100 },
       ),
     staleTime: 1000 * 60, // 1 minuto de cache
@@ -70,23 +70,23 @@ export function SelectCustomer({ disabled = false }: { disabled?: boolean }) {
   return (
     <div className="flex flex-col space-y-1  w-full">
       <Controller
-        control={ control }
+        control={control}
         name="customer"
-        render={ ({ field }) =>
+        render={({ field }) =>
           isDesktop ? (
             <DesktopSelect
-              disabled={ disabled }
-              allCustomers={ allCustomers || [] }
-              field={ field }
-              searchTerm={ searchTerm }
-              setSearchTerm={ setSearchTerm }
+              disabled={disabled}
+              allCustomers={allCustomers || []}
+              field={field}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
             />
           ) : (
             <MobileSelect
-              allCustomers={ allCustomers || [] }
-              field={ field }
-              searchTerm={ searchTerm }
-              setSearchTerm={ setSearchTerm }
+              allCustomers={allCustomers || []}
+              field={field}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
             />
           )
         }
@@ -108,22 +108,24 @@ function DesktopSelect({
   searchTerm: string;
   setSearchTerm: (term: string) => void;
 }) {
-  const [ open, setOpen ] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const selectedCustomer = field.value;
 
   return (
-    <Popover open={ open } onOpenChange={ setOpen }>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          disabled={ disabled }
+          disabled={disabled}
           variant="outline"
           className="w-full justify-start group cursor-pointer"
         >
           {selectedCustomer ? (
             <>
               {selectedCustomer.fullname} -{" "}
-              {hideDocumentNumber(selectedCustomer.cpf || selectedCustomer.cnpj)}
+              {hideDocumentNumber(
+                selectedCustomer.cpf || selectedCustomer.cnpj,
+              )}
             </>
           ) : (
             <span className="text-placeholder group-hover:text-white">
@@ -134,12 +136,12 @@ function DesktopSelect({
       </PopoverTrigger>
       <PopoverContent className="p-0 w-full" align="start">
         <CustomersList
-          allCustomers={ allCustomers }
-          setOpen={ setOpen }
-          onChange={ field.onChange }
-          value={ field.value }
-          searchTerm={ searchTerm }
-          setSearchTerm={ setSearchTerm }
+          allCustomers={allCustomers}
+          setOpen={setOpen}
+          onChange={field.onChange}
+          value={field.value}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
         />
       </PopoverContent>
     </Popover>
@@ -157,33 +159,36 @@ function MobileSelect({
   searchTerm: string;
   setSearchTerm: (term: string) => void;
 }) {
-  const [ open, setOpen ] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const selectedCustomer = field.value;
 
   return (
-    <Drawer open={ open } onOpenChange={ setOpen }>
+    <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button variant="outline" className="w-full justify-start">
           {selectedCustomer ? (
             <>
-              {selectedCustomer.fullname} - {hideDocumentNumber(selectedCustomer.cpf || selectedCustomer.cnpj)}
+              {selectedCustomer.fullname} -{" "}
+              {hideDocumentNumber(
+                selectedCustomer.cpf || selectedCustomer.cnpj,
+              )}
             </>
           ) : (
             <span className="text-placeholder">Selecione o cliente</span>
           )}
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="w-full" aria-describedby={ undefined }>
+      <DrawerContent className="w-full" aria-describedby={undefined}>
         <DrawerTitle>
           <div className="mt-4 border-t">
             <CustomersList
-              allCustomers={ allCustomers }
-              setOpen={ setOpen }
-              onChange={ field.onChange }
-              value={ field.value }
-              searchTerm={ searchTerm }
-              setSearchTerm={ setSearchTerm }
+              allCustomers={allCustomers}
+              setOpen={setOpen}
+              onChange={field.onChange}
+              value={field.value}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
             />
           </div>
         </DrawerTitle>
@@ -221,11 +226,11 @@ function CustomersList({
   setSearchTerm: (term: string) => void;
 }) {
   return (
-    <Command shouldFilter={ false }>
+    <Command shouldFilter={false}>
       <CommandInput
         placeholder="Filtrar clientes..."
-        value={ searchTerm }
-        onValueChange={ setSearchTerm }
+        value={searchTerm}
+        onValueChange={setSearchTerm}
       />
       <CommandList>
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
@@ -233,9 +238,9 @@ function CustomersList({
           {allCustomers?.map((customer) => (
             <CommandItem
               className="w-[700px]"
-              key={ customer.customerId }
-              value={ customer.customerId }
-              onSelect={ () => {
+              key={customer.customerId}
+              value={customer.customerId}
+              onSelect={() => {
                 onChange({
                   customerId: customer.customerId,
                   fullname: customer.fullname,
@@ -244,7 +249,7 @@ function CustomersList({
                   cellphone: customer.cellphone ?? "",
                 });
                 setOpen(false);
-              } }
+              }}
             >
               {customer.fullname} -{" "}
               {hideDocumentNumber(customer.cpf || customer.cnpj)}

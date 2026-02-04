@@ -39,6 +39,7 @@ export interface GetAllCustomersFilters {
   isVisible?: string;
   status?: "Ativo" | "Inativo";
   isTrainee?: boolean;
+  includeAllTrainees?: boolean;
 }
 
 export async function GetAllCustomers(

@@ -51,3 +51,21 @@ export async function DeleteEmployee(employeeId: string) {
   });
   return response;
 }
+
+export async function UpdateEmployee({
+  employeeId,
+  data,
+}: {
+  employeeId: string;
+  data: Partial<Employee>;
+}) {
+  const response = await apiRequest<{
+    message: string;
+    employee: Employee;
+  }>({
+    endpoint: `employees/update/${employeeId}`,
+    method: "POST",
+    body: data,
+  });
+  return response;
+}

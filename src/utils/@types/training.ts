@@ -28,5 +28,6 @@ export interface Training {
   TrainingPayment: TrainingPayment[];
   SourceFilial: Filial;
   wasRefunded?: boolean;
+  isVisible: boolean;
   Address: Address;
 }

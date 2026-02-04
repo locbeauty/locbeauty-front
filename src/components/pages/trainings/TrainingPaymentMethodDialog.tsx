@@ -98,6 +98,7 @@ export type UpdateTrainingPayload = {
     | "Credito"
     | "Dinheiro"
     | null;
+  isVisible?: boolean;
   traineeId?: string;
   customerId?: string;
   volunteerId?: string;
@@ -686,7 +687,7 @@ export function TrainingPaymentMethodDialog({
               <div className="space-y-2 w-full">
                 <div className="mb-10 -mt-10 -ml-1">
                   <Label>
-                  O valor total é:{" "}
+                    O valor total é:{" "}
                     <span>{centsToStringWithCurrencyMark(displayPrice)}</span>
                   </Label>
                 </div>

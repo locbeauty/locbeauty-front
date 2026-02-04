@@ -25,6 +25,8 @@ import {
   Plus,
   X,
   Pencil,
+  Copy,
+  RefreshCcw,
 } from "lucide-react";
 
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
@@ -46,6 +48,8 @@ import { queryClient } from "@/app/(main)/layout";
 import { AddParticipantDialog } from "./AddParticipantDialog";
 // import { UpdateParticipantValuesDialog } from "./UpdateParticipantValuesDialog";
 import EditTrainingFinancialsDialog from "./EditTrainingFinancialsDialog";
+import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 
 interface TrainingDetailsDialogProps {
   open: boolean;
@@ -92,6 +96,37 @@ export function TrainingDetailsDialog({
     useState(false);
   const [ financialPayerTypeToEdit, setFinancialPayerTypeToEdit ] =
     useState<PayerType>("TRAINEE");
+
+  const { user } = useAuth();
+  const [ isRestoring, setIsRestoring ] = useState(false);
+
+  const handleRestore = async () => {
+    setIsRestoring(true);
+    try {
+      const response = await UpdateTraining({
+        //@ts-ignore
+        trainingId: selectedTraining.trainingId,
+        body: {
+          trainingStatus: selectedTraining.trainingStatus,
+          payerType: "TRAINEE",
+          isVisible: true,
+        },
+      });
+
+      if (response && response.isVisible) {
+        toast.success("Treinamento restaurado com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        if (onOpenChange) onOpenChange(false);
+      } else {
+        toast.error("Erro ao restaurar treinamento.");
+      }
+    } catch (error) {
+      toast.error("Erro ao restaurar treinamento.");
+      console.error(error);
+    } finally {
+      setIsRestoring(false);
+    }
+  };
 
   useEffect(() => {
     setCurrentTrainingStatus(selectedTraining.trainingStatus);
@@ -427,6 +462,29 @@ export function TrainingDetailsDialog({
     currentTrainingStatus !== "Concluido" &&
     currentTrainingStatus !== "Cancelado";
 
+  const handleCopySummary = () => {
+    // Calculate start time
+    const start = new Date(selectedTraining.dueDate);
+    start.setHours(Math.floor(selectedTraining.hourInMinutes / 60));
+    start.setMinutes(selectedTraining.hourInMinutes % 60);
+
+    // Format times
+    const formatTime = (date: Date) =>
+      `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+
+    const lines = [
+      "*Resumo do Treinamento*",
+      `Equipamento: ${selectedTraining.Gear.gearName}`,
+      `Data: ${new Date(selectedTraining.dueDate).toLocaleDateString("pt-BR")}`,
+      `Horário: ${formatTime(start)}`,
+      `Endereço: ${selectedTraining.Address.street}, ${selectedTraining.Address.buildingNumber} - ${selectedTraining.Address.neighborhood}, ${selectedTraining.Address.city}/${selectedTraining.Address.state}`,
+    ];
+
+    const summary = lines.join("\n");
+    navigator.clipboard.writeText(summary);
+    toast.success("Resumo copiado para a área de transferência!");
+  };
+
   return (
     <Dialog open={ open } onOpenChange={ onOpenChange }>
       <DialogContent className="max-h-[90vh] w-[90vw] md:w-[900px] overflow-hidden flex flex-col dark:bg-gray-900">
@@ -470,6 +528,15 @@ export function TrainingDetailsDialog({
                 </div>
               </div>
               <div className="flex gap-2 ml-auto items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 h-8"
+                  onClick={ handleCopySummary }
+                >
+                  <Copy className="h-3 w-3" />
+                  <span className="hidden sm:inline">Copiar Resumo</span>
+                </Button>
                 <BookingStatusBadge status={ currentTrainingStatus } />
               </div>
             </div>

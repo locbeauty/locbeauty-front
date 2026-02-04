@@ -19,6 +19,24 @@ export async function DeleteFilial(filialId: string) {
   return response;
 }
 
+export async function UpdateFilial({
+  filialId,
+  data,
+}: {
+  filialId: string;
+  data: Partial<Filial>;
+}) {
+  const response = await apiRequest<{
+    message: string;
+    filial: Filial;
+  }>({
+    endpoint: `filials/update/${filialId}`,
+    method: "POST",
+    body: data,
+  });
+  return response;
+}
+
 export async function getFilialStats(filialId: string) {
   const response = await apiRequest<FilialStats>({
     endpoint: `filials/${filialId}/stats`,
