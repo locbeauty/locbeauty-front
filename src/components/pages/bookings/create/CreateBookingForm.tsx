@@ -455,15 +455,17 @@ export function CreateBookingForm() {
 
   const onInvalid = (errors: FieldErrors<CreateCheckoutFormSchemaType>) => {
     // Function to recursively find the first error key
-    const getFirstErrorKey = (errorObj: any, prefix = ""): string | null => {
-      const keys = Object.keys(errorObj);
+    const getFirstErrorKey = (errorObj: unknown, prefix = ""): string | null => {
+      if (!errorObj || typeof errorObj !== "object") return null;
+
+      const keys = Object.keys(errorObj as object);
       if (keys.length === 0) return null;
 
       const firstKey = keys[0];
-      const value = errorObj[firstKey];
+      const value = (errorObj as Record<string, unknown>)[firstKey];
 
       // If it has a message, it's a leaf error
-      if (value?.message) {
+      if (value && typeof value === "object" && "message" in value) {
         return prefix ? `${prefix}.${firstKey}` : firstKey;
       }
 
