@@ -53,7 +53,7 @@ export function UpdateEmployeeDialog({
         birthdate: selectedEmployee.birthdate
           ? new Date(selectedEmployee.birthdate)
           : null,
-        cellphone: selectedEmployee.cellphone,
+        cellphone: selectedEmployee.cellphone ?? "",
         username: selectedEmployee.username,
         email: selectedEmployee.email ?? undefined,
         fullname: selectedEmployee.fullname,
