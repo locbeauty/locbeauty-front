@@ -149,7 +149,7 @@ export function CustomersTable() {
 
   return (
     <>
-      <div className="flex flex-col gap-4 mb-4 md:flex-row items-end">
+      <div className="flex flex-col gap-4 mb-4 md:flex-row items-center">
         <div className="relative flex-1 max-w-xs">
           <Input
             placeholder="Filtrar por Nome"

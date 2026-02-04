@@ -128,7 +128,7 @@ export default function BookingsPage() {
               <Input
                 type="search"
                 placeholder="ID do agendamento"
-                className="pl-8"
+                className="pl-8 placeholder:text-placeholder"
                 value={ checkoutId }
                 onChange={ (e) => setCheckoutId(e.target.value) }
               />
@@ -138,7 +138,7 @@ export default function BookingsPage() {
               <Input
                 type="search"
                 placeholder="Buscar por cliente..."
-                className="pl-8"
+                className="pl-8 placeholder:text-placeholder"
                 value={ customerName }
                 onChange={ (e) => setCustomerName(e.target.value) }
               />
@@ -149,7 +149,9 @@ export default function BookingsPage() {
               <div className="w-full md:w-[200px]">
                 <SelectFilial
                   value={ filialId }
-                  onValueChange={ setFilialId }
+                  onValueChange={ (val) =>
+                    setFilialId(val === "ALL" ? undefined : val)
+                  }
                   placeholder="Filtrar por filial"
                   accessibleFilials={ accessibleFilialIds }
                 />

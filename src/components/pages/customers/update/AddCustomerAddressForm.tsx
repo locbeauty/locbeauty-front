@@ -22,9 +22,10 @@ import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AddressTypeSchema } from "@/lib/zod/address";
 import { toast } from "sonner";
+import { GetViaCepAddressDetailsResponse } from "@/utils/addressHandlers";
 
 interface AddCustomerAddressFormProps {
   handleSaveUpdatedCustomer: (newAddressData: AddressTypeSchema) => void;
@@ -46,6 +47,30 @@ export function AddCustomerAddressForm({
     formState: { errors },
   } = useFormContext<AddressTypeSchema>();
 
+  const [ isStreetDisabled, setIsStreetDisabled ] = useState(true);
+  const [ isNeighborhoodDisabled, setIsNeighborhoodDisabled ] = useState(true);
+
+  const handleAddressDataFetched = (
+    data: GetViaCepAddressDetailsResponse | null,
+  ) => {
+    if (data) {
+      if (!data.logradouro) {
+        setIsStreetDisabled(false);
+      } else {
+        setIsStreetDisabled(true);
+      }
+
+      if (!data.bairro) {
+        setIsNeighborhoodDisabled(false);
+      } else {
+        setIsNeighborhoodDisabled(true);
+      }
+    } else {
+      setIsStreetDisabled(true);
+      setIsNeighborhoodDisabled(true);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -64,6 +89,7 @@ export function AddCustomerAddressForm({
             trigger={ trigger }
             isUpdateForm={ true }
             zipCodeError={ errors.zipCode?.message }
+            onCepDataFetched={ handleAddressDataFetched }
           />
 
           <div className="grid gap-4 md:grid-cols-2 mt-6">
@@ -107,7 +133,7 @@ export function AddCustomerAddressForm({
               placeholder="Bairro"
               className="placeholder:text-muted-foreground/50"
               id="bairro"
-              disabled={ true }
+              disabled={ isNeighborhoodDisabled }
             />
           </div>
           <div className="flex md:flex-row flex-col md:items-start gap-4 mt-6">
@@ -118,7 +144,7 @@ export function AddCustomerAddressForm({
                 id="rua"
                 className="placeholder:text-muted-foreground/50"
                 placeholder="Nome da rua"
-                disabled={ true }
+                disabled={ isStreetDisabled }
               />
             </div>
             <div className="space-y-2">
@@ -149,7 +175,11 @@ export function AddCustomerAddressForm({
           </div>
           {!hideButton && (
             <div className="flex mt-6">
-              <Button type="submit" className="ml-auto flex">
+              <Button
+                type="button"
+                className="ml-auto flex"
+                onClick={ handleSubmit(handleSaveUpdatedCustomer) }
+              >
                 Adicionar
                 <Plus />
               </Button>

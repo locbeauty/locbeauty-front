@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Controller,
+  FieldErrors,
   FormProvider,
   SubmitHandler,
   useForm,
@@ -115,7 +116,7 @@ export function GearsSection() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" id="gears">
       <Label className="text-sm font-medium flex items-center gap-1">
         <Settings className="w-4 h-4" />
         Equipamentos
@@ -452,6 +453,61 @@ export function CreateBookingForm() {
     }
   };
 
+  const onInvalid = (errors: FieldErrors<CreateCheckoutFormSchemaType>) => {
+    // Function to recursively find the first error key
+    const getFirstErrorKey = (errorObj: unknown, prefix = ""): string | null => {
+      if (!errorObj || typeof errorObj !== "object") return null;
+
+      const keys = Object.keys(errorObj as object);
+      if (keys.length === 0) return null;
+
+      const firstKey = keys[0];
+      const value = (errorObj as Record<string, unknown>)[firstKey];
+
+      // If it has a message, it's a leaf error
+      if (value && typeof value === "object" && "message" in value) {
+        return prefix ? `${prefix}.${firstKey}` : firstKey;
+      }
+
+      // If it's an object (nested error), recurse
+      if (typeof value === "object" && value !== null) {
+        return getFirstErrorKey(value, prefix ? `${prefix}.${firstKey}` : firstKey);
+      }
+
+      return null;
+    };
+
+    const firstErrorKey = getFirstErrorKey(errors);
+
+    if (firstErrorKey) {
+      // Tenta encontrar pelo name (com tratamento para nested paths)
+      // Ex: customer.customerId pode não ter um input exato, mas podemos tentar focar num container ou input próximo
+      let element = document.querySelector(`[name="${firstErrorKey}"]`);
+
+      // Fallback: se for customer.customerId, tenta focar em algo com id ou name que contenha 'customer'
+      if (!element) {
+        element = document.getElementById(firstErrorKey);
+      }
+
+      // Fallback para SelectCustomer e similares que podem usar ids simplificados
+      if (!element && firstErrorKey.includes(".")) {
+        const parts = firstErrorKey.split(".");
+        // Tenta encontrar pelo último pedaço (ex: customerId)
+        element = document.querySelector(`[name="${parts[parts.length - 1]}"]`) || document.getElementById(parts[parts.length - 1]);
+        // Tenta encontrar pelo primeiro pedaço (ex: customer) -> container
+        if (!element) {
+          element = document.querySelector(`[name="${parts[0]}"]`) || document.getElementById(parts[0]);
+        }
+      }
+
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        (element as HTMLElement).focus();
+      }
+    }
+    toast.warning("Verifique os campos obrigatórios.");
+  };
+
   return (
     <div>
       <div className="space-y-2 mb-8 flex flex-col md:flex-row md:items-center">
@@ -467,7 +523,7 @@ export function CreateBookingForm() {
 
       <form
         id="new-booking-form"
-        onSubmit={ handleSubmit(handleCreateNewCheckout) }
+        onSubmit={ handleSubmit(handleCreateNewCheckout, onInvalid) }
       >
         <FormProvider { ...createBookingFormMethods }>
           <div className="flex flex-col gap-10">
@@ -479,20 +535,14 @@ export function CreateBookingForm() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 w-full">
-                <div className="space-y-2 w-full">
+                <div className="space-y-2 w-full" id="customer">
                   <Label className="text-sm font-medium flex items-center gap-1">
                     <User className="w-4 h-4" /> Cliente
                   </Label>
                   <SelectCustomer />
-                  {errors.customer?.customerId && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      {errors.customer.customerId.message}
-                    </p>
-                  )}
                 </div>
 
-                <div className="space-y-2 w-full">
+                <div className="space-y-2 w-full" id="addressId">
                   <Label className="text-sm font-medium flex items-center gap-1">
                     <Pin className="w-4 h-4" /> Endereço
                   </Label>
@@ -512,7 +562,7 @@ export function CreateBookingForm() {
                   isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
                 />
 
-                <div className="space-y-2">
+                <div className="space-y-2" id="driverId">
                   <Label className="text-sm font-medium flex items-center gap-1">
                     <Truck className="h-5 w-5 text-primary" /> Motorista
                   </Label>
@@ -685,9 +735,6 @@ Motorista: ${driverString || "A definir"}
                 className="w-full md:w-auto md:min-w-[300px] md:ml-auto flex"
                 size="lg"
                 disabled={
-                  !startHour ||
-                  watchSelectedGears.length === 0 ||
-                  // watchTotalPrice === "0,00" ||
                   isSubmitting ||
                   isLoading
                 }

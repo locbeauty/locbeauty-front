@@ -150,7 +150,7 @@ export function DatePicker({
           <div
             className={cn(
               "flex md:w-fit w-full justify-center cursor-pointer items-center h-9 ps-3 pe-1 font-normal border border-input rounded-md text-sm shadow-sm",
-              !displayValue && "text-muted-foreground",
+              !displayValue && "text-placeholder",
               (!clearable || !value) && "pe-3",
               disabled && "opacity-50 cursor-not-allowed pointer-events-none",
               classNames?.trigger,

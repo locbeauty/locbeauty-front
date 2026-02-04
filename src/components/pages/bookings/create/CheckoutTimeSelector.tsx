@@ -28,7 +28,7 @@ export default function CheckoutTimeSelector<T extends FieldValues>({
   checkoutSchedule,
   control,
 }: CheckoutTimeSelectorProps<T>) {
-  const { setValue, watch } = useFormContext<CreateCheckoutFormSchemaType>();
+  const { setValue, watch, formState: { errors } } = useFormContext<CreateCheckoutFormSchemaType>();
 
   const watchDate = watch("date");
   const watchSelectedGears = watch("gears");
@@ -39,7 +39,7 @@ export default function CheckoutTimeSelector<T extends FieldValues>({
   return (
     <div className="space-y-10">
       {/* Seleção de Data */}
-      <Card className="transition-all duration-200 hover:shadow-md">
+      <Card className="transition-all duration-200 hover:shadow-md" id="date">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Calendar className="h-5 w-5 text-primary" />
@@ -81,6 +81,15 @@ export default function CheckoutTimeSelector<T extends FieldValues>({
                     </span>
                   </div>
                 )}
+                {/* Error message for date */ }
+                {errors.date && (
+                  <div className="flex items-center gap-2 text-destructive mt-1">
+                    <AlertCircle className="h-3 w-3 shrink-0" />
+                    <span className="text-sm font-medium">
+                      {errors.date.message as string}
+                    </span>
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -96,10 +105,20 @@ export default function CheckoutTimeSelector<T extends FieldValues>({
 
       {/* Seleção de Horário */}
       {
-        <TimePicker
-          checkoutSchedule={ checkoutSchedule }
-          selectedDate={ watchDate && !isDateInPast ? watchDate : undefined }
-        />
+        <div id="startHourInMinutes">
+          <TimePicker
+            checkoutSchedule={ checkoutSchedule }
+            selectedDate={ watchDate && !isDateInPast ? watchDate : undefined }
+          />
+          {errors.startHourInMinutes && (
+            <div className="flex items-center gap-2 text-destructive mt-2">
+              <AlertCircle className="h-3 w-3 shrink-0" />
+              <span className="text-sm font-medium">
+                {errors.startHourInMinutes.message as string}
+              </span>
+            </div>
+          )}
+        </div>
       }
     </div>
   );

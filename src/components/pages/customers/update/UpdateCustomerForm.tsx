@@ -25,10 +25,6 @@ import { toast } from "sonner";
 import { Customer } from "@/utils/@types/customer";
 import { useEffect, useState } from "react";
 import { fetchWithToken } from "@/utils/fetchWithToken";
-import { Address } from "@/utils/@types/address";
-import { ListCustomerAddressesCard } from "./ListAddressCard";
-import { GetAllCustomerAddresses } from "@/services/addresses.service";
-import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
 
 interface UpdateCustomerFormProps {
@@ -45,24 +41,6 @@ export function UpdateCustomerForm({
     setValue,
     control,
   } = useFormContext<UpdateCustomerFormSchemaType>();
-  // const [ customerAddresses, setCustomerAddresses ] = useState<Address[] | null>(null);
-
-  const { data, isLoading, error, refetch } = useQuery<
-    ApiResponse<Address[]>,
-    Error
-  >({
-    queryKey: [ "get-all-customer-addresses", selectedCustomer?.customerId ],
-    queryFn: ({ queryKey }) => {
-      const [ , customerId ] = queryKey as [string, string | undefined];
-      if (!customerId) throw new Error("Nenhum cliente selecionado");
-      return GetAllCustomerAddresses({ customerId });
-    },
-    enabled: !!selectedCustomer,
-    staleTime: 1000 * 60, // 1 minuto de cache
-    // cacheTime: 1000 * 60 * 5, // mantém cache 5 minutos
-  });
-
-  const customerAddresses = data?.data ?? [];
 
   // useEffect(() => {
   //     async function getCustomerAddresses(customerId: string) {
@@ -319,10 +297,6 @@ export function UpdateCustomerForm({
           </div>
         </CardContent>
       </Card>
-      <ListCustomerAddressesCard
-        customerId={ selectedCustomer.customerId }
-        customerAddresses={ customerAddresses }
-      />
     </>
   );
 }

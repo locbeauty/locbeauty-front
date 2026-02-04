@@ -32,6 +32,7 @@ interface HandleZipCodeChangeParams<T extends FieldValues> {
   isUpdateForm?: boolean;
   setIsLoadingZipCode: (_value: boolean) => void;
   clearErrors: UseFormClearErrors<T>;
+  onCepDataFetched?: (data: GetViaCepAddressDetailsResponse | null) => void;
 }
 
 export async function handleCepChange<T extends FieldValues>({
@@ -42,6 +43,7 @@ export async function handleCepChange<T extends FieldValues>({
   setError,
   clearErrors,
   isUpdateForm = false,
+  onCepDataFetched,
 }: HandleZipCodeChangeParams<T>) {
   const zipCodeParsed = e.target.value.replace(/\D/g, "");
 
@@ -72,6 +74,10 @@ export async function handleCepChange<T extends FieldValues>({
 
     const response = await getAddressDetails(zipCodeValue);
 
+    if (onCepDataFetched) {
+      onCepDataFetched(response);
+    }
+
     if (!response) {
       setError(zipCode, { message: "CEP não encontrado." });
 
@@ -85,9 +91,9 @@ export async function handleCepChange<T extends FieldValues>({
     setValue(city, response.localidade as PathValue<T, typeof city>);
     setValue(
       neighborhood,
-      response.bairro as PathValue<T, typeof neighborhood>,
+      (response.bairro || "") as PathValue<T, typeof neighborhood>,
     );
-    setValue(street, response.logradouro as PathValue<T, typeof street>);
+    setValue(street, (response.logradouro || "") as PathValue<T, typeof street>);
     setValue(state, response.uf as PathValue<T, typeof state>);
 
     trigger([ city, neighborhood, street, state ]);
