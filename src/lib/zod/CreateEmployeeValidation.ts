@@ -2,7 +2,8 @@ import { z } from "zod";
 import { addressSchema } from "./address";
 
 // Schema principal do Employee
-export const createEmployeeFormSchema = z.object({
+// Schema principal do Employee
+const baseEmployeeSchema = z.object({
   // TODO: ADD PASSWORD
   fullname: z
     .string({ message: "Nome completo é obrigatório" })
@@ -39,14 +40,27 @@ export const createEmployeeFormSchema = z.object({
     })
     .nullable()
     .optional(),
-  password: z.string({ message: "Senha é obrigatória." }),
+  password: z.string({ message: "Senha é obrigatória." }).optional(),
+  confirmPassword: z.string().optional(),
 });
+
+export const createEmployeeFormSchema = baseEmployeeSchema.superRefine(
+  ({ password, confirmPassword }, ctx) => {
+    if (password && password !== confirmPassword) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Senhas não conferem",
+        path: ["confirmPassword"],
+      });
+    }
+  },
+);
 
 export type CreateEmployeeFormSchemaType = z.infer<
   typeof createEmployeeFormSchema
 >;
 
-export const updateEmployeeFormSchema = createEmployeeFormSchema.partial();
+export const updateEmployeeFormSchema = baseEmployeeSchema.partial();
 
 export type UpdateEmployeeFormSchemaType = z.infer<
   typeof updateEmployeeFormSchema

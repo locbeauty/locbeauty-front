@@ -45,6 +45,7 @@ export function CreateEmployeeForm() {
     resolver: zodResolver(createEmployeeFormSchema),
     defaultValues: {
       sourceFilialId: defaultFilialId || "",
+      confirmPassword: "",
     },
   });
 
@@ -54,7 +55,7 @@ export function CreateEmployeeForm() {
     if (defaultFilialId) {
       setValue("sourceFilialId", defaultFilialId);
     }
-  }, [ defaultFilialId, setValue ]);
+  }, [defaultFilialId, setValue]);
 
   async function handleCreateEmployee(
     newEmployeeData: CreateEmployeeFormSchemaType,
@@ -96,12 +97,12 @@ export function CreateEmployeeForm() {
       <form
         id="create-employee-form"
         className="space-y-6"
-        onSubmit={ handleSubmit(handleCreateEmployee) }
+        onSubmit={handleSubmit(handleCreateEmployee)}
       >
-        <FormProvider { ...CreateEmployeeMethods }>
+        <FormProvider {...CreateEmployeeMethods}>
           <EmployeeForm
-            accessibleFilialsIds={ accessibleFilialsIds }
-            defaultFilialId={ defaultFilialId }
+            accessibleFilialsIds={accessibleFilialsIds}
+            defaultFilialId={defaultFilialId}
           />
         </FormProvider>
       </form>

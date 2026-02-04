@@ -33,16 +33,14 @@ export function EmployeeForm({
     control,
     setError,
     clearErrors,
-    formState: { errors, isSubmitSuccessful },
+    formState: { errors },
   } = useFormContext<CreateEmployeeFormSchemaType>();
 
-  const [ confirmPassword, setConfirmPassword ] = useState("");
-  const password = watch("password");
   const username = watch("username");
 
-  const [ debouncedUsername ] = useDebounceValue(username, 500);
-  const [ isCheckingUsername, setIsCheckingUsername ] = useState(false);
-  const [ isUsernameAvailable, setIsUsernameAvailable ] = useState<
+  const [debouncedUsername] = useDebounceValue(username, 500);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<
     boolean | null
   >(null);
 
@@ -81,21 +79,7 @@ export function EmployeeForm({
     }
 
     checkUsername();
-  }, [ debouncedUsername, setError, clearErrors, currentUsername ]);
-
-  useEffect(() => {
-    if (isSubmitSuccessful) {
-      setConfirmPassword("");
-    }
-  }, [ isSubmitSuccessful ]);
-
-  useEffect(() => {
-    if (password !== confirmPassword && confirmPassword.length > 0) {
-      setError("password", { message: "Senhas não batem." });
-    } else {
-      clearErrors("password");
-    }
-  }, [ setError, clearErrors, password, confirmPassword ]);
+  }, [debouncedUsername, setError, clearErrors, currentUsername]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -112,16 +96,16 @@ export function EmployeeForm({
             <div className="space-y-2">
               <Label>Filial *</Label>
               <Controller
-                control={ control }
+                control={control}
                 name="sourceFilialId"
-                render={ ({ field }) => (
+                render={({ field }) => (
                   <SelectFilial
-                    control={ control }
+                    control={control}
                     name="sourceFilialId"
-                    accessibleFilials={ accessibleFilialsIds }
-                    defaultFilial={ defaultFilialId }
+                    accessibleFilials={accessibleFilialsIds}
+                    defaultFilial={defaultFilialId}
                   />
-                ) }
+                )}
               />
               {errors.sourceFilialId && (
                 <p className="text-sm text-destructive">
@@ -132,7 +116,7 @@ export function EmployeeForm({
             <div className="space-y-2">
               <Label htmlFor="fullname">Nome Completo</Label>
               <Input
-                { ...register("fullname") }
+                {...register("fullname")}
                 id="fullname"
                 placeholder="Ex: Maria Silva"
                 className="placeholder:text-placeholder"
@@ -149,7 +133,7 @@ export function EmployeeForm({
               <Label htmlFor="username">Username (utilizado para login)</Label>
               <div className="relative">
                 <Input
-                  { ...register("username") }
+                  {...register("username")}
                   id="username"
                   placeholder="Ex: mariasilva"
                   className="placeholder:text-placeholder"
@@ -174,7 +158,7 @@ export function EmployeeForm({
             <div className="space-y-2">
               <Label htmlFor="documentNumber">CPF</Label>
               <DocumentInput
-                register={ register("documentNumber") }
+                register={register("documentNumber")}
                 isCPF
                 placeholder="000.000.000-00"
               />
@@ -188,17 +172,17 @@ export function EmployeeForm({
             <div className="space-y-2">
               <Label htmlFor="birthdate">Data de Nascimento</Label>
               <Controller
-                control={ control }
+                control={control}
                 name="birthdate"
-                render={ ({ field: { value, onChange } }) => (
+                render={({ field: { value, onChange } }) => (
                   <MaskedDateInput
                     id="birthdate"
-                    value={ value }
-                    onChange={ onChange }
-                    error={ errors.birthdate?.message }
-                    disabled={ isEditing }
+                    value={value}
+                    onChange={onChange}
+                    error={errors.birthdate?.message}
+                    disabled={isEditing}
                   />
-                ) }
+                )}
               />
               {errors.birthdate && (
                 <p className="text-xs font-medium text-destructive">
@@ -209,7 +193,7 @@ export function EmployeeForm({
 
             <div className="space-y-2">
               <Label htmlFor="role">Cargo</Label>
-              <SelectRole control={ control } name="role" />
+              <SelectRole control={control} name="role" />
               {errors.role && (
                 <p className="text-xs font-medium text-destructive">
                   {errors.role.message}
@@ -232,7 +216,7 @@ export function EmployeeForm({
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="cellphone">Telefone</Label>
-              <PhoneInput control={ control } name="cellphone" />
+              <PhoneInput control={control} name="cellphone" />
               {errors.cellphone && (
                 <p className="text-xs font-medium text-destructive">
                   {errors.cellphone.message}
@@ -243,7 +227,7 @@ export function EmployeeForm({
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
-                { ...register("email") }
+                {...register("email")}
                 id="email"
                 type="email"
                 placeholder="exemplo@email.com"
@@ -269,7 +253,7 @@ export function EmployeeForm({
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input
-                { ...register("password") }
+                {...register("password")}
                 id="password"
                 type="password"
                 placeholder="Senha de acesso"
@@ -280,15 +264,14 @@ export function EmployeeForm({
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar Senha</Label>
               <Input
-                onChange={ (e) => setConfirmPassword(e.target.value) }
+                {...register("confirmPassword")}
                 id="confirmPassword"
                 type="password"
                 placeholder="Repita a senha"
-                className="placeholder:text-placeholder"
               />
-              {errors.password && (
+              {errors.confirmPassword && (
                 <p className="text-xs font-medium text-destructive">
-                  {errors.password.message}
+                  {errors.confirmPassword.message}
                 </p>
               )}
             </div>
