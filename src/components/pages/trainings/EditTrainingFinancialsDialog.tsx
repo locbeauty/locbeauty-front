@@ -16,7 +16,7 @@ import {
   PaymentModes,
   PaymentStatuses,
 } from "@/utils/constants";
-import { UpdateTraining } from "@/services/trainings.service";
+import { UpdateTraining, GetTrainingById } from "@/services/trainings.service";
 import { Loader2 } from "lucide-react";
 import { UpdateTrainingPayload } from "./TrainingPaymentMethodDialog";
 import { parseStringToCents } from "@/utils/parseStringToCents";
@@ -227,7 +227,7 @@ export default function EditTrainingFinancialsDialog({
           (p.paymentInfo.secondPaymentAmount as string) || "0",
         );
         const refundAmountCents = parseStringToCents(
-          (p.paymentInfo.refundAmount as string) || "0",
+          (p.paymentInfo.refundedAmount as string) || "0",
         );
 
         const payload: UpdateTrainingPayload = {
@@ -281,9 +281,22 @@ export default function EditTrainingFinancialsDialog({
       if (allSuccessful) {
         toast.success("Financeiro atualizado com sucesso!");
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
-        if (onSuccess && results[0].data) {
-          onSuccess(results[0].data);
+
+        // Fetch fresh data to ensure parent dialog has the latest prices
+        try {
+          const freshData = await GetTrainingById(training.trainingId);
+          if (freshData.statusCode === 200 && freshData.data) {
+            onSuccess(freshData.data);
+          } else if (results[0].data) {
+            onSuccess(results[0].data);
+          }
+        } catch (e) {
+          console.error("Failed to fetch fresh training data", e);
+          if (results[0].data) {
+            onSuccess(results[0].data);
+          }
         }
+
         onOpenChange(false);
       } else {
         toast.error("Ocorreu um erro ao atualizar alguns participantes.");

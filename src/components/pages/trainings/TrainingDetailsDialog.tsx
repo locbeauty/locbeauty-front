@@ -660,7 +660,13 @@ export function TrainingDetailsDialog({
                           (p.traineeId === trainee.customerId ||
                             p.customerId === trainee.customerId),
                       );
-                      const status = payment?.paymentStatus || "Pendente";
+                      const isPartialFullyPaid =
+                        payment?.paymentStatus === "Parcial" &&
+                        payment?.firstPaymentStatus === "Pago" &&
+                        payment?.secondPaymentStatus === "Pago";
+                      const status = isPartialFullyPaid
+                        ? "Pago"
+                        : payment?.paymentStatus || "Pendente";
                       const canRemove =
                         canEditParticipants && status === "Pendente";
 
@@ -782,7 +788,13 @@ export function TrainingDetailsDialog({
                           p.payerType === "VOLUNTEER" &&
                           p.volunteerId === volunteer.volunteerId,
                       );
-                      const status = payment?.paymentStatus || "Pendente";
+                      const isPartialFullyPaid =
+                        payment?.paymentStatus === "Parcial" &&
+                        payment?.firstPaymentStatus === "Pago" &&
+                        payment?.secondPaymentStatus === "Pago";
+                      const status = isPartialFullyPaid
+                        ? "Pago"
+                        : payment?.paymentStatus || "Pendente";
                       const canRemove =
                         canEditParticipants && status === "Pendente";
 
@@ -953,25 +965,6 @@ export function TrainingDetailsDialog({
           ...(selectedTraining.Volunteers?.map((v) => v.volunteerId) || []),
         ] }
       />
-
-      {/* {selectedPayerType && selectedParticipantId && ( */}
-      {/* <UpdateParticipantValuesDialog
-          open={ isUpdateValuesDialogOpen }
-          onOpenChange={ setIsUpdateValuesDialogOpen }
-          selectedTraining={ selectedTraining }
-          setSelectedTraining={ setSelectedTraining }
-          payerType={ selectedPayerType }
-          participantId={ selectedParticipantId }
-          currentPayment={ selectedTraining.TrainingPayment?.find(
-            (p) =>
-              p.payerType === selectedPayerType &&
-              (selectedPayerType === "TRAINEE"
-                ? p.traineeId === selectedParticipantId ||
-                  p.customerId === selectedParticipantId
-                : p.volunteerId === selectedParticipantId),
-          ) }
-        />
-      )} */}
 
       <EditTrainingFinancialsDialog
         open={ isEditFinancialsDialogOpen }

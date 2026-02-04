@@ -16,6 +16,13 @@ export async function GetCustomerTrainings(customerId: string) {
   return response;
 }
 
+export async function GetTrainingById(trainingId: string) {
+  const response = await apiRequest<Training>({
+    endpoint: `trainings/${trainingId}`,
+  });
+  return response;
+}
+
 export async function GetAllTrainings(isVisible?: string) {
   const queryParams = isVisible ? { isVisible } : undefined;
   const response = await apiRequest<Training[]>({

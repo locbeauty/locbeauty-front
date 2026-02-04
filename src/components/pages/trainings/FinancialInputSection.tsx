@@ -95,7 +95,7 @@ export function FinancialInputSection({
   );
   const currentPaymentInfo = watch(
     `${fieldName}.${selectedIndex}.paymentInfo` as Path<CreateTrainingDataType>,
-  );
+  ) as IndividualPayment["paymentInfo"];
 
   // Replicate effect
   useEffect(() => {
@@ -280,16 +280,6 @@ export function FinancialInputSection({
                         </div>
                       </div>
                     )}
-                    {/* Payment Info Section reused */}
-                    <TrainingPaymentSection
-                      prefix={ `${fieldName}.${selectedIndex}` }
-                      label="Detalhes do Pagamento"
-                      totalValue={
-                        parseCurrencyToFloat(currentPrice as string) +
-                        parseCurrencyToFloat(currentAddCost as string)
-                      }
-                      disabled={ isDisabled }
-                    />
                   </>
                 );
               })()}

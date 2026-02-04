@@ -684,6 +684,12 @@ export function TrainingPaymentMethodDialog({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex justify-between">
               <div className="space-y-2 w-full">
+                <div className="mb-10 -mt-10 -ml-1">
+                  <Label>
+                  O valor total é:{" "}
+                    <span>{centsToStringWithCurrencyMark(displayPrice)}</span>
+                  </Label>
+                </div>
                 <Label className="text-sm font-medium flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-muted-foreground" />
                   Status do pagamento
@@ -755,14 +761,9 @@ export function TrainingPaymentMethodDialog({
               {/* Checkboxes removed to match Checkout flow */}
             </div>
 
-            {paymentStatus !== "Pendente" && paymentStatus !== "Cancelado" && (
-              <div className="">
-                <Label>
-                  O valor total é:{" "}
-                  <span>{centsToStringWithCurrencyMark(displayPrice)}</span>
-                </Label>
-              </div>
-            )}
+            {/* {paymentStatus !== "Pendente" && paymentStatus !== "Cancelado" && (
+
+            )} */}
           </div>
 
           {paymentStatus !== "Pendente" &&

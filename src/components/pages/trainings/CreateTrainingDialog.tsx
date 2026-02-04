@@ -297,8 +297,8 @@ export function CreateTrainingDialog({
         secondPaymentMethod: paymentInfo.secondPaymentMethod || null,
         secondPaymentStatus: paymentInfo.secondPaymentStatus || "Pendente",
         wasRefunded: paymentInfo.wasRefunded || false,
-        refundAmount: paymentInfo.refundAmount
-          ? parseStringToCents(String(paymentInfo.refundAmount))
+        refundedAmount: paymentInfo.refundedAmount
+          ? parseStringToCents(String(paymentInfo.refundedAmount))
           : 0,
       },
     };
