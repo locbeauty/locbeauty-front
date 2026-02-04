@@ -82,6 +82,30 @@ export function UpdateCustomerDialog({
       });
 
       if (response.statusCode !== 201) {
+        if (
+          response.message &&
+          (response.message.toLowerCase().includes("cpf") ||
+            response.message.toLowerCase().includes("cnpj")) &&
+          response.message.toLowerCase().includes("cadastrado")
+        ) {
+          const fieldName = response.message.toLowerCase().includes("cpf")
+            ? "cpf"
+            : "cnpj";
+
+          updateCustomerMethods.setError(fieldName, {
+            type: "manual",
+            message: response.message,
+          });
+
+          const element = document.querySelector(
+            `input[name="${fieldName}"]`,
+          ) as HTMLElement;
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            element.focus();
+          }
+        }
+
         toast.warning(response.message, { style: { fontSize: "1rem" } });
       } else {
         queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
