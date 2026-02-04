@@ -69,7 +69,7 @@ export function RegisterNewAddressDialog({
       onOpenChange={ setIsRegisterNewAddressDialogOpen }
     >
       <DialogTrigger asChild className="flex">
-        <Button variant="default" className="ml-auto mt-5">
+        <Button variant="default" className="ml-auto mt-5" type="button">
           Registrar novo endereço
         </Button>
       </DialogTrigger>
@@ -84,17 +84,20 @@ export function RegisterNewAddressDialog({
         <div className="space-y-6">
           <FormProvider { ...createAddressMethods }>
             <form
-              onSubmit={ createAddressMethods.handleSubmit(
-                handleSaveUpdatedCustomer,
-                (errors) => {
-                  const firstError = Object.values(errors)[0];
-                  if (firstError) {
-                    toast.warning(firstError.message || "Erro de validação", {
-                      style: { fontSize: "1rem" },
-                    });
-                  }
-                },
-              ) }
+              onSubmit={ (e) => {
+                e.stopPropagation();
+                createAddressMethods.handleSubmit(
+                  handleSaveUpdatedCustomer,
+                  (errors) => {
+                    const firstError = Object.values(errors)[0];
+                    if (firstError) {
+                      toast.warning(firstError.message || "Erro de validação", {
+                        style: { fontSize: "1rem" },
+                      });
+                    }
+                  },
+                )(e);
+              } }
             >
               <AddCustomerAddressForm
                 handleSaveUpdatedCustomer={ handleSaveUpdatedCustomer }

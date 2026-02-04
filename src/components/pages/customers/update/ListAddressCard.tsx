@@ -217,33 +217,27 @@ export function ListCustomerAddressesCard({
                     </p>
                   </div>
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        disabled={ isLoading }
-                        onClick={ () =>
-                          handleToggleAddressStatus(
-                            addr.addressId,
-                            !!addr.isActive,
-                          )
-                        }
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash className="size-4" />
-                        <span className="sr-only">
-                          Excluir endereço
-                        </span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        Excluir endereço
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={ isLoading }
+                    onClick={ (e) => {
+                      // e.preventDefault();
+                      // e.stopPropagation();
+                      handleToggleAddressStatus(
+                        addr.addressId,
+                        !!addr.isActive,
+                      );
+                    } }
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    title="Excluir endereço"
+                  >
+                    <Trash className="size-4" />
+                    <span className="sr-only">
+                      Excluir endereço
+                    </span>
+                  </Button>
                 </div>
               ))}
           </div>

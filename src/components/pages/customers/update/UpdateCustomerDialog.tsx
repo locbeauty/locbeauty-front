@@ -19,6 +19,11 @@ import {
 import { toast } from "sonner";
 import { UpdateCustomer } from "@/services/customers.service";
 import { queryClient } from "@/app/(main)/layout";
+import { Address } from "@/utils/@types/address";
+import { ListCustomerAddressesCard } from "./ListAddressCard";
+import { GetAllCustomerAddresses } from "@/services/addresses.service";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse } from "@/lib/api";
 
 interface UpdateCustomerDialogProps {
   isUpdateCustomerDialogOpen: boolean;
@@ -42,8 +47,24 @@ export function UpdateCustomerDialog({
   const {
     handleSubmit,
     reset,
-    formState: { errors, isDirty, isLoading, isSubmitting },
+    formState: { errors, isDirty, isLoading: isFormLoading, isSubmitting },
   } = updateCustomerMethods;
+
+  const { data, isLoading: isAddressesLoading } = useQuery<
+    ApiResponse<Address[]>,
+    Error
+  >({
+    queryKey: [ "get-all-customer-addresses", selectedCustomer?.customerId ],
+    queryFn: ({ queryKey }) => {
+      const [ , customerId ] = queryKey as [string, string | undefined];
+      if (!customerId) throw new Error("Nenhum cliente selecionado");
+      return GetAllCustomerAddresses({ customerId });
+    },
+    enabled: !!selectedCustomer,
+    staleTime: 1000 * 60, // 1 minuto de cache
+  });
+
+  const customerAddresses = data?.data ?? [];
 
   useEffect(() => {
     if (selectedCustomer) {
@@ -149,8 +170,12 @@ export function UpdateCustomerDialog({
                 >
                   Cancelar
                 </Button>
-                <Button disabled={ !isDirty || isSubmitting || isLoading }>
-                  {isSubmitting || isLoading ? (
+                <Button
+                  type="button"
+                  disabled={ !isDirty || isSubmitting || isFormLoading }
+                  onClick={ handleSubmit(handleSaveUpdatedCustomer) }
+                >
+                  {isSubmitting || isFormLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <Save className="mr-2 h-4 w-4" />
@@ -160,6 +185,12 @@ export function UpdateCustomerDialog({
               </DialogFooter>
             </FormProvider>
           </form>
+          {selectedCustomer && (
+            <ListCustomerAddressesCard
+              customerId={ selectedCustomer.customerId }
+              customerAddresses={ customerAddresses }
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -175,7 +175,11 @@ export function AddCustomerAddressForm({
           </div>
           {!hideButton && (
             <div className="flex mt-6">
-              <Button type="submit" className="ml-auto flex">
+              <Button
+                type="button"
+                className="ml-auto flex"
+                onClick={ handleSubmit(handleSaveUpdatedCustomer) }
+              >
                 Adicionar
                 <Plus />
               </Button>
