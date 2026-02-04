@@ -3,7 +3,7 @@ import { z } from "zod";
 // --- Schemas Auxiliares ---
 
 const currencyFieldSchema = z
-  .union([z.string(), z.number()])
+  .union([ z.string(), z.number() ])
   .optional()
   .nullable();
 
@@ -21,14 +21,16 @@ const basePaymentInfoSchema = z.object({
     .optional(),
 
   firstPaymentAmount: currencyFieldSchema,
-  firstPaymentDate: z.union([z.date(), z.string()]).optional().nullable(),
+  firstPaymentDate: z.union([ z.date(), z.string() ]).optional().nullable(),
   firstPaymentMethod: z.string().optional().nullable(),
   firstPaymentStatus: z.string().optional().nullable(),
 
   secondPaymentAmount: currencyFieldSchema,
-  secondPaymentDate: z.union([z.date(), z.string()]).optional().nullable(),
+  secondPaymentDate: z.union([ z.date(), z.string() ]).optional().nullable(),
   secondPaymentMethod: z.string().optional().nullable(),
   secondPaymentStatus: z.string().optional().nullable(),
+  wasRefunded: z.boolean().optional(),
+  refundedAmount: currencyFieldSchema,
 });
 
 // Schema individual de pagamento
@@ -51,14 +53,14 @@ export const IndividualPaymentSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Data é obrigatória",
-          path: ["paymentInfo", "firstPaymentDate"],
+          path: [ "paymentInfo", "firstPaymentDate" ],
         });
       }
       if (!data.paymentInfo.firstPaymentMethod) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Método é obrigatório",
-          path: ["paymentInfo", "firstPaymentMethod"],
+          path: [ "paymentInfo", "firstPaymentMethod" ],
         });
       }
     }
@@ -113,6 +115,7 @@ type ProcessedPaymentInfo = {
   secondPaymentAmount: number | null;
   secondPaymentMethod: string | null;
   secondPaymentStatus: string | null;
+  refundedAmount: number | null;
 };
 
 // Tipo enviado ao backend (omitindo os campos de UI-only e formatando pagamentos)

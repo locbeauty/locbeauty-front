@@ -96,7 +96,7 @@ export function CreateFilialForm() {
               <SelectEmployee
                 control={ control }
                 name="managerEmployeeId"
-                currentUser={ user as any }
+                currentUser={ user }
               />
               {errors.managerEmployeeId && (
                 <p className="text-sm font-medium text-destructive">

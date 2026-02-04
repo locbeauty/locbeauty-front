@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 import { useForm, useFieldArray, FormProvider } from "react-hook-form";
 import {
@@ -9,14 +11,25 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Training } from "@/utils/@types/training";
+import {
+  PaymentMethodsType,
+  PaymentModes,
+  PaymentStatuses,
+} from "@/utils/constants";
 import { UpdateTraining } from "@/services/trainings.service";
 import { Loader2 } from "lucide-react";
 import { UpdateTrainingPayload } from "./TrainingPaymentMethodDialog";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { toast } from "sonner";
-import { queryClient } from "@/app/(main)/layout";
+import { useQueryClient } from "@tanstack/react-query";
 import { FinancialInputSection } from "./FinancialInputSection";
-import { CreateTrainingDataType } from "@/lib/zod/CreateTrainingValidation";
+import {
+  CreateTrainingDataType,
+  IndividualPaymentSchema,
+} from "@/lib/zod/CreateTrainingValidation";
+import { z } from "zod";
+
+type IndividualPayment = z.infer<typeof IndividualPaymentSchema>;
 
 interface EditTrainingFinancialsDialogProps {
   open: boolean;
@@ -33,6 +46,7 @@ export default function EditTrainingFinancialsDialog({
   payerType,
   onSuccess,
 }: EditTrainingFinancialsDialogProps) {
+  const queryClient = useQueryClient();
   const methods = useForm<CreateTrainingDataType>({
     defaultValues: {
       traineePayments: [],
@@ -42,11 +56,10 @@ export default function EditTrainingFinancialsDialog({
 
   const {
     control,
-    handleSubmit,
     register,
+    handleSubmit,
     setValue,
-    watch,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting, errors },
   } = methods;
 
   const { fields: traineeFields, replace: replaceTrainees } = useFieldArray({
@@ -84,34 +97,43 @@ export default function EditTrainingFinancialsDialog({
               : "",
             additionalCostDescription: payment?.additionalCostDescription || "",
             paymentInfo: {
-              paymentStatus: payment?.isCourtesy
+              paymentStatus: (payment?.isCourtesy
                 ? "Cortesia"
-                : payment?.paymentStatus || "Pendente",
+                : payment?.paymentStatus || "Pendente") as PaymentStatuses,
               firstPaymentDate: payment?.firstPaymentDate
-                ? new Date(payment.firstPaymentDate)
-                : null,
+                ? new Date(payment.firstPaymentDate).toISOString().split("T")[0]
+                : "",
               firstPaymentAmount: payment?.firstPaymentAmount
                 ? (payment.firstPaymentAmount / 100)
-                    .toFixed(2)
-                    .replace(".", ",")
+                  .toFixed(2)
+                  .replace(".", ",")
                 : "",
-              firstPaymentStatus: payment?.firstPaymentStatus || "Pendente",
-              firstPaymentMethod: payment?.firstPaymentMethod || "",
+              firstPaymentStatus: (payment?.firstPaymentStatus ||
+                "Pendente") as PaymentStatuses,
+              firstPaymentMethod: (payment?.firstPaymentMethod ||
+                "Dinheiro") as PaymentMethodsType,
               secondPaymentAmount: payment?.secondPaymentAmount
                 ? (payment.secondPaymentAmount / 100)
-                    .toFixed(2)
-                    .replace(".", ",")
+                  .toFixed(2)
+                  .replace(".", ",")
                 : "",
-              secondPaymentStatus: payment?.secondPaymentStatus || "Pendente",
-              secondPaymentMethod: payment?.secondPaymentMethod || "",
+              secondPaymentStatus: (payment?.secondPaymentStatus ||
+                "Pendente") as PaymentStatuses,
+              secondPaymentMethod: (payment?.secondPaymentMethod ||
+                "Dinheiro") as PaymentMethodsType,
               secondPaymentDate: payment?.secondPaymentDate
                 ? new Date(payment.secondPaymentDate)
-                : null,
+                  .toISOString()
+                  .split("T")[0]
+                : "",
+              wasRefunded: payment?.wasRefunded || false,
+              refundedAmount: payment?.refundedAmount
+                ? (payment.refundedAmount / 100).toFixed(2).replace(".", ",")
+                : "",
             },
           };
         });
         replaceTrainees(initialTraineePayments);
-        // Clear volunteers to avoid confusion
         replaceVolunteers([]);
       } else {
         const volunteers = training.Volunteers || [];
@@ -130,49 +152,58 @@ export default function EditTrainingFinancialsDialog({
             additionalCost: "",
             additionalCostDescription: "",
             paymentInfo: {
-              paymentStatus: payment?.isCourtesy
+              paymentStatus: (payment?.isCourtesy
                 ? "Cortesia"
-                : payment?.paymentStatus || "Pendente",
+                : payment?.paymentStatus || "Pendente") as PaymentStatuses,
               firstPaymentDate: payment?.firstPaymentDate
-                ? new Date(payment.firstPaymentDate)
-                : null,
+                ? new Date(payment.firstPaymentDate).toISOString().split("T")[0]
+                : "",
               firstPaymentAmount: payment?.firstPaymentAmount
                 ? (payment.firstPaymentAmount / 100)
-                    .toFixed(2)
-                    .replace(".", ",")
+                  .toFixed(2)
+                  .replace(".", ",")
                 : "",
-              firstPaymentStatus: payment?.firstPaymentStatus || "Pendente",
-              firstPaymentMethod: payment?.firstPaymentMethod || "",
+              firstPaymentStatus: (payment?.firstPaymentStatus ||
+                "Pendente") as PaymentStatuses,
+              firstPaymentMethod: (payment?.firstPaymentMethod ||
+                "Dinheiro") as PaymentMethodsType,
               secondPaymentAmount: payment?.secondPaymentAmount
                 ? (payment.secondPaymentAmount / 100)
-                    .toFixed(2)
-                    .replace(".", ",")
+                  .toFixed(2)
+                  .replace(".", ",")
                 : "",
-              secondPaymentStatus: payment?.secondPaymentStatus || "Pendente",
-              secondPaymentMethod: payment?.secondPaymentMethod || "",
+              secondPaymentStatus: (payment?.secondPaymentStatus ||
+                "Pendente") as PaymentStatuses,
+              secondPaymentMethod: (payment?.secondPaymentMethod ||
+                "Dinheiro") as PaymentMethodsType,
               secondPaymentDate: payment?.secondPaymentDate
                 ? new Date(payment.secondPaymentDate)
-                : null,
+                  .toISOString()
+                  .split("T")[0]
+                : "",
+              wasRefunded: payment?.wasRefunded || false,
+              refundedAmount: payment?.refundedAmount
+                ? (payment.refundedAmount / 100).toFixed(2).replace(".", ",")
+                : "",
             },
           };
         });
         replaceVolunteers(initialVolunteerPayments);
-        // Clear trainees
         replaceTrainees([]);
       }
     }
-  }, [open, training, payerType, replaceTrainees, replaceVolunteers]);
+  }, [ open, training, payerType, replaceTrainees, replaceVolunteers ]);
 
   const participants =
     payerType === "TRAINEE"
       ? training.Trainees?.map((t) => ({
-          id: t.customerId,
-          name: t.fullname,
-        })) || []
+        id: t.customerId,
+        name: t.fullname,
+      })) || []
       : training.Volunteers?.map((v) => ({
-          id: v.volunteerId,
-          name: v.name,
-        })) || [];
+        id: v.volunteerId,
+        name: v.name,
+      })) || [];
 
   const onSubmit = async (data: CreateTrainingDataType) => {
     try {
@@ -187,23 +218,17 @@ export default function EditTrainingFinancialsDialog({
 
       // We need to update each participant individually
       const updatePromises = payments.map(async (p) => {
-        // Find existing payment to preserve other fields if needed,
-        // essentially we are overwriting financial fields but keeping others safe
-        const existingPayment = training.TrainingPayment?.find(
-          (ep) =>
-            ep.payerType === payerType &&
-            (payerType === "TRAINEE"
-              ? ep.traineeId === p.participantId ||
-                ep.customerId === p.participantId
-              : ep.volunteerId === p.participantId),
+        const priceCents = parseStringToCents(p.price || "0");
+        const additionalCostCents = parseStringToCents(p.additionalCost || "0");
+        const firstPaymentAmountCents = parseStringToCents(
+          (p.paymentInfo.firstPaymentAmount as string) || "0",
         );
-
-        const basePrice = parseStringToCents(p.price || "0");
-        const additionalCost =
-          payerType === "TRAINEE"
-            ? parseStringToCents(p.additionalCost || "0")
-            : 0;
-        const totalPrice = basePrice + additionalCost;
+        const secondPaymentAmountCents = parseStringToCents(
+          (p.paymentInfo.secondPaymentAmount as string) || "0",
+        );
+        const refundAmountCents = parseStringToCents(
+          (p.paymentInfo.refundAmount as string) || "0",
+        );
 
         const payload: UpdateTrainingPayload = {
           trainingStatus: training.trainingStatus,
@@ -211,49 +236,36 @@ export default function EditTrainingFinancialsDialog({
           traineeId: payerType === "TRAINEE" ? p.participantId : undefined,
           customerId: payerType === "TRAINEE" ? p.participantId : undefined,
           volunteerId: payerType === "VOLUNTEER" ? p.participantId : undefined,
-
+          isCourtesy:
+            p.paymentInfo.paymentStatus === ("Cortesia" as PaymentStatuses),
           TrainingPayment: {
-            basePrice: basePrice,
-            additionalCost: additionalCost,
-            additionalCostDescription: p.additionalCostDescription,
-            totalPrice: totalPrice,
-
-            // Payment info
+            basePrice: priceCents,
+            additionalCost: additionalCostCents,
+            totalPrice: priceCents + additionalCostCents,
+            additionalCostDescription: p.additionalCostDescription || "",
             paymentStatus:
-              p.paymentInfo.paymentStatus === "Cortesia"
+              p.paymentInfo.paymentStatus === ("Cortesia" as PaymentStatuses)
                 ? "Pago"
-                : p.paymentInfo.paymentStatus || "Pendente",
-
-            firstPaymentAmount: parseStringToCents(
-              String(p.paymentInfo.firstPaymentAmount || "0"),
-            ),
+                : (p.paymentInfo.paymentStatus as PaymentStatuses),
+            paymentMode: "AVista" as PaymentModes,
+            firstPaymentAmount: firstPaymentAmountCents,
             firstPaymentDate: p.paymentInfo.firstPaymentDate
-              ? new Date(p.paymentInfo.firstPaymentDate)
+              ? new Date(p.paymentInfo.firstPaymentDate as string)
               : null,
-            firstPaymentMethod: p.paymentInfo.firstPaymentMethod || null,
-            firstPaymentStatus: p.paymentInfo.firstPaymentStatus || "Pendente",
-
-            secondPaymentAmount: parseStringToCents(
-              String(p.paymentInfo.secondPaymentAmount || "0"),
-            ),
+            firstPaymentMethod: p.paymentInfo
+              .firstPaymentMethod as PaymentMethodsType,
+            firstPaymentStatus: p.paymentInfo
+              .firstPaymentStatus as PaymentStatuses,
+            secondPaymentAmount: secondPaymentAmountCents,
             secondPaymentDate: p.paymentInfo.secondPaymentDate
-              ? new Date(p.paymentInfo.secondPaymentDate)
+              ? new Date(p.paymentInfo.secondPaymentDate as string)
               : null,
-            secondPaymentMethod: p.paymentInfo.secondPaymentMethod || null,
-            secondPaymentStatus:
-              p.paymentInfo.secondPaymentStatus || "Pendente",
-
-            // Preserve other fields but update isCourtesy based on selection
-            isCourtesy:
-              p.paymentInfo.paymentStatus === "Cortesia"
-                ? true
-                : p.paymentInfo.paymentStatus === "Pendente" ||
-                    p.paymentInfo.paymentStatus === "Pago" ||
-                    p.paymentInfo.paymentStatus === "Parcial"
-                  ? false // Explicitly false if changed to a paid status
-                  : existingPayment?.isCourtesy || false, // Fallback for other statuses? Actually better to be strict
-            wasRefunded: existingPayment?.wasRefunded || false,
-            paymentMode: existingPayment?.paymentMode || "AVista",
+            secondPaymentMethod: p.paymentInfo
+              .secondPaymentMethod as PaymentMethodsType,
+            secondPaymentStatus: p.paymentInfo
+              .secondPaymentStatus as PaymentStatuses,
+            wasRefunded: p.paymentInfo.wasRefunded || false,
+            refundedAmount: refundAmountCents,
           },
         };
 
@@ -264,68 +276,66 @@ export default function EditTrainingFinancialsDialog({
       });
 
       const results = await Promise.all(updatePromises);
+      const allSuccessful = results.every((r) => r.statusCode === 200);
 
-      const hasError = results.some((r) => r.statusCode !== 200);
-
-      if (!hasError) {
-        toast.success("Valores atualizados com sucesso!");
-        queryClient.invalidateQueries({ queryKey: ["get-all-trainings"] });
-
-        // Ideally we should merge the results to update the selected training locally
-        // For now, we return the last result's data or trigger a refetch
-        if (results.length > 0 && results[results.length - 1].data) {
-          onSuccess(results[results.length - 1].data!);
+      if (allSuccessful) {
+        toast.success("Financeiro atualizado com sucesso!");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        if (onSuccess && results[0].data) {
+          onSuccess(results[0].data);
         }
         onOpenChange(false);
       } else {
-        toast.warning("Alguns participantes podem não ter sido atualizados.");
+        toast.error("Ocorreu um erro ao atualizar alguns participantes.");
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao atualizar valores.");
+      toast.error("Erro ao atualizar financeiro.");
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card">
+    <Dialog open={ open } onOpenChange={ onOpenChange }>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            Gerenciar Financeiro (
-            {payerType === "TRAINEE" ? "Alunos" : "Pacientes Modelo"})
-          </DialogTitle>
+          <DialogTitle>Editar Financeiro do Treinamento</DialogTitle>
         </DialogHeader>
 
-        <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="border rounded-md p-5 bg-muted/10 shadow-sm">
-              <FinancialInputSection
-                control={control}
-                register={register}
-                setValue={setValue}
-                watch={watch}
-                errors={errors}
-                participants={participants}
-                type={payerType === "TRAINEE" ? "trainee" : "volunteer"}
-                fields={
-                  payerType === "TRAINEE" ? traineeFields : volunteerFields
-                }
-              />
-            </div>
+        <FormProvider { ...methods }>
+          <form onSubmit={ handleSubmit(onSubmit) } className="space-y-6">
+            <FinancialInputSection
+              control={ control }
+              register={ register }
+              setValue={ setValue }
+              watch={ methods.watch }
+              errors={ errors }
+              fields={
+                (payerType === "TRAINEE"
+                  ? traineeFields
+                  : volunteerFields) as IndividualPayment[]
+              }
+              participants={ participants }
+              type={ payerType === "TRAINEE" ? "trainee" : "volunteer" }
+            />
 
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={ () => onOpenChange(false) }
+                disabled={ isSubmitting }
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Button type="submit" disabled={ isSubmitting }>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar Tudo"
                 )}
-                Salvar Alterações
               </Button>
             </DialogFooter>
           </form>

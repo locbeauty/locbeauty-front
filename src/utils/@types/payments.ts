@@ -34,6 +34,7 @@ export interface TrainingPayment {
   isCourtesy: boolean;
   wasRefunded: boolean;
   refundAmount: number | null;
+  refundedAmount: number | null;
   cancellationFee: number | null;
   cancellationDate: string | null;
   cancellationFeePaymentDate: string | null;

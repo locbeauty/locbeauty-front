@@ -1,6 +1,6 @@
 import { CheckoutStatuses } from "../constants";
 import { Address } from "./address";
-import { CheckoutPayment } from "./payments";
+export type { CheckoutPayment } from "./payments";
 
 export type Checkout = {
   checkoutId: string;

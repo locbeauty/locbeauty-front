@@ -60,6 +60,7 @@ const createNoticeSchema = z
   .object({
     description: z.string().min(1, "Descrição é obrigatória"),
     filialId: z.string().optional(),
+
     /* eslint-disable camelcase */
     startDate: z.date({ required_error: "Data de início é obrigatória" }),
     endDate: z.date({ required_error: "Data de término é obrigatória" }),
@@ -70,6 +71,7 @@ const createNoticeSchema = z
       required_error: "Horário de término é obrigatório",
     }),
     /* eslint-enable camelcase */
+
   })
   .refine(
     (data) => {

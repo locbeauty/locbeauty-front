@@ -38,9 +38,9 @@ export function AddParticipantDialog({
   excludeIds = [],
   filialId,
 }: AddParticipantDialogProps) {
-  const [options, setOptions] = useState<(Trainee | Volunteer)[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [ options, setOptions ] = useState<(Trainee | Volunteer)[]>([]);
+  const [ isLoading, setIsLoading ] = useState(false);
+  const [ selectedId, setSelectedId ] = useState<string | null>(null);
 
   const loadOptions = useCallback(async () => {
     setIsLoading(true);
@@ -62,14 +62,14 @@ export function AddParticipantDialog({
     } finally {
       setIsLoading(false);
     }
-  }, [type, filialId]);
+  }, [ type, filialId ]);
 
   useEffect(() => {
     if (open) {
       loadOptions();
       setSelectedId(null);
     }
-  }, [open, type, loadOptions]);
+  }, [ open, type, loadOptions ]);
 
   const handleSelect = async (id: string) => {
     setSelectedId(id);
@@ -87,7 +87,7 @@ export function AddParticipantDialog({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={ open } onOpenChange={ onOpenChange }>
       <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden">
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle>
@@ -96,7 +96,7 @@ export function AddParticipantDialog({
         </DialogHeader>
         <Command className="overflow-hidden rounded-t-none border-t">
           <CommandInput
-            placeholder={`Buscar ${type === "TRAINEE" ? "aluno" : "modelo"}...`}
+            placeholder={ `Buscar ${type === "TRAINEE" ? "aluno" : "modelo"}...` }
           />
           <CommandList>
             <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
@@ -119,15 +119,15 @@ export function AddParticipantDialog({
 
                   return (
                     <CommandItem
-                      key={id}
-                      value={name}
-                      onSelect={() => handleSelect(id)}
+                      key={ id }
+                      value={ name }
+                      onSelect={ () => handleSelect(id) }
                     >
                       <Check
-                        className={cn(
+                        className={ cn(
                           "mr-2 h-4 w-4",
                           isSelected ? "opacity-100" : "opacity-0",
-                        )}
+                        ) }
                       />
                       {name}
                     </CommandItem>

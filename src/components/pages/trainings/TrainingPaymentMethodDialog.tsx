@@ -48,8 +48,6 @@ import {
 import { validateCheckoutForm } from "@/utils/validators/update-payment-info";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
 import { UpdateTraining } from "@/services/trainings.service";
-import { Trainee } from "@/utils/@types/trainee";
-import { Address } from "@/utils/@types/address";
 import { Training } from "@/utils/@types/training";
 
 // --- TIPOS ---
@@ -66,8 +64,22 @@ export type LocalErrorsType = {
     secondPaymentAmount: string | null;
     secondPaymentDate: string | null;
     secondPaymentMethod: string | null;
+    refundAmount?: string | null;
     general?: string | null;
   };
+};
+
+const initialErrors: LocalErrorsType = {
+  paymentStatus: null,
+  paymentInfo: {
+    firstPaymentAmount: null,
+    firstPaymentDate: null,
+    firstPaymentMethod: null,
+    secondPaymentAmount: null,
+    secondPaymentDate: null,
+    secondPaymentMethod: null,
+    refundAmount: null,
+  },
 };
 
 export type UpdateTrainingPayload = {
@@ -98,31 +110,20 @@ export type UpdateTrainingPayload = {
     basePrice: number;
     additionalCost: number;
     additionalCostDescription: string;
-    paymentStatus: PaymentStatuses;
-    paymentMode: PaymentModes;
+    paymentStatus: string;
+    paymentMode: string;
     firstPaymentAmount: number;
     firstPaymentDate: Date | null;
     firstPaymentMethod: string | null;
-    firstPaymentStatus: InstallmentStatus;
+    firstPaymentStatus: string;
     secondPaymentAmount: number;
     secondPaymentDate: Date | null;
     secondPaymentMethod: string | null;
-    secondPaymentStatus: InstallmentStatus;
-    refundAmount?: number | null;
+    secondPaymentStatus: string;
+    wasRefunded?: boolean;
+    refundedAmount?: number | null;
+    isCourtesy?: boolean;
   };
-};
-
-const initialErrors: LocalErrorsType = {
-  paymentStatus: null,
-  paymentInfo: {
-    firstPaymentAmount: null,
-    firstPaymentDate: null,
-    firstPaymentMethod: null,
-    secondPaymentAmount: null,
-    secondPaymentDate: null,
-    secondPaymentMethod: null,
-    general: null,
-  },
 };
 
 // --- HELPER FUNCTIONS ---
@@ -359,7 +360,7 @@ export function TrainingPaymentMethodDialog({
       setWasRefunded(false);
       setCancellationFee("0,00");
       setIsRefunded(currentPaymentData?.wasRefunded || false);
-      setRefundAmount(centsToString(currentPaymentData?.refundAmount || 0));
+      setRefundAmount(centsToString(currentPaymentData?.refundedAmount || 0));
 
       if (currentPaymentData) {
         // MODO EDIÇÃO
@@ -482,8 +483,16 @@ export function TrainingPaymentMethodDialog({
 
   async function handleSave() {
     // Calculate total cancellation fee and wasRefunded status early for validation
-    const calculatedWasRefunded = wasRefunded;
     const totalCents = displayPrice;
+
+    // Calculate how much has actually been paid (to validate refund)
+    let paidAmountCents = 0;
+    if (firstPaymentStatus === "Pago") {
+      paidAmountCents += parseStringToCents(firstPaymentAmount);
+    }
+    if (secondPaymentStatus === "Pago") {
+      paidAmountCents += parseStringToCents(secondPaymentAmount);
+    }
 
     const isValid = validateCheckoutForm({
       paymentStatus,
@@ -500,10 +509,22 @@ export function TrainingPaymentMethodDialog({
       totalValue: totalCents,
       initialErrors,
       setErrors,
-      isRefunded: calculatedWasRefunded,
+      isRefunded: isRefunded, // Fix: use isRefunded state instead of calculatedWasRefunded
     });
 
     if (!selectedTraining || !isValid || !payerType) {
+      return;
+    }
+
+    if (isRefunded && parseStringToCents(refundAmount) > paidAmountCents) {
+      setErrors((prev) => ({
+        ...prev,
+        paymentInfo: {
+          ...prev.paymentInfo,
+          refundAmount:
+            "O valor reembolsado não pode ser maior que o valor já pago.",
+        },
+      }));
       return;
     }
 
@@ -513,7 +534,7 @@ export function TrainingPaymentMethodDialog({
       trainingStatus: trainingStatus,
       payerType: payerType,
       isCourtesy: isCourtesy || paymentStatus === "Cortesia",
-      wasRefunded,
+      wasRefunded: isRefunded,
       cancellationFee: parseStringToCents(cancellationFee),
       traineeId:
         payerType === "TRAINEE"
@@ -558,7 +579,8 @@ export function TrainingPaymentMethodDialog({
           parseStringToCents(secondPaymentAmount) > 0
             ? "Pago"
             : secondPaymentStatus,
-        refundAmount: isRefunded ? parseStringToCents(refundAmount) : null,
+        wasRefunded: isRefunded,
+        refundedAmount: isRefunded ? parseStringToCents(refundAmount) : null,
       },
     };
 
@@ -965,7 +987,10 @@ export function TrainingPaymentMethodDialog({
                 <Checkbox
                   id="refunded"
                   checked={ isRefunded }
-                  disabled={ paymentStatus === "Reembolsado" }
+                  disabled={
+                    paymentStatus === "Reembolsado" ||
+                      currentPaymentData?.wasRefunded
+                  }
                   onCheckedChange={ (checked) =>
                     setIsRefunded(checked as boolean)
                   }
@@ -984,10 +1009,18 @@ export function TrainingPaymentMethodDialog({
                       Valor do Reembolso
                   </Label>
                   <PriceInput
-                    disabled={ paymentStatus === "Reembolsado" }
+                    disabled={
+                      paymentStatus === "Reembolsado" ||
+                        currentPaymentData?.wasRefunded
+                    }
                     value={ refundAmount }
                     onChange={ (value) => setRefundAmount(value) }
                   />
+                  {errors.paymentInfo?.refundAmount && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.paymentInfo.refundAmount}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

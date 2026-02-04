@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  Control,
   UseFormRegister,
   UseFormSetValue,
   UseFormWatch,
-  FieldErrors,
   Path,
+  Control,
+  FieldErrors,
 } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,14 @@ import { cn } from "@/lib/utils";
 import PriceInput from "@/components/shared/PriceInput";
 import { Textarea } from "@/components/ui/textarea";
 import { TrainingPaymentSection } from "./TrainingPaymentSection";
-import { CreateTrainingDataType } from "@/lib/zod/CreateTrainingValidation";
+import {
+  CreateTrainingDataType,
+  IndividualPaymentSchema,
+} from "@/lib/zod/CreateTrainingValidation";
+import { AlertCircle } from "lucide-react";
+import { z } from "zod";
+
+type IndividualPayment = z.infer<typeof IndividualPaymentSchema>;
 
 interface Participant {
   id: string;
@@ -28,7 +35,7 @@ interface FinancialInputSectionProps {
   errors: FieldErrors<CreateTrainingDataType>;
   participants: Participant[];
   type: "trainee" | "volunteer";
-  fields: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  fields: IndividualPayment[];
 }
 
 // Helper para tratar string de moeda (ex: "1.000,00")
@@ -43,11 +50,9 @@ const parseCurrencyToFloat = (
 };
 
 export function FinancialInputSection({
-  control,
   register,
   setValue,
   watch,
-  errors,
   participants,
   type,
   fields,
@@ -75,8 +80,7 @@ export function FinancialInputSection({
   }, [ participants, selectedParticipantId ]);
 
   const selectedIndex = fields.findIndex(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (field: any) => field.participantId === selectedParticipantId,
+    (field) => field.participantId === selectedParticipantId,
   );
 
   // Watch current participant's values
@@ -96,33 +100,14 @@ export function FinancialInputSection({
   // Replicate effect
   useEffect(() => {
     if (isReplicating && selectedIndex !== -1) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      fields.forEach((field: any, index) => {
+      fields.forEach((field, index) => {
         if (index === selectedIndex) return;
-
-        // Check current payment status of the target field
-        // We use fields[index] data if available, but for dynamic form validity we might need to rely on watch if the field data isn't updating in real-time,
-        // HOWEVER, useFieldArray fields are snapshots. Let's try to get the current value from the form state if possible to be safe,
-        // or rely on field.paymentInfo if initialized correctly.
-        // Actually, since we are inside a form, `watch` on specific index is safer for current state.
-
-        // WATCH OUT: We cannot call 'watch' inside this loop (hooks rules).
-        // We need to access the current value using `methods.getValues()` if we had access to methods,
-        // OR we can trust that `field.paymentInfo` has the initial state and if it changed it should be in the form state.
-        // Since we don't have getValues here, we might need to rely on `fields` snapshot which is updated on re-render,
-        // OR pass getValues from parent OR standard solution: use `watch` for the whole array outside the effect?
-        // Watching the whole array might be heavy.
-
-        // Better approach: We can check the defaultValue or the current value if we had it.
-        // But wait, `fields` from useFieldArray contains the values.
-        // Let's check `field.paymentInfo?.paymentStatus`.
 
         const currentStatus = field.paymentInfo?.paymentStatus;
         if (currentStatus === "Pago" || currentStatus === "Parcial") {
           return;
         }
 
-        // Only update if different to avoid potential loops (though hook form is robust)
         setValue(
           `${fieldName}.${index}.price` as Path<CreateTrainingDataType>,
           currentPrice,
@@ -144,12 +129,9 @@ export function FinancialInputSection({
     currentPrice,
     currentAddCost,
     currentAddDesc,
-    // JSON.stringify(currentPaymentInfo), - disabling deps check to avoid complexity warning
     fields,
     fieldName,
     setValue,
-
-    // currentPaymentInfo - omitted from strict dep check due to deep object comparison complexity, handled by re-renders
   ]);
 
   if (participants.length === 0) {
@@ -219,8 +201,7 @@ export function FinancialInputSection({
             <div className="space-y-4">
               {/* Calculate disabled state */}
               {(() => {
-                const currentStatus = (currentPaymentInfo as any)
-                  ?.paymentStatus;
+                const currentStatus = currentPaymentInfo?.paymentStatus;
                 const isDisabled =
                   currentStatus === "Pago" ||
                   currentStatus === "Parcial" ||
@@ -275,20 +256,26 @@ export function FinancialInputSection({
                               placeholder="Valor:  R$ 0,00"
                               disabled={ isDisabled }
                             />
-                            <Textarea
-                              { ...register(
-                                `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
-                              ) }
-                              placeholder="Descrição: Taxa de sala, material..."
-                              className="resize-none min-h-[40px]"
-                              rows={ 1 }
-                              disabled={ isDisabled }
-                              value={
-                                (watch(
+                            <div className="flex flex-col gap-2">
+                              <Label className="text-sm font-medium flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 text-red-500" />
+                                Descrição dos Adicionais
+                              </Label>
+                              <Textarea
+                                { ...register(
                                   `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
-                                ) as string) || ""
-                              }
-                            />
+                                ) }
+                                placeholder="Descrição: Taxa de sala, material..."
+                                className="resize-none min-h-[40px]"
+                                rows={ 1 }
+                                disabled={ isDisabled }
+                                value={
+                                  (watch(
+                                    `${fieldName}.${selectedIndex}.additionalCostDescription` as Path<CreateTrainingDataType>,
+                                  ) as string) || ""
+                                }
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -298,12 +285,8 @@ export function FinancialInputSection({
                       prefix={ `${fieldName}.${selectedIndex}` }
                       label="Detalhes do Pagamento"
                       totalValue={
-                        parseCurrencyToFloat(
-                          currentPrice as unknown as string,
-                        ) +
-                        parseCurrencyToFloat(
-                          currentAddCost as unknown as string,
-                        )
+                        parseCurrencyToFloat(currentPrice as string) +
+                        parseCurrencyToFloat(currentAddCost as string)
                       }
                       disabled={ isDisabled }
                     />
