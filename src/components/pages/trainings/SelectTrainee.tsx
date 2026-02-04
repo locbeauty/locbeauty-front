@@ -205,7 +205,7 @@ function TraineesList({
           {allTrainees?.map((trainee) => {
             const isSelected = selectedTraineeIds.includes(trainee.customerId);
             const documentToDisplay =
-              trainee.cpf || trainee.cnpj || trainee.documentNumber;
+              trainee.cpf || trainee.cnpj;
 
             return (
               <CommandItem
