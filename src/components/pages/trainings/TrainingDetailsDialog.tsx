@@ -104,7 +104,7 @@ export function TrainingDetailsDialog({
     setIsRestoring(true);
     try {
       const response = await UpdateTraining({
-        //@ts-expect-error
+        //@ts-expect-error trainingId is not defined in Training type
         trainingId: selectedTraining.trainingId,
         body: {
           trainingStatus: selectedTraining.trainingStatus,
@@ -113,7 +113,7 @@ export function TrainingDetailsDialog({
         },
       });
 
-      if (response && response.isVisible) {
+      if (response && response.data?.isVisible) {
         toast.success("Treinamento restaurado com sucesso.");
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
         if (onOpenChange) onOpenChange(false);
