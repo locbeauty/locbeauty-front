@@ -10,12 +10,22 @@ export function SelectStatus() {
       </SelectTrigger>
       <SelectContent>
         {
+          // FilterBookingStatusTypes.map(status => {
+          //   if(status !== "Todos") {
+          //     return (
+          //       <SelectItem key={ status } value={ status.toLowerCase() }>{ status }</SelectItem>
+          //     );
+          //   }
+          // })
           FilterBookingStatusTypes.map(status => {
-            if(status !== "Todos") {
-              return (
-                <SelectItem key={ status } value={ status.toLowerCase() }>{ status }</SelectItem>
-              );
-            }
+            if (status === "Todos") return null;
+
+            const value = typeof status === "string" ? status : status.value;
+            const label = typeof status === "string" ? status : status.label;
+
+            return (
+              <SelectItem key={ value } value={ value.toLowerCase() }>{ label }</SelectItem>
+            );
           })
         }
       </SelectContent>
