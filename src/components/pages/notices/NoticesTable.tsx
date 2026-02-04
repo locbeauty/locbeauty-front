@@ -196,7 +196,7 @@ export function NoticesTable() {
                     </Can>
 
                     {(user?.role === USER_ROLES.MASTER ||
-                      user?.role === USER_ROLES.ADMIN) && (
+                      user?.role === USER_ROLES.GERENTE) && (
                       <Button
                         variant="ghost"
                         size="icon"
