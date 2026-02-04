@@ -259,6 +259,11 @@ export function EmployeeForm({
                 placeholder="Senha de acesso"
                 className="placeholder:text-placeholder"
               />
+              {errors.password && (
+                <p className="text-xs font-medium text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
