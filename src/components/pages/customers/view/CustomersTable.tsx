@@ -155,7 +155,7 @@ export function CustomersTable() {
             placeholder="Filtrar por Nome"
             value={ filters.name }
             onChange={ (e) => setFilters({ ...filters, name: e.target.value }) }
-            className="pr-8"
+            className="pr-8 placeholder:text-placeholder"
             name="filter-name"
             autoComplete="off"
           />
@@ -173,7 +173,7 @@ export function CustomersTable() {
             placeholder="Filtrar por Email"
             value={ filters.email }
             onChange={ (e) => setFilters({ ...filters, email: e.target.value }) }
-            className="pr-8"
+            className="pr-8 placeholder:text-placeholder"
             type="text"
             name="filter-email"
             autoComplete="off"
@@ -194,7 +194,7 @@ export function CustomersTable() {
             onChange={ (e) =>
               setFilters({ ...filters, document: e.target.value })
             }
-            className="pr-8"
+            className="pr-8 placeholder:text-placeholder"
             name="filter-document"
           />
           {filters.document && (
@@ -218,7 +218,7 @@ export function CustomersTable() {
             setFilters({
               ...filters,
               status:
-                value === "ALL" ? undefined : (value as "Ativo" | "Inativo"),
+                value === "ALL" ? undefined : (value as "Ativo" | "Inativo" | "Inadimplente" | "Bloqueado"),
             })
           }
         >

@@ -37,7 +37,7 @@ export interface GetAllCustomersFilters {
   phone?: string;
   filialId?: string;
   isVisible?: string;
-  status?: "Ativo" | "Inativo";
+  status?: "Ativo" | "Inativo" | "Inadimplente" | "Bloqueado";
   isTrainee?: boolean;
   includeAllTrainees?: boolean;
 }
