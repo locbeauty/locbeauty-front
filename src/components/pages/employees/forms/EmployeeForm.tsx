@@ -135,6 +135,7 @@ export function EmployeeForm({
                 { ...register("fullname") }
                 id="fullname"
                 placeholder="Ex: Maria Silva"
+                className="placeholder:text-placeholder"
                 // disabled={ isEditing }
               />
               {errors.fullname && (
@@ -151,6 +152,7 @@ export function EmployeeForm({
                   { ...register("username") }
                   id="username"
                   placeholder="Ex: mariasilva"
+                  className="placeholder:text-placeholder"
                 />
                 <div className="absolute right-3 top-2.5">
                   {isCheckingUsername ? (
@@ -245,6 +247,7 @@ export function EmployeeForm({
                 id="email"
                 type="email"
                 placeholder="exemplo@email.com"
+                className="placeholder:text-placeholder"
               />
               {errors.email && (
                 <p className="text-xs font-medium text-destructive">
@@ -270,6 +273,7 @@ export function EmployeeForm({
                 id="password"
                 type="password"
                 placeholder="Senha de acesso"
+                className="placeholder:text-placeholder"
               />
             </div>
 
@@ -280,6 +284,7 @@ export function EmployeeForm({
                 id="confirmPassword"
                 type="password"
                 placeholder="Repita a senha"
+                className="placeholder:text-placeholder"
               />
               {errors.password && (
                 <p className="text-xs font-medium text-destructive">

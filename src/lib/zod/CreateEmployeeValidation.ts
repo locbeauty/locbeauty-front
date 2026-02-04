@@ -24,7 +24,7 @@ export const createEmployeeFormSchema = z.object({
     .min(14, { message: "Telefone é obrigatório" })
     .nullable()
     .optional(),
-  sourceFilialId: z.string(),
+  sourceFilialId: z.string().min(1, { message: "Filial é obrigatória" }),
   email: z
     .string()
     .email({ message: "Email inválido" })
