@@ -22,6 +22,7 @@ import { toast } from "sonner";
 
 import { Training } from "@/utils/@types/training";
 import { Filial } from "@/utils/@types/filials";
+import { UpdateTrainingPayload } from "./TrainingPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { Badge } from "@/components/ui/badge";
@@ -41,9 +42,16 @@ import { Switch } from "@/components/ui/switch";
 interface TrainingsTableProps {
   trainings: Training[] | undefined;
   filials?: Filial[];
+  isVisible: boolean;
+  setIsVisible: (value: boolean) => void;
 }
 
-export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
+export function TrainingsTable({
+  trainings,
+  filials,
+  isVisible,
+  setIsVisible,
+}: TrainingsTableProps) {
   const [ selectedTraining, setSelectedTraining ] = useState<Training | null>(
     null,
   );
@@ -57,10 +65,9 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
   const [ trainingToRestore, setTrainingToRestore ] = useState<Training | null>(
     null,
   );
-  const [ isRestoring, setIsRestoring ] = useState (false);
+  const [ isRestoring, setIsRestoring ] = useState(false);
   const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
     useState(false);
-  const [ isVisible, setIsVisible ] =  useState(true);
 
   // Participants Dialog State
   const [ isParticipantsDialogOpen, setIsParticipantsDialogOpen ] =
@@ -80,9 +87,9 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
   const [ searchTerm, setSearchTerm ] = useState("");
   const [ filterStatus, setFilterStatus ] = useState<"ALL" | string>("ALL");
   const [ filterPaymentStatus, setFilterPaymentStatus ] = useState<
-    "ALL"  | "PENDING" | "PAID" | " CANCELED"
-  >("ALL" );
-  const [ filterDate, setFilterDate ] = useState<Date  | undefined>(undefined);
+    "ALL" | "PENDING" | "PAID" | "CANCELED"
+  >("ALL");
+  const [ filterDate, setFilterDate ] = useState<Date | undefined>(undefined);
   const [ filterFilial, setFilterFilial ] = useState<string>("ALL");
 
   const handleOpenDetails = (training: Training) => {
@@ -105,7 +112,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
         trainingId: targetId,
         body: {
           isVisible: true,
-        } as any, // Type assertion for partial update
+        },
       });
 
       if (
@@ -114,7 +121,13 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
         response.statusCode === 204
       ) {
         toast.success("Treinamento restaurado com sucesso.");
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        // Invalidate both visibility states to ensure UI updates correctly
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainings", true ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainings", false ],
+        });
       } else {
         toast.error(response.message || "Erro ao restaurar treinamento.");
       }
@@ -138,7 +151,13 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
 
       if (response.statusCode === 200 || response.statusCode === 204) {
         toast.success("Treinamento excluído com sucesso.");
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        // Invalidate both visibility states to ensure UI updates correctly
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainings", true ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainings", false ],
+        });
       } else {
         toast.error(response.message || "Erro ao excluir treinamento.");
       }
@@ -164,7 +183,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
     let result = [ ...trainings ];
 
     // General Search Filter (ID, Trainee, Volunteer)
-    if (searchTerm ) {
+    if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
       result = result.filter(
         (t) =>
@@ -275,7 +294,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 onChange={ (e) => setSearchTerm(e.target.value) }
                 className="h-9 bg-background pr-8"
               />
-              {searchTerm  && (
+              {searchTerm && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -283,7 +302,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                   onClick={ () => setSearchTerm("") }
                 >
                   <X className="h-3 w-3 text-muted-foreground" />
-                  <span cla ssName="sr-only">Limpar  busca</span>
+                  <span className="sr-only">Limpar busca</span>
                 </Button>
               )}
             </div>
@@ -342,7 +361,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
               value={ filterPaymentStatus }
               onValueChange={ (v) =>
                 setFilterPaymentStatus(
-                  v as "ALL" | "PENDING"  | "PAID" | "CANCELED",
+                  v as "ALL" | "PENDING" | "PAID" | "CANCELED",
                 )
               }
             >
@@ -371,7 +390,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 onClick={ clearFilters }
                 className="text-muted-foreground h-9"
               >
-                <X className="h-3 w-3  mr-1" /> Limpar Todos os Filtros
+                <X className="h-3 w-3 mr-1" /> Limpar Todos os Filtros
               </Button>
             )}
           </div>
@@ -384,7 +403,7 @@ export function TrainingsTable({ trainings, filials }: TrainingsTableProps) {
                 onCheckedChange={ (checked) => setIsVisible(!checked) }
               />
               <Label
-                htmlFor="show-del eted-trainings"
+                htmlFor="show-deleted-trainings"
                 className="text-sm cursor-pointer"
               >
                 Ver Excluídos

@@ -5,7 +5,7 @@ import { Training } from "@/utils/@types/training";
 
 interface UpdateTrainingRequest {
   trainingId: string;
-  body: UpdateTrainingPayload;
+  body: Partial<UpdateTrainingPayload>;
 }
 
 export async function GetCustomerTrainings(customerId: string) {

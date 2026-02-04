@@ -34,6 +34,7 @@ export default function Treinamentos() {
   const [dialogNewVolunteer, setDialogNewVolunteer] = useState(false);
   const [dialogNovoAluno, setDialogNovoAluno] = useState(false);
   const [dialogNovoTreinamento, setDialogNovoTreinamento] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   const traineesData = useQuery<ApiResponse<Trainee[]>, Error>({
     queryKey: ["get-all-trainees"],
@@ -48,8 +49,8 @@ export default function Treinamentos() {
   });
 
   const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
-    queryKey: ["get-all-trainings"],
-    queryFn: () => GetAllTrainings(),
+    queryKey: ["get-all-trainings", isVisible],
+    queryFn: () => GetAllTrainings(isVisible ? "true" : "false"),
     staleTime: 1000 * 60,
   });
 
@@ -214,6 +215,8 @@ export default function Treinamentos() {
             <TrainingsTable
               trainings={filteredData.trainings}
               filials={accessibleFilials}
+              isVisible={isVisible}
+              setIsVisible={setIsVisible}
             />
           </TabsContent>
 

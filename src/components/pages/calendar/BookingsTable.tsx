@@ -119,13 +119,6 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     isVisible,
   };
 
-  console.log(
-    "[DEBUG] BookingsTable isVisible:",
-    isVisible,
-    "queryParams:",
-    queryParams,
-  );
-
   const { data, isLoading } = useQuery<
     ApiResponse<{ items: Checkout[]; total: number }>,
     Error
