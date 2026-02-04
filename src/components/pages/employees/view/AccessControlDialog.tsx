@@ -18,6 +18,7 @@ export function AccessControlDialog({ employee }: AccessControlDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
+
         <Button
           variant="outline"
           className="gap-2 w-full justify-start border-dashed"
