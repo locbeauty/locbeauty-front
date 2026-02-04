@@ -13,7 +13,7 @@ import {
   FieldValues,
   Path,
 } from "react-hook-form";
-import { handleCepChange } from "@/utils/addressHandlers";
+import { GetViaCepAddressDetailsResponse, handleCepChange } from "@/utils/addressHandlers";
 import { Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
@@ -27,6 +27,7 @@ interface CEPInputProps<
   clearErrors: UseFormClearErrors<T>;
   zipCodeError?: string;
   isUpdateForm?: boolean;
+  onCepDataFetched?: (data: GetViaCepAddressDetailsResponse | null) => void;
 }
 
 export default function CEPInput<T extends FieldValues>({
@@ -37,6 +38,7 @@ export default function CEPInput<T extends FieldValues>({
   trigger,
   zipCodeError,
   isUpdateForm = false,
+  onCepDataFetched,
   ...props
 }: CEPInputProps<T>) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -83,6 +85,7 @@ export default function CEPInput<T extends FieldValues>({
                   isUpdateForm,
                   setError,
                   clearErrors,
+                  onCepDataFetched,
                 });
               } }
               ref={ (el) => {

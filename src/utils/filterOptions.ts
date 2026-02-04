@@ -1,13 +1,16 @@
 export const FilterBookingStatusTypes = [
   "Todos",
-  "Não iniciado",
-  "Concluído",
+  "Pendente",
+  { value: "Concluido", label: "Concluído" },
   "Cancelado",
 ] as const;
 
 export const FilterBookingPaymentStatusTypes = [
   "Todos",
-  "Não pago",
-  "Pagamento parcial",
+  "Pendente",
+  "Cancelado",
+  "Cortesia",
+  "Reembolsado",
+  "Parcial",
   "Pago",
 ] as const;

@@ -5,6 +5,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import React from "react";
 
 type FilterItem = string | { value: string; label: string };
@@ -23,11 +24,18 @@ export function CustomFilterSelect({
   placeholder,
   triggerProps,
   showAllOption = false,
+  value,
   ...selectProps
 }: CustomFilterSelectProps) {
   return (
-    <Select { ...selectProps }>
-      <SelectTrigger { ...triggerProps }>
+    <Select value={ value ?? "" } { ...selectProps }>
+      <SelectTrigger
+        { ...triggerProps }
+        className={ cn(
+          "data-[placeholder]:text-placeholder",
+          triggerProps?.className,
+        ) }
+      >
         <SelectValue placeholder={ placeholder } />
       </SelectTrigger>
       <SelectContent>

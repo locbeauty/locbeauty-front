@@ -14,6 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 import { MapPin } from "lucide-react";
+import { useState } from "react";
+import { GetViaCepAddressDetailsResponse } from "@/utils/addressHandlers";
 
 export function CustomerAddressForm() {
   const {
@@ -25,6 +27,30 @@ export function CustomerAddressForm() {
     setValue,
     formState: { errors },
   } = useFormContext<CreateCustomerFormSchemaType>();
+
+  const [ isStreetDisabled, setIsStreetDisabled ] = useState(true);
+  const [ isNeighborhoodDisabled, setIsNeighborhoodDisabled ] = useState(true);
+
+  const handleAddressDataFetched = (
+    data: GetViaCepAddressDetailsResponse | null,
+  ) => {
+    if (data) {
+      if (!data.logradouro) {
+        setIsStreetDisabled(false);
+      } else {
+        setIsStreetDisabled(true);
+      }
+
+      if (!data.bairro) {
+        setIsNeighborhoodDisabled(false);
+      } else {
+        setIsNeighborhoodDisabled(true);
+      }
+    } else {
+      setIsStreetDisabled(true);
+      setIsNeighborhoodDisabled(true);
+    }
+  };
 
   return (
     <Card>
@@ -45,6 +71,7 @@ export function CustomerAddressForm() {
           setValue={ setValue }
           trigger={ trigger }
           zipCodeError={ errors.address?.zipCode?.message }
+          onCepDataFetched={ handleAddressDataFetched }
         />
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -71,7 +98,7 @@ export function CustomerAddressForm() {
         <div className="space-y-2">
           <Label htmlFor="bairro">Bairro</Label>
           <Input
-            disabled
+            disabled={ isNeighborhoodDisabled }
             { ...register("address.neighborhoodName") }
             placeholder="Bairro"
             className="placeholder:text-placeholder"
@@ -82,7 +109,7 @@ export function CustomerAddressForm() {
           <div className="space-y-2 flex-1">
             <Label htmlFor="rua">Rua</Label>
             <Input
-              disabled
+              disabled={ isStreetDisabled }
               { ...register("address.streetName") }
               id="rua"
               className="placeholder:text-placeholder"

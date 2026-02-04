@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Clock, Timer, CheckCircle2 } from "lucide-react";
+import { Calendar, Clock, Timer, CheckCircle2, AlertCircle } from "lucide-react";
 import { useFormContext, Controller } from "react-hook-form";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 // import { GetDayCheckoutsResponse } from "./CreateBookingForm";
@@ -40,7 +40,7 @@ export default function TimePicker({
     return minutesToHHMM(totalMinutes);
   };
 
-  const { setValue, watch, getValues, control } =
+  const { setValue, watch, getValues, control, formState: { errors } } =
     useFormContext<CreateCheckoutFormSchemaType>();
 
   const watchStartHourInMinutes = watch("startHourInMinutes");
@@ -186,8 +186,9 @@ export default function TimePicker({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {selectedHour &&
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {selectedHour &&
                     selectedHour.availability.map((option) => {
                       return (
                         <Button
@@ -213,6 +214,17 @@ export default function TimePicker({
                         </Button>
                       );
                     })}
+                  </div>
+                  {
+                    errors.totalDurationInMinutes && (
+                      <div className="flex items-center gap-2 text-destructive mt-2">
+                        <AlertCircle className="h-3 w-3 shrink-0" />
+                        <span className="text-sm font-medium">
+                          {errors.totalDurationInMinutes.message as string}
+                        </span>
+                      </div>
+                    )
+                  }
                 </div>
               </div>
             </>

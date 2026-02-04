@@ -4,6 +4,7 @@ import {
   Controller,
   ControllerRenderProps,
   useFormContext,
+  FieldErrors,
 } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { AlertCircle } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -72,24 +74,32 @@ export function SelectCustomer({ disabled = false }: { disabled?: boolean }) {
       <Controller
         control={ control }
         name="customer"
-        render={ ({ field }) =>
-          isDesktop ? (
-            <DesktopSelect
-              disabled={ disabled }
-              allCustomers={ allCustomers || [] }
-              field={ field }
-              searchTerm={ searchTerm }
-              setSearchTerm={ setSearchTerm }
-            />
-          ) : (
-            <MobileSelect
-              allCustomers={ allCustomers || [] }
-              field={ field }
-              searchTerm={ searchTerm }
-              setSearchTerm={ setSearchTerm }
-            />
-          )
-        }
+        render={ ({ field, fieldState }) => (
+          <>
+            {isDesktop ? (
+              <DesktopSelect
+                disabled={ disabled }
+                allCustomers={ allCustomers || [] }
+                field={ field }
+                searchTerm={ searchTerm }
+                setSearchTerm={ setSearchTerm }
+              />
+            ) : (
+              <MobileSelect
+                allCustomers={ allCustomers || [] }
+                field={ field }
+                searchTerm={ searchTerm }
+                setSearchTerm={ setSearchTerm }
+              />
+            )}
+            {((fieldState.error as FieldErrors<CreateCheckoutFormSchemaType["customer"]>)?.customerId || fieldState.error?.message) && (
+              <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                <AlertCircle className="h-3 w-3" />
+                {(fieldState.error as FieldErrors<CreateCheckoutFormSchemaType["customer"]>)?.customerId?.message || fieldState.error?.message || "Cliente é obrigatório"}
+              </p>
+            )}
+          </>
+        ) }
       />
     </div>
   );

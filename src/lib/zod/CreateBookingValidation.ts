@@ -70,8 +70,8 @@ export const createCheckoutFormSchema = z
     filialId: z.string(),
 
     date: z.date({ message: "Data é obrigatória." }),
-    startHourInMinutes: z.number(),
-    totalDurationInMinutes: z.number(),
+    startHourInMinutes: z.number({ message: "Selecione horário de início." }),
+    totalDurationInMinutes: z.number({ message: "Selecione duração." }),
 
     driverId: z.string().optional(),
     accountableEmployeeId: z.string(),
@@ -94,16 +94,16 @@ export const createCheckoutFormSchema = z
         .optional()
         .or(z.literal("")),
       cellphone: z.string(),
-    }),
-    addressId: z.string(),
+    }, { message: "Cliente é obrigatório." }),
+    addressId: z.string().min(1, { message: "Endereço é obrigatório." }),
 
     gears: z.array(
       z.object({
         gearId: z.string({ message: "ID da máquina é obrigatório" }),
         gearName: z.string({ message: "Nome da máquina é obrigatório" }),
         individualPrice: z.string(),
-      }),
-    ),
+      }), { message: "Selecione pelo menos um equipamento." }
+    ).min(1, { message: "Selecione pelo menos um equipamento." }),
 
     // basePrice: z.string().min(1, { message: "Preço base é obrigatório." }),
     basePrice: z.string(),

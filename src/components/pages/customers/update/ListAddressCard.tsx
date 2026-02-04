@@ -6,12 +6,12 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card";
-import { Check, X } from "lucide-react";
+import { Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { Address } from "@/utils/@types/address";
 import { RegisterNewAddressDialog } from "./RegisterNewAddressDialog";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -163,6 +163,10 @@ export function ListCustomerAddressesCard({
 
   const isLoading = isDeactivating || isActivating;
 
+  const activeAddresses = useMemo(() => {
+    return customerAddresses?.filter((addr) => addr.isActive) ?? [];
+  }, [ customerAddresses ]);
+
   return (
     <Card className="">
       <CardHeader>
@@ -171,9 +175,9 @@ export function ListCustomerAddressesCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {customerAddresses && customerAddresses.length > 0 ? (
+        {activeAddresses && activeAddresses.length > 0 ? (
           <div className="space-y-3">
-            {customerAddresses
+            {activeAddresses
               .sort((a, b) => {
                 // Stable sort by street name, ignoring active status to prevent jumping
                 return (a.street || "").localeCompare(b.street || "");
@@ -226,29 +230,17 @@ export function ListCustomerAddressesCard({
                             !!addr.isActive,
                           )
                         }
-                        className={
-                          !addr.isActive
-                            ? "text-primary hover:text-primary hover:bg-primary/10"
-                            : "text-destructive hover:text-destructive hover:bg-destructive/10"
-                        }
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
-                        {addr.isActive ? (
-                          <X className="size-4" />
-                        ) : (
-                          <Check className="size-4" />
-                        )}
+                        <Trash className="size-4" />
                         <span className="sr-only">
-                          {addr.isActive
-                            ? "Desativar endereço"
-                            : "Ativar endereço"}
+                          Excluir endereço
                         </span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>
-                        {addr.isActive
-                          ? "Desativar endereço"
-                          : "Ativar endereço"}
+                        Excluir endereço
                       </p>
                     </TooltipContent>
                   </Tooltip>

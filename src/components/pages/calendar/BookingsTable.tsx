@@ -113,10 +113,15 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     string | number | boolean | Date | string[] | undefined | null
   > = {
     ...filters,
-    filialIds: finalFilialIds,
+    filialIds: accessibleFilialIds,
     page: pagination.page,
     limit: pagination.limit,
     isVisible,
+    // Exclude filters we want to apply locally
+    gearId: undefined,
+    date: undefined,
+    status: undefined,
+    paymentStatus: undefined,
   };
 
   const { data, isLoading } = useQuery<
@@ -129,14 +134,53 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     enabled: !!user, // só executa a query quando user estiver disponível
   });
 
-  const checkouts = allCheckouts ?? data?.data?.items;
   const totalCheckouts = data?.data?.total || 0;
   const totalPages = Math.ceil(totalCheckouts / pagination.limit);
 
   // Update local state when data changes
-  if (data?.data?.items && !allCheckouts) {
+  if (data?.data?.items && (!allCheckouts || JSON.stringify(data.data.items) !== JSON.stringify(allCheckouts))) {
     setAllCheckouts(data.data.items);
   }
+
+  const filteredCheckouts = useMemo(() => {
+    let result = allCheckouts || [];
+
+    if (filters?.filialIds && filters.filialIds.length > 0) {
+      result = result.filter((c) =>
+        filters.filialIds?.includes(c.SourceFilial?.filialId || c.SourceFilial.filialId || "")
+      );
+    }
+
+    if (filters?.gearId) {
+      result = result.filter((c) =>
+        c.Bookings.some((b) => b.Gear.gearId === filters.gearId)
+      );
+    }
+
+    if (filters?.date) {
+      const filterDate = new Date(filters.date);
+      filterDate.setHours(0, 0, 0, 0);
+      result = result.filter((c) => {
+        const cDate = new Date(c.date);
+        cDate.setHours(0, 0, 0, 0);
+        return cDate.getTime() === filterDate.getTime();
+      });
+    }
+
+    if (filters?.status && filters.status !== "Todos") {
+      result = result.filter((c) => c.checkoutStatus === filters.status);
+    }
+
+    if (filters?.paymentStatus && filters.paymentStatus !== "Todos") {
+      result = result.filter(
+        (c) => c.CheckoutPayment?.paymentStatus === filters.paymentStatus
+      );
+    }
+
+    return result;
+  }, [ allCheckouts, filters ]);
+
+  const checkouts = filteredCheckouts;
 
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));

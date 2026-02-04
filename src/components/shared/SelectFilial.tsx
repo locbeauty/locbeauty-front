@@ -74,6 +74,7 @@ export function SelectFilial<T extends FieldValues = FieldValues>({
         <SelectValue placeholder={ placeholder || "Selecione uma filial" } />
       </SelectTrigger>
       <SelectContent>
+        <SelectItem value="ALL">Todas</SelectItem>
         {filteredFilials.map((filial) => (
           <SelectItem key={ filial.filialId } value={ filial.filialId }>
             {filial.filialName}

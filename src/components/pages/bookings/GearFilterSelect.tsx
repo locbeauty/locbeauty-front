@@ -49,7 +49,10 @@ export function GearFilterSelect({
           variant="outline"
           role="combobox"
           aria-expanded={ open }
-          className="w-full justify-between md:w-[200px]"
+          className={ cn(
+            "w-full justify-between md:w-[200px]",
+            !selectedGear && "text-placeholder",
+          ) }
         >
           {selectedGear ? selectedGear.gearName : "Filtrar por máquina"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
