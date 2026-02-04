@@ -65,7 +65,7 @@ export function TrainingHistoryCard({
         const response = await GetCustomerTrainings(
           selectedCustomer.customerId,
         );
-        if (response.success) {
+        if (response.data) {
           setAllTrainings(response.data);
         }
       } catch (error) {

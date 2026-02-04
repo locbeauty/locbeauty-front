@@ -4,32 +4,7 @@ import { Loader2 } from "lucide-react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { redirect } from "next/navigation";
 
-type User = {
-  employeeId: string;
-  fullname: string;
-  documentNumber: string;
-  cellphone: string;
-  email: string | null;
-  birthdate: string | null;
-  role: string;
-  sourceFilialId: string;
-  SourceFilial?: {
-    filialId: string;
-    filialName: string;
-    Address?: {
-      State: {
-        UF: string;
-      };
-    };
-  };
-  // Backward compatibility (optional)
-  sub?: string;
-  employeeName?: string;
-  sourceFilial?: {
-    filialId: string;
-    description: string;
-  };
-};
+import { User } from "@/utils/@types/user";
 
 type AuthContextType = {
   user: User | null;

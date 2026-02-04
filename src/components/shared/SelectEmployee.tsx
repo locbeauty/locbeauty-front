@@ -9,6 +9,7 @@ import {
 } from "react-hook-form";
 import { Dispatch, SetStateAction, useState } from "react";
 import { Employee } from "@/utils/@types/employee";
+import { User } from "@/utils/@types/user";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
 import { GetAllEmployees } from "@/services/employees.service";
@@ -45,9 +46,9 @@ type SelectEmployeeProps<T extends FieldValues> = {
   employeeRole?: ROLES;
   filialId?: string;
   setDriverString?: Dispatch<SetStateAction<string>>;
-  onEmployeeSelect?: (employee: Employee) => void;
+  onEmployeeSelect?: (employee: Employee | User) => void;
   currentUserId?: string; // Include this user in results regardless of filters
-  currentUser?: Employee | null;
+  currentUser?: Employee | User | null;
   modal?: boolean;
   excludeRoles?: string[];
 };
@@ -130,10 +131,10 @@ export function SelectEmployee<T extends FieldValues>({
 }
 
 interface SelectionProps<T extends FieldValues> {
-  allEmployees: Employee[];
+  allEmployees: (Employee | User)[];
   field: ControllerRenderProps<T, FieldPath<T>>;
   setDriverString?: Dispatch<SetStateAction<string>>;
-  onEmployeeSelect?: (employee: Employee) => void;
+  onEmployeeSelect?: (employee: Employee | User) => void;
   modal?: boolean;
 }
 
@@ -250,11 +251,11 @@ function EmployeeList<T extends FieldValues>({
   setDriverString,
   onEmployeeSelect,
 }: {
-  allEmployees: Employee[];
+  allEmployees: (Employee | User)[];
   setOpen: (open: boolean) => void;
   field: ControllerRenderProps<T, FieldPath<T>>;
   setDriverString?: Dispatch<SetStateAction<string>>;
-  onEmployeeSelect?: (employee: Employee) => void;
+  onEmployeeSelect?: (employee: Employee | User) => void;
 }) {
   return (
     <Command>
