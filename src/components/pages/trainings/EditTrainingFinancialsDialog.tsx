@@ -92,15 +92,15 @@ export default function EditTrainingFinancialsDialog({
                 : null,
               firstPaymentAmount: payment?.firstPaymentAmount
                 ? (payment.firstPaymentAmount / 100)
-                  .toFixed(2)
-                  .replace(".", ",")
+                    .toFixed(2)
+                    .replace(".", ",")
                 : "",
               firstPaymentStatus: payment?.firstPaymentStatus || "Pendente",
               firstPaymentMethod: payment?.firstPaymentMethod || "",
               secondPaymentAmount: payment?.secondPaymentAmount
                 ? (payment.secondPaymentAmount / 100)
-                  .toFixed(2)
-                  .replace(".", ",")
+                    .toFixed(2)
+                    .replace(".", ",")
                 : "",
               secondPaymentStatus: payment?.secondPaymentStatus || "Pendente",
               secondPaymentMethod: payment?.secondPaymentMethod || "",
@@ -138,15 +138,15 @@ export default function EditTrainingFinancialsDialog({
                 : null,
               firstPaymentAmount: payment?.firstPaymentAmount
                 ? (payment.firstPaymentAmount / 100)
-                  .toFixed(2)
-                  .replace(".", ",")
+                    .toFixed(2)
+                    .replace(".", ",")
                 : "",
               firstPaymentStatus: payment?.firstPaymentStatus || "Pendente",
               firstPaymentMethod: payment?.firstPaymentMethod || "",
               secondPaymentAmount: payment?.secondPaymentAmount
                 ? (payment.secondPaymentAmount / 100)
-                  .toFixed(2)
-                  .replace(".", ",")
+                    .toFixed(2)
+                    .replace(".", ",")
                 : "",
               secondPaymentStatus: payment?.secondPaymentStatus || "Pendente",
               secondPaymentMethod: payment?.secondPaymentMethod || "",
@@ -161,18 +161,18 @@ export default function EditTrainingFinancialsDialog({
         replaceTrainees([]);
       }
     }
-  }, [ open, training, payerType, replaceTrainees, replaceVolunteers ]);
+  }, [open, training, payerType, replaceTrainees, replaceVolunteers]);
 
   const participants =
     payerType === "TRAINEE"
       ? training.Trainees?.map((t) => ({
-        id: t.customerId,
-        name: t.fullname,
-      })) || []
+          id: t.customerId,
+          name: t.fullname,
+        })) || []
       : training.Volunteers?.map((v) => ({
-        id: v.volunteerId,
-        name: v.name,
-      })) || [];
+          id: v.volunteerId,
+          name: v.name,
+        })) || [];
 
   const onSubmit = async (data: CreateTrainingDataType) => {
     try {
@@ -219,7 +219,10 @@ export default function EditTrainingFinancialsDialog({
             totalPrice: totalPrice,
 
             // Payment info
-            paymentStatus: p.paymentInfo.paymentStatus || "Pendente",
+            paymentStatus:
+              p.paymentInfo.paymentStatus === "Cortesia"
+                ? "Pago"
+                : p.paymentInfo.paymentStatus || "Pendente",
 
             firstPaymentAmount: parseStringToCents(
               String(p.paymentInfo.firstPaymentAmount || "0"),
@@ -266,7 +269,7 @@ export default function EditTrainingFinancialsDialog({
 
       if (!hasError) {
         toast.success("Valores atualizados com sucesso!");
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-trainings"] });
 
         // Ideally we should merge the results to update the selected training locally
         // For now, we return the last result's data or trigger a refetch
@@ -284,7 +287,7 @@ export default function EditTrainingFinancialsDialog({
   };
 
   return (
-    <Dialog open={ open } onOpenChange={ onOpenChange }>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card">
         <DialogHeader>
           <DialogTitle>
@@ -293,17 +296,17 @@ export default function EditTrainingFinancialsDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <FormProvider { ...methods }>
-          <form onSubmit={ handleSubmit(onSubmit) } className="space-y-6">
+        <FormProvider {...methods}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="border rounded-md p-5 bg-muted/10 shadow-sm">
               <FinancialInputSection
-                control={ control }
-                register={ register }
-                setValue={ setValue }
-                watch={ watch }
-                errors={ errors }
-                participants={ participants }
-                type={ payerType === "TRAINEE" ? "trainee" : "volunteer" }
+                control={control}
+                register={register}
+                setValue={setValue}
+                watch={watch}
+                errors={errors}
+                participants={participants}
+                type={payerType === "TRAINEE" ? "trainee" : "volunteer"}
                 fields={
                   payerType === "TRAINEE" ? traineeFields : volunteerFields
                 }
@@ -314,11 +317,11 @@ export default function EditTrainingFinancialsDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={ () => onOpenChange(false) }
+                onClick={() => onOpenChange(false)}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={ isSubmitting }>
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}

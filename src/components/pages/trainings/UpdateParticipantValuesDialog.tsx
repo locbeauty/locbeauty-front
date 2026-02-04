@@ -42,11 +42,11 @@ export function UpdateParticipantValuesDialog({
   participantId,
   currentPayment,
 }: UpdateParticipantValuesDialogProps) {
-  const [ basePrice, setBasePrice ] = useState("0,00");
-  const [ additionalCost, setAdditionalCost ] = useState("0,00");
-  const [ additionalCostDescription, setAdditionalCostDescription ] =
+  const [basePrice, setBasePrice] = useState("0,00");
+  const [additionalCost, setAdditionalCost] = useState("0,00");
+  const [additionalCostDescription, setAdditionalCostDescription] =
     useState("");
-  const [ isSubmitting, setIsSubmitting ] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open && currentPayment) {
@@ -61,7 +61,7 @@ export function UpdateParticipantValuesDialog({
       setAdditionalCost("0,00");
       setAdditionalCostDescription("");
     }
-  }, [ open, currentPayment ]);
+  }, [open, currentPayment]);
 
   const handleSave = async () => {
     if (!selectedTraining) return;
@@ -72,6 +72,12 @@ export function UpdateParticipantValuesDialog({
       const additionalCostCents = parseStringToCents(additionalCost);
       const totalPriceCents = basePriceCents + additionalCostCents;
 
+      const currentStatus = currentPayment?.paymentStatus;
+      const effectivePaymentStatus =
+        currentStatus === "Cortesia" ? "Pago" : currentStatus || "Pendente";
+      const effectiveIsCourtesy =
+        currentPayment?.isCourtesy || currentStatus === "Cortesia";
+
       // Construct payload specifically to update values
       // We must preserve existing payment status/details so we don't reset them
       const payload = {
@@ -80,6 +86,7 @@ export function UpdateParticipantValuesDialog({
         traineeId: payerType === "TRAINEE" ? participantId : undefined,
         customerId: payerType === "TRAINEE" ? participantId : undefined,
         volunteerId: payerType === "VOLUNTEER" ? participantId : undefined,
+        isCourtesy: effectiveIsCourtesy,
         TrainingPayment: {
           ...currentPayment, // Spread existing payment to keep other fields
           basePrice: basePriceCents,
@@ -87,7 +94,7 @@ export function UpdateParticipantValuesDialog({
           additionalCostDescription: additionalCostDescription,
           totalPrice: totalPriceCents,
           // Ensure mandatory fields for UpdateTrainingPayload are present if currentPayment is undefined
-          paymentStatus: currentPayment?.paymentStatus || "Pendente",
+          paymentStatus: effectivePaymentStatus,
           paymentMode: currentPayment?.paymentMode || "AVista",
           firstPaymentAmount: currentPayment?.firstPaymentAmount || 0,
           firstPaymentDate: currentPayment?.firstPaymentDate
@@ -112,7 +119,7 @@ export function UpdateParticipantValuesDialog({
 
       if (response.statusCode === 200) {
         toast.success("Valores atualizados com sucesso!");
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-trainings"] });
         if (setSelectedTraining && response.data) {
           setSelectedTraining(response.data);
         }
@@ -129,7 +136,7 @@ export function UpdateParticipantValuesDialog({
   };
 
   return (
-    <Dialog open={ open } onOpenChange={ onOpenChange }>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -144,25 +151,25 @@ export function UpdateParticipantValuesDialog({
           <div className="grid gap-2">
             <Label htmlFor="basePrice">Preço Base (R$)</Label>
             <PriceInput
-              value={ basePrice }
-              onChange={ setBasePrice }
-              withLabel={ false }
+              value={basePrice}
+              onChange={setBasePrice}
+              withLabel={false}
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="additionalCost">Custo Adicional (R$)</Label>
             <PriceInput
-              value={ additionalCost }
-              onChange={ setAdditionalCost }
-              withLabel={ false }
+              value={additionalCost}
+              onChange={setAdditionalCost}
+              withLabel={false}
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="description">Descrição do Adicional</Label>
             <Input
               id="description"
-              value={ additionalCostDescription }
-              onChange={ (e) => setAdditionalCostDescription(e.target.value) }
+              value={additionalCostDescription}
+              onChange={(e) => setAdditionalCostDescription(e.target.value)}
               placeholder="Ex: Material extra, transporte..."
             />
           </div>
@@ -177,10 +184,10 @@ export function UpdateParticipantValuesDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={ () => onOpenChange(false) }>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={ handleSave } disabled={ isSubmitting }>
+          <Button onClick={handleSave} disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Salvar Alterações
           </Button>

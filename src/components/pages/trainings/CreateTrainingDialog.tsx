@@ -175,8 +175,8 @@ export function CreateTrainingDialog({
   });
 
   // --- UI States for Participant Names ---
-  const [ selectedTrainees, setSelectedTrainees ] = useState<Customer[]>([]);
-  const [ selectedVolunteers, setSelectedVolunteers ] = useState<Volunteer[]>([]);
+  const [selectedTrainees, setSelectedTrainees] = useState<Customer[]>([]);
+  const [selectedVolunteers, setSelectedVolunteers] = useState<Volunteer[]>([]);
 
   // --- Watchers ---
   const watchSelectedTraineeIds = watch("traineeIds") || [];
@@ -276,7 +276,10 @@ export function CreateTrainingDialog({
         : 0,
       additionalCostDescription: additionalCostDesc,
       paymentInfo: {
-        paymentStatus: paymentInfo.paymentStatus || "Pendente",
+        paymentStatus:
+          paymentInfo.paymentStatus === "Cortesia"
+            ? "Pago"
+            : paymentInfo.paymentStatus || "Pendente",
         firstPaymentDate: paymentInfo.firstPaymentDate
           ? new Date(paymentInfo.firstPaymentDate)
           : null,
@@ -362,8 +365,8 @@ export function CreateTrainingDialog({
       if (response.statusCode !== 201) {
         toast.warning(response.message, { style: { fontSize: "1rem" } });
       } else {
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
-        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-trainings"] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-goals"] });
         toast.success(response.message, { style: { fontSize: "1rem" } });
         window.scroll({ top: 0 });
         reset({
@@ -399,14 +402,14 @@ export function CreateTrainingDialog({
       setSelectedTrainees([]);
       setSelectedVolunteers([]);
     }
-  }, [ dialogNovoTreinamento, reset, defaultFilialId ]);
+  }, [dialogNovoTreinamento, reset, defaultFilialId]);
 
   // --- Queries ---
   // Use first trainee for address hint (legacy behavior maintained)
   const firstTraineeId = watchSelectedTraineeIds[0];
 
   const addressesData = useQuery<ApiResponse<Address[]>, Error>({
-    queryKey: [ "get-all-trainee-addresses", firstTraineeId ],
+    queryKey: ["get-all-trainee-addresses", firstTraineeId],
     queryFn: () => GetAllTraineeAddresses({ customerId: firstTraineeId }),
     enabled: !!firstTraineeId,
     staleTime: 1000 * 60,
@@ -450,7 +453,7 @@ export function CreateTrainingDialog({
     date: watchDueDate,
   };
   const { data } = useQuery<ApiResponse<GetDayCheckoutsResponse[]>, Error>({
-    queryKey: [ "get-day-checkouts", params ],
+    queryKey: ["get-day-checkouts", params],
     queryFn: () => getDayCheckouts({ body: params }),
     enabled: !!watchFilialId && !!watchDueDate && !!watchSelectedGear,
     staleTime: 0,
@@ -459,12 +462,12 @@ export function CreateTrainingDialog({
 
   useEffect(() => {
     setValue("hourInMinutes", 0);
-  }, [ setValue, watchSelectedGear ]);
+  }, [setValue, watchSelectedGear]);
 
   return (
     <Dialog
-      open={ dialogNovoTreinamento }
-      onOpenChange={ setDialogNovoTreinamento }
+      open={dialogNovoTreinamento}
+      onOpenChange={setDialogNovoTreinamento}
     >
       <DialogTrigger asChild>
         <Button>
@@ -476,8 +479,8 @@ export function CreateTrainingDialog({
         id="create-training-dialog-content"
         className="max-w-6xl max-h-[90vh] overflow-y-auto bg-card"
       >
-        <form onSubmit={ handleSubmit(onSubmitTraining, onInvalid) }>
-          <FormProvider { ...createTrainingMethods }>
+        <form onSubmit={handleSubmit(onSubmitTraining, onInvalid)}>
+          <FormProvider {...createTrainingMethods}>
             <DialogHeader>
               <DialogTitle>Criar Nova Sessão</DialogTitle>
               <DialogDescription>
@@ -495,22 +498,22 @@ export function CreateTrainingDialog({
                   <div className="space-y-2">
                     <Label>Filial *</Label>
                     <SelectFilial
-                      control={ control }
+                      control={control}
                       name="filialId"
-                      accessibleFilials={ accessibleFilialsIds }
-                      defaultFilial={ defaultFilialId }
+                      accessibleFilials={accessibleFilialsIds}
+                      defaultFilial={defaultFilialId}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="gearId">Equipamento *</Label>
                     <SelectTrainingGear
-                      disabled={ !watchFilialId }
-                      filialId={ watchFilialId }
-                      selectedGear={ watchSelectedGear }
-                      onGearChange={ (gearId) => {
+                      disabled={!watchFilialId}
+                      filialId={watchFilialId}
+                      selectedGear={watchSelectedGear}
+                      onGearChange={(gearId) => {
                         setValue("gearId", gearId, { shouldValidate: true });
-                      } }
+                      }}
                     />
                     {errors.gearId && (
                       <p className="text-sm text-red-600">
@@ -524,10 +527,10 @@ export function CreateTrainingDialog({
                   <div className="space-y-2">
                     <Label>Alunos *</Label>
                     <SelectTrainee
-                      disabled={ !watchFilialId }
-                      filialId={ watchFilialId }
-                      selectedTraineeIds={ watchSelectedTraineeIds }
-                      onTraineesChange={ handleTraineesChange }
+                      disabled={!watchFilialId}
+                      filialId={watchFilialId}
+                      selectedTraineeIds={watchSelectedTraineeIds}
+                      onTraineesChange={handleTraineesChange}
                     />
                     {errors.traineeIds && (
                       <p className="text-sm text-red-600">
@@ -538,10 +541,10 @@ export function CreateTrainingDialog({
                   <div className="space-y-2">
                     <Label>Pacientes modelo *</Label>
                     <SelectVolunteer
-                      disabled={ !watchFilialId }
-                      filialId={ watchFilialId }
-                      selectedVolunteerIds={ watchSelectedVolunteerIds }
-                      onVolunteersChange={ handleVolunteersChange }
+                      disabled={!watchFilialId}
+                      filialId={watchFilialId}
+                      selectedVolunteerIds={watchSelectedVolunteerIds}
+                      onVolunteersChange={handleVolunteersChange}
                     />
                     {errors.volunteerIds && (
                       <p className="text-sm text-red-600">
@@ -563,19 +566,19 @@ export function CreateTrainingDialog({
                   <div className="space-y-2">
                     <Label>Data do Treinamento *</Label>
                     <Controller
-                      control={ control }
+                      control={control}
                       name="dueDate"
-                      render={ ({ field }) => (
+                      render={({ field }) => (
                         <DatePicker
-                          modal={ true }
-                          value={ field.value! }
-                          onChange={ (e) => {
+                          modal={true}
+                          value={field.value!}
+                          onChange={(e) => {
                             field.onChange(e);
-                          } }
+                          }}
                           placeholder="Selecione a data"
                           clearable
                         />
-                      ) }
+                      )}
                     />
                     {errors.dueDate && (
                       <p className="text-sm text-red-600">
@@ -606,24 +609,24 @@ export function CreateTrainingDialog({
                         return (
                           <Button
                             type="button"
-                            key={ hour.hourInMinutes }
+                            key={hour.hourInMinutes}
                             variant={
                               watchHour === hour.hourInMinutes
                                 ? "default"
                                 : "outline"
                             }
                             size="sm"
-                            disabled={ !hasSomeAvailableGapTime }
-                            onClick={ () =>
+                            disabled={!hasSomeAvailableGapTime}
+                            onClick={() =>
                               setValue("hourInMinutes", hour.hourInMinutes, {
                                 shouldValidate: true,
                               })
                             }
-                            className={ `text-xs h-9 transition-all ${
+                            className={`text-xs h-9 transition-all ${
                               watchHour === hour.hourInMinutes
                                 ? "ring-2 ring-primary ring-offset-2"
                                 : ""
-                            } ${!hasSomeAvailableGapTime ? "opacity-50" : "hover:scale-105"}` }
+                            } ${!hasSomeAvailableGapTime ? "opacity-50" : "hover:scale-105"}`}
                           >
                             {hour.formattedTime}
                             {watchHour === hour.hourInMinutes && (
@@ -682,17 +685,17 @@ export function CreateTrainingDialog({
                     </div>
 
                     <FinancialInputSection
-                      control={ control }
-                      register={ register }
-                      setValue={ setValue }
-                      watch={ watch }
-                      errors={ errors }
-                      participants={ selectedTrainees.map((t) => ({
+                      control={control}
+                      register={register}
+                      setValue={setValue}
+                      watch={watch}
+                      errors={errors}
+                      participants={selectedTrainees.map((t) => ({
                         id: t.customerId,
                         name: t.fullname,
-                      })) }
+                      }))}
                       type="trainee"
-                      fields={ traineeFields }
+                      fields={traineeFields}
                     />
                   </div>
 
@@ -708,17 +711,17 @@ export function CreateTrainingDialog({
                     </div>
 
                     <FinancialInputSection
-                      control={ control }
-                      register={ register }
-                      setValue={ setValue }
-                      watch={ watch }
-                      errors={ errors }
-                      participants={ selectedVolunteers.map((v) => ({
+                      control={control}
+                      register={register}
+                      setValue={setValue}
+                      watch={watch}
+                      errors={errors}
+                      participants={selectedVolunteers.map((v) => ({
                         id: v.volunteerId,
                         name: v.name,
-                      })) }
+                      }))}
                       type="volunteer"
-                      fields={ volunteerFields }
+                      fields={volunteerFields}
                     />
                   </div>
                 </div>
@@ -729,11 +732,11 @@ export function CreateTrainingDialog({
               <Button
                 variant="outline"
                 type="button"
-                onClick={ () => setDialogNovoTreinamento(false) }
+                onClick={() => setDialogNovoTreinamento(false)}
               >
                 Cancelar
               </Button>
-              <Button disabled={ isSubmitting } type="submit">
+              <Button disabled={isSubmitting} type="submit">
                 {isSubmitting ? (
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
                 ) : null}

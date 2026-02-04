@@ -66,7 +66,7 @@ export function TrainingDetailsDialog({
     isTrainingPaymentMethodDialogOpen,
     setIsTrainingPaymentMethodDialogOpen,
   ] = useState(false);
-  const [ isUpdateValuesDialogOpen, setIsUpdateValuesDialogOpen ] =
+  const [isUpdateValuesDialogOpen, setIsUpdateValuesDialogOpen] =
     useState(false);
   const [
     isCancelTrainingConfirmationDialogOpen,
@@ -76,26 +76,26 @@ export function TrainingDetailsDialog({
     isFinishTrainingConfirmationDialogOpen,
     setFinishTrainingConfirmationDialogOpen,
   ] = useState(false);
-  const [ selectedPayerType, setSelectedPayerType ] = useState<PayerType | null>(
+  const [selectedPayerType, setSelectedPayerType] = useState<PayerType | null>(
     null,
   );
-  const [ currentTrainingStatus, setCurrentTrainingStatus ] = useState(
+  const [currentTrainingStatus, setCurrentTrainingStatus] = useState(
     selectedTraining?.trainingStatus,
   );
 
-  const [ isAddParticipantDialogOpen, setIsAddParticipantDialogOpen ] =
+  const [isAddParticipantDialogOpen, setIsAddParticipantDialogOpen] =
     useState(false);
-  const [ participantTypeToAdd, setParticipantTypeToAdd ] =
+  const [participantTypeToAdd, setParticipantTypeToAdd] =
     useState<PayerType>("TRAINEE");
 
-  const [ isEditFinancialsDialogOpen, setIsEditFinancialsDialogOpen ] =
+  const [isEditFinancialsDialogOpen, setIsEditFinancialsDialogOpen] =
     useState(false);
-  const [ financialPayerTypeToEdit, setFinancialPayerTypeToEdit ] =
+  const [financialPayerTypeToEdit, setFinancialPayerTypeToEdit] =
     useState<PayerType>("TRAINEE");
 
   useEffect(() => {
     setCurrentTrainingStatus(selectedTraining.trainingStatus);
-  }, [ selectedTraining ]);
+  }, [selectedTraining]);
 
   // --- Extrair os pagamentos do Array (APENAS PARA USO GERAL/LEGADO) ---
   const { traineePayment, volunteerPayment } = useMemo(() => {
@@ -111,9 +111,9 @@ export function TrainingDetailsDialog({
         (p: TrainingPayment) => p.payerType === "VOLUNTEER",
       ),
     };
-  }, [ selectedTraining ]);
+  }, [selectedTraining]);
 
-  const [ selectedParticipantId, setSelectedParticipantId ] = useState<
+  const [selectedParticipantId, setSelectedParticipantId] = useState<
     string | null
   >(null);
 
@@ -148,12 +148,12 @@ export function TrainingDetailsDialog({
     // Find specific payment if ID provided
     const payment = participantId
       ? payments.find(
-        (p) =>
-          p.payerType === type &&
+          (p) =>
+            p.payerType === type &&
             (type === "TRAINEE"
               ? p.traineeId === participantId || p.customerId === participantId
               : p.volunteerId === participantId),
-      )
+        )
       : null; // Do NOT default to "first found"
 
     if (payment) {
@@ -214,8 +214,8 @@ export function TrainingDetailsDialog({
 
         TrainingPayment: getSafePaymentData(type, null),
 
-        addedTrainees: type === "TRAINEE" ? [ id ] : undefined,
-        addedVolunteers: type === "VOLUNTEER" ? [ id ] : undefined,
+        addedTrainees: type === "TRAINEE" ? [id] : undefined,
+        addedVolunteers: type === "VOLUNTEER" ? [id] : undefined,
       };
 
       const response = await UpdateTraining({
@@ -225,7 +225,7 @@ export function TrainingDetailsDialog({
 
       if (response && response.statusCode === 200) {
         toast.success("Participante adicionado com  sucesso!");
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-trainings"] });
         if (setSelectedTraining && response.data) {
           setSelectedTraining(response.data);
         }
@@ -274,8 +274,8 @@ export function TrainingDetailsDialog({
       customerId: type === "TRAINEE" ? id : undefined,
       volunteerId: type === "VOLUNTEER" ? id : undefined,
       TrainingPayment: getSafePaymentData(type, id),
-      removedTrainees: type === "TRAINEE" ? [ id ] : undefined,
-      removedVolunteers: type === "VOLUNTEER" ? [ id ] : undefined,
+      removedTrainees: type === "TRAINEE" ? [id] : undefined,
+      removedVolunteers: type === "VOLUNTEER" ? [id] : undefined,
     };
 
     try {
@@ -285,7 +285,7 @@ export function TrainingDetailsDialog({
       });
       if (response && response.statusCode === 200) {
         toast.success("Participante removido com sucesso!");
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-trainings"] });
         if (setSelectedTraining && response.data) {
           setSelectedTraining(response.data);
         }
@@ -321,45 +321,47 @@ export function TrainingDetailsDialog({
 
       const paymentData = targetPayment
         ? {
-          totalPrice: targetPayment.totalPrice,
-          basePrice: targetPayment.basePrice,
-          paymentStatus:
+            totalPrice: targetPayment.totalPrice,
+            basePrice: targetPayment.basePrice,
+            paymentStatus:
               trainingStatus === "Cancelado"
                 ? "Cancelado"
-                : targetPayment.paymentStatus || "Pendente",
-          paymentMode: targetPayment.paymentMode,
-          firstPaymentAmount: targetPayment.firstPaymentAmount || 0,
-          firstPaymentDate: targetPayment.firstPaymentDate
-            ? new Date(targetPayment.firstPaymentDate)
-            : null,
-          firstPaymentMethod: targetPayment.firstPaymentMethod,
-          firstPaymentStatus: targetPayment.firstPaymentStatus,
-          secondPaymentAmount: targetPayment.secondPaymentAmount || 0,
-          secondPaymentDate: targetPayment.secondPaymentDate
-            ? new Date(targetPayment.secondPaymentDate)
-            : null,
-          secondPaymentMethod: targetPayment.secondPaymentMethod,
-          secondPaymentStatus: targetPayment.secondPaymentStatus,
-          additionalCost: targetPayment.additionalCost || 0,
-          additionalCostDescription:
+                : targetPayment.paymentStatus === "Cortesia"
+                  ? "Pago"
+                  : targetPayment.paymentStatus || "Pendente",
+            paymentMode: targetPayment.paymentMode,
+            firstPaymentAmount: targetPayment.firstPaymentAmount || 0,
+            firstPaymentDate: targetPayment.firstPaymentDate
+              ? new Date(targetPayment.firstPaymentDate)
+              : null,
+            firstPaymentMethod: targetPayment.firstPaymentMethod,
+            firstPaymentStatus: targetPayment.firstPaymentStatus,
+            secondPaymentAmount: targetPayment.secondPaymentAmount || 0,
+            secondPaymentDate: targetPayment.secondPaymentDate
+              ? new Date(targetPayment.secondPaymentDate)
+              : null,
+            secondPaymentMethod: targetPayment.secondPaymentMethod,
+            secondPaymentStatus: targetPayment.secondPaymentStatus,
+            additionalCost: targetPayment.additionalCost || 0,
+            additionalCostDescription:
               targetPayment.additionalCostDescription || "",
-        }
+          }
         : {
-          paymentStatus: "Pendente" as const,
-          paymentMode: "AVista" as const,
-          totalPrice: 0,
-          basePrice: 0,
-          firstPaymentAmount: 0,
-          firstPaymentDate: null,
-          firstPaymentMethod: null,
-          firstPaymentStatus: "Pendente" as const,
-          secondPaymentAmount: 0,
-          secondPaymentDate: null,
-          secondPaymentMethod: null,
-          secondPaymentStatus: "Pendente" as const,
-          additionalCost: 0,
-          additionalCostDescription: "",
-        };
+            paymentStatus: "Pendente" as const,
+            paymentMode: "AVista" as const,
+            totalPrice: 0,
+            basePrice: 0,
+            firstPaymentAmount: 0,
+            firstPaymentDate: null,
+            firstPaymentMethod: null,
+            firstPaymentStatus: "Pendente" as const,
+            secondPaymentAmount: 0,
+            secondPaymentDate: null,
+            secondPaymentMethod: null,
+            secondPaymentStatus: "Pendente" as const,
+            additionalCost: 0,
+            additionalCostDescription: "",
+          };
 
       const targetId =
         targetPayerType === "VOLUNTEER"
@@ -396,8 +398,8 @@ export function TrainingDetailsDialog({
         if (setSelectedTraining && response.data) {
           setSelectedTraining(response.data);
         }
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
-        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-trainings"] });
+        queryClient.invalidateQueries({ queryKey: ["get-all-goals"] });
         onOpenChange(false);
       } else {
         toast.warning(response.message || "Erro ao atualizar status.");
@@ -409,14 +411,14 @@ export function TrainingDetailsDialog({
   };
 
   // Esta dos para os valores financeiros
-  const [ traineeBasePrice, setTraineeBasePrice ] = useState(0);
-  const [ traineeAdditionalCost, setTraineeAdditionalCost ] = useState(0);
+  const [traineeBasePrice, setTraineeBasePrice] = useState(0);
+  const [traineeAdditionalCost, setTraineeAdditionalCost] = useState(0);
   const [
     traineeAdditionalCostDescription,
     setTraineeAdditionalCostDescription,
   ] = useState("");
-  const [ traineeTotalPrice, setTraineeTotalPrice ] = useState(0);
-  const [ volunteerTotalPrice, setVolunteerTotalPrice ] = useState(0);
+  const [traineeTotalPrice, setTraineeTotalPrice] = useState(0);
+  const [volunteerTotalPrice, setVolunteerTotalPrice] = useState(0);
 
   // Helper para formatar moeda
   const formatCurrency = (val: number) => `R$ ${centsToString(val)}`;
@@ -426,7 +428,7 @@ export function TrainingDetailsDialog({
     currentTrainingStatus !== "Cancelado";
 
   return (
-    <Dialog open={ open } onOpenChange={ onOpenChange }>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] w-[90vw] md:w-[900px] overflow-hidden flex flex-col dark:bg-gray-900">
         <DialogHeader className="px-1">
           <DialogTitle className="text-xl">Detalhes do Treinamento</DialogTitle>
@@ -468,7 +470,7 @@ export function TrainingDetailsDialog({
                 </div>
               </div>
               <div className="flex gap-2 ml-auto items-center">
-                <BookingStatusBadge status={ currentTrainingStatus } />
+                <BookingStatusBadge status={currentTrainingStatus} />
               </div>
             </div>
 
@@ -505,58 +507,58 @@ export function TrainingDetailsDialog({
                     {selectedTraining.TrainingPayment.some(
                       (p) => (p.cancellationFee || 0) > 0,
                     ) ? (
-                        selectedTraining.TrainingPayment.filter(
-                          (p) => (p.cancellationFee || 0) > 0,
-                        ).map((p) => (
-                          <div
-                            key={ `$ {p.payerType}-${p.traineeId || p.volunteerId}` }
-                            className="space-y-2"
-                          >
+                      selectedTraining.TrainingPayment.filter(
+                        (p) => (p.cancellationFee || 0) > 0,
+                      ).map((p) => (
+                        <div
+                          key={`$ {p.payerType}-${p.traineeId || p.volunteerId}`}
+                          className="space-y-2"
+                        >
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Taxa (
+                              {p.payerType === "TRAINEE" ? "Aluno" : "Modelo"}):
+                            </span>
+                            <span className="font-bold text-red-600">
+                              {formatCurrency(p.cancellationFee || 0)}
+                            </span>
+                          </div>
+
+                          {p.cancellationFeePaymentDate && (
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">
-                              Taxa (
-                                {p.payerType === "TRAINEE" ? "Aluno" : "Modelo"}):
+                                Data Pagamento Taxa:
                               </span>
-                              <span className="font-bold text-red-600">
-                                {formatCurrency(p.cancellationFee || 0)}
+                              <span className="font-medium">
+                                {new Date(
+                                  p.cancellationFeePaymentDate,
+                                ).toLocaleDateString("pt-BR")}
                               </span>
                             </div>
+                          )}
 
-                            {p.cancellationFeePaymentDate && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">
-                                Data Pagamento Taxa:
-                                </span>
-                                <span className="font-medium">
-                                  {new Date(
-                                    p.cancellationFeePaymentDate,
-                                  ).toLocaleDateString("pt-BR")}
-                                </span>
-                              </div>
-                            )}
-
-                            {p.cancellationFeePaymentMethod && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">
+                          {p.cancellationFeePaymentMethod && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
                                 Método Pagamento Taxa:
-                                </span>
-                                <span className="font-medium">
-                                  {p.cancellationFeePaymentMethod}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
-                          Taxa de Cancelamento:
-                          </span>
-                          <span className="font-medium text-green-600">
-                          Isento / Não aplicada
-                          </span>
+                              </span>
+                              <span className="font-medium">
+                                {p.cancellationFeePaymentMethod}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      ))
+                    ) : (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Taxa de Cancelamento:
+                        </span>
+                        <span className="font-medium text-green-600">
+                          Isento / Não aplicada
+                        </span>
+                      </div>
+                    )}
 
                     {/* Reembolso */}
                     {selectedTraining.wasRefunded && (
@@ -632,19 +634,19 @@ export function TrainingDetailsDialog({
                         variant="ghost"
                         size="sm"
                         className="h-6 text-xs flex gap-1"
-                        onClick={ () => handleOpenEditFinancials("TRAINEE") }
+                        onClick={() => handleOpenEditFinancials("TRAINEE")}
                       >
                         <DollarSign className="h-3 w-3 mr-1" />
-                          Valores
+                        Valores
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-6 text-xs flex gap-1"
-                        onClick={ () => handleAddParticipantClick("TRAINEE") }
+                        onClick={() => handleAddParticipantClick("TRAINEE")}
                       >
                         <Plus className="h-3 w-3 mr-1" />
-                          Adicionar
+                        Adicionar
                       </Button>
                     </div>
                   )}
@@ -664,7 +666,7 @@ export function TrainingDetailsDialog({
 
                       return (
                         <div
-                          key={ trainee.customerId }
+                          key={trainee.customerId}
                           className="p-3 rounded-lg border bg-card flex items-center justify-between gap-3"
                         >
                           <div className="flex items-center gap-3 overflow-hidden">
@@ -693,9 +695,9 @@ export function TrainingDetailsDialog({
                           </div>
                           <div className="ml-auto px-2">
                             <BookingPaymentStatusBadge
-                              status={ status }
-                              isCourtesy={ payment?.isCourtesy }
-                              wasRefunded={ payment?.wasRefunded }
+                              status={status}
+                              isCourtesy={payment?.isCourtesy}
+                              wasRefunded={payment?.wasRefunded}
                               small
                             />
                           </div>
@@ -705,7 +707,7 @@ export function TrainingDetailsDialog({
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 shrink-0"
-                              onClick={ () =>
+                              onClick={() =>
                                 handleOpenPaymentDialog(
                                   "TRAINEE",
                                   trainee.customerId,
@@ -722,7 +724,7 @@ export function TrainingDetailsDialog({
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={ () =>
+                                onClick={() =>
                                   onRemoveParticipant(
                                     "TRAINEE",
                                     trainee.customerId,
@@ -757,7 +759,7 @@ export function TrainingDetailsDialog({
                         variant="ghost"
                         size="sm"
                         className="h-6 px-2 text-xs"
-                        onClick={ () => handleOpenEditFinancials("VOLUNTEER") }
+                        onClick={() => handleOpenEditFinancials("VOLUNTEER")}
                       >
                         <DollarSign className="h-3 w-3 mr-1" /> Valores
                       </Button>
@@ -765,7 +767,7 @@ export function TrainingDetailsDialog({
                         variant="ghost"
                         size="sm"
                         className="h-6 px-2 text-xs"
-                        onClick={ () => handleAddParticipantClick("VOLUNTEER") }
+                        onClick={() => handleAddParticipantClick("VOLUNTEER")}
                       >
                         <Plus className="h-3 w-3 mr-1" /> Adicionar
                       </Button>
@@ -786,7 +788,7 @@ export function TrainingDetailsDialog({
 
                       return (
                         <div
-                          key={ volunteer.volunteerId }
+                          key={volunteer.volunteerId}
                           className="p-3 rounded-lg border bg-card flex items-center justify-between gap-3"
                         >
                           <div className="flex items-center gap-3 overflow-hidden">
@@ -815,9 +817,9 @@ export function TrainingDetailsDialog({
                           </div>
                           <div className="ml-auto px-2">
                             <BookingPaymentStatusBadge
-                              status={ status }
-                              isCourtesy={ payment?.isCourtesy }
-                              wasRefunded={ payment?.wasRefunded }
+                              status={status}
+                              isCourtesy={payment?.isCourtesy}
+                              wasRefunded={payment?.wasRefunded}
                               small
                             />
                           </div>
@@ -826,7 +828,7 @@ export function TrainingDetailsDialog({
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 shrink-0"
-                              onClick={ () =>
+                              onClick={() =>
                                 handleOpenPaymentDialog(
                                   "VOLUNTEER",
                                   volunteer.volunteerId,
@@ -843,7 +845,7 @@ export function TrainingDetailsDialog({
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={ () =>
+                                onClick={() =>
                                   onRemoveParticipant(
                                     "VOLUNTEER",
                                     volunteer.volunteerId,
@@ -874,10 +876,10 @@ export function TrainingDetailsDialog({
         <DialogFooter className="sm:justify-end gap-2 w-full">
           <div className="flex items-center gap-2">
             <Button
-              disabled={ currentTrainingStatus !== "Pendente" }
+              disabled={currentTrainingStatus !== "Pendente"}
               variant="destructive"
               className="flex items-center justify-center gap-2"
-              onClick={ () => setCancelTrainingConfirmationDialogOpen(true) }
+              onClick={() => setCancelTrainingConfirmationDialogOpen(true)}
             >
               <Trash2 className="w-4 h-4" />
               <span className="sr-only md:not-sr-only">Cancelar</span>
@@ -890,7 +892,7 @@ export function TrainingDetailsDialog({
                 selectedTraining.trainingStatus === "Concluido" ||
                 selectedTraining.trainingStatus === "Cancelado"
               }
-              onClick={ () => setFinishTrainingConfirmationDialogOpen(true) }
+              onClick={() => setFinishTrainingConfirmationDialogOpen(true)}
             >
               <Check className="w-4 h-4" />
               <span className="sr-only md:not-sr-only">Concluir</span>
@@ -901,17 +903,17 @@ export function TrainingDetailsDialog({
 
       {selectedPayerType && (
         <TrainingPaymentMethodDialog
-          key={ selectedPayerType }
-          payerType={ selectedPayerType }
-          isTrainingPaymentMethodDialogOpen={ isTrainingPaymentMethodDialogOpen }
-          selectedTraining={ selectedTraining }
-          setSelectedTraining={ setSelectedTraining }
+          key={selectedPayerType}
+          payerType={selectedPayerType}
+          isTrainingPaymentMethodDialogOpen={isTrainingPaymentMethodDialogOpen}
+          selectedTraining={selectedTraining}
+          setSelectedTraining={setSelectedTraining}
           setIsTrainingPaymentMethodDialogOpen={
             setIsTrainingPaymentMethodDialogOpen
           }
-          traineeTotalPrice={ traineeTotalPrice }
-          volunteerTotalPrice={ volunteerTotalPrice }
-          participantId={ selectedParticipantId }
+          traineeTotalPrice={traineeTotalPrice}
+          volunteerTotalPrice={volunteerTotalPrice}
+          participantId={selectedParticipantId}
         />
       )}
 
@@ -922,10 +924,10 @@ export function TrainingDetailsDialog({
         setCancelTrainingConfirmationDialogOpen={
           setCancelTrainingConfirmationDialogOpen
         }
-        setCurrentTrainingStatus={ setCurrentTrainingStatus }
-        selectedTraining={ selectedTraining }
-        setSelectedTraining={ setSelectedTraining }
-        handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
+        setCurrentTrainingStatus={setCurrentTrainingStatus}
+        selectedTraining={selectedTraining}
+        setSelectedTraining={setSelectedTraining}
+        handleUpdateTrainingStatus={handleUpdateTrainingStatus}
       />
 
       <FinishTrainingConfirmationDialog
@@ -935,52 +937,52 @@ export function TrainingDetailsDialog({
         setFinishTrainingConfirmationDialogOpen={
           setFinishTrainingConfirmationDialogOpen
         }
-        setCurrentTrainingStatus={ setCurrentTrainingStatus }
-        selectedTraining={ selectedTraining }
-        handleUpdateTrainingStatus={ handleUpdateTrainingStatus }
+        setCurrentTrainingStatus={setCurrentTrainingStatus}
+        selectedTraining={selectedTraining}
+        handleUpdateTrainingStatus={handleUpdateTrainingStatus}
       />
 
       <AddParticipantDialog
-        open={ isAddParticipantDialogOpen }
-        onOpenChange={ setIsAddParticipantDialogOpen }
-        type={ participantTypeToAdd }
-        onAdd={ onAddParticipant }
-        filialId={ selectedTraining.sourceFilialId }
-        excludeIds={ [
+        open={isAddParticipantDialogOpen}
+        onOpenChange={setIsAddParticipantDialogOpen}
+        type={participantTypeToAdd}
+        onAdd={onAddParticipant}
+        filialId={selectedTraining.sourceFilialId}
+        excludeIds={[
           ...(selectedTraining.Trainees?.map((t) => t.customerId) || []),
           ...(selectedTraining.Volunteers?.map((v) => v.volunteerId) || []),
-        ] }
+        ]}
       />
 
       {selectedPayerType && selectedParticipantId && (
         <UpdateParticipantValuesDialog
-          open={ isUpdateValuesDialogOpen }
-          onOpenChange={ setIsUpdateValuesDialogOpen }
-          selectedTraining={ selectedTraining }
-          setSelectedTraining={ setSelectedTraining }
-          payerType={ selectedPayerType }
-          participantId={ selectedParticipantId }
-          currentPayment={ selectedTraining.TrainingPayment?.find(
+          open={isUpdateValuesDialogOpen}
+          onOpenChange={setIsUpdateValuesDialogOpen}
+          selectedTraining={selectedTraining}
+          setSelectedTraining={setSelectedTraining}
+          payerType={selectedPayerType}
+          participantId={selectedParticipantId}
+          currentPayment={selectedTraining.TrainingPayment?.find(
             (p) =>
               p.payerType === selectedPayerType &&
               (selectedPayerType === "TRAINEE"
                 ? p.traineeId === selectedParticipantId ||
                   p.customerId === selectedParticipantId
                 : p.volunteerId === selectedParticipantId),
-          ) }
+          )}
         />
       )}
 
       <EditTrainingFinancialsDialog
-        open={ isEditFinancialsDialogOpen }
-        onOpenChange={ setIsEditFinancialsDialogOpen }
-        training={ selectedTraining }
-        payerType={ financialPayerTypeToEdit }
-        onSuccess={ (updated) => {
+        open={isEditFinancialsDialogOpen}
+        onOpenChange={setIsEditFinancialsDialogOpen}
+        training={selectedTraining}
+        payerType={financialPayerTypeToEdit}
+        onSuccess={(updated) => {
           if (setSelectedTraining) {
             setSelectedTraining(updated);
           }
-        } }
+        }}
       />
     </Dialog>
   );
