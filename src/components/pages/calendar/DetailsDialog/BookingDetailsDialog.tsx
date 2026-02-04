@@ -85,6 +85,7 @@ import { SelectAddress } from "../../bookings/create/SelectAddress";
 import PriceInput from "@/components/shared/PriceInput";
 import { Address } from "@/utils/@types/address";
 import { Employee } from "@/utils/@types/employee";
+import { User as UserData } from "@/utils/@types/user";
 
 interface BookingDetailsDialogProps {
   setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -115,9 +116,9 @@ export function BookingDetailsDialog({
   ] = useState(false);
   const [ checkoutCanBeUpdated, setCheckoutCanBeUpdated ] = useState(true);
   const [ isEditingDriver, setIsEditingDriver ] = useState(false);
-  const [ selectedDriverData, setSelectedDriverData ] = useState<Employee | null>(
-    null,
-  );
+  const [ selectedDriverData, setSelectedDriverData ] = useState<
+    Employee | UserData | null
+  >(null);
   const [ isEditingAddress, setIsEditingAddress ] = useState(false);
   const [ selectedAddressString, setSelectedAddressString ] = useState("");
   const [ selectedAddressData, setSelectedAddressData ] =
