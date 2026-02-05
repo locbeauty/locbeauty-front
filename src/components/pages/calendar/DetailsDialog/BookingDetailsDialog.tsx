@@ -173,7 +173,7 @@ export function BookingDetailsDialog({
     const isPast = selectedCheckout.date <= new Date();
     const isNotPending = selectedCheckout.checkoutStatus !== "Pendente";
 
-    setCheckoutCanBeUpdated(!(isPaid || isPast || isNotPending));
+    setCheckoutCanBeUpdated(!(isPaid || isNotPending));
 
     setEditingDate(new Date(selectedCheckout.date));
     setEditingStartHour(selectedCheckout.startHourInMinutes);
