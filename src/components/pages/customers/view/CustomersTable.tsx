@@ -35,6 +35,7 @@ import {
   GetAllCustomersFilters,
   UpdateCustomer,
   DeleteCustomer,
+  HardDeleteCustomer,
 } from "@/services/customers.service";
 import { ApiResponse } from "@/lib/api";
 import { Can } from "@/components/auth/Can";
@@ -77,6 +78,13 @@ export function CustomersTable() {
   const [ customerToRestore, setCustomerToRestore ] = useState<Customer | null>(
     null,
   );
+  const [ isHardDeleting, setIsHardDeleting ] = useState(false);
+  const [
+    isHardDeleteConfirmationDialogOpen,
+    setIsHardDeleteConfirmationDialogOpen,
+  ] = useState(false);
+  const [ customerToHardDelete, setCustomerToHardDelete ] =
+    useState<Customer | null>(null);
 
   const [ pagination, setPagination ] = useState({ page: 1, limit: 10 });
   const [ filters, setFilters ] = useState<GetAllCustomersFilters>({
@@ -186,6 +194,30 @@ export function CustomersTable() {
       setIsRestoring(false);
       setIsRestoreConfirmationDialogOpen(false);
       setCustomerToRestore(null);
+    }
+  };
+
+  const handleHardDeleteCustomer = async () => {
+    if (!customerToHardDelete) return;
+
+    setIsHardDeleting(true);
+    try {
+      const response = await HardDeleteCustomer(customerToHardDelete.customerId);
+
+      if (response.statusCode === 204 || response.statusCode === 200) {
+        toast.success("Cliente excluído definitivamente.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+      } else {
+        toast.error(response.message || "Erro ao excluir cliente.");
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir cliente.");
+    } finally {
+      setIsHardDeleting(false);
+      setIsHardDeleteConfirmationDialogOpen(false);
+      setCustomerToHardDelete(null);
     }
   };
 
@@ -479,6 +511,19 @@ export function CustomersTable() {
                           <RefreshCcw className="w-4 h-4" />
                         </Button>
                       )}
+                      {user?.role === USER_ROLES.MASTER && filters.isVisible === "false" && (
+                        <Button
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={ () => {
+                            setCustomerToHardDelete(customer);
+                            setIsHardDeleteConfirmationDialogOpen(true);
+                          } }
+                          disabled={ isHardDeleting }
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -738,6 +783,44 @@ export function CustomersTable() {
         itemId={ customerToRestore?.customerId }
         isRestoring={ isRestoring }
       />
+
+      <Dialog
+        open={ isHardDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsHardDeleteConfirmationDialogOpen }
+      >
+        <DialogContent className="max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <Trash2 className="h-5 w-5" /> EXCLUSÃO DEFINITIVA
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é <span className="font-bold underline">irreversível</span>.
+              Tem certeza que deseja excluir permanentemente o cliente{" "}
+              <span className="font-bold">
+                {customerToHardDelete?.fullname ||
+                  customerToHardDelete?.companyName}
+              </span>
+              ? Todos os dados associados a este cliente serão removidos para sempre.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={ () => setIsHardDeleteConfirmationDialogOpen(false) }
+              disabled={ isHardDeleting }
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={ handleHardDeleteCustomer }
+              disabled={ isHardDeleting }
+            >
+              {isHardDeleting ? "Excluindo..." : "Confirmar Exclusão Definitiva"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
