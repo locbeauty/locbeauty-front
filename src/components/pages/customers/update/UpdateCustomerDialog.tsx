@@ -95,8 +95,14 @@ export function UpdateCustomerDialog({
     customerData: UpdateCustomerFormSchemaType,
   ) => {
     if (selectedCustomer) {
+      const formattedData = {
+        ...customerData,
+        cpf: customerData.cpf === "" ? null : customerData.cpf,
+        cnpj: customerData.cnpj === "" ? null : customerData.cnpj,
+      };
+
       const response = await UpdateCustomer({
-        body: customerData,
+        body: formattedData,
         queryParams: {
           customerId: selectedCustomer.customerId,
         },
