@@ -198,7 +198,7 @@ function CityList({
               />
               <div className="flex flex-col">
                 <span>{city.name}</span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs">
                   {city.distance} km
                 </span>
               </div>

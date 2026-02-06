@@ -101,7 +101,9 @@ export function GearsSection() {
       },
     ]);
   }
-
+  useEffect(() => {
+    console.log("Errors: ", errors);
+  }, [ errors ]);
   function handleRemoveGear(gearId: string) {
     setValue(
       "gears",
@@ -389,6 +391,7 @@ export function CreateBookingForm() {
       crossDays: false,
       endDate: undefined,
       endHourInMinutes: undefined,
+      isRoundTrip: true,
     });
   }
 

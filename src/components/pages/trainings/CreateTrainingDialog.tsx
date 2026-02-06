@@ -45,10 +45,7 @@ import { FinancialInputSection } from "./FinancialInputSection";
 
 // Services & Utils
 import { CreateTraining } from "@/services/trainings.service";
-import {
-  GetAllTraineeAddresses,
-  CreateGenericAddress,
-} from "@/services/addresses.service";
+import { CreateGenericAddress } from "@/services/addresses.service";
 import {
   getDayCheckouts,
   GetDayCheckoutsResponse,
@@ -408,17 +405,6 @@ export function CreateTrainingDialog({
     }
   }, [ dialogNovoTreinamento, reset, defaultFilialId ]);
 
-  // --- Queries ---
-  // Use first trainee for address hint (legacy behavior maintained)
-  const firstTraineeId = watchSelectedTraineeIds[0];
-
-  const addressesData = useQuery<ApiResponse<Address[]>, Error>({
-    queryKey: [ "get-all-trainee-addresses", firstTraineeId ],
-    queryFn: () => GetAllTraineeAddresses({ customerId: firstTraineeId }),
-    enabled: !!firstTraineeId,
-    staleTime: 1000 * 60,
-  });
-
   // --- Helper: Scroll to top on error ---
   const onInvalid = () => {
     const dialogContent = document.getElementById(
@@ -574,7 +560,6 @@ export function CreateTrainingDialog({
                       name="dueDate"
                       render={ ({ field }) => (
                         <DatePicker
-                          modal={ true }
                           value={ field.value! }
                           onChange={ (e) => {
                             field.onChange(e);

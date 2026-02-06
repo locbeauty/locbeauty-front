@@ -586,7 +586,7 @@ export function BookingDetailsDialog({
         open={ isBookingDetailsDialogOpen }
         onOpenChange={ setBookingDetailsDialogOpen }
       >
-        <DialogContent className="max-h-[95vh] w-full max-w-5xl overflow-y-auto dark:bg-gray-900 p-0 gap-0">
+        <DialogContent className="max-h-[95vh] w-full max-w-5xl overflow-y-auto dark:bg-gray-900 p-0 gap-0" aria-describedby={ undefined }>
           {selectedCheckout ? (
             <>
               <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between">

@@ -33,6 +33,12 @@ export default function CheckoutTimeSelector<T extends FieldValues>({
   const watchDate = watch("date");
   const watchSelectedGears = watch("gears");
 
+  // Reset start time and duration when date changes
+  useEffect(() => {
+    setValue("startHourInMinutes", 0);
+    setValue("totalDurationInMinutes", 0);
+  }, [ watchDate, setValue ]);
+
   // const isDateInPast = watchDate && watchDate < new Date();
   const isDateInPast = false;
 

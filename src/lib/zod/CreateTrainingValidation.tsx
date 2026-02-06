@@ -85,9 +85,7 @@ export const CreateTrainingSchema = z.object({
   filialId: z.string(),
 
   // Endereço
-  zipCode: z
-    .string({ message: "CEP é obrigatório" })
-    .min(1, { message: "CEP é obrigatório" }),
+  zipCode: z.string().optional().nullable(),
   stateName: z.string().optional(),
   cityName: z.string().optional(),
   neighborhoodName: z.string().optional(),

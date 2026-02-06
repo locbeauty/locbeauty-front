@@ -29,6 +29,7 @@ export default function DocumentInput({
   const inputRef = useRef<HTMLInputElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const maskRef = useRef<any>(null);
+  const isProgrammaticUpdate = useRef(false);
 
   // Extract register props to handle them manually
   const {
@@ -57,6 +58,8 @@ export default function DocumentInput({
     maskRef.current = IMask(inputRef.current, maskOptions);
 
     maskRef.current.on("accept", () => {
+      if (isProgrammaticUpdate.current) return;
+
       const event = {
         target: {
           name: name || registerName,
@@ -89,7 +92,9 @@ export default function DocumentInput({
       value !== undefined &&
       maskRef.current.value !== value
     ) {
+      isProgrammaticUpdate.current = true;
       maskRef.current.value = value;
+      isProgrammaticUpdate.current = false;
     }
   }, [ value ]);
 

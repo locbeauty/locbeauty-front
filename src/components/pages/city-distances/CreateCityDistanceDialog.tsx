@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createCityDistance } from "@/services/city-distances.service";
 import { useQueryClient } from "@tanstack/react-query";
@@ -40,8 +40,18 @@ import {
 
 const formSchema = z.object({
   cityName: z.string().min(1, "Nome da cidade é obrigatório"),
-  state: z.string().length(2, "Estado deve ter 2 letras").toUpperCase(),
-  distance: z.coerce.number().int().positive("Distância deve ser positiva"),
+  state: z.string().length(2, "Estado é obrigatório").toUpperCase(),
+  distance: z.coerce
+    .number({
+      errorMap: (issue, ctx) => {
+        if (issue.code === z.ZodIssueCode.invalid_type) {
+          return { message: "Distância deve ser um número" };
+        }
+        return { message: ctx.defaultError };
+      },
+    })
+    .int("Distância é obrigatória")
+    .positive("Distância é obrigatório"),
   filialId: z.string().min(1, "Filial é obrigatória"),
 });
 
@@ -65,12 +75,17 @@ export function CreateCityDistanceDialog({
     defaultValues: {
       cityName: "",
       state: "",
-      distance: 0,
+      distance: undefined as unknown as number,
       filialId: defaultFilialId,
     },
   });
 
   const { isSubmitting } = form.formState;
+
+  // Reset form when dialog opens or closes
+  useEffect(() => {
+    form.reset();
+  }, [ open, form ]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -81,7 +96,7 @@ export function CreateCityDistanceDialog({
         ...values,
         cityName: "",
         state: "",
-        distance: 0,
+        distance: undefined as unknown as number,
       });
       queryClient.invalidateQueries({ queryKey: [ "city-distances" ] });
     } catch (error) {
@@ -118,7 +133,9 @@ export function CreateCityDistanceDialog({
                     value={ field.value }
                     defaultFilial={ field.value }
                   />
-                  <FormMessage />
+                  <div className="min-h-[20px]">
+                    <FormMessage />
+                  </div>
                 </FormItem>
               ) }
             />
@@ -131,9 +148,11 @@ export function CreateCityDistanceDialog({
                   <FormItem className="col-span-3">
                     <FormLabel>Cidade</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Recife" { ...field } />
+                      <Input placeholder="Ex: Recife" { ...field } className="placeholder:text-placeholder" />
                     </FormControl>
-                    <FormMessage />
+                    <div className="min-h-[20px]">
+                      <FormMessage />
+                    </div>
                   </FormItem>
                 ) }
               />
@@ -149,7 +168,7 @@ export function CreateCityDistanceDialog({
                       defaultValue={ field.value }
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="data-[placeholder]:text-placeholder">
                           <SelectValue placeholder="UF" />
                         </SelectTrigger>
                       </FormControl>
@@ -161,7 +180,9 @@ export function CreateCityDistanceDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <div className="min-h-[20px]">
+                      <FormMessage />
+                    </div>
                   </FormItem>
                 ) }
               />
@@ -178,13 +199,16 @@ export function CreateCityDistanceDialog({
                       <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="number"
-                        className="pl-9"
+                        className="pl-9 placeholder:text-placeholder"
                         placeholder="0"
                         { ...field }
+                        value={ field.value || "" }
                       />
                     </div>
                   </FormControl>
-                  <FormMessage />
+                  <div className="min-h-[20px]">
+                    <FormMessage />
+                  </div>
                 </FormItem>
               ) }
             />
