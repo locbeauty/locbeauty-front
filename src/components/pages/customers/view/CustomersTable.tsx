@@ -11,6 +11,7 @@ import {
   ChevronsRight,
   X,
   Trash2,
+  RefreshCcw,
 } from "lucide-react";
 import {
   Select,
@@ -32,6 +33,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   GetAllCustomers,
   GetAllCustomersFilters,
+  UpdateCustomer,
   DeleteCustomer,
 } from "@/services/customers.service";
 import { ApiResponse } from "@/lib/api";
@@ -57,6 +59,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { toast } from "sonner";
 
 export function CustomersTable() {
@@ -66,6 +69,12 @@ export function CustomersTable() {
   const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
   const [ customerToDelete, setCustomerToDelete ] = useState<Customer | null>(
+    null,
+  );
+  const [ isRestoring, setIsRestoring ] = useState(false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
+    useState(false);
+  const [ customerToRestore, setCustomerToRestore ] = useState<Customer | null>(
     null,
   );
 
@@ -144,6 +153,39 @@ export function CustomersTable() {
       setIsDeleting(false);
       setIsDeleteConfirmationDialogOpen(false);
       setCustomerToDelete(null);
+    }
+  };
+
+  const handleRestoreCustomer = (customer: Customer) => {
+    setCustomerToRestore(customer);
+    setIsRestoreConfirmationDialogOpen(true);
+  };
+
+  const confirmRestoreCustomer = async () => {
+    if (!customerToRestore) return;
+
+    setIsRestoring(true);
+    try {
+      const response = await UpdateCustomer({
+        body: { isVisible: true },
+        queryParams: {
+          customerId: customerToRestore.customerId,
+        },
+      });
+
+      if (response.statusCode === 201 || response.statusCode === 200) {
+        toast.success("Cliente restaurado com sucesso.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+        setIsRestoreConfirmationDialogOpen(false);
+      } else {
+        toast.error(response.message || "Erro ao restaurar cliente.");
+      }
+    } catch (error) {
+      toast.error("Erro ao restaurar cliente.");
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreConfirmationDialogOpen(false);
+      setCustomerToRestore(null);
     }
   };
 
@@ -415,7 +457,7 @@ export function CustomersTable() {
                           <Pencil className="w-4 h-4" />
                         </Button>
                       </Can>
-                      {user?.role === USER_ROLES.MASTER && (
+                      {user?.role === USER_ROLES.MASTER && filters.isVisible !== "false" && (
                         <Button
                           variant="ghost"
                           className="text-destructive hover:bg-destructive/10"
@@ -425,6 +467,16 @@ export function CustomersTable() {
                           } }
                         >
                           <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {user?.role === USER_ROLES.MASTER && filters.isVisible === "false" && (
+                        <Button
+                          variant="ghost"
+                          className="text-green-600 hover:bg-green-50"
+                          onClick={ () => handleRestoreCustomer(customer) }
+                          disabled={ isRestoring }
+                        >
+                          <RefreshCcw className="w-4 h-4" />
                         </Button>
                       )}
                     </TableCell>
@@ -675,6 +727,17 @@ export function CustomersTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <RestoreConfirmationDialog
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onOpenChange={ setIsRestoreConfirmationDialogOpen }
+        onConfirm={ confirmRestoreCustomer }
+        title="Confirmar Restauração"
+        description="Tem certeza que deseja restaurar o cliente"
+        itemName={ (customerToRestore?.fullname || customerToRestore?.companyName) ?? undefined }
+        itemId={ customerToRestore?.customerId }
+        isRestoring={ isRestoring }
+      />
     </>
   );
 }
