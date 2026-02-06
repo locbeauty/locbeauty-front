@@ -96,7 +96,7 @@ export default function CEPInput<T extends FieldValues>({
               } }
               className="placeholder:text-placeholder md:w-[110px] w-full"
               placeholder="00000-000"
-              autoComplete="off"
+              autoComplete="nope"
             />
           ) }
         />

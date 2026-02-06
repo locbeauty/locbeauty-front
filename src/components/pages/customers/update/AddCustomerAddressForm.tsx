@@ -22,10 +22,8 @@ import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
 import { AddressTypeSchema } from "@/lib/zod/address";
-import { toast } from "sonner";
-import { GetViaCepAddressDetailsResponse } from "@/utils/addressHandlers";
+import { AddressAutocompleteInput } from "@/components/shared/AddressAutocompleteInput";
 
 interface AddCustomerAddressFormProps {
   handleSaveUpdatedCustomer: (newAddressData: AddressTypeSchema) => void;
@@ -47,30 +45,6 @@ export function AddCustomerAddressForm({
     formState: { errors },
   } = useFormContext<AddressTypeSchema>();
 
-  const [ isStreetDisabled, setIsStreetDisabled ] = useState(true);
-  const [ isNeighborhoodDisabled, setIsNeighborhoodDisabled ] = useState(true);
-
-  const handleAddressDataFetched = (
-    data: GetViaCepAddressDetailsResponse | null,
-  ) => {
-    if (data) {
-      if (!data.logradouro) {
-        setIsStreetDisabled(false);
-      } else {
-        setIsStreetDisabled(true);
-      }
-
-      if (!data.bairro) {
-        setIsNeighborhoodDisabled(false);
-      } else {
-        setIsNeighborhoodDisabled(true);
-      }
-    } else {
-      setIsStreetDisabled(true);
-      setIsNeighborhoodDisabled(true);
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -89,27 +63,23 @@ export function AddCustomerAddressForm({
             trigger={ trigger }
             isUpdateForm={ true }
             zipCodeError={ errors.zipCode?.message }
-            onCepDataFetched={ handleAddressDataFetched }
           />
 
           <div className="grid gap-4 md:grid-cols-2 mt-6">
-            <div className="space-y-2">
-              <Label htmlFor="cidade">Cidade</Label>
-              <Input
-                { ...register("cityName") }
-                placeholder="Cidade"
-                className="placeholder:text-muted-foreground/50"
-                id="cidade"
-                disabled={ true }
-              />
-            </div>
+            <AddressAutocompleteInput
+              name="cityName"
+              label="Cidade"
+              placeholder="Cidade"
+              suggestionType="city"
+              id="cidade"
+            />
             <div className="space-y-2">
               <Label htmlFor="estado">Estado</Label>
               <Controller
                 name="stateName"
                 control={ control }
                 render={ ({ field }) => (
-                  <Select onValueChange={ field.onChange } value={ field.value } disabled={ true }>
+                  <Select onValueChange={ field.onChange } value={ field.value ?? "" }>
                     <SelectTrigger id="estado" className="w-full">
                       <SelectValue placeholder="Selecione o estado" />
                     </SelectTrigger>
@@ -123,30 +93,35 @@ export function AddCustomerAddressForm({
                   </Select>
                 ) }
               />
+              <div className="min-h-[20px]">
+                {errors.stateName && (
+                  <p className="text-sm font-medium text-destructive">
+                    {errors.stateName.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="space-y-2 mt-6">
-            <Label htmlFor="bairro">Bairro</Label>
-            <Input
-              { ...register("neighborhoodName") }
+          <div className="mt-6">
+            <AddressAutocompleteInput
+              name="neighborhoodName"
+              label="Bairro"
               placeholder="Bairro"
-              className="placeholder:text-muted-foreground/50"
+              suggestionType="neighborhood"
               id="bairro"
-              disabled={ isNeighborhoodDisabled }
             />
           </div>
+
           <div className="flex md:flex-row flex-col md:items-start gap-4 mt-6">
-            <div className="space-y-2 flex-1">
-              <Label htmlFor="rua">Rua</Label>
-              <Input
-                { ...register("streetName") }
-                id="rua"
-                className="placeholder:text-muted-foreground/50"
-                placeholder="Nome da rua"
-                disabled={ isStreetDisabled }
-              />
-            </div>
+            <AddressAutocompleteInput
+              name="streetName"
+              label="Rua"
+              placeholder="Nome da rua"
+              suggestionType="street"
+              id="rua"
+              className="flex-1"
+            />
             <div className="space-y-2">
               <Label htmlFor="number">Número</Label>
               <Input

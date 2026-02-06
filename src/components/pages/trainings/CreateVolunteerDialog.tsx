@@ -67,11 +67,9 @@ export function CreateVolunteerDialog({
     formState: { errors, isSubmitting },
   } = volunteerForm;
 
-  // Reset form when dialog closes
+  // Reset form when dialog opens or closes
   useEffect(() => {
-    if (!dialogNewVolunteer) {
-      reset();
-    }
+    reset();
   }, [ dialogNewVolunteer, reset ]);
 
   const onSubmitVolunteer = async (data: CreateVolunteerFormDataType) => {

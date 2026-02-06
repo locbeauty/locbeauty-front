@@ -54,6 +54,7 @@ function MaskedInput({
   const elementRef = useRef<HTMLInputElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const maskRef = useRef<any>(null);
+  const isProgrammaticUpdate = useRef(false);
 
   useEffect(() => {
     if (!elementRef.current) return;
@@ -68,6 +69,7 @@ function MaskedInput({
     maskRef.current = IMask(elementRef.current, maskOptions);
 
     maskRef.current.on("accept", () => {
+      if (isProgrammaticUpdate.current) return;
       onChange(maskRef.current?.value || "");
     });
 
@@ -80,7 +82,11 @@ function MaskedInput({
   // Sync value from RHF to IMask if it changes externally (e.g. reset)
   useEffect(() => {
     if (maskRef.current && value !== maskRef.current.value) {
+      isProgrammaticUpdate.current = true;
       maskRef.current.value = value || "";
+      // Use setTimeout or similar to ensure the 'accept' event is handled before resetting the flag
+      // Actually IMask value assignment is synchronous and triggers 'accept' immediately
+      isProgrammaticUpdate.current = false;
     }
   }, [ value ]);
 

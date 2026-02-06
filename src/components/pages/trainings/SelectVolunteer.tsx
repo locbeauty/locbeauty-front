@@ -99,7 +99,7 @@ function DesktopSelect({
   const selectedCount = selectedVolunteerIds.length;
 
   return (
-    <Popover modal={ true } open={ open } onOpenChange={ setOpen }>
+    <Popover open={ open } onOpenChange={ setOpen } modal={ true }>
       <PopoverTrigger asChild>
         <Button
           disabled={ disabled }

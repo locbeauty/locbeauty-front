@@ -20,7 +20,7 @@ export async function GetAllTraineeAddresses({
   customerId: string;
 }) {
   const response = await apiRequest<Address[]>({
-    endpoint: "trainee/addresses",
+    endpoint: "customer/addresses",
     queryParams: { customerId },
   });
 
@@ -82,3 +82,19 @@ export async function ActivateCustomerAddress({
 
   return response;
 }
+
+export async function GetAddressSuggestions({
+  type,
+  search,
+}: {
+  type: "city" | "neighborhood" | "street";
+  search: string;
+}) {
+  const response = await apiRequest<string[]>({
+    endpoint: "addresses/suggestions",
+    queryParams: { type, search },
+  });
+
+  return response;
+}
+
