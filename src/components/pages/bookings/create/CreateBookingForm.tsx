@@ -626,11 +626,12 @@ export function CreateBookingForm() {
             <CheckoutPaymentMethod />
 
             {/* Resumo Final */}
-            {selectedDate &&
-              startHour &&
-              watchTotalDurationInMinutes &&
-              watchTotalPrice &&
-              !isDateInPast && (
+            {!!selectedDate &&
+              startHour !== undefined &&
+              !!watchTotalDurationInMinutes &&
+              !!watchTotalPrice &&
+              !isDateInPast &&
+              !!watchCustomer?.fullname && (
               <Card className="bg-primary/5 border-primary/20 w-[80%] ml-auto mr-auto">
                 <CardHeader>
                   <CardTitle className="text-lg text-primary flex justify-between">

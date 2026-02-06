@@ -46,13 +46,12 @@ export default function TimePicker({
   const watchStartHourInMinutes = watch("startHourInMinutes");
   const watchGears = watch("gears");
   const watchTotalDuration = watch("totalDurationInMinutes");
-  const startHour = watch("startHourInMinutes");
 
   useEffect(() => {
     const handleShowHourDurations = () => {
-      if (startHour) {
+      if (typeof watchStartHourInMinutes === "number") {
         const selectedTimeDurations = checkoutSchedule?.filter(
-          (hour) => hour.hourInMinutes === startHour
+          (hour) => hour.hourInMinutes === watchStartHourInMinutes
         )[0];
         setSelectedHour(selectedTimeDurations);
       } else {
@@ -60,7 +59,7 @@ export default function TimePicker({
       }
     };
     handleShowHourDurations();
-  }, [ checkoutSchedule, getValues, startHour ]);
+  }, [ checkoutSchedule, getValues, watchStartHourInMinutes ]);
 
   const handleDurationButtonClick = (
     durationValue: number,
@@ -99,7 +98,7 @@ export default function TimePicker({
         <CardTitle className="flex items-center gap-2 text-lg">
           <Clock className="h-5 w-5 text-primary" />
           Horário da Reserva
-          {watchStartHourInMinutes && (
+          {typeof watchStartHourInMinutes === "number" && (
             <Badge variant="secondary" className="ml-auto">
               <Timer className="h-3 w-3 mr-1" />
               {minutesToHHMM(watchStartHourInMinutes)} -{" "}
