@@ -95,3 +95,10 @@ export async function DeleteCustomer(customerId: string) {
   });
   return response;
 }
+export async function HardDeleteCustomer(customerId: string) {
+  const response = await apiRequest({
+    endpoint: `customers/${customerId}/hard`,
+    method: "DELETE",
+  });
+  return response;
+}
