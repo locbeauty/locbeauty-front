@@ -26,8 +26,8 @@ interface CalendarControlsProps {
   hideViewSelect?: boolean;
   hideCanceled?: boolean;
   setHideCanceled?: Dispatch<SetStateAction<boolean>>;
-  selectedFilialId: string;
-  setSelectedFilialId: (id: string) => void;
+  selectedFilialId?: string;
+  setSelectedFilialId?: (id: string) => void;
 }
 
 export function CalendarControls({
@@ -38,8 +38,8 @@ export function CalendarControls({
   hideViewSelect = false,
   hideCanceled = false,
   setHideCanceled = () => {},
-  selectedFilialId,
-  setSelectedFilialId,
+  selectedFilialId = "",
+  setSelectedFilialId = () => {},
 }: CalendarControlsProps) {
   const { user } = useAuth();
 
@@ -49,7 +49,7 @@ export function CalendarControls({
         <Button
           variant="outline"
           size="icon"
-          onClick={ () => {
+          onClick={() => {
             if (viewType === "dia") {
               prevDay(currentDate, setCurrentDate);
             } else if (viewType === "semana") {
@@ -57,17 +57,17 @@ export function CalendarControls({
             } else if (viewType === "mes") {
               prevMonth(currentDate, setCurrentDate);
             }
-          } }
+          }}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <Button variant="outline" onClick={ () => goToToday(setCurrentDate) }>
+        <Button variant="outline" onClick={() => goToToday(setCurrentDate)}>
           Hoje
         </Button>
         <Button
           variant="outline"
           size="icon"
-          onClick={ () => {
+          onClick={() => {
             if (viewType === "dia") {
               nextDay(currentDate, setCurrentDate);
             } else if (viewType === "semana") {
@@ -75,7 +75,7 @@ export function CalendarControls({
             } else if (viewType === "mes") {
               nextMonth(currentDate, setCurrentDate);
             }
-          } }
+          }}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -87,15 +87,15 @@ export function CalendarControls({
         <div className="flex items-center gap-4">
           <div className="w-[160px]">
             <SelectFilial
-              value={ selectedFilialId }
-              onValueChange={ setSelectedFilialId }
+              value={selectedFilialId}
+              onValueChange={setSelectedFilialId}
             />
           </div>
           <div className="flex items-center space-x-2 border p-2 rounded-md h-9 bg-background px-3">
             <Checkbox
               id="hide-canceled"
-              checked={ hideCanceled }
-              onCheckedChange={ (checked) => setHideCanceled(!!checked) }
+              checked={hideCanceled}
+              onCheckedChange={(checked) => setHideCanceled(!!checked)}
             />
             <Label
               htmlFor="hide-canceled"
@@ -105,8 +105,8 @@ export function CalendarControls({
             </Label>
           </div>
           <SelectCalendarViewType
-            viewType={ viewType }
-            setViewType={ setViewType }
+            viewType={viewType}
+            setViewType={setViewType}
           />
         </div>
       )}
