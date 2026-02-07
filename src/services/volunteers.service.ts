@@ -1,5 +1,6 @@
 import { apiRequest } from "@/lib/api";
 import { CreateVolunteerFormDataType } from "@/lib/zod/CreateVolunteerValidation";
+import { UpdateVolunteerFormDataType } from "@/lib/zod/UpdateVolunteerValidation";
 import { Volunteer } from "@/utils/@types/volunteer";
 
 export async function GetAllVolunteers(queryParams?: Record<string, string>) {
@@ -31,7 +32,7 @@ export async function UpdateVolunteer({
   body,
   volunteerId,
 }: {
-  body: Partial<Volunteer> | any;
+  body: UpdateVolunteerFormDataType;
   volunteerId: string;
 }) {
   const response = await apiRequest({
