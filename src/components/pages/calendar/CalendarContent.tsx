@@ -103,6 +103,7 @@ export function CalendarContent({
       ...(queryParams || {}),
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
+      limit: "1000",
     }).filter(([ _, v ]) => v !== undefined),
   ) as Record<string, string>;
 
