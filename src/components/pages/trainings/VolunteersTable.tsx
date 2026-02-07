@@ -1,15 +1,19 @@
 import { useMemo, useState } from "react";
-import { Eye, Filter, X, Trash2 } from "lucide-react";
+import { Eye, Filter, X, Trash2, RefreshCcw } from "lucide-react";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
-import { DeleteVolunteer } from "@/services/volunteers.service";
+import {
+  DeleteVolunteer,
+  UpdateVolunteer,
+} from "@/services/volunteers.service";
 import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
 
 import { Volunteer } from "@/utils/@types/volunteer";
 import { Training } from "@/utils/@types/training";
 import { Filial } from "@/utils/@types/filials";
+import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { VolunteerDetailsDialog } from "./VolunteerDetailsDialog";
@@ -28,12 +32,16 @@ interface VolunteersTableProps {
   volunteers: Volunteer[] | undefined;
   allTrainings: Training[];
   filials?: Filial[];
+  isVisible: boolean;
+  setIsVisible: (isVisible: boolean) => void;
 }
 
 export function VolunteersTable({
   volunteers,
   allTrainings,
   filials,
+  isVisible,
+  setIsVisible,
 }: VolunteersTableProps) {
   const [ selectedVolunteer, setSelectedVolunteer ] = useState<Volunteer | null>(
     null,
@@ -45,6 +53,11 @@ export function VolunteersTable({
   const [ volunteerToDelete, setVolunteerToDelete ] = useState<Volunteer | null>(
     null,
   );
+  const [ volunteerToRestore, setVolunteerToRestore ] =
+    useState<Volunteer | null>(null);
+  const [ isRestoring, setIsRestoring ] = useState(false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
+    useState(false);
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -59,6 +72,51 @@ export function VolunteersTable({
     setIsDetailsOpen(true);
   };
 
+  const handleRestoreVolunteer = (volunteer: Volunteer) => {
+    setVolunteerToRestore(volunteer);
+    setIsRestoreConfirmationDialogOpen(true);
+  };
+
+  const confirmRestoreVolunteer = async () => {
+    if (!volunteerToRestore) return;
+    const targetId = volunteerToRestore.volunteerId;
+
+    setIsRestoring(true);
+    try {
+      const response = await UpdateVolunteer({
+        volunteerId: targetId,
+        body: {
+          isVisible: true,
+        },
+      });
+
+      if (
+        response.statusCode === 200 ||
+        response.statusCode === 201 ||
+        response.statusCode === 204
+      ) {
+        toast.success("Modelo restaurado com sucesso.");
+        // Invalidate both visibility states to ensure UI updates correctly
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-volunteers", true ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-volunteers", false ],
+        });
+      } else {
+        toast.error(response.message || "Erro ao restaurar modelo.");
+      }
+    } catch (error) {
+      toast.error("Erro ao restaurar modelo.");
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreConfirmationDialogOpen(false);
+      if (volunteerToRestore?.volunteerId === targetId) {
+        setVolunteerToRestore(null);
+      }
+    }
+  };
+
   const handleDeleteVolunteer = async () => {
     if (!volunteerToDelete) return;
 
@@ -68,7 +126,12 @@ export function VolunteersTable({
 
       if (response.statusCode === 200 || response.statusCode === 204) {
         toast.success("Modelo excluído com sucesso.");
-        queryClient.invalidateQueries({ queryKey: [ "get-all-volunteers" ] });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-volunteers", true ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-volunteers", false ],
+        });
       } else {
         toast.error(response.message || "Erro ao excluir modelo.");
       }
@@ -197,7 +260,23 @@ export function VolunteersTable({
               Com Pagamento Pendente
             </Label>
           </div>
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex flex-col sm:flex-row justify-end items-end gap-4">
+            {(user?.role === USER_ROLES.MASTER ||
+              user?.role === USER_ROLES.ADMIN) && (
+              <div className="flex items-center space-x-2 border p-2 rounded-md h-9 bg-background px-3">
+                <Switch
+                  id="show-deleted-volunteers"
+                  checked={ !isVisible }
+                  onCheckedChange={ (checked) => setIsVisible(!checked) }
+                />
+                <Label
+                  htmlFor="show-deleted-volunteers"
+                  className="text-sm cursor-pointer whitespace-nowrap"
+                >
+                  Ver Excluídos
+                </Label>
+              </div>
+            )}
             {(filterName || filterPending || filterFilial !== "all") && (
               <Button
                 variant="ghost"
@@ -255,18 +334,35 @@ export function VolunteersTable({
                       <Eye className="h-4 w-4" />
                     </Button>
                     {user?.role === USER_ROLES.MASTER && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={ (e) => {
-                          e.stopPropagation();
-                          setVolunteerToDelete(volunteer);
-                          setIsDeleteConfirmationDialogOpen(true);
-                        } }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <>
+                        {!isVisible ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Restaurar"
+                            onClick={ (e) => {
+                              e.stopPropagation();
+                              handleRestoreVolunteer(volunteer);
+                            } }
+                            disabled={ isRestoring }
+                          >
+                            <RefreshCcw className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={ (e) => {
+                              e.stopPropagation();
+                              setVolunteerToDelete(volunteer);
+                              setIsDeleteConfirmationDialogOpen(true);
+                            } }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </>
                     )}
                   </td>
                 </tr>
@@ -333,6 +429,19 @@ export function VolunteersTable({
         description="Tem certeza que deseja excluir o modelo"
         itemName={ volunteerToDelete?.name }
         isDeleting={ isDeleting }
+      />
+
+      <RestoreConfirmationDialog
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onOpenChange={ (open) => {
+          setIsRestoreConfirmationDialogOpen(open);
+          if (!open) setVolunteerToRestore(null);
+        } }
+        onConfirm={ confirmRestoreVolunteer }
+        isRestoring={ isRestoring }
+        title="Confirmar Restauração"
+        description="Tem certeza que deseja restaurar o modelo"
+        itemName={ volunteerToRestore?.name }
       />
     </>
   );

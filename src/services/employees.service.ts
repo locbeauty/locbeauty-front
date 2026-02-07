@@ -69,3 +69,11 @@ export async function UpdateEmployee({
   });
   return response;
 }
+
+export async function HardDeleteEmployee(employeeId: string) {
+  const response = await apiRequest({
+    endpoint: `employees/${employeeId}/hard`,
+    method: "DELETE",
+  });
+  return response;
+}

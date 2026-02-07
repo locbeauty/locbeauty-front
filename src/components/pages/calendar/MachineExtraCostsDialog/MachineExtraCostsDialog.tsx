@@ -25,7 +25,6 @@ interface MachineExtraCostsDialogProps {
   isMachineExtraCostsDialogOpen: boolean;
   selectedBookingId: string | null;
   setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>;
-  setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export function MachineExtraCostsDialog({

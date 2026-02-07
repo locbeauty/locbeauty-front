@@ -7,10 +7,6 @@ import { Can } from "@/components/auth/Can";
 import Link from "next/link";
 import { ROUTES } from "@/utils/routes";
 import { useRouter } from "next/navigation";
-// import { CalendarContent } from "@/components/pages/bookings/view/CalendarContent";
-// import { CalendarFooter } from "@/components/pages/bookings/view/CalendarFooter";
-// import { CalendarControls } from "@/components/pages/bookings/view/CalendarControls";
-// import { BookingDetailsDialog } from "@/components/pages/bookings/view/DetailsDialog/BookingDetailsDialog";
 import { Checkout } from "@/utils/@types/checkouts";
 import { CalendarControls } from "@/components/pages/calendar/CalendarControls";
 import { CalendarContent } from "@/components/pages/calendar/CalendarContent";
@@ -28,6 +24,7 @@ export default function AgendamentosPage() {
   );
   const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] =
     useState(false);
+  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("ALL");
   const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("mes");
   const [ isMobile, setIsMobile ] = useState(false);
 
@@ -97,18 +94,21 @@ export default function AgendamentosPage() {
           setViewType={ setViewType }
           hideCanceled={ hideCanceled }
           setHideCanceled={ setHideCanceled }
+          selectedFilialId={ selectedFilialId }
+          setSelectedFilialId={ setSelectedFilialId }
         />
         <CalendarContent
           currentDate={ currentDate }
           openCheckoutDetails={ openCheckoutDetails }
           viewType={ viewType }
           hideCanceled={ hideCanceled }
+          selectedFilialId={ selectedFilialId }
         />
         <CalendarFooter />
 
         <BookingDetailsDialog
-          isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen }
-          setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
+          isOpen={ isBookingDetailsDialogOpen }
+          onOpenChange={ setBookingDetailsDialogOpen }
           selectedCheckout={ selectedCheckout }
           setSelectedCheckout={ setSelectedCheckout }
         />

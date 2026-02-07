@@ -5,13 +5,13 @@ import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
 import { Checkout } from "@/utils/@types/checkouts";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
-import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/lib/api";
 import {
   GetAllCheckouts,
   UpdateCheckout,
   DeleteCheckout,
 } from "@/services/checkouts.service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookingDetailsDialog } from "./DetailsDialog/BookingDetailsDialog";
 import {
   ChevronLeft,
@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
 import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
+import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -47,8 +48,6 @@ import { useAccess } from "@/contexts/access-provider";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { useMemo, useState } from "react";
 
-// ... (existing constants)
-
 export function BookingsTable({ filters }: BookingsTableProps) {
   const { user } = useAuth();
   const { accesses } = useAccess();
@@ -65,7 +64,13 @@ export function BookingsTable({ filters }: BookingsTableProps) {
   const [ isRestoring, setIsRestoring ] = useState(false);
   const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
     useState(false);
-  const [ allCheckouts, setAllCheckouts ] = useState<Checkout[] | null>(null);
+
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
+    useState(false);
+  const [ checkoutToDelete, setCheckoutToDelete ] = useState<string | null>(null);
+  const [ isDeleting, setIsDeleting ] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const accessibleFilialIds = useMemo(() => {
     // Superusers can view all filials
@@ -113,11 +118,10 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     string | number | boolean | Date | string[] | undefined | null
   > = {
     ...filters,
-    filialIds: accessibleFilialIds,
+    filialIds: finalFilialIds,
     page: pagination.page,
     limit: pagination.limit,
     isVisible,
-    // Exclude filters we want to apply locally
     gearId: undefined,
     date: undefined,
     status: undefined,
@@ -131,36 +135,33 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     queryKey: [ "get-all-checkouts", queryParams ],
     queryFn: () => GetAllCheckouts({ queryParams: queryParams || {} }),
     staleTime: 1000 * 60,
-    enabled: !!user, // só executa a query quando user estiver disponível
+    enabled: !!user,
   });
 
   const totalCheckouts = data?.data?.total || 0;
   const totalPages = Math.ceil(totalCheckouts / pagination.limit);
 
-  // Update local state when data changes
-  if (data?.data?.items && (!allCheckouts || JSON.stringify(data.data.items) !== JSON.stringify(allCheckouts))) {
-    setAllCheckouts(data.data.items);
-  }
-
   const filteredCheckouts = useMemo(() => {
-    let result = allCheckouts || [];
+    let result = data?.data?.items || [];
 
     if (filters?.filialIds && filters.filialIds.length > 0) {
-      result = result.filter((c) =>
-        filters.filialIds?.includes(c.SourceFilial?.filialId || c.SourceFilial.filialId || "")
+      result = result.filter((c: Checkout) =>
+        filters.filialIds?.includes(
+          c.SourceFilial?.filialId || c.SourceFilial.filialId || "",
+        ),
       );
     }
 
     if (filters?.gearId) {
-      result = result.filter((c) =>
-        c.Bookings.some((b) => b.Gear.gearId === filters.gearId)
+      result = result.filter((c: Checkout) =>
+        c.Bookings.some((b) => b.Gear.gearId === filters.gearId),
       );
     }
 
     if (filters?.date) {
       const filterDate = new Date(filters.date);
       filterDate.setHours(0, 0, 0, 0);
-      result = result.filter((c) => {
+      result = result.filter((c: Checkout) => {
         const cDate = new Date(c.date);
         cDate.setHours(0, 0, 0, 0);
         return cDate.getTime() === filterDate.getTime();
@@ -168,17 +169,20 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     }
 
     if (filters?.status && filters.status !== "Todos") {
-      result = result.filter((c) => c.checkoutStatus === filters.status);
+      result = result.filter(
+        (c: Checkout) => c.checkoutStatus === filters.status,
+      );
     }
 
     if (filters?.paymentStatus && filters.paymentStatus !== "Todos") {
       result = result.filter(
-        (c) => c.CheckoutPayment?.paymentStatus === filters.paymentStatus
+        (c: Checkout) =>
+          c.CheckoutPayment?.paymentStatus === filters.paymentStatus,
       );
     }
 
     return result;
-  }, [ allCheckouts, filters ]);
+  }, [ data?.data?.items, filters ]);
 
   const checkouts = filteredCheckouts;
 
@@ -210,11 +214,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
         response.statusCode === 204
       ) {
         toast.success("Agendamento restaurado com sucesso.");
-        // Force data re-fetch by setting to null
-        setAllCheckouts((prev) => {
-          if (!prev) return null;
-          return prev.filter((e) => String(e.checkoutId) !== String(targetId));
-        });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
       } else {
         toast.error(response.message || "Erro ao restaurar agendamento.");
       }
@@ -223,30 +223,32 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     } finally {
       setIsRestoring(false);
       setIsRestoreConfirmationDialogOpen(false);
-      if (checkoutToRestore?.checkoutId === targetId) {
-        setCheckoutToRestore(null);
-      }
+      setCheckoutToRestore(null);
     }
   };
 
-  const handleDeleteCheckout = async (checkoutId: string) => {
+  const handleDeleteCheckout = async () => {
+    if (!checkoutToDelete) return;
+
+    setIsDeleting(true);
     try {
-      const response = await DeleteCheckout(checkoutId);
+      const response = await DeleteCheckout(checkoutToDelete);
       if (
         response.statusCode === 200 ||
         response.statusCode === 201 ||
         response.statusCode === 204
       ) {
         toast.success("Agendamento excluído com sucesso.");
-        setAllCheckouts((prev) => {
-          if (!prev) return null;
-          return prev.filter((c) => c.checkoutId !== checkoutId);
-        });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
       } else {
         toast.error(response.message || "Erro ao excluir agendamento.");
       }
     } catch (error) {
       toast.error("Erro ao excluir agendamento.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmationDialogOpen(false);
+      setCheckoutToDelete(null);
     }
   };
 
@@ -269,7 +271,6 @@ export function BookingsTable({ filters }: BookingsTableProps) {
 
   return (
     <>
-      {/* Ver Excluídos Toggle */}
       {(user?.role === USER_ROLES.MASTER ||
         user?.role === USER_ROLES.ADMIN) && (
         <div className="flex items-center space-x-2 mb-4">
@@ -278,7 +279,9 @@ export function BookingsTable({ filters }: BookingsTableProps) {
             checked={ !isVisible }
             onCheckedChange={ (checked) => {
               setIsVisible(!checked);
-              setAllCheckouts(null);
+              queryClient.invalidateQueries({
+                queryKey: [ "get-all-checkouts" ],
+              });
             } }
           />
           <Label htmlFor="show-deleted">Ver Excluídos</Label>
@@ -311,28 +314,26 @@ export function BookingsTable({ filters }: BookingsTableProps) {
           <tbody>
             {isEmpty && (
               <tr>
-                <td className="text-center p-4" colSpan={ 9 }>
+                <td className="text-center p-4" colSpan={ 10 }>
                   Nada a mostrar por aqui.
                 </td>
               </tr>
             )}
             {checkouts ? (
-              checkouts?.map((checkout) => {
+              checkouts.map((checkout) => {
                 return (
                   <tr
-                    key={ checkout?.checkoutId }
+                    key={ checkout.checkoutId }
                     className="border-t hover:bg-muted/50"
                   >
                     <td className="p-3 text-sm">
-                      {checkout?.Customer.fullname}
+                      {checkout.Customer.fullname}
                     </td>
                     <td className="p-3 text-sm">
-                      {checkout?.SourceFilial?.filialName || "N/A"}
+                      {checkout.SourceFilial?.filialName || "N/A"}
                     </td>
                     <td className="p-3 text-sm">
-                      {checkout?.Bookings.map((b) => b.Gear.gearName).join(
-                        ", ",
-                      )}
+                      {checkout.Bookings.map((b) => b.Gear.gearName).join(", ")}
                     </td>
                     <td className="p-3 text-center text-sm">
                       {new Date(checkout.date).toLocaleDateString("pt-BR")}
@@ -347,7 +348,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                       )}
                     </td>
                     <td className="p-3 text-center text-sm">
-                      <BookingStatusBadge status={ checkout?.checkoutStatus } />
+                      <BookingStatusBadge status={ checkout.checkoutStatus } />
                     </td>
                     <td className="p-3 text-center">
                       <BookingPaymentStatusBadge
@@ -358,13 +359,15 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                     </td>
                     <td className="p-3 text-center">
                       <Button
+                        size="icon"
+                        variant="ghost"
                         onClick={ () =>
                           openCheckoutDetails({
                             checkoutId: checkout.checkoutId,
                           })
                         }
                       >
-                        <Eye />
+                        <Eye className="h-4 w-4" />
                       </Button>
                     </td>
                     {(user?.role === USER_ROLES.MASTER ||
@@ -383,9 +386,10 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={ () =>
-                              handleDeleteCheckout(checkout.checkoutId)
-                            }
+                            onClick={ () => {
+                              setCheckoutToDelete(checkout.checkoutId);
+                              setIsDeleteConfirmationDialogOpen(true);
+                            } }
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -398,7 +402,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
             ) : (
               <tr>
                 <td
-                  colSpan={ 9 }
+                  colSpan={ 10 }
                   className="p-4 text-center text-muted-foreground"
                 >
                   Carregando...
@@ -409,8 +413,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
         </table>
       </div>
 
-      {/* Mobile  View */}
-      <div className=" md:hidden space-y-4">
+      <div className="md:hidden space-y-4">
         {isEmpty && (
           <div className="text-center p-4 text-muted-foreground bg-white rounded-lg border">
             Nada a mostrar por aqui.
@@ -472,7 +475,6 @@ export function BookingsTable({ filters }: BookingsTableProps) {
         ))}
       </div>
 
-      {/* Pagination Controls */}
       <div className="flex items-center justify-end space-x-2 py-4 px-4 bg-white border-t">
         <div className="flex-1 text-sm text-muted-foreground hidden md:block">
           {totalCheckouts} agendamento(s) encontrado(s)
@@ -497,7 +499,6 @@ export function BookingsTable({ filters }: BookingsTableProps) {
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
-          {/* Numbered Pages */}
           <div className="flex items-center gap-1">
             {(() => {
               const MAX_VISIBLE_PAGES = 5;
@@ -554,8 +555,8 @@ export function BookingsTable({ filters }: BookingsTableProps) {
       </div>
 
       <BookingDetailsDialog
-        isBookingDetailsDialogOpen={ isBookingDetailsDialogOpen }
-        setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
+        isOpen={ isBookingDetailsDialogOpen }
+        onOpenChange={ setBookingDetailsDialogOpen }
         selectedCheckout={ selectedCheckout }
         setSelectedCheckout={ setSelectedCheckout }
       />
@@ -573,6 +574,19 @@ export function BookingsTable({ filters }: BookingsTableProps) {
         onConfirm={ confirmRestoreCheckout }
         isRestoring={ isRestoring }
         itemName={ checkoutToRestore?.Customer?.fullname || "agendamento" }
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+        onConfirm={ handleDeleteCheckout }
+        title="Excluir Agendamento"
+        description="Tem certeza que deseja excluir este agendamento?"
+        itemName={
+          checkouts?.find((c) => c.checkoutId === checkoutToDelete)?.Customer
+            ?.fullname || "agendamento"
+        }
+        isDeleting={ isDeleting }
       />
     </>
   );

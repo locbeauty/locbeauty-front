@@ -187,7 +187,10 @@ export function DatePicker({
           </div>
         )}
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-2">
+      <PopoverContent
+        className="w-auto p-2"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <div className="flex items-center justify-between">
           <div className="text-md font-bold ms-2 flex items-center cursor-pointer">
             <div>
@@ -212,6 +215,7 @@ export function DatePicker({
               </span>
             </div>
             <Button
+              type="button"
               variant="ghost"
               className="p-0 ml-2"
               onClick={() =>
@@ -228,10 +232,26 @@ export function DatePicker({
           <div
             className={cn("flex space-x-2", monthYearPicker ? "hidden" : "")}
           >
-            <Button variant="ghost" size="icon" onClick={onPrevMonth}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPrevMonth();
+              }}
+            >
               <ChevronLeftIcon />
             </Button>
-            <Button variant="ghost" size="icon" onClick={onNextMonth}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNextMonth();
+              }}
+            >
               <ChevronRightIcon />
             </Button>
           </div>

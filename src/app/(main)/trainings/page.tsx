@@ -37,14 +37,15 @@ export default function Treinamentos() {
   const [ isVisible, setIsVisible ] = useState(true);
 
   const traineesData = useQuery<ApiResponse<Trainee[]>, Error>({
-    queryKey: [ "get-all-trainees" ],
-    queryFn: () => GetAllTrainees({}),
+    queryKey: [ "get-all-trainees", isVisible ],
+    queryFn: () => GetAllTrainees({ isVisible: isVisible ? "true" : "false" }),
     staleTime: 1000 * 60,
   });
 
   const volunteersData = useQuery<ApiResponse<Volunteer[]>, Error>({
-    queryKey: [ "get-all-volunteers" ],
-    queryFn: () => GetAllVolunteers({}),
+    queryKey: [ "get-all-volunteers", isVisible ],
+    queryFn: () =>
+      GetAllVolunteers({ isVisible: isVisible ? "true" : "false" }),
     staleTime: 1000 * 60,
   });
 
@@ -226,6 +227,8 @@ export default function Treinamentos() {
               trainees={ filteredData.trainees }
               allTrainings={ filteredData.trainings || [] }
               filials={ accessibleFilials }
+              isVisible={ isVisible }
+              setIsVisible={ setIsVisible }
             />
           </TabsContent>
 
@@ -235,6 +238,8 @@ export default function Treinamentos() {
               volunteers={ filteredData.volunteers }
               allTrainings={ filteredData.trainings || [] }
               filials={ accessibleFilials }
+              isVisible={ isVisible }
+              setIsVisible={ setIsVisible }
             />
           </TabsContent>
         </Tabs>

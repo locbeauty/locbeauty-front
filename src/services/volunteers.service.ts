@@ -26,3 +26,19 @@ export async function DeleteVolunteer(volunteerId: string) {
   });
   return response;
 }
+
+export async function UpdateVolunteer({
+  body,
+  volunteerId,
+}: {
+  body: Partial<Volunteer> | any;
+  volunteerId: string;
+}) {
+  const response = await apiRequest({
+    endpoint: `volunteers/update/${volunteerId}`,
+    method: "POST",
+    body,
+  });
+
+  return response;
+}

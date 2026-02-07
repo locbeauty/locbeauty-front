@@ -34,3 +34,13 @@ export async function DeleteTrainee(traineeId: string) {
   });
   return response;
 }
+
+export async function UpdateTrainee(body: any) {
+  const response = await apiRequest({
+    endpoint: "customers/update",
+    method: "POST",
+    body,
+  });
+
+  return response;
+}

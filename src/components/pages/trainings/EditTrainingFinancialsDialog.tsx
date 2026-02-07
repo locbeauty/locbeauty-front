@@ -309,29 +309,34 @@ export default function EditTrainingFinancialsDialog({
 
   return (
     <Dialog open={ open } onOpenChange={ onOpenChange }>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle>Editar Financeiro do Treinamento</DialogTitle>
         </DialogHeader>
 
         <FormProvider { ...methods }>
-          <form onSubmit={ handleSubmit(onSubmit) } className="space-y-6">
-            <FinancialInputSection
-              control={ control }
-              register={ register }
-              setValue={ setValue }
-              watch={ methods.watch }
-              errors={ errors }
-              fields={
-                (payerType === "TRAINEE"
-                  ? traineeFields
-                  : volunteerFields) as IndividualPayment[]
-              }
-              participants={ participants }
-              type={ payerType === "TRAINEE" ? "trainee" : "volunteer" }
-            />
+          <form
+            onSubmit={ handleSubmit(onSubmit) }
+            className="flex flex-col flex-1 overflow-hidden"
+          >
+            <div className="flex-1 overflow-y-auto p-6 pt-2">
+              <FinancialInputSection
+                control={ control }
+                register={ register }
+                setValue={ setValue }
+                watch={ methods.watch }
+                errors={ errors }
+                fields={
+                  (payerType === "TRAINEE"
+                    ? traineeFields
+                    : volunteerFields) as IndividualPayment[]
+                }
+                participants={ participants }
+                type={ payerType === "TRAINEE" ? "trainee" : "volunteer" }
+              />
+            </div>
 
-            <DialogFooter>
+            <DialogFooter className="p-6 border-t bg-muted/20">
               <Button
                 type="button"
                 variant="outline"

@@ -10,16 +10,14 @@ const baseEmployeeSchema = z.object({
     .trim()
     .min(1, { message: "Nome completo é obrigatório" })
     .max(200, { message: "Nome completo deve ter no máximo 200 caracteres" }),
-  username: z
-    .string({ message: "Username é obrigatório" })
-    .min(1, { message: "Username é obrigatório" }),
+  username: z.string().optional(),
   role: z.string({ message: "Função é obrigatória" }),
   documentNumber: z
     .string()
-    .min(11, { message: "CPF deve ter no mínimo 11 dígitos" })
-    .max(14, { message: "CPF deve ter no máximo 14 dígitos" })
+    .min(14, { message: "Documento deve ter no mínimo 14 caracteres." })
     .nullable()
-    .optional(),
+    .optional()
+    .or(z.literal("")),
   cellphone: z
     .string({ message: "Telefone é obrigatório" })
     .min(14, { message: "Telefone é obrigatório" }),
@@ -38,12 +36,8 @@ const baseEmployeeSchema = z.object({
     })
     .nullable()
     .optional(),
-  password: z
-    .string({ message: "Senha é obrigatória." })
-    .min(1, { message: "Senha é obrigatória." }),
-  confirmPassword: z
-    .string({ message: "Confirmação de senha é obrigatória." })
-    .min(1, { message: "Confirmação de senha é obrigatória." }),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
 });
 
 export const createEmployeeFormSchema = baseEmployeeSchema.superRefine(

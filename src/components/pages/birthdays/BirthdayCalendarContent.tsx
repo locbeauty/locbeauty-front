@@ -1,12 +1,10 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { DayView } from "../calendar/DayView";
-import { WeekView } from "../calendar/WeekView";
 import { MonthView } from "../calendar/MonthView";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { ApiResponse } from "@/lib/api";
 import { CalendarEvent } from "../calendar/bookingViewHelpers";
 import { GetBirthdays } from "@/services/birthdays.service";
@@ -14,11 +12,7 @@ import { BirthdayEvent } from "@/utils/@types/birthday";
 import { useAccess } from "@/contexts/access-provider";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { USER_ROLES } from "@/utils/constants";
-
-interface BirthdayCalendarContentProps {
-  viewType: "semana" | "dia" | "mes";
-  currentDate: Date;
-}
+import { Loader2 } from "lucide-react";
 
 export function BirthdayCalendarContent({
   currentDate,
@@ -58,7 +52,7 @@ export function BirthdayCalendarContent({
     0,
     0,
     0,
-    0
+    0,
   );
 
   const endDate = new Date(
@@ -68,7 +62,7 @@ export function BirthdayCalendarContent({
     23,
     59,
     59,
-    999
+    999,
   );
 
   const { data: birthdaysData, isLoading } = useQuery<
@@ -98,13 +92,22 @@ export function BirthdayCalendarContent({
 
   return (
     <Card className="overflow-hidden py-0">
-      <CardContent className="p-0">
+      <CardContent className="p-0 relative">
         <MonthView
           currentDate={ currentDate }
           events={ allEvents }
-          openDetails={ () => { } }
+          openDetails={ () => {} }
         />
-        {isLoading && <div className="p-4 text-center">Carregando...</div>}
+        {isLoading && (
+          <div className="absolute inset-0 bg-background/50 flex items-center justify-center backdrop-blur-sm z-50">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm font-medium text-muted-foreground">
+                Carregando aniversariantes...
+              </p>
+            </div>
+          </div>
+        )}
         {!isLoading && allEvents.length === 0 && (
           <div className="p-4 text-center">
             Nenhum aniversariante encontrado.

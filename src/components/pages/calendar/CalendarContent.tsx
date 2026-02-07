@@ -26,6 +26,7 @@ interface CalendarContentProps {
   currentDate: Date;
   openCheckoutDetails: (_agendamento: Checkout) => void;
   hideCanceled: boolean;
+  selectedFilialId: string;
 }
 
 export function CalendarContent({
@@ -33,6 +34,7 @@ export function CalendarContent({
   currentDate,
   openCheckoutDetails,
   hideCanceled,
+  selectedFilialId,
 }: CalendarContentProps) {
   const { user } = useAuth();
   const { accesses } = useAccess();
@@ -64,10 +66,6 @@ export function CalendarContent({
     return uniquePermissions.length > 0 ? uniquePermissions : [ "NO_ACCESS" ];
   }, [ user, accesses ]);
 
-  const queryParams = accessibleFilialIds
-    ? { filialIds: accessibleFilialIds }
-    : {};
-
   // Calcula startDate e endDate conforme viewType
   const { startDate, endDate } = useMemo(() => {
     if (!currentDate) return { startDate: undefined, endDate: undefined };
@@ -98,20 +96,25 @@ export function CalendarContent({
     return { startDate: start, endDate: end };
   }, [ viewType, currentDate ]);
 
+  const finalFilialIds = useMemo(() => {
+    if (selectedFilialId === "ALL") return accessibleFilialIds;
+    return [ selectedFilialId ];
+  }, [ selectedFilialId, accessibleFilialIds ]);
+
   const params = Object.fromEntries(
     Object.entries({
-      ...(queryParams || {}),
+      filialIds: finalFilialIds,
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
       limit: "1000",
     }).filter(([ _, v ]) => v !== undefined),
-  ) as Record<string, string>;
+  ) as Record<string, string | string[]>;
 
   const { data, isLoading } = useQuery<
     ApiResponse<{ items: Checkout[]; total: number }>,
     Error
   >({
-    queryKey: [ "get-all-checkouts", queryParams, startDate, endDate ],
+    queryKey: [ "get-all-checkouts", finalFilialIds, startDate, endDate ],
     queryFn: () =>
       GetAllCheckouts({
         queryParams: params,
@@ -121,17 +124,22 @@ export function CalendarContent({
   });
 
   const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
-    queryKey: [ "get-all-trainings" ],
-    queryFn: () => GetAllTrainings(),
-    staleTime: 1000 * 60, // 1 minuto de cache
+    queryKey: [ "get-all-trainings", selectedFilialId ],
+    queryFn: () =>
+      GetAllTrainings(
+        undefined,
+        selectedFilialId === "ALL" ? undefined : selectedFilialId,
+      ),
+    staleTime: 1000 * 60,
   });
 
   const noticesData = useQuery<ApiResponse<Notice[]>, Error>({
-    queryKey: [ "get-notices", startDate, endDate ],
+    queryKey: [ "get-notices", startDate, endDate, selectedFilialId ],
     queryFn: () =>
       GetNotices({
         startDate: startDate?.toISOString() || "",
         endDate: endDate?.toISOString() || "",
+        filialId: selectedFilialId === "ALL" ? undefined : selectedFilialId,
       }),
     enabled: !!startDate && !!endDate,
     staleTime: 1000 * 60,

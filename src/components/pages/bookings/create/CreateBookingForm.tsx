@@ -28,7 +28,7 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-provider";
@@ -249,6 +249,7 @@ export function CreateBookingForm() {
   const watchTotalDurationInMinutes = watch("totalDurationInMinutes");
   const selectedDate = watch("date");
   const watchFilialId = watch("filialId");
+  const prevFilialId = useRef(watchFilialId);
   const watchSelectedGears = watch("gears");
   const watchCustomer = watch("customer");
   const watchTotalPrice = watch("totalPrice");
@@ -366,34 +367,62 @@ export function CreateBookingForm() {
   });
   const checkoutSchedule = data?.data;
 
-  function handleResetValues() {
-    reset({
-      checkoutStatus: "Pendente",
-      paymentStatus: "Pendente",
-      totalPrice: "0",
-      addressId: "",
-      filialId: user?.sourceFilialId,
-      accountableEmployeeId: user?.employeeId || user?.sub,
-      customer: undefined,
-      gears: [],
-      date: undefined,
-      startHourInMinutes: 0,
-      totalDurationInMinutes: 0,
-      observations: "",
-      driverId: "",
-      additionalTransportCost: "0",
-      basePrice: "0",
-      distanceInKm: 0,
-      extraMachineCosts: "0",
-      foodCost: "0",
-      fuelCost: "0",
-      lodgingCost: "0",
-      crossDays: false,
-      endDate: undefined,
-      endHourInMinutes: undefined,
-      isRoundTrip: true,
-    });
-  }
+  const handleResetValues = useCallback(
+    (newFilialId?: string) => {
+      reset({
+        checkoutStatus: "Pendente",
+        paymentStatus: "Pendente",
+        paymentInfo: {
+          paymentStatus: "Pendente",
+          firstPaymentDate: null,
+          secondPaymentDate: null,
+          firstPaymentAmount: "0,00",
+          firstPaymentStatus: "Pendente",
+          secondPaymentAmount: "0,00",
+          secondPaymentStatus: "Pendente",
+        },
+        basePrice: "0,00",
+        totalPrice: "0,00",
+        extraMachineCosts: "0,00",
+        lodgingCost: "0,00",
+        foodCost: "0,00",
+        fuelCost: "0,00",
+        additionalTransportCost: "0,00",
+        consumption: 10,
+        addressId: "",
+        filialId:
+          newFilialId !== undefined ? newFilialId : defaultFilialId || "",
+        accountableEmployeeId: user?.employeeId || user?.sub,
+        crossDays: false,
+        endDate: undefined,
+        endHourInMinutes: undefined,
+        isRoundTrip: true,
+        observations: "",
+        customer: undefined,
+        gears: [],
+        date: undefined,
+        startHourInMinutes: 0,
+        totalDurationInMinutes: 0,
+        driverId: "",
+        distanceInKm: 0,
+      });
+      setAddressString("");
+      setDrivingDistance(0);
+      setDriverString("");
+    },
+    [ defaultFilialId, reset, user?.employeeId, user?.sub ],
+  );
+
+  useEffect(() => {
+    if (
+      watchFilialId &&
+      prevFilialId.current &&
+      watchFilialId !== prevFilialId.current
+    ) {
+      handleResetValues(watchFilialId);
+    }
+    prevFilialId.current = watchFilialId;
+  }, [ watchFilialId, handleResetValues ]);
 
   const handleCreateNewCheckout: SubmitHandler<
     CreateCheckoutFormSchemaType
@@ -458,7 +487,10 @@ export function CreateBookingForm() {
 
   const onInvalid = (errors: FieldErrors<CreateCheckoutFormSchemaType>) => {
     // Function to recursively find the first error key
-    const getFirstErrorKey = (errorObj: unknown, prefix = ""): string | null => {
+    const getFirstErrorKey = (
+      errorObj: unknown,
+      prefix = "",
+    ): string | null => {
       if (!errorObj || typeof errorObj !== "object") return null;
 
       const keys = Object.keys(errorObj as object);
@@ -474,7 +506,10 @@ export function CreateBookingForm() {
 
       // If it's an object (nested error), recurse
       if (typeof value === "object" && value !== null) {
-        return getFirstErrorKey(value, prefix ? `${prefix}.${firstKey}` : firstKey);
+        return getFirstErrorKey(
+          value,
+          prefix ? `${prefix}.${firstKey}` : firstKey,
+        );
       }
 
       return null;
@@ -496,10 +531,14 @@ export function CreateBookingForm() {
       if (!element && firstErrorKey.includes(".")) {
         const parts = firstErrorKey.split(".");
         // Tenta encontrar pelo último pedaço (ex: customerId)
-        element = document.querySelector(`[name="${parts[parts.length - 1]}"]`) || document.getElementById(parts[parts.length - 1]);
+        element =
+          document.querySelector(`[name="${parts[parts.length - 1]}"]`) ||
+          document.getElementById(parts[parts.length - 1]);
         // Tenta encontrar pelo primeiro pedaço (ex: customer) -> container
         if (!element) {
-          element = document.querySelector(`[name="${parts[0]}"]`) || document.getElementById(parts[0]);
+          element =
+            document.querySelector(`[name="${parts[0]}"]`) ||
+            document.getElementById(parts[0]);
         }
       }
 
@@ -738,10 +777,7 @@ Motorista: ${driverString || "A definir"}
                 type="submit"
                 className="w-full md:w-auto md:min-w-[300px] md:ml-auto flex"
                 size="lg"
-                disabled={
-                  isSubmitting ||
-                  isLoading
-                }
+                disabled={ isSubmitting || isLoading }
               >
                 {isSubmitting || isLoading ? (
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
