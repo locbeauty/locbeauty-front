@@ -1,5 +1,9 @@
 import { apiRequest } from "@/lib/api";
-import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
+import {
+  CreateCustomerFormSchemaType,
+  createCustomerFormSchema,
+} from "@/lib/zod/CreateCustomerValidation";
+import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
 import { Customer } from "@/utils/@types/customer";
 
 export async function GetAllTrainees(queryParams?: Record<string, string>) {
@@ -32,5 +36,19 @@ export async function DeleteTrainee(traineeId: string) {
     endpoint: `customers/${traineeId}`,
     method: "DELETE",
   });
+  return response;
+}
+
+export type UpdateTraineeBody = UpdateCustomerFormSchemaType & {
+  customerId: string;
+};
+
+export async function UpdateTrainee(body: UpdateTraineeBody) {
+  const response = await apiRequest({
+    endpoint: "customers/update",
+    method: "POST",
+    body,
+  });
+
   return response;
 }

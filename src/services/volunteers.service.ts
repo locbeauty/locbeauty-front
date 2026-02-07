@@ -1,5 +1,6 @@
 import { apiRequest } from "@/lib/api";
 import { CreateVolunteerFormDataType } from "@/lib/zod/CreateVolunteerValidation";
+import { UpdateVolunteerFormDataType } from "@/lib/zod/UpdateVolunteerValidation";
 import { Volunteer } from "@/utils/@types/volunteer";
 
 export async function GetAllVolunteers(queryParams?: Record<string, string>) {
@@ -24,5 +25,21 @@ export async function DeleteVolunteer(volunteerId: string) {
     endpoint: `volunteers/${volunteerId}`,
     method: "DELETE",
   });
+  return response;
+}
+
+export async function UpdateVolunteer({
+  body,
+  volunteerId,
+}: {
+  body: UpdateVolunteerFormDataType;
+  volunteerId: string;
+}) {
+  const response = await apiRequest({
+    endpoint: `volunteers/update/${volunteerId}`,
+    method: "POST",
+    body,
+  });
+
   return response;
 }

@@ -88,15 +88,15 @@ import { Employee } from "@/utils/@types/employee";
 import { User as UserData } from "@/utils/@types/user";
 
 interface BookingDetailsDialogProps {
-  setBookingDetailsDialogOpen: Dispatch<SetStateAction<boolean>>;
-  isBookingDetailsDialogOpen: boolean;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
+  isOpen: boolean;
   selectedCheckout: Checkout | null;
   setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>;
 }
 
 export function BookingDetailsDialog({
-  isBookingDetailsDialogOpen,
-  setBookingDetailsDialogOpen,
+  isOpen,
+  onOpenChange,
   selectedCheckout,
   setSelectedCheckout,
 }: BookingDetailsDialogProps) {
@@ -552,7 +552,7 @@ export function BookingDetailsDialog({
 
       if (response.statusCode === 200 || response.statusCode === 204) {
         toast.success("Agendamento excluído com sucesso.");
-        setBookingDetailsDialogOpen(false);
+        onOpenChange(false);
         queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
       } else {
         toast.error(response.message || "Erro ao excluir agendamento.");
@@ -582,11 +582,11 @@ export function BookingDetailsDialog({
 
   return (
     <TooltipProvider>
-      <Dialog
-        open={ isBookingDetailsDialogOpen }
-        onOpenChange={ setBookingDetailsDialogOpen }
-      >
-        <DialogContent className="max-h-[95vh] w-full max-w-5xl overflow-y-auto dark:bg-gray-900 p-0 gap-0" aria-describedby={ undefined }>
+      <Dialog open={ isOpen } onOpenChange={ onOpenChange }>
+        <DialogContent
+          className="max-h-[95vh] w-full max-w-5xl overflow-y-auto dark:bg-gray-900 p-0 gap-0"
+          aria-describedby={ undefined }
+        >
           {selectedCheckout ? (
             <>
               <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between">
@@ -636,7 +636,7 @@ export function BookingDetailsDialog({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={ () => setBookingDetailsDialogOpen(false) }
+                    onClick={ () => onOpenChange(false) }
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -1241,39 +1241,6 @@ export function BookingDetailsDialog({
                             key={ booking.bookingId }
                             className="bg-muted/30 p-3 rounded-md text-sm space-y-2 border"
                           >
-                            {/* <div className="flex justify-between items-center bg-muted/30 p-2 rounded-lg border border-dashed">
-                              <div>
-                                <p className="text-[10px] text-muted-foreground uppercase font-bold px-1">
-                                  Término Previsto
-                                </p>
-                                <div className="flex items-center space-x-2 px-1">
-                                  <CalendarDays className="h-3 w-3 text-primary" />
-                                  <span className="text-xs font-semibold">
-                                    {addMinutes(
-                                      currentBookingDate,
-                                      currentStartHour + (currentDuration || 0),
-                                    ).toLocaleDateString("pt-BR")}
-                                  </span>
-                                  <Clock className="h-3 w-3 text-primary ml-1" />
-                                  <span className="text-xs font-semibold">
-                                    {minutesToHHMM(
-                                      currentStartHour + (currentDuration || 0),
-                                    )}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="text-right px-1">
-                                <p className="text-[10px] text-muted-foreground uppercase font-bold">
-                                  Duração Total
-                                </p>
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] font-bold"
-                                >
-                                  {((currentDuration || 0) / 60).toFixed(1)}h
-                                </Badge>
-                              </div>
-                            </div> */}
                             <div className="flex items-start justify-between">
                               <span className="font-semibold flex items-center gap-2">
                                 <Package className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1594,7 +1561,6 @@ export function BookingDetailsDialog({
       />
 
       <MachineExtraCostsDialog
-        setBookingDetailsDialogOpen={ setBookingDetailsDialogOpen }
         setSelectedCheckout={ setSelectedCheckout }
         selectedBookingId={ selectedBookingIdForExtraCosts }
         isMachineExtraCostsDialogOpen={ !!selectedBookingIdForExtraCosts }

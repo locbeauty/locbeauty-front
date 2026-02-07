@@ -134,22 +134,25 @@ export function EmployeeDetailsCard({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <Label className="text-sm font-medium">Email:</Label>
-                <span className="text-sm text-blue-600">
-                  {selectedEmployee.email}
-                </span>
+                <div className="flex justify-between w-full">
+                  <Label className="text-sm font-medium">Email:</Label>
+                  <span className="text-sm text-blue-600">
+                    {selectedEmployee.email || "--"}
+                  </span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <Label className="text-sm font-medium">Telefone:</Label>
-                <span className="text-sm">{selectedEmployee.cellphone}</span>
+                <div className="flex justify-between w-full">
+                  <Label className="text-sm font-medium">Telefone:</Label>
+                  <span className="text-sm">{selectedEmployee.cellphone || "--"}</span>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Label className="text-sm font-medium">Filial de Origem: </Label>
               <span className="text-sm font-semibold">
-                {selectedEmployee.SourceFilial?.filialName}/
-                {selectedEmployee.SourceFilial?.Address?.State?.UF || "N/A"}
+                {selectedEmployee.SourceFilial?.filialName}
               </span>
             </div>
           </div>

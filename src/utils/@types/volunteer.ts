@@ -9,4 +9,5 @@ export interface Volunteer {
   Training: Training[];
   sourceFilialId?: string;
   SourceFilial?: Filial;
+  isVisible: boolean;
 }

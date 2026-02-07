@@ -330,7 +330,7 @@ export function CreateTrainingDialog({
       }
 
       if (!finalAddressId) {
-        toast.warning("Selecione um endereço ou preencha o novo endereço.");
+        toast.warning("preencha o novo endereço.");
         return;
       }
 
@@ -560,7 +560,8 @@ export function CreateTrainingDialog({
                       name="dueDate"
                       render={ ({ field }) => (
                         <DatePicker
-                          value={ field.value! }
+                          modal={ true }
+                          value={ field.value || null }
                           onChange={ (e) => {
                             field.onChange(e);
                           } }

@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Eye, Filter, X, Trash2 } from "lucide-react";
+import { Eye, Filter, X, Trash2, RefreshCcw } from "lucide-react";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
-import { DeleteTrainee } from "@/services/trainees.service";
+import { DeleteTrainee, UpdateTrainee } from "@/services/trainees.service";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
 import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Customer } from "@/utils/@types/customer";
 import { Training } from "@/utils/@types/training";
 import { Filial } from "@/utils/@types/filials";
+import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { CustomerDetailsDialog } from "@/components/pages/customers/view/CustomerDetailsDialog";
@@ -31,6 +32,8 @@ interface TraineesTableProps {
   allTrainings: Training[];
   filials?: Filial[];
   onViewDetails?: (trainee: Customer) => void;
+  isVisible: boolean;
+  setIsVisible: (isVisible: boolean) => void;
 }
 
 export function TraineesTable({
@@ -38,6 +41,8 @@ export function TraineesTable({
   allTrainings,
   filials,
   onViewDetails,
+  isVisible,
+  setIsVisible,
 }: TraineesTableProps) {
   const [ selectedTrainee, setSelectedTrainee ] = useState<Customer | null>(null);
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
@@ -45,6 +50,12 @@ export function TraineesTable({
   const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
   const [ traineeToDelete, setTraineeToDelete ] = useState<Customer | null>(null);
+  const [ traineeToRestore, setTraineeToRestore ] = useState<Customer | null>(
+    null,
+  );
+  const [ isRestoring, setIsRestoring ] = useState(false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
+    useState(false);
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -62,6 +73,49 @@ export function TraineesTable({
     }
   };
 
+  const handleRestoreTrainee = (trainee: Customer) => {
+    setTraineeToRestore(trainee);
+    setIsRestoreConfirmationDialogOpen(true);
+  };
+
+  const confirmRestoreTrainee = async () => {
+    if (!traineeToRestore) return;
+    const targetId = traineeToRestore.customerId;
+
+    setIsRestoring(true);
+    try {
+      const response = await UpdateTrainee({
+        customerId: targetId,
+        isVisible: true,
+      });
+
+      if (
+        response.statusCode === 200 ||
+        response.statusCode === 201 ||
+        response.statusCode === 204
+      ) {
+        toast.success("Aluno restaurado com sucesso.");
+        // Invalidate both visibility states to ensure UI updates correctly
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainees", true ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainees", false ],
+        });
+      } else {
+        toast.error(response.message || "Erro ao restaurar aluno.");
+      }
+    } catch (error) {
+      toast.error("Erro ao restaurar aluno.");
+    } finally {
+      setIsRestoring(false);
+      setIsRestoreConfirmationDialogOpen(false);
+      if (traineeToRestore?.customerId === targetId) {
+        setTraineeToRestore(null);
+      }
+    }
+  };
+
   const handleDeleteTrainee = async () => {
     if (!traineeToDelete) return;
 
@@ -71,7 +125,12 @@ export function TraineesTable({
 
       if (response.statusCode === 200 || response.statusCode === 204) {
         toast.success("Aluno excluído com sucesso.");
-        queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainees", true ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-all-trainees", false ],
+        });
       } else {
         toast.error(response.message || "Erro ao excluir aluno.");
       }
@@ -194,7 +253,23 @@ export function TraineesTable({
               Com Pagamento Pendente
             </Label>
           </div>
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex flex-col sm:flex-row justify-end items-end gap-4">
+            {(user?.role === USER_ROLES.MASTER ||
+              user?.role === USER_ROLES.ADMIN) && (
+              <div className="flex items-center space-x-2 border p-2 rounded-md h-9 bg-background px-3">
+                <Switch
+                  id="show-deleted-trainees"
+                  checked={ !isVisible }
+                  onCheckedChange={ (checked) => setIsVisible(!checked) }
+                />
+                <Label
+                  htmlFor="show-deleted-trainees"
+                  className="text-sm cursor-pointer whitespace-nowrap"
+                >
+                  Ver Excluídos
+                </Label>
+              </div>
+            )}
             {(filterName || filterPending || filterFilial !== "all") && (
               <Button
                 variant="ghost"
@@ -257,17 +332,34 @@ export function TraineesTable({
                       <Eye className="h-4 w-4" />
                     </Button>
                     {user?.role === USER_ROLES.MASTER && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={ () => {
-                          setTraineeToDelete(trainee);
-                          setIsDeleteConfirmationDialogOpen(true);
-                        } }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <>
+                        {!isVisible ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Restaurar"
+                            onClick={ (e) => {
+                              e.stopPropagation();
+                              handleRestoreTrainee(trainee);
+                            } }
+                            disabled={ isRestoring }
+                          >
+                            <RefreshCcw className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={ () => {
+                              setTraineeToDelete(trainee);
+                              setIsDeleteConfirmationDialogOpen(true);
+                            } }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </>
                     )}
                   </td>
                 </tr>
@@ -338,6 +430,19 @@ export function TraineesTable({
         description="Tem certeza que deseja excluir o aluno"
         itemName={ traineeToDelete?.fullname }
         isDeleting={ isDeleting }
+      />
+
+      <RestoreConfirmationDialog
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onOpenChange={ (open) => {
+          setIsRestoreConfirmationDialogOpen(open);
+          if (!open) setTraineeToRestore(null);
+        } }
+        onConfirm={ confirmRestoreTrainee }
+        isRestoring={ isRestoring }
+        title="Confirmar Restauração"
+        description="Tem certeza que deseja restaurar o aluno"
+        itemName={ traineeToRestore?.fullname }
       />
     </>
   );

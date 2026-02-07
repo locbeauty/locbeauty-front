@@ -20,4 +20,5 @@ export interface Employee {
     };
   };
   isVisible?: boolean;
+  isAnonymized: boolean;
 }

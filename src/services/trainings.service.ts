@@ -23,11 +23,14 @@ export async function GetTrainingById(trainingId: string) {
   return response;
 }
 
-export async function GetAllTrainings(isVisible?: string) {
-  const queryParams = isVisible ? { isVisible } : undefined;
+export async function GetAllTrainings(isVisible?: string, filialId?: string) {
+  const queryParams: Record<string, string> = {};
+  if (isVisible) queryParams.isVisible = isVisible;
+  if (filialId) queryParams.filialID = filialId;
+
   const response = await apiRequest<Training[]>({
     endpoint: "trainings",
-    queryParams,
+    queryParams: Object.keys(queryParams).length > 0 ? queryParams : undefined,
   });
   return response;
 }

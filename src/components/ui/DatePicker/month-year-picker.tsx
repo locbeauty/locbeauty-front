@@ -81,7 +81,7 @@ export function MonthYearPicker({
       }
       onChange(newDate, "year");
     },
-    [onChange, value, minDate, maxDate]
+    [onChange, value, minDate, maxDate],
   );
 
   useEffect(() => {
@@ -101,10 +101,14 @@ export function MonthYearPicker({
                 ref={year.value === getYear(value) ? yearRef : undefined}
               >
                 <Button
+                  type="button"
                   disabled={year.disabled}
                   variant={getYear(value) === year.value ? "default" : "ghost"}
                   className="rounded-full"
-                  onClick={() => onYearChange(year)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onYearChange(year);
+                  }}
                 >
                   {year.label}
                 </Button>
@@ -116,14 +120,16 @@ export function MonthYearPicker({
           <div className="grid grid-cols-3 gap-4">
             {months.map((month) => (
               <Button
+                type="button"
                 key={month.value}
                 size="lg"
                 disabled={month.disabled}
                 variant={getMonth(value) === month.value ? "default" : "ghost"}
                 className="rounded-full"
-                onClick={() =>
-                  onChange(setMonthFns(value, month.value), "month")
-                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange(setMonthFns(value, month.value), "month");
+                }}
               >
                 {month.label}
               </Button>

@@ -63,7 +63,7 @@ export function MonthView({
                   {day.getDate()}
                 </div>
 
-                <div className="space-y-1 mt-1">
+                <div className="space-y-1 mt-1 max-h-[200px] overflow-y-auto">
                   {dayEvents
                     .sort((a, b) => {
                       const { startDate: dateA } = getEventBasicInfo(a);
