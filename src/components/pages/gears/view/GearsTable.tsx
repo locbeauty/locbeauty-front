@@ -21,7 +21,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { queryClient } from "@/app/(main)/layout";
 
-export function GearsTable() {
+interface GearsTableProps {
+  searchName?: string;
+  filialId?: string;
+}
+
+export function GearsTable({ searchName, filialId }: GearsTableProps) {
   const [ gears, setGears ] = useState<Gear[] | null>(null);
   const [ isDeleting, setIsDeleting ] = useState(false);
   const [ isRestoring, setIsRestoring ] = useState(false);
@@ -154,30 +159,57 @@ export function GearsTable() {
   };
 
   useEffect(() => {
+    let isActive = true;
+
     async function getGears() {
       const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears`);
 
-      // If user is restricted (accessibleFilialIds is defined), add filters
-      if (accessibleFilialIds) {
+      // Logic to select filialIds in query
+      if (filialId && filialId !== "ALL") {
+        url.searchParams.append("filialIds", filialId);
+      } else if (accessibleFilialIds) {
         accessibleFilialIds.forEach((id) =>
           url.searchParams.append("filialIds", id),
         );
+      }
+
+      if (searchName) {
+        url.searchParams.append("name", searchName);
       }
 
       if (isVisible) {
         url.searchParams.append("isVisible", "false");
       }
 
-      const response = await fetchWithToken(url, {
-        credentials: "include",
-        cache: "no-store",
-      });
+      // console.log("Fetching gears from:", url.toString());
 
-      const { data } = await response.json();
-      setGears(data);
+      try {
+        const response = await fetchWithToken(url, {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (isActive) {
+          const { data } = await response.json();
+          setGears(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch gears:", error);
+      }
     }
     getGears();
-  }, [ user, accessibleFilialIds, refreshCounter, isVisible ]);
+
+    return () => {
+      isActive = false;
+    };
+  }, [
+    user,
+    accessibleFilialIds,
+    refreshCounter,
+    isVisible,
+    searchName,
+    filialId,
+  ]);
 
   return (
     <>

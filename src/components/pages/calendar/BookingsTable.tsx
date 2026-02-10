@@ -46,7 +46,7 @@ export interface BookingsTableFilters {
 
 import { useAccess } from "@/contexts/access-provider";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 export function BookingsTable({ filters }: BookingsTableProps) {
   const { user } = useAuth();
@@ -189,6 +189,10 @@ export function BookingsTable({ filters }: BookingsTableProps) {
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
   };
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [ filters ]);
 
   const isEmpty = !isLoading && (!checkouts || checkouts.length === 0);
 

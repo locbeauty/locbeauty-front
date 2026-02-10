@@ -114,6 +114,10 @@ export function CustomersTable() {
     setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [ filters ]);
+
   const [ isUpdateCustomerDialogOpen, setIsUpdateCustomerDialogOpen ] =
     useState(false);
   const [ selectedCustomer, setSelectedCustomer ] = useState<Customer | null>(
@@ -202,7 +206,9 @@ export function CustomersTable() {
 
     setIsHardDeleting(true);
     try {
-      const response = await HardDeleteCustomer(customerToHardDelete.customerId);
+      const response = await HardDeleteCustomer(
+        customerToHardDelete.customerId,
+      );
 
       if (response.statusCode === 204 || response.statusCode === 200) {
         toast.success("Cliente excluído definitivamente.");
@@ -292,7 +298,13 @@ export function CustomersTable() {
             setFilters({
               ...filters,
               status:
-                value === "ALL" ? undefined : (value as "Ativo" | "Inativo" | "Inadimplente" | "Bloqueado"),
+                value === "ALL"
+                  ? undefined
+                  : (value as
+                      | "Ativo"
+                      | "Inativo"
+                      | "Inadimplente"
+                      | "Bloqueado"),
             })
           }
         >
@@ -406,21 +418,6 @@ export function CustomersTable() {
                     <TableCell className="p-3 text-sm">
                       {customer.fullname || customer.companyName || "N/A"}
                     </TableCell>
-                    {/* <TableCell className="p-3 text-sm">
-                      <div className="flex flex-col">
-                        {customer.cpf && (
-                          <span className="text-xs">CPF: {customer.cpf}</span>
-                        )}
-                        {customer.cnpj && (
-                          <span className="text-xs">CNPJ: {customer.cnpj}</span>
-                        )}
-                        {!customer.cpf && !customer.cnpj && (
-                          <span className="text-muted-foreground">
-                            Não informa
-                          </span>
-                        )}
-                      </div>
-                    </TableCell> */}
                     <TableCell className="p-3 text-sm text-center">
                       <div>
                         {customer.email || "--"}
@@ -466,7 +463,7 @@ export function CustomersTable() {
                     </TableCell>
                     <TableCell className="p-3 text-center text-sm">
                       {customer.lastBooking
-                        ? new Date(customer.lastBooking).toLocaleDateString()
+                        ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
                         : "Não informado"}
                     </TableCell>
                     <TableCell className="p-3 flex justify-center items-center gap-4">
@@ -489,7 +486,8 @@ export function CustomersTable() {
                           <Pencil className="w-4 h-4" />
                         </Button>
                       </Can>
-                      {user?.role === USER_ROLES.MASTER && filters.isVisible !== "false" && (
+                      {user?.role === USER_ROLES.MASTER &&
+                        filters.isVisible !== "false" && (
                         <Button
                           variant="ghost"
                           className="text-destructive hover:bg-destructive/10"
@@ -501,7 +499,8 @@ export function CustomersTable() {
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
-                      {user?.role === USER_ROLES.MASTER && filters.isVisible === "false" && (
+                      {user?.role === USER_ROLES.MASTER &&
+                        filters.isVisible === "false" && (
                         <Button
                           variant="ghost"
                           className="text-green-600 hover:bg-green-50"
@@ -511,7 +510,8 @@ export function CustomersTable() {
                           <RefreshCcw className="w-4 h-4" />
                         </Button>
                       )}
-                      {user?.role === USER_ROLES.MASTER && filters.isVisible === "false" && (
+                      {user?.role === USER_ROLES.MASTER &&
+                        filters.isVisible === "false" && (
                         <Button
                           variant="ghost"
                           className="text-destructive hover:bg-destructive/10"
@@ -709,7 +709,7 @@ export function CustomersTable() {
                       {
                         itemLabel: "Último Agendamento",
                         itemInfo: customer.lastBooking
-                          ? new Date(customer.lastBooking).toLocaleDateString()
+                          ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
                           : "Não informado",
                       },
                     ],
@@ -779,7 +779,10 @@ export function CustomersTable() {
         onConfirm={ confirmRestoreCustomer }
         title="Confirmar Restauração"
         description="Tem certeza que deseja restaurar o cliente"
-        itemName={ (customerToRestore?.fullname || customerToRestore?.companyName) ?? undefined }
+        itemName={
+          (customerToRestore?.fullname || customerToRestore?.companyName) ??
+          undefined
+        }
         itemId={ customerToRestore?.customerId }
         isRestoring={ isRestoring }
       />
@@ -794,13 +797,15 @@ export function CustomersTable() {
               <Trash2 className="h-5 w-5" /> EXCLUSÃO DEFINITIVA
             </DialogTitle>
             <DialogDescription>
-              Esta ação é <span className="font-bold underline">irreversível</span>.
-              Tem certeza que deseja excluir permanentemente o cliente{" "}
+              Esta ação é{" "}
+              <span className="font-bold underline">irreversível</span>. Tem
+              certeza que deseja excluir permanentemente o cliente{" "}
               <span className="font-bold">
                 {customerToHardDelete?.fullname ||
                   customerToHardDelete?.companyName}
               </span>
-              ? Todos os dados associados a este cliente serão removidos para sempre.
+              ? Todos os dados associados a este cliente serão removidos para
+              sempre.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
@@ -816,7 +821,9 @@ export function CustomersTable() {
               onClick={ handleHardDeleteCustomer }
               disabled={ isHardDeleting }
             >
-              {isHardDeleting ? "Excluindo..." : "Confirmar Exclusão Definitiva"}
+              {isHardDeleting
+                ? "Excluindo..."
+                : "Confirmar Exclusão Definitiva"}
             </Button>
           </DialogFooter>
         </DialogContent>
