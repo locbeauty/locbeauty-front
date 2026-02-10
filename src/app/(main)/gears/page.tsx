@@ -42,7 +42,7 @@ export default function GearsPage() {
           <div className="relative flex-1 w-full">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              type="search"
+              type="text"
               placeholder="Buscar equipamentos..."
               className="pl-8 pr-8"
               value={ searchName }

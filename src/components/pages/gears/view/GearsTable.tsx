@@ -159,6 +159,8 @@ export function GearsTable({ searchName, filialId }: GearsTableProps) {
   };
 
   useEffect(() => {
+    let isActive = true;
+
     async function getGears() {
       const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears`);
 
@@ -171,19 +173,35 @@ export function GearsTable({ searchName, filialId }: GearsTableProps) {
         );
       }
 
+      if (searchName) {
+        url.searchParams.append("name", searchName);
+      }
+
       if (isVisible) {
         url.searchParams.append("isVisible", "false");
       }
 
-      const response = await fetchWithToken(url, {
-        credentials: "include",
-        cache: "no-store",
-      });
+      // console.log("Fetching gears from:", url.toString());
 
-      const { data } = await response.json();
-      setGears(data);
+      try {
+        const response = await fetchWithToken(url, {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (isActive) {
+          const { data } = await response.json();
+          setGears(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch gears:", error);
+      }
     }
     getGears();
+
+    return () => {
+      isActive = false;
+    };
   }, [
     user,
     accessibleFilialIds,
