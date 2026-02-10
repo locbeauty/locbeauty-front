@@ -21,7 +21,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { queryClient } from "@/app/(main)/layout";
 
-export function GearsTable() {
+interface GearsTableProps {
+  searchName?: string;
+  filialId?: string;
+}
+
+export function GearsTable({ searchName, filialId }: GearsTableProps) {
   const [ gears, setGears ] = useState<Gear[] | null>(null);
   const [ isDeleting, setIsDeleting ] = useState(false);
   const [ isRestoring, setIsRestoring ] = useState(false);
@@ -157,8 +162,10 @@ export function GearsTable() {
     async function getGears() {
       const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears`);
 
-      // If user is restricted (accessibleFilialIds is defined), add filters
-      if (accessibleFilialIds) {
+      // Logic to select filialIds in query
+      if (filialId && filialId !== "ALL") {
+        url.searchParams.append("filialIds", filialId);
+      } else if (accessibleFilialIds) {
         accessibleFilialIds.forEach((id) =>
           url.searchParams.append("filialIds", id),
         );
@@ -177,7 +184,14 @@ export function GearsTable() {
       setGears(data);
     }
     getGears();
-  }, [ user, accessibleFilialIds, refreshCounter, isVisible ]);
+  }, [
+    user,
+    accessibleFilialIds,
+    refreshCounter,
+    isVisible,
+    searchName,
+    filialId,
+  ]);
 
   return (
     <>
