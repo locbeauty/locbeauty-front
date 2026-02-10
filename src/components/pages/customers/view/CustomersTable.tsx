@@ -114,6 +114,10 @@ export function CustomersTable() {
     setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [ filters ]);
+
   const [ isUpdateCustomerDialogOpen, setIsUpdateCustomerDialogOpen ] =
     useState(false);
   const [ selectedCustomer, setSelectedCustomer ] = useState<Customer | null>(
