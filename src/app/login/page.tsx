@@ -45,7 +45,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   async function handleLogin({ username, password }: LoginSchemaType) {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/signin`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/signin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -69,7 +69,7 @@ export default function LoginPage() {
 
       // Fetch user permissions to determine first accessible route
       const permissionsRes = await fetch(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/access/${employeeId}`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/access/${employeeId}`,
         {
           headers: {
             "Content-Type": "application/json",

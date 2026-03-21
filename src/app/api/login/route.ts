@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
 
   try {
-    const fastifyRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/signin`, {
+    const fastifyRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/signin`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

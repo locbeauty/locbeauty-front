@@ -56,7 +56,7 @@ export async function ImportBookings(formData: FormData) {
 
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/import`,
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/api/bookings/import`,
       {
         method: "POST",
         headers: {

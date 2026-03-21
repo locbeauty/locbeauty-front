@@ -58,7 +58,7 @@ export async function apiRequest<T = unknown>({
     }
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/${endpoint}${queryString}`,
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/api/${endpoint}${queryString}`,
       {
         method,
         headers,

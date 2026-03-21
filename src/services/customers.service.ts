@@ -70,7 +70,7 @@ export async function ImportCustomers(formData: FormData) {
 
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/customers/import`,
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/api/customers/import`,
       {
         method: "POST",
         headers: {

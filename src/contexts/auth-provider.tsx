@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/me`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/me`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,

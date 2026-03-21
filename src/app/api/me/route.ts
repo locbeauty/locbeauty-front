@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   try {
     const cookies = await getCookies();
 
-    const fastifyRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/me`, {
+    const fastifyRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/me`, {
       method: "GET",
       // headers: {
       //     "Content-Type": "application/json",

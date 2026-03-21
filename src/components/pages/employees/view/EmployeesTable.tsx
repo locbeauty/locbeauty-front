@@ -36,39 +36,39 @@ interface EmployeesTableProps {
 
 export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
   const { user } = useAuth();
-  const [isUpdateEmployeeDialogOpen, setIsUpdateEmployeeDialogOpen] =
+  const [ isUpdateEmployeeDialogOpen, setIsUpdateEmployeeDialogOpen ] =
     useState(false);
-  const [allEmployees, setAllEmployees] = useState<Employee[] | null>(null);
-  const [totalEmployees, setTotalEmployees] = useState(0);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+  const [ allEmployees, setAllEmployees ] = useState<Employee[] | null>(null);
+  const [ totalEmployees, setTotalEmployees ] = useState(0);
+  const [ pagination, setPagination ] = useState({ page: 1, limit: 10 });
+  const [ selectedEmployee, setSelectedEmployee ] = useState<Employee | null>(
     null,
   );
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen] =
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
-  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
+  const [ employeeToDelete, setEmployeeToDelete ] = useState<Employee | null>(
     null,
   );
-  const [employeeToRestore, setEmployeeToRestore] = useState<Employee | null>(
+  const [ employeeToRestore, setEmployeeToRestore ] = useState<Employee | null>(
     null,
   );
-  const [refreshCounter, setRefreshCounter] = useState(0);
-  const [isRestoring, setIsRestoring] = useState(false);
-  const [isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen] =
+  const [ refreshCounter, setRefreshCounter ] = useState(0);
+  const [ isRestoring, setIsRestoring ] = useState(false);
+  const [ isRestoreConfirmationDialogOpen, setIsRestoreConfirmationDialogOpen ] =
     useState(false);
 
-  const [isEmployeeDetailsDialogOpen, setIsEmployeeDetailsDialogOpen] =
+  const [ isEmployeeDetailsDialogOpen, setIsEmployeeDetailsDialogOpen ] =
     useState(false);
-  const [isHardDeleting, setIsHardDeleting] = useState(false);
+  const [ isHardDeleting, setIsHardDeleting ] = useState(false);
   const [
     isHardDeleteConfirmationDialogOpen,
     setIsHardDeleteConfirmationDialogOpen,
   ] = useState(false);
-  const [employeeToHardDelete, setEmployeeToHardDelete] =
+  const [ employeeToHardDelete, setEmployeeToHardDelete ] =
     useState<Employee | null>(null);
 
-  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [ isVisible, setIsVisible ] = useState<boolean>(false);
 
   const totalPages = Math.ceil(totalEmployees / pagination.limit);
 
@@ -203,7 +203,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, page: 1 }));
-  }, [searchName, filialId, isVisible]);
+  }, [ searchName, filialId, isVisible ]);
 
   useEffect(() => {
     async function getEmployees() {
@@ -254,7 +254,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
       }
     }
     getEmployees();
-  }, [searchName, filialId, pagination, refreshCounter, isVisible]);
+  }, [ searchName, filialId, pagination, refreshCounter, isVisible ]);
 
   return (
     <>
@@ -264,8 +264,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
           <div className="flex items-center space-x-2">
             <Switch
               id="view-deleted-employees"
-              checked={isVisible}
-              onCheckedChange={setIsVisible}
+              checked={ isVisible }
+              onCheckedChange={ setIsVisible }
             />
             <Label htmlFor="view-deleted-employees">Ver Excluídos</Label>
           </div>
@@ -286,7 +286,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
           <tbody>
             {allEmployees?.length === 0 && (
               <tr>
-                <td className="text-center p-4" colSpan={6}>
+                <td className="text-center p-4" colSpan={ 6 }>
                   Nada a mostrar por aqui.
                 </td>
               </tr>
@@ -299,7 +299,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                 )
                 .map((employee) => (
                   <tr
-                    key={employee.employeeId}
+                    key={ employee.employeeId }
                     className="border-t hover:bg-muted/50"
                   >
                     <td className="p-3 text-sm">{employee.fullname}</td>
@@ -314,19 +314,19 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                       {employee.email ?? "-"}
                     </td>
                     <td className="p-3 flex justify-center items-center gap-4">
-                      <Can module={SYSTEM_MODULES.EMPLOYEES} action="canView">
+                      <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canView">
                         <Button
-                          onClick={() =>
+                          onClick={ () =>
                             handleToggleEmployeeDetailsDialog(true, employee)
                           }
                         >
                           <Eye />
                         </Button>
                       </Can>
-                      <Can module={SYSTEM_MODULES.EMPLOYEES} action="canEdit">
+                      <Can module={ SYSTEM_MODULES.EMPLOYEES } action="canEdit">
                         <Button
                           variant="outline"
-                          onClick={() =>
+                          onClick={ () =>
                             handleToggleUpdateEmployeeDialog(true, employee)
                           }
                         >
@@ -339,8 +339,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                             <Button
                               variant="ghost"
                               className="text-green-600 hover:bg-green-50"
-                              onClick={() => handleRestoreEmployee(employee)}
-                              disabled={isRestoring}
+                              onClick={ () => handleRestoreEmployee(employee) }
+                              disabled={ isRestoring }
                               title="Restaurar"
                             >
                               <RefreshCcw className="w-4 h-4" />
@@ -348,11 +348,11 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                             <Button
                               variant="ghost"
                               className="text-destructive hover:bg-destructive/10"
-                              onClick={() => {
+                              onClick={ () => {
                                 setEmployeeToHardDelete(employee);
                                 setIsHardDeleteConfirmationDialogOpen(true);
-                              }}
-                              disabled={isHardDeleting}
+                              } }
+                              disabled={ isHardDeleting }
                               title="Excluir Definitivamente"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -362,10 +362,10 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                           <Button
                             variant="ghost"
                             className="text-destructive hover:bg-destructive/10"
-                            onClick={() => {
+                            onClick={ () => {
                               setEmployeeToDelete(employee);
                               setIsDeleteConfirmationDialogOpen(true);
-                            }}
+                            } }
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -376,7 +376,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             ) : (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={ 8 }
                   className="p-4 text-center text-muted-foreground"
                 >
                   Carregando...
@@ -397,8 +397,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={() => handlePageChange(1)}
-            disabled={pagination.page === 1}
+            onClick={ () => handlePageChange(1) }
+            disabled={ pagination.page === 1 }
           >
             <ChevronsLeft className="h-4 w-4" />
           </Button>
@@ -406,8 +406,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page === 1}
+            onClick={ () => handlePageChange(pagination.page - 1) }
+            disabled={ pagination.page === 1 }
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -433,11 +433,11 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               for (let i = startPage; i <= endPage; i++) {
                 pages.push(
                   <Button
-                    key={i}
-                    variant={pagination.page === i ? "default" : "outline"}
+                    key={ i }
+                    variant={ pagination.page === i ? "default" : "outline" }
                     size="sm"
                     className="h-8 w-8"
-                    onClick={() => handlePageChange(i)}
+                    onClick={ () => handlePageChange(i) }
                   >
                     {i}
                   </Button>,
@@ -451,8 +451,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page === totalPages || totalPages === 0}
+            onClick={ () => handlePageChange(pagination.page + 1) }
+            disabled={ pagination.page === totalPages || totalPages === 0 }
           >
             <ChevronLeft className="h-4 w-4 rotate-180" />
           </Button>
@@ -460,8 +460,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={() => handlePageChange(totalPages)}
-            disabled={pagination.page === totalPages || totalPages === 0}
+            onClick={ () => handlePageChange(totalPages) }
+            disabled={ pagination.page === totalPages || totalPages === 0 }
           >
             <ChevronsLeft className="h-4 w-4 rotate-180" />
           </Button>
@@ -475,9 +475,9 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               employee.employeeId !== (user?.employeeId || user?.sub),
           )
           .map((employee) => (
-            <Fragment key={employee.employeeId}>
+            <Fragment key={ employee.employeeId }>
               <ResponsiveCard
-                cardData={{
+                cardData={ {
                   id: employee.employeeId,
                   title: employee.fullname,
                   description: "",
@@ -489,9 +489,9 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
                       itemInfo: employee.cellphone ?? "-",
                     },
                   ],
-                }}
-                rawData={employee}
-                handleToggleDialog={handleToggleEmployeeDetailsDialog}
+                } }
+                rawData={ employee }
+                handleToggleDialog={ handleToggleEmployeeDetailsDialog }
               />
             </Fragment>
           ))}
@@ -507,8 +507,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={() => handlePageChange(1)}
-            disabled={pagination.page === 1}
+            onClick={ () => handlePageChange(1) }
+            disabled={ pagination.page === 1 }
           >
             <ChevronsLeft className="h-4 w-4" />
           </Button>
@@ -516,8 +516,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page === 1}
+            onClick={ () => handlePageChange(pagination.page - 1) }
+            disabled={ pagination.page === 1 }
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -543,11 +543,11 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
               for (let i = startPage; i <= endPage; i++) {
                 pages.push(
                   <Button
-                    key={i}
-                    variant={pagination.page === i ? "default" : "outline"}
+                    key={ i }
+                    variant={ pagination.page === i ? "default" : "outline" }
                     size="sm"
                     className="h-8 w-8"
-                    onClick={() => handlePageChange(i)}
+                    onClick={ () => handlePageChange(i) }
                   >
                     {i}
                   </Button>,
@@ -561,8 +561,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page === totalPages || totalPages === 0}
+            onClick={ () => handlePageChange(pagination.page + 1) }
+            disabled={ pagination.page === totalPages || totalPages === 0 }
           >
             <ChevronLeft className="h-4 w-4 rotate-180" />
           </Button>
@@ -570,8 +570,8 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            onClick={() => handlePageChange(totalPages)}
-            disabled={pagination.page === totalPages || totalPages === 0}
+            onClick={ () => handlePageChange(totalPages) }
+            disabled={ pagination.page === totalPages || totalPages === 0 }
           >
             <ChevronsLeft className="h-4 w-4 rotate-180" />
           </Button>
@@ -579,55 +579,55 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
       </div>
 
       <EmployeeDetailsDialog
-        selectedEmployee={selectedEmployee}
-        handleToggleUpdateEmployeeDialog={handleToggleUpdateEmployeeDialog}
-        handleToggleEmployeeDetailsDialog={handleToggleEmployeeDetailsDialog}
-        isEmployeeDetailsModalOpen={isEmployeeDetailsDialogOpen}
-        handleRestoreEmployee={handleRestoreEmployee}
+        selectedEmployee={ selectedEmployee }
+        handleToggleUpdateEmployeeDialog={ handleToggleUpdateEmployeeDialog }
+        handleToggleEmployeeDetailsDialog={ handleToggleEmployeeDetailsDialog }
+        isEmployeeDetailsModalOpen={ isEmployeeDetailsDialogOpen }
+        handleRestoreEmployee={ handleRestoreEmployee }
         handleHardDeleteEmployee={ (employee) => {
           setEmployeeToHardDelete(employee);
           setIsHardDeleteConfirmationDialogOpen(true);
         } }
-        isRestoring={isRestoring}
-        isHardDeleting={isHardDeleting}
+        isRestoring={ isRestoring }
+        isHardDeleting={ isHardDeleting }
       />
 
       <UpdateEmployeeDialog
-        isUpdateEmployeeDialogOpen={isUpdateEmployeeDialogOpen}
-        selectedEmployee={selectedEmployee!}
-        setSelectedEmployee={setSelectedEmployee}
-        handleToggleUpdateEmployeeDialog={handleToggleUpdateEmployeeDialog}
-        onEmployeeUpdated={handleEmployeeUpdated}
+        isUpdateEmployeeDialogOpen={ isUpdateEmployeeDialogOpen }
+        selectedEmployee={ selectedEmployee! }
+        setSelectedEmployee={ setSelectedEmployee }
+        handleToggleUpdateEmployeeDialog={ handleToggleUpdateEmployeeDialog }
+        onEmployeeUpdated={ handleEmployeeUpdated }
       />
 
       <DeleteConfirmationDialog
-        isOpen={isDeleteConfirmationDialogOpen}
-        onOpenChange={setIsDeleteConfirmationDialogOpen}
-        onConfirm={handleDeleteEmployee}
+        isOpen={ isDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsDeleteConfirmationDialogOpen }
+        onConfirm={ handleDeleteEmployee }
         title="Confirmar Exclusão"
         description="Tem certeza que deseja excluir o funcionário"
-        itemName={employeeToDelete?.fullname}
-        isDeleting={isDeleting}
+        itemName={ employeeToDelete?.fullname }
+        isDeleting={ isDeleting }
       />
 
       <RestoreConfirmationDialog
-        isOpen={isRestoreConfirmationDialogOpen}
-        onOpenChange={setIsRestoreConfirmationDialogOpen}
-        onConfirm={confirmRestoreEmployee}
+        isOpen={ isRestoreConfirmationDialogOpen }
+        onOpenChange={ setIsRestoreConfirmationDialogOpen }
+        onConfirm={ confirmRestoreEmployee }
         title="Confirmar Restauração"
         description="Tem certeza que deseja restaurar o funcionário"
-        itemName={employeeToRestore?.fullname}
-        isRestoring={isRestoring}
+        itemName={ employeeToRestore?.fullname }
+        isRestoring={ isRestoring }
       />
 
       <DeleteConfirmationDialog
-        isOpen={isHardDeleteConfirmationDialogOpen}
-        onOpenChange={setIsHardDeleteConfirmationDialogOpen}
-        onConfirm={handleHardDeleteEmployee}
+        isOpen={ isHardDeleteConfirmationDialogOpen }
+        onOpenChange={ setIsHardDeleteConfirmationDialogOpen }
+        onConfirm={ handleHardDeleteEmployee }
         title="Confirmar Exclusão Definitiva"
         description="Tem certeza que deseja excluir definitivamente o funcionário? Esta ação irá anonimizar os dados e não poderá ser desfeita."
-        itemName={employeeToHardDelete?.fullname}
-        isDeleting={isHardDeleting}
+        itemName={ employeeToHardDelete?.fullname }
+        isDeleting={ isHardDeleting }
       />
     </>
   );
