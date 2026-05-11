@@ -15,11 +15,7 @@ import {
 } from "../CustomMultiLineChart";
 import { CHART_COLORS } from "../CustomPieChart";
 
-interface CityTrendsCardProps {
-  availableYears: string[];
-}
-
-export function CityTrendsCard({ availableYears }: CityTrendsCardProps) {
+export function CityTrendsCard() {
   const [ chartData, setChartData ] = useState<
     Record<string, string | number>[]
   >([]);
@@ -28,11 +24,12 @@ export function CityTrendsCard({ availableYears }: CityTrendsCardProps) {
 
   useEffect(() => {
     async function fetchTrends() {
-      if (availableYears.length === 0) return;
-
       setLoading(true);
       try {
-        const yearsToShow = availableYears.slice(-5);
+        const currentYear = new Date().getFullYear();
+        const yearsToShow = Array.from({ length: 5 }, (_, i) =>
+          String(currentYear - 4 + i),
+        );
 
         const yearlyResults = await Promise.all(
           yearsToShow.map(async (year) => {
@@ -81,7 +78,7 @@ export function CityTrendsCard({ availableYears }: CityTrendsCardProps) {
     }
 
     fetchTrends();
-  }, [ availableYears ]);
+  }, []);
 
   return (
     <Card>

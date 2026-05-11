@@ -55,7 +55,7 @@ export function OverviewTab() {
           months={ MONTHS }
           availableYears={ availableYears }
         />
-        <CityTrendsCard availableYears={ availableYears } />
+        <CityTrendsCard />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <FilialRankingsCard
