@@ -62,7 +62,7 @@ export function CreateEmployeeForm() {
   ) {
     try {
       const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/create`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/employees/create`,
         {
           method: "POST",
           credentials: "include",

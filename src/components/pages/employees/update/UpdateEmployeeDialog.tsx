@@ -73,7 +73,7 @@ export function UpdateEmployeeDialog({
 
     try {
       const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/update?employeeId=${selectedEmployee.employeeId}`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/employees/update?employeeId=${selectedEmployee.employeeId}`,
         {
           method: "POST",
           credentials: "include",

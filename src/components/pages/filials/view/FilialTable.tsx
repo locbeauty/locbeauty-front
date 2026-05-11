@@ -147,7 +147,7 @@ export function FilialsTable() {
       }
 
       const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/filials?${queryParams.toString()}`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/filials?${queryParams.toString()}`,
         {
           credentials: "include",
           cache: "no-store",

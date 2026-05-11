@@ -162,7 +162,7 @@ export function GearsTable({ searchName, filialId }: GearsTableProps) {
     let isActive = true;
 
     async function getGears() {
-      const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/gears`);
+      const url = new URL(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/gears`);
 
       // Logic to select filialIds in query
       if (filialId && filialId !== "ALL") {

@@ -36,7 +36,7 @@ export function CreateFilialForm() {
   async function handleCreateFilial(newFilialData: CreateFilialFormSchemaType) {
     try {
       const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/filials/create`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/filials/create`,
         {
           method: "POST",
           credentials: "include",

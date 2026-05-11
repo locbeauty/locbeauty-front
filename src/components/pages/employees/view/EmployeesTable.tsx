@@ -228,7 +228,7 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
       const response = await fetchWithToken(
         `${
           process.env.NEXT_PUBLIC_SERVER_URL
-        }/employees?${queryParams.toString()}`,
+        }/api/employees?${queryParams.toString()}`,
         {
           credentials: "include",
           cache: "no-store",

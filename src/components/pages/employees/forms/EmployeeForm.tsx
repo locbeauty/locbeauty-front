@@ -60,7 +60,7 @@ export function EmployeeForm({
       setIsCheckingUsername(true);
       try {
         const response = await fetchWithToken(
-          `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/check-availability?username=${debouncedUsername}`,
+          `${process.env.NEXT_PUBLIC_SERVER_URL}/api/employees/check-availability?username=${debouncedUsername}`,
         );
         const data = await response.json();
 

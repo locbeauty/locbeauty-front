@@ -99,7 +99,7 @@ export function BookingHistoryCard({
       setIsLoadingBookings(true);
       try {
         const response = await fetchWithToken(
-          `${process.env.NEXT_PUBLIC_SERVER_URL}/bookings/customer?customerId=${selectedCustomer?.customerId}`,
+          `${process.env.NEXT_PUBLIC_SERVER_URL}/api/bookings/customer?customerId=${selectedCustomer?.customerId}`,
           {
             credentials: "include",
           },

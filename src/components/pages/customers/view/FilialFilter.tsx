@@ -25,7 +25,7 @@ export function FilialFilter({
   useEffect(() => {
     async function handleGetAllFilials() {
       const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/filials`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/filials`,
         {
           credentials: "include",
           next: {

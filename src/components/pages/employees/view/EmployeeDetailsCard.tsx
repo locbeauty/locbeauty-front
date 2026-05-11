@@ -34,7 +34,7 @@ export function EmployeeDetailsCard({
       if (selectedEmployee?.employeeId) {
         try {
           const response = await fetchWithToken(
-            `${process.env.NEXT_PUBLIC_SERVER_URL}/employees/${selectedEmployee.employeeId}/metrics/average-bookings`,
+            `${process.env.NEXT_PUBLIC_SERVER_URL}/api/employees/${selectedEmployee.employeeId}/metrics/average-bookings`,
           );
           if (response.ok) {
             const data = await response.json();

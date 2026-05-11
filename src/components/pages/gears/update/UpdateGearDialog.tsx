@@ -81,7 +81,7 @@ export function UpdateGearDialog({
   const handleSaveGear = async (targetGearData: UpdateGearFormSchemaType) => {
     try {
       const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/gears/update?gearId=${selectedGear?.gearId}`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/gears/update?gearId=${selectedGear?.gearId}`,
         {
           method: "POST",
           credentials: "include",

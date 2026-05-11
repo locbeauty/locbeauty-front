@@ -76,7 +76,7 @@ export function CreateGearForm() {
   async function handleCreateGear(newGearData: CreateGearFormSchemaType) {
     try {
       const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/gears/create`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/gears/create`,
         {
           method: "POST",
           credentials: "include",

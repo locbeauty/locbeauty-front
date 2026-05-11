@@ -62,7 +62,7 @@ export function UpdateFilialDialog({
     updatedFilialData: UpdateFilialFormSchemaType,
   ) {
     const response = await fetchWithToken(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/filials/update/${selectedFilial.filialId}`,
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/api/filials/update/${selectedFilial.filialId}`,
       {
         method: "POST",
         headers: {
