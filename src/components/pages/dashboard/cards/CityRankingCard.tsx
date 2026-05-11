@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
-import { CustomBarChart } from "../CustomBarChart";
+import { CustomPieChart } from "../CustomPieChart";
 import { useEffect, useState } from "react";
 import { getCityRankingMetric } from "@/services/dashboard.service";
 import { apiRequest } from "@/lib/api";
@@ -91,11 +91,11 @@ export function CityRankingCard({
   }, [ localSelectedYear, selectedFilialId ]);
 
   return (
-    <Card className="lg:col-span-4 w-[89vw] md:w-auto">
+    <Card className="w-[89vw] md:w-auto">
       <CardHeader>
         <CardTitle>Ranking de cidades</CardTitle>
         <CardDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span>Cidades com mais agendamentos</span>
+          <span>Distribuição de agendamentos por cidade</span>
           <div className="flex items-center gap-2">
             <Select
               value={ selectedFilialId }
@@ -125,18 +125,16 @@ export function CityRankingCard({
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex h-[400px] items-center justify-center">
+          <div className="flex h-[320px] items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <CustomBarChart
+          <CustomPieChart
             data={ rankingData }
             dataKey="value"
             nameKey="name"
-            height={ 400 }
-            fill="#7f2b83"
+            height={ 320 }
             valueFormatter={ (value) => `${value} locações` }
-            allowDecimals={ false }
           />
         )}
       </CardContent>

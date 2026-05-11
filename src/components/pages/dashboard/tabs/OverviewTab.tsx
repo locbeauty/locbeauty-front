@@ -1,6 +1,7 @@
 import { TotalRevenueCard } from "../cards/TotalRevenueCard";
 import { FilialRankingsCard } from "../cards/FilialRankingsCard";
 import { CityRankingCard } from "../cards/CityRankingCard";
+import { CityTrendsCard } from "../cards/CityTrendsCard";
 import { useEffect, useState } from "react";
 import { getAvailableYears } from "@/services/dashboard.service";
 
@@ -20,10 +21,6 @@ const MONTHS = [
 ];
 
 export function OverviewTab() {
-  const currentMonthIndex = new Date().getMonth();
-  const [ selectedMonth, setSelectedMonth ] = useState<string>(
-    MONTHS[currentMonthIndex].toLowerCase(),
-  );
   const [ selectedYear, setSelectedYear ] = useState<string>(
     String(new Date().getFullYear()),
   );
@@ -52,20 +49,21 @@ export function OverviewTab() {
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-4 md:grid-cols-2">
+        <TotalRevenueCard
+          selectedYear={ selectedYear }
+          months={ MONTHS }
+          availableYears={ availableYears }
+        />
+        <CityTrendsCard availableYears={ availableYears } />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
         <FilialRankingsCard
           selectedYear={ selectedYear }
           availableYears={ availableYears }
         />
         <CityRankingCard
           selectedYear={ selectedYear }
-          availableYears={ availableYears }
-        />
-      </div>
-      <div className="grid gap-4 grid-cols-1">
-        <TotalRevenueCard
-          selectedYear={ selectedYear }
-          months={ MONTHS }
           availableYears={ availableYears }
         />
       </div>

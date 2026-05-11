@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
-import { CustomBarChart } from "../CustomBarChart";
+import { CustomPieChart } from "../CustomPieChart";
 import { useEffect, useState } from "react";
 import { getFilialBookingsRanking } from "@/services/dashboard.service";
 
@@ -63,11 +63,11 @@ export function FilialRankingsCard({
   }, [ localSelectedYear ]);
 
   return (
-    <Card className="lg:col-span-3 w-[89vw] md:w-auto">
+    <Card className="w-[89vw] md:w-auto">
       <CardHeader>
         <CardTitle>Ranking de filiais</CardTitle>
         <CardDescription className="flex items-center justify-between">
-          Número de locações por filial
+          Distribuição de locações por filial
           <CustomFilterSelect
             items={ availableYears }
             placeholder="Selecione o ano"
@@ -78,14 +78,19 @@ export function FilialRankingsCard({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <CustomBarChart
-          data={ rankingData }
-          dataKey="value"
-          nameKey="name"
-          height={ 400 }
-          fill="#7f2b83"
-          valueFormatter={ (value) => `${value} locações` }
-        />
+        {loading ? (
+          <div className="flex h-[320px] items-center justify-center">
+            <span className="text-muted-foreground text-sm">Carregando...</span>
+          </div>
+        ) : (
+          <CustomPieChart
+            data={ rankingData }
+            dataKey="value"
+            nameKey="name"
+            height={ 320 }
+            valueFormatter={ (value) => `${value} locações` }
+          />
+        )}
       </CardContent>
     </Card>
   );

@@ -92,7 +92,8 @@ export const CustomAreaChart = ({
           type="monotone"
           dataKey={ dataKey }
           stroke={ stroke }
-          fillOpacity={ 1 }
+          strokeWidth={ 2 }
+          fillOpacity={ 0.08 }
           fill={ `url(#color-${dataKey})` }
         />
       </RechartsAreaChart>

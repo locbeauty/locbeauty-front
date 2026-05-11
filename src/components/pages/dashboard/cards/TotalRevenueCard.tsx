@@ -98,7 +98,7 @@ export function TotalRevenueCard({
   }, [ internalYear, months, selectedFilialId ]);
 
   return (
-    <Card className="col-span-1 md:col-span-2 relative h-fit">
+    <Card className="relative h-fit">
       <CardHeader>
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
           <CardTitle>Receita Total</CardTitle>
@@ -139,9 +139,9 @@ export function TotalRevenueCard({
         <CustomAreaChart
           data={ yearlyData.length > 0 ? yearlyData : [] }
           dataKey="total"
-          height={ 150 }
-          stroke="#10b981"
-          fill="#10b981"
+          height={ 200 }
+          stroke="#9B72CF"
+          fill="#9B72CF"
           valueFormatter={ (value) =>
             value.toLocaleString("pt-BR", {
               style: "currency",
