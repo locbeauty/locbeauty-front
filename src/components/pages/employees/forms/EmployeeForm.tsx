@@ -9,6 +9,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import { CreateEmployeeFormSchemaType } from "@/lib/zod/CreateEmployeeValidation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 import { User, Phone, Lock, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDebounceValue } from "usehooks-ts";
@@ -27,6 +28,8 @@ export function EmployeeForm({
   accessibleFilialsIds,
   defaultFilialId,
 }: EmployeeFormProps) {
+  const { user } = useAuth();
+
   const {
     register,
     watch,
@@ -35,6 +38,11 @@ export function EmployeeForm({
     clearErrors,
     formState: { errors },
   } = useFormContext<CreateEmployeeFormSchemaType>();
+
+  const canEditBirthdate =
+    !isEditing ||
+    user?.role === USER_ROLES.MASTER ||
+    user?.role === USER_ROLES.GERENTE;
 
   const username = watch("username");
 
@@ -180,7 +188,7 @@ export function EmployeeForm({
                     value={ value }
                     onChange={ onChange }
                     error={ errors.birthdate?.message }
-                    disabled={ isEditing }
+                    disabled={ !canEditBirthdate }
                   />
                 ) }
               />

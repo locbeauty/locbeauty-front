@@ -107,7 +107,7 @@ export function EditProfileForm() {
       };
 
       const response = await fetchWithToken(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/employees/update?employeeId=${userId}`,
+        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/employees/update/${userId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
