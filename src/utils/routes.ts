@@ -13,6 +13,7 @@ export const ROUTES = {
   CALENDAR: "/calendar",
   CREATE_BOOKING: "/bookings/create",
   BOOKING_TABLE: "/bookings",
+  CITY_DISTANCES: "/city-distances",
   // VIEW_CALENDAR: "/bookings",
   TRAININGS: "/trainings",
   BIRTHDAYS: "/birthdays",

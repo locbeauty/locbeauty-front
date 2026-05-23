@@ -8,6 +8,7 @@ import {
   Calendar,
   Calendar1,
   Home,
+  MapPin,
   Package,
   TargetIcon,
   UserRound,
@@ -60,6 +61,12 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
       name: "Agendamentos",
       href: ROUTES.BOOKING_TABLE,
       icon: Calendar,
+      module: SYSTEM_MODULES.BOOKINGS,
+    },
+    {
+      name: "Rotas",
+      href: ROUTES.CITY_DISTANCES,
+      icon: MapPin,
       module: SYSTEM_MODULES.BOOKINGS,
     },
     {
