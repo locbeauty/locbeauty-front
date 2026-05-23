@@ -223,7 +223,9 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
 
       queryParams.append("page", pagination.page.toString());
       queryParams.append("limit", pagination.limit.toString());
-      queryParams.append("excludeMaster", "true");
+      if (user?.role !== USER_ROLES.MASTER) {
+        queryParams.append("excludeMaster", "true");
+      }
 
       const response = await fetchWithToken(
         `${
