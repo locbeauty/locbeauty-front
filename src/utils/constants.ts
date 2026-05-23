@@ -35,6 +35,7 @@ export const USER_ROLES = {
   GERENTE: "Gerente",
   ADMIN: "ADMIN",
   MASTER: "Master",
+  MOTORISTA: "Motorista",
 } as const;
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];

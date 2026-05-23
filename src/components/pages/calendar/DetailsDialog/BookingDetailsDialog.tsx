@@ -145,6 +145,7 @@ export function BookingDetailsDialog({
   );
 
   const { user } = useAuth();
+  const readOnly = user?.role === USER_ROLES.MOTORISTA;
   const [ isDeleting, setIsDeleting ] = useState(false);
   const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
@@ -705,7 +706,7 @@ export function BookingDetailsDialog({
                           Localização
                         </h3>
                       </div>
-                      {checkoutCanBeUpdated && (
+                      {checkoutCanBeUpdated && !readOnly && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -782,7 +783,7 @@ export function BookingDetailsDialog({
                           Agendamento
                         </h3>
                       </div>
-                      {checkoutCanBeUpdated && (
+                      {checkoutCanBeUpdated && !readOnly && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -1132,7 +1133,7 @@ export function BookingDetailsDialog({
                             Motorista
                           </h3>
                         </div>
-                        {checkoutCanBeUpdated && (
+                        {checkoutCanBeUpdated && !readOnly && (
                           <Button
                             size="icon"
                             variant="ghost"
@@ -1209,7 +1210,7 @@ export function BookingDetailsDialog({
                     {selectedCheckout.Bookings.filter(
                       (booking) => booking.status === "ACTIVE",
                     ).length < 3 &&
-                      checkoutCanBeUpdated && (
+                      checkoutCanBeUpdated && !readOnly && (
                       <Button
                         size="sm"
                         variant="secondary"
@@ -1269,7 +1270,7 @@ export function BookingDetailsDialog({
                               </div>
                             )}
 
-                            {checkoutCanBeUpdated && (
+                            {checkoutCanBeUpdated && !readOnly && (
                               <div className="flex justify-end gap-2 pt-1">
                                 <Button
                                   variant="ghost"
@@ -1371,7 +1372,7 @@ export function BookingDetailsDialog({
                         </div>
                       )}
 
-                      {checkoutCanBeUpdated && (
+                      {checkoutCanBeUpdated && !readOnly && (
                         <div className="flex flex-col gap-2 pt-2">
                           {/* {selectedCheckout.totalDurationInMinutes > 1440 && (
                             <div className="text-xs font-medium text-destructive mb-1">
@@ -1460,65 +1461,69 @@ export function BookingDetailsDialog({
                   </CardHeader>
                   <CardContent className="pt-0 space-y-2">
                     <Textarea
-                      disabled={ !checkoutCanBeUpdated }
+                      disabled={ !checkoutCanBeUpdated || readOnly }
                       placeholder="Adicione uma observação"
                       value={ checkoutObservations }
                       onChange={ (e) => setCheckoutObservations(e.target.value) }
                       className="min-h-[100px] resize-none"
                       maxLength={ 500 }
                     />
-                    <div className="flex justify-end">
-                      <Button
-                        size="sm"
-                        onClick={ () => handleUpdateCheckoutObservations() }
-                        disabled={
-                          checkoutObservations === selectedCheckout.observations
-                        }
-                      >
-                        Salvar Observações
-                      </Button>
-                    </div>
+                    {!readOnly && (
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={ () => handleUpdateCheckoutObservations() }
+                          disabled={
+                            checkoutObservations === selectedCheckout.observations
+                          }
+                        >
+                          Salvar Observações
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
 
-              <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t p-4 flex flex-col sm:flex-row gap-3 justify-end z-10">
-                <Button
-                  variant="outline"
-                  onClick={ () => setIsCheckoutPaymentMethodDialogOpen(true) }
-                  className="sm:w-auto w-full"
-                >
-                  <DollarSign className="mr-2 h-4 w-4" />
-                  Gerenciar Pagamento
-                </Button>
-
-                <Button
-                  onClick={ () => {
-                    handleChangeCheckoutStatus(
-                      selectedCheckout.checkoutId,
-                      "Concluido",
-                    );
-                  } }
-                  disabled={
-                    selectedCheckout.checkoutStatus === "Concluido" ||
-                    selectedCheckout.checkoutStatus === "Cancelado"
-                  }
-                  className="sm:w-auto w-full"
-                >
-                  <Check className="mr-2 h-4 w-4" />
-                  Concluir Agendamento
-                </Button>
-
-                {selectedCheckout.checkoutStatus === "Pendente" && (
+              {!readOnly && (
+                <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t p-4 flex flex-col sm:flex-row gap-3 justify-end z-10">
                   <Button
-                    variant="destructive"
-                    onClick={ () => setCancelBookingConfirmationDialogOpen(true) }
+                    variant="outline"
+                    onClick={ () => setIsCheckoutPaymentMethodDialogOpen(true) }
                     className="sm:w-auto w-full"
                   >
-                    Cancelamento
+                    <DollarSign className="mr-2 h-4 w-4" />
+                    Gerenciar Pagamento
                   </Button>
-                )}
-              </div>
+
+                  <Button
+                    onClick={ () => {
+                      handleChangeCheckoutStatus(
+                        selectedCheckout.checkoutId,
+                        "Concluido",
+                      );
+                    } }
+                    disabled={
+                      selectedCheckout.checkoutStatus === "Concluido" ||
+                      selectedCheckout.checkoutStatus === "Cancelado"
+                    }
+                    className="sm:w-auto w-full"
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Concluir Agendamento
+                  </Button>
+
+                  {selectedCheckout.checkoutStatus === "Pendente" && (
+                    <Button
+                      variant="destructive"
+                      onClick={ () => setCancelBookingConfirmationDialogOpen(true) }
+                      className="sm:w-auto w-full"
+                    >
+                      Cancelamento
+                    </Button>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <div className="p-8 text-center text-muted-foreground">

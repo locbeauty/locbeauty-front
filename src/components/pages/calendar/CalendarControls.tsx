@@ -85,12 +85,14 @@ export function CalendarControls({
       </div>
       {!hideViewSelect && (
         <div className="flex items-center gap-4">
-          <div className="w-[160px]">
-            <SelectFilial
-              value={ selectedFilialId }
-              onValueChange={ setSelectedFilialId }
-            />
-          </div>
+          {user?.role !== USER_ROLES.MOTORISTA && (
+            <div className="w-[160px]">
+              <SelectFilial
+                value={ selectedFilialId }
+                onValueChange={ setSelectedFilialId }
+              />
+            </div>
+          )}
           <div className="flex items-center space-x-2 border p-2 rounded-md h-9 bg-background px-3">
             <Checkbox
               id="hide-canceled"
