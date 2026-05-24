@@ -51,9 +51,16 @@ export function UpdateFilialDialog({
   useEffect(() => {
     if (selectedFilial) {
       reset({
-        cellphone: formatPhone(selectedFilial.cellphone), // masked value
+        cellphone: formatPhone(selectedFilial.cellphone),
         filialName: selectedFilial.filialName,
         managerEmployeeId: selectedFilial.managerEmployee?.employeeId,
+        zipCode: selectedFilial.zipCode ?? "",
+        street: selectedFilial.street ?? "",
+        buildingNumber: selectedFilial.buildingNumber ?? "",
+        addressComplement: selectedFilial.addressComplement ?? "",
+        neighborhood: selectedFilial.neighborhood ?? "",
+        city: selectedFilial.city ?? "",
+        state: selectedFilial.state ?? "",
       });
     }
   }, [ selectedFilial, reset ]);

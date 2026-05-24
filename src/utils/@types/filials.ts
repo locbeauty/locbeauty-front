@@ -1,5 +1,3 @@
-import { Address } from "./address";
-
 export interface Filial {
   managerEmployee: {
     employeeId: string;
@@ -8,10 +6,16 @@ export interface Filial {
   filialId: string;
   CNPJ: string;
   filialName: string;
-  Address: Address;
   cellphone: string;
   email: string;
   isVisible?: boolean;
+  zipCode?: string | null;
+  street?: string | null;
+  buildingNumber?: string | null;
+  addressComplement?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
 }
 
 export interface FilialStats {
