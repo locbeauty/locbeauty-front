@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useFormContext } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import CEPInput from "@/components/shared/CEPInput";
-import { UpdateFilialFormSchemaType } from "@/lib/zod/UpdateFilialValidation";
+import { UpdateEmployeeWithAddressFormSchemaType } from "@/lib/zod/CreateEmployeeValidation";
 
 export function EmployeeUpdateAddressForm() {
   const {
@@ -24,7 +24,7 @@ export function EmployeeUpdateAddressForm() {
     setError,
     setValue,
     formState: { errors },
-  } = useFormContext<UpdateFilialFormSchemaType>();
+  } = useFormContext<UpdateEmployeeWithAddressFormSchemaType>();
 
   return (
     <Card>

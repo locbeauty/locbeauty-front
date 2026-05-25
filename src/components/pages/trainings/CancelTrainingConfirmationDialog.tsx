@@ -16,15 +16,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import PriceInput from "@/components/shared/PriceInput";
 import { Training } from "@/utils/@types/training";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { PaymentMethods } from "@/utils/constants";
+import { CheckoutStatuses, PaymentMethods } from "@/utils/constants";
 import { Input } from "@/components/ui/input";
 
 interface CancelTrainingConfirmationDialogProps {
   selectedTraining: Training | null;
   setSelectedTraining?: Dispatch<SetStateAction<Training | null>>;
-  setCurrentTrainingStatus: Dispatch<
-    SetStateAction<"Pendente" | "Concluido" | "Cancelado">
-  >;
+  setCurrentTrainingStatus: Dispatch<SetStateAction<CheckoutStatuses>>;
   setCancelTrainingConfirmationDialogOpen: Dispatch<SetStateAction<boolean>>;
   isCancelTrainingConfirmationDialogOpen: boolean;
   handleUpdateTrainingStatus: (
