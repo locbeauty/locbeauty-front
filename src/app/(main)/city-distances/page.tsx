@@ -27,7 +27,7 @@ export default function CityDistancesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Distâncias Manuais
+            Custos de Logística
           </h1>
           <p className="text-muted-foreground">
             Gerencie as distâncias entre cidades e filiais para cálculo de

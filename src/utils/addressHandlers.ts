@@ -65,6 +65,13 @@ export async function handleCepChange<T extends FieldValues>({
 
   const zipCodeValue = e.target.value.replace(/\D/g, "");
 
+  // Salva o CEP formatado (00000-000) no campo do form
+  const formatted =
+    zipCodeValue.length >= 6
+      ? `${zipCodeValue.slice(0, 5)}-${zipCodeValue.slice(5, 8)}`
+      : zipCodeValue;
+  setValue(zipCode, formatted as PathValue<T, typeof zipCode>);
+
   if (zipCodeParsed.length === 0) clearErrors(zipCode);
   if (zipCodeValue.length !== 8) return;
 

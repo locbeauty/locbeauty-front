@@ -66,7 +66,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
   async function handleCepChange(raw: string) {
     const formatted = formatCep(raw);
     setCepRaw(formatted);
-    setValue("zipCode", formatted.replace(/\D/g, ""), { shouldValidate: false });
+    setValue("zipCode", formatted, { shouldValidate: false });
 
     const digits = formatted.replace(/\D/g, "");
     if (digits.length < 8) {

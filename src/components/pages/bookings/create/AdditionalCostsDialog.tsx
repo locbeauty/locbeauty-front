@@ -31,7 +31,7 @@ import PriceInput from "@/components/shared/PriceInput";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { centsToString } from "@/utils/centsToString";
 import { toast } from "sonner";
-import { CityInput } from "./CityInput";
+import { AddressDistanceInput } from "./AddressDistanceInput";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -244,7 +244,7 @@ export function AdditionalCostsDialog({
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <CarFront className="h-6 w-6 text-primary" />
-            Custos de Logística e Viagemasdada
+            Custos de Logística e Viagem
           </DialogTitle>
           <DialogDescription>
             Calcule e adicione custos variáveis relacionados à entrega e
@@ -265,17 +265,23 @@ export function AdditionalCostsDialog({
                   <MapPin className="h-3.5 w-3.5" />
                   Distância Total
                 </Label>
-                <CityInput
-                  setDistanceInKM={ setDistanceInKM }
-                  distanceInKM={ distanceInKM }
-                  filialId={
-                    isUpdateMode && selectedCheckout
-                      ? selectedCheckout.SourceFilial.filialId
-                      : watch
-                        ? watch("filialId")
-                        : ""
-                  }
-                />
+                {isAdditionalCostsDialogOpen && (
+                  <AddressDistanceInput
+                    setDistanceInKM={ setDistanceInKM }
+                    distanceInKM={ distanceInKM }
+                    filialId={
+                      isUpdateMode && selectedCheckout
+                        ? selectedCheckout.SourceFilial.filialId
+                        : watch
+                          ? watch("filialId")
+                          : ""
+                    }
+                    onTollCost={ (cents) =>
+                      setAdditionalTransportCost(centsToString(cents))
+                    }
+                    isRoundTrip={ isRoundTrip }
+                  />
+                )}
                 <div className="flex flex-col gap-3 mt-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground w-16">

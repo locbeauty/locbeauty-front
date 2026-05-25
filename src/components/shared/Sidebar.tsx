@@ -21,10 +21,13 @@ import { usePathname } from "next/navigation";
 import { Label } from "../ui/label";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { useAccess } from "@/contexts/access-provider";
+import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
 
 export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const pathname = usePathname();
   const { can } = useAccess();
+  const { user } = useAuth();
 
   const routes = [
     {
@@ -65,9 +68,10 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
     },
     {
       name: "Rotas",
-      href: ROUTES.CITY_DISTANCES,
+      href: ROUTES.ROUTES,
       icon: MapPin,
-      module: SYSTEM_MODULES.BOOKINGS,
+      module: SYSTEM_MODULES.ROUTES,
+      allowedRoles: [ USER_ROLES.MASTER, USER_ROLES.GERENTE, USER_ROLES.MOTORISTA ],
     },
     {
       name: "Calendário",
@@ -121,7 +125,14 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
       <nav className="flex-1 overflow-auto py-4">
         <ul className="grid gap-1 px-2">
           {routes
-            .filter((route) => can(route.module, "canView"))
+            .filter((route) => {
+              if (!can(route.module, "canView")) return false;
+              if ("allowedRoles" in route && route.allowedRoles) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                return (route.allowedRoles as any[]).includes(user?.role);
+              }
+              return true;
+            })
             .map((route) => (
               <li key={ route.href }>
                 <Link

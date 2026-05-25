@@ -1,0 +1,128 @@
+"use client";
+
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { SelectFilial } from "@/components/shared/SelectFilial";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
+import { Button } from "@/components/ui/button";
+import { Search, X } from "lucide-react";
+import { useAuth } from "@/contexts/auth-provider";
+import { USER_ROLES } from "@/utils/constants";
+import { useDebounce } from "@/hooks/use-debounce";
+import { RoutesTable } from "@/components/pages/routes/RoutesTable";
+import { RouteGuard } from "@/components/auth/RouteGuard";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { FilterBookingStatusTypes } from "@/utils/filterOptions";
+
+export default function RoutesPage() {
+  const { user } = useAuth();
+
+  const isMaster = user?.role === USER_ROLES.MASTER || user?.role === USER_ROLES.ADMIN;
+  const isMotorista = user?.role === USER_ROLES.MOTORISTA;
+
+  const [ searchQuery, setSearchQuery ] = useState("");
+  const [ selectedFilialId, setSelectedFilialId ] = useState<string | undefined>(
+    isMaster ? undefined : user?.sourceFilialId,
+  );
+  const [ selectedDate, setSelectedDate ] = useState<Date | null>(null);
+  const [ status, setStatus ] = useState<string | undefined>();
+
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
+  const hasActiveFilters =
+    debouncedSearch ||
+    selectedDate ||
+    status ||
+    (isMaster && selectedFilialId);
+
+  function clearFilters() {
+    setSearchQuery("");
+    setSelectedDate(null);
+    setStatus(undefined);
+    if (isMaster) setSelectedFilialId(undefined);
+  }
+
+  return (
+    <RouteGuard module={ SYSTEM_MODULES.ROUTES }>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {isMotorista ? "Minhas Rotas" : "Rotas"}
+          </h1>
+          <p className="text-muted-foreground">
+            {isMotorista
+              ? "Visualize e gerencie as rotas atribuídas a você."
+              : "Gerencie as rotas com motoristas atribuídos."}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex md:flex-row flex-col md:items-center gap-3 flex-wrap">
+
+            {/* Gestor: busca por cliente */}
+            {!isMotorista && (
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Buscar por cliente..."
+                  className="pl-8 placeholder:text-placeholder"
+                  value={ searchQuery }
+                  onChange={ (e) => setSearchQuery(e.target.value) }
+                />
+              </div>
+            )}
+
+            {/* Master: seletor de filial */}
+            {isMaster && (
+              <SelectFilial
+                value={ selectedFilialId }
+                onValueChange={ (val) =>
+                  setSelectedFilialId(val === "ALL" ? undefined : val)
+                }
+                placeholder="Filtrar por filial"
+                className="w-full md:w-[220px]"
+              />
+            )}
+
+            <DatePicker
+              value={ selectedDate }
+              onChange={ (d) => setSelectedDate(d || null) }
+              placeholder="Filtrar por data"
+              clearable
+              classNames={ { trigger: "w-full md:w-[180px]" } }
+            />
+
+            {/* Status só para gestores */}
+            {!isMotorista && (
+              <CustomFilterSelect
+                items={ FilterBookingStatusTypes }
+                placeholder="Status"
+                value={ status }
+                onValueChange={ setStatus }
+                triggerProps={ { className: "w-full md:w-[180px]" } }
+              />
+            )}
+
+            {hasActiveFilters && (
+              <Button variant="ghost" onClick={ clearFilters } className="h-9 px-3">
+                Limpar filtros
+                <X className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <RoutesTable
+          filters={ {
+            customerName: !isMotorista ? debouncedSearch || undefined : undefined,
+            filialId: selectedFilialId,
+            date: selectedDate || undefined,
+            status: !isMotorista ? status : undefined,
+          } }
+        />
+      </div>
+    </RouteGuard>
+  );
+}
