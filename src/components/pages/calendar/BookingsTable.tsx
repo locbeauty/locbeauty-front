@@ -147,7 +147,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     if (filters?.filialIds && filters.filialIds.length > 0) {
       result = result.filter((c: Checkout) =>
         filters.filialIds?.includes(
-          c.SourceFilial?.filialId || c.SourceFilial.filialId || "",
+          c.SourceFilial?.filialId ?? "",
         ),
       );
     }

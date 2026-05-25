@@ -27,7 +27,7 @@ import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES, CheckoutStatuses } from "@/utils/constants";
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyA_g8REueNGH3OnPicdll0KvPHHgGp8Ses";
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAX_DISTANCE_METERS = 1000;
 
 function buildGoogleMapsUrl(origin: string | null, destination: string): string {
@@ -320,7 +320,7 @@ export default function RouteDetailsPage() {
               <span>{checkout?.distanceInKm ? `${checkout.distanceInKm} km` : "—"}</span>
             </div>
 
-            {(checkout?.Bookings?.length ?? 0) > 0 && (
+            {checkout && checkout.Bookings && checkout.Bookings.length > 0 && (
               <p>
                 <span className="text-muted-foreground">Equipamentos: </span>
                 <span>{checkout.Bookings.map((b) => b.Gear.gearName).join(", ")}</span>

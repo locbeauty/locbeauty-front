@@ -69,20 +69,20 @@ export function AddGearToCheckoutDialog({
     queryKey: [
       "get-all-checkouts-for-availability",
       selectedCheckout?.date,
-      selectedCheckout?.SourceFilial.filialId,
+      selectedCheckout?.SourceFilial?.filialId,
     ],
     queryFn: () =>
       GetAllCheckouts({
         queryParams: {
           date: selectedCheckout?.date,
-          filialIds: selectedCheckout?.SourceFilial.filialId
+          filialIds: selectedCheckout?.SourceFilial?.filialId
             ? [ selectedCheckout.SourceFilial.filialId ]
             : undefined,
         },
       }),
     enabled:
       !!selectedCheckout?.date &&
-      !!selectedCheckout?.SourceFilial.filialId &&
+      !!selectedCheckout?.SourceFilial?.filialId &&
       isOpen,
   });
 

@@ -77,7 +77,7 @@ export function AdditionalCostsDialog({
   const selectedGearsCost: number = useMemo(() => {
     if (isUpdateMode) {
       return (
-        selectedCheckout?.Bookings.filter((b) => b.status === "ACTIVE").reduce(
+        selectedCheckout?.Bookings?.filter((b) => b.status === "ACTIVE").reduce(
           (acc: number, item) =>
             acc + Number(item.individualPrice) + (item.extraMachineCosts || 0),
           0,

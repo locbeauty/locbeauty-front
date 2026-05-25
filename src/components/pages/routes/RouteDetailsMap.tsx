@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { MapPin } from "lucide-react";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyA_g8REueNGH3OnPicdll0KvPHHgGp8Ses";
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 interface RouteDetailsMapProps {
   origin: string | null;
