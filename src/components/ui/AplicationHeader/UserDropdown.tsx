@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LoaderCircle, LogOut, MapPin } from "lucide-react";
+import { ChevronDown, LoaderCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DarkModeSwitcher } from "@/components/shared/DarkModeSwitcher";
 import { useAuth } from "@/contexts/auth-provider";
@@ -74,18 +74,6 @@ export function UserDropdown() {
           </Button>
         </DropdownMenuItem>
 
-        <DropdownMenuItem asChild>
-          <Button
-            variant="ghost"
-            className="cursor-pointer w-full justify-start h-auto px-2 py-1.5"
-            asChild
-          >
-            <Link href="/city-distances">
-              <MapPin className="mr-2 h-4 w-4" />
-              <span>Distâncias</span>
-            </Link>
-          </Button>
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DarkModeSwitcher />
         <DropdownMenuSeparator />

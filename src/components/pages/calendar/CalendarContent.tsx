@@ -55,9 +55,13 @@ export function CalendarContent({
       return undefined;
     }
 
-    // Strict access control: derived only from EmployeeAccess permissions
+    // Motorista: derive filial access from CALENDAR module (not BOOKINGS)
+    const moduleFilter = user?.role === USER_ROLES.MOTORISTA
+      ? SYSTEM_MODULES.CALENDAR
+      : SYSTEM_MODULES.BOOKINGS;
+
     const permissions = accesses
-      .filter((a) => a.module === SYSTEM_MODULES.BOOKINGS && a.canView)
+      .filter((a) => a.module === moduleFilter && a.canView)
       .map((a) => a.filialId);
 
     const uniquePermissions = Array.from(new Set(permissions));
@@ -101,12 +105,15 @@ export function CalendarContent({
     return [ selectedFilialId ];
   }, [ selectedFilialId, accessibleFilialIds ]);
 
+  const isMotorista = user?.role === USER_ROLES.MOTORISTA;
+
   const params = Object.fromEntries(
     Object.entries({
       filialIds: finalFilialIds,
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
       limit: "1000",
+      ...(isMotorista && user?.employeeId ? { driverId: user.employeeId } : {}),
     }).filter(([ _, v ]) => v !== undefined),
   ) as Record<string, string | string[]>;
 
@@ -114,7 +121,7 @@ export function CalendarContent({
     ApiResponse<{ items: Checkout[]; total: number }>,
     Error
   >({
-    queryKey: [ "get-all-checkouts", finalFilialIds, startDate, endDate ],
+    queryKey: [ "get-all-checkouts", finalFilialIds, startDate, endDate, isMotorista ? user?.employeeId : null ],
     queryFn: () =>
       GetAllCheckouts({
         queryParams: params,

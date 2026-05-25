@@ -6,6 +6,9 @@ export type CityDistance = {
   state: string;
   distance: number;
   filialId: string;
+  street?: string | null;
+  buildingNumber?: string | null;
+  addressComplement?: string | null;
 };
 
 type CreateCityDistanceInput = {
@@ -13,6 +16,9 @@ type CreateCityDistanceInput = {
   state: string;
   distance: number;
   filialId: string;
+  street: string;
+  buildingNumber: string;
+  addressComplement?: string | null;
 };
 
 export async function fetchCityDistances(filialId: string) {

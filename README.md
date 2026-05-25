@@ -35,9 +35,9 @@
 
 - **Existe algum interesse em guardar endereço dos funcionários?**
 
-- **Quais são os dados necessários para cadastrar uma nova filial? Cada uma tem seu próprio CNPJ?**
+- **Quais são os dados necessários para cadastrar uma nova filial?? Cada uma tem seu próprio CNPJ??**
 
-- **Quais seriam boas métricas?**
+- **Quais seriam boas métricas??**
 
 ---
 

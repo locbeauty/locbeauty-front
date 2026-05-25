@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { addressSchema } from "./address";
 
 export const updateFilialFormSchema = z.object({
   CNPJ: z.string().optional(),
@@ -10,7 +9,13 @@ export const updateFilialFormSchema = z.object({
     .optional(),
   filialName: z.string().optional(),
   managerEmployeeId: z.string().optional(),
-  address: addressSchema.optional(),
+  zipCode: z.string().min(8, "CEP inválido").optional(),
+  street: z.string().optional(),
+  buildingNumber: z.string().optional(),
+  addressComplement: z.string().optional().nullable(),
+  neighborhood: z.string().optional().nullable(),
+  city: z.string().optional(),
+  state: z.string().optional(),
 });
 
 export type UpdateFilialFormSchemaType = z.infer<typeof updateFilialFormSchema>;

@@ -71,19 +71,21 @@ export default function AgendamentosPage() {
                 </Link>
               </Button>
             </Can>
-            <Button
-              variant="outline"
-              className="flex justify-center items-center"
-              asChild
-            >
-              <Link
+            <Can module={ SYSTEM_MODULES.BOOKINGS } action="canView">
+              <Button
+                variant="outline"
                 className="flex justify-center items-center"
-                href={ ROUTES.BOOKING_TABLE }
+                asChild
               >
-                <Eye className="mr-2 h-4 w-4" />
-                <span className="hidden md:inline">Visualizar Tabela</span>
-              </Link>
-            </Button>
+                <Link
+                  className="flex justify-center items-center"
+                  href={ ROUTES.BOOKING_TABLE }
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  <span className="hidden md:inline">Visualizar Tabela</span>
+                </Link>
+              </Button>
+            </Can>
           </div>
         </div>
 
