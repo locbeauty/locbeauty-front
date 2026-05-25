@@ -2,7 +2,14 @@ import { z } from "zod";
 
 // Schema para Address
 export const addressSchema = z.object({
-  zipCode: z.string().optional().nullable(),
+  zipCode: z
+    .string()
+    .refine(
+      (val) => !val || /^\d{5}-\d{3}$/.test(val),
+      "CEP inválido (use 00000-000)",
+    )
+    .optional()
+    .nullable(),
   stateName: z.string({ message: "Estado é obrigatório" }).min(1, { message: "Estado é obrigatório" }),
   cityName: z
     .string()

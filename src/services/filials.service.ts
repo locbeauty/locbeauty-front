@@ -37,6 +37,14 @@ export async function UpdateFilial({
   return response;
 }
 
+export async function GetFilialById(filialId: string) {
+  const response = await apiRequest<Filial>({
+    endpoint: `filials/${filialId}`,
+  });
+  if (response.statusCode !== 200) throw new Error(response.message);
+  return response.data!;
+}
+
 export async function getFilialStats(filialId: string) {
   const response = await apiRequest<FilialStats>({
     endpoint: `filials/${filialId}/stats`,

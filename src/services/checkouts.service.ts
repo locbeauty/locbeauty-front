@@ -8,17 +8,21 @@ function parseCheckoutDates(checkout: Record<string, any>): Checkout {
   return {
     ...(checkout as Checkout),
     date: new Date(checkout.date),
-    Customer: {
-      ...checkout.Customer,
-      lastBooking: checkout.Customer.lastBooking
-        ? new Date(checkout.Customer.lastBooking)
-        : null,
-    },
-    Address: {
-      ...checkout.Address,
-      createdAt: new Date(checkout.Address.createdAt),
-      updatedAt: new Date(checkout.Address.updatedAt),
-    },
+    Customer: checkout.Customer
+      ? {
+          ...checkout.Customer,
+          lastBooking: checkout.Customer.lastBooking
+            ? new Date(checkout.Customer.lastBooking)
+            : null,
+        }
+      : checkout.Customer,
+    Address: checkout.Address
+      ? {
+          ...checkout.Address,
+          createdAt: new Date(checkout.Address.createdAt),
+          updatedAt: new Date(checkout.Address.updatedAt),
+        }
+      : checkout.Address,
   };
 }
 
@@ -44,16 +48,32 @@ export async function GetAllCheckouts({
 }
 
 export async function GetCheckoutById(checkoutId: string) {
-  const response = await apiRequest<Checkout>({
-    endpoint: `checkouts/${checkoutId}`,
+  const response = await apiRequest<{ items: Checkout[]; total: number }>({
+    endpoint: "checkouts",
+    queryParams: { checkoutId, limit: 1 },
   });
 
-  // Parse dates for the checkout
-  if (response.data) {
-    response.data = parseCheckoutDates(response.data);
-  }
+  const raw = response.data?.items?.[0];
+  return {
+    ...response,
+    data: raw ? parseCheckoutDates(raw) : undefined,
+  };
+}
 
-  return response;
+export async function UpdateDriverLocation({
+  checkoutId,
+  lat,
+  lng,
+}: {
+  checkoutId: string;
+  lat: number;
+  lng: number;
+}) {
+  return apiRequest({
+    endpoint: `checkouts/${checkoutId}/driver-location`,
+    method: "PATCH",
+    body: { lat, lng },
+  });
 }
 
 export type UpdateCheckoutBody = {

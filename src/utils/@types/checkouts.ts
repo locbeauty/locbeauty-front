@@ -64,4 +64,7 @@ export type Checkout = {
   };
   Address: Address;
   isVisible?: boolean;
+  driverLat?: number | null;
+  driverLng?: number | null;
+  driverLocationAt?: Date | null;
 };

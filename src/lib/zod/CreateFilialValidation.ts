@@ -7,7 +7,7 @@ export const createFilialFormSchema = z.object({
     .min(14, { message: "Telefone deve conter DDD e número" })
     .max(15, { message: "Telefone deve conter no máximo 15 dígitos" }),
   managerEmployeeId: z.string().nullable().optional(),
-  zipCode: z.string().min(8, "CEP inválido"),
+  zipCode: z.string().regex(/^\d{5}-\d{3}$/, "CEP inválido (use 00000-000)"),
   street: z.string().min(1, "Rua é obrigatória"),
   buildingNumber: z.string().min(1, "Número é obrigatório"),
   addressComplement: z.string().optional(),

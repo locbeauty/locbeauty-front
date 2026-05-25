@@ -16,6 +16,9 @@ const geistMono = geistMonoFont({
 export const metadata: Metadata = {
   title: "Locbeauty",
   description: "Locbeauty company",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
