@@ -69,7 +69,7 @@ export function UpdateGearDialog({
   useEffect(() => {
     if (selectedGear) {
       reset({
-        sourceFilialId: selectedGear?.SourceFilial.filialId,
+        sourceFilialId: selectedGear?.SourceFilial?.filialId,
         availableUnits: selectedGear?.availableUnits,
         gearName: selectedGear?.gearName,
         outOfServiceUnits: selectedGear?.outOfServiceUnits,

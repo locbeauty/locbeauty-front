@@ -10,14 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Training } from "@/utils/@types/training";
+import { CheckoutStatuses } from "@/utils/constants";
 
 interface FinishTrainingConfirmationDialogProps {
   selectedTraining: Training | null;
   isFinishTrainingConfirmationDialogOpen: boolean;
   setFinishTrainingConfirmationDialogOpen: Dispatch<SetStateAction<boolean>>;
-  setCurrentTrainingStatus: Dispatch<
-    SetStateAction<"Pendente" | "Concluido" | "Cancelado">
-  >;
+  setCurrentTrainingStatus: Dispatch<SetStateAction<CheckoutStatuses>>;
   handleUpdateTrainingStatus: (
     trainingId: string,
     trainingStatus: "Concluido" | "Cancelado",

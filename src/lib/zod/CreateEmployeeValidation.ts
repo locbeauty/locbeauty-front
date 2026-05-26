@@ -61,3 +61,11 @@ export const updateEmployeeFormSchema = baseEmployeeSchema.partial();
 export type UpdateEmployeeFormSchemaType = z.infer<
   typeof updateEmployeeFormSchema
 >;
+
+export const updateEmployeeWithAddressFormSchema = baseEmployeeSchema
+  .partial()
+  .extend({ address: addressSchema.optional() });
+
+export type UpdateEmployeeWithAddressFormSchemaType = z.infer<
+  typeof updateEmployeeWithAddressFormSchema
+>;

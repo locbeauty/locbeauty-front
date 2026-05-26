@@ -78,7 +78,7 @@ export function CustomerDetailsCard({
                     Filial
                   </span>
                   <span className="truncate">
-                    {selectedCustomer?.SourceFilial.filialName}
+                    {selectedCustomer?.SourceFilial?.filialName}
                   </span>
                 </div>
               </div>
