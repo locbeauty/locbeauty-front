@@ -19,6 +19,7 @@ export default function EntryPage() {
       try {
         const payload = JSON.parse(atob(token!.split(".")[1]));
         const employeeId = payload.sub;
+        const role: string = payload.role;
 
         const permissionsRes = await fetch(
           `${process.env.NEXT_PUBLIC_SERVER_URL}/api/access/${employeeId}`,
@@ -35,7 +36,7 @@ export default function EntryPage() {
           const permissions: UserAccess[] = Array.isArray(response)
             ? response
             : response.data || [];
-          router.replace(getFirstAccessibleRoute(permissions));
+          router.replace(getFirstAccessibleRoute(permissions, role));
         } else {
           router.replace("/dashboard");
         }
