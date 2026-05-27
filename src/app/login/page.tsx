@@ -66,6 +66,7 @@ export default function LoginPage() {
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       const employeeId = payload.sub;
+      const role: string = payload.role;
 
       // Fetch user permissions to determine first accessible route
       const permissionsRes = await fetch(
@@ -84,7 +85,7 @@ export default function LoginPage() {
         const permissions: UserAccess[] = Array.isArray(response)
           ? response
           : response.data || [];
-        const targetRoute = getFirstAccessibleRoute(permissions);
+        const targetRoute = getFirstAccessibleRoute(permissions, role);
         router.push(targetRoute);
       } else {
         // If permissions fetch fails, default to dashboard

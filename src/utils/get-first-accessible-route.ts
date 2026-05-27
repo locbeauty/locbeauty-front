@@ -28,12 +28,21 @@ export type UserAccess = {
   canEdit: boolean;
 };
 
+const ROLE_DEFAULT_ROUTES: Record<string, string> = {
+  Motorista: ROUTES.CALENDAR,
+  Comercial: ROUTES.CALENDAR,
+};
+
 /**
  * Determines the first accessible route for a user based on their permissions
  * @param accesses - Array of user's access permissions
+ * @param role - Optional role to force a specific starting route
  * @returns The first route the user has view access to, or a fallback route
  */
-export function getFirstAccessibleRoute(accesses: UserAccess[]): string {
+export function getFirstAccessibleRoute(accesses: UserAccess[], role?: string): string {
+  if (role && ROLE_DEFAULT_ROUTES[role]) {
+    return ROLE_DEFAULT_ROUTES[role];
+  }
   // Check each module in priority order
   for (const { module, route } of MODULE_ROUTE_PRIORITY) {
     const hasAccess = accesses.some(
