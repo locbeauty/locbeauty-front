@@ -81,32 +81,7 @@ export function ImportBookingsDialog({
       "Status",
       "Valor Final",
     ];
-    const rows = [
-      [
-        "Agendamento Exemplo",
-        "Nome do Cliente",
-        "01/01/2025",
-        "15 de janeiro de 2025",
-        "1h",
-        "Salvador",
-        "Ultraformer III",
-        "1500,00",
-        "",
-        "",
-        "",
-        "",
-        "Observação opcional",
-        "Nome do Responsável",
-        "Pago",
-        "1500,00",
-      ],
-    ];
-
-    const csvContent =
-      "﻿" +
-      headers.join(",") +
-      "\n" +
-      rows.map((r) => r.map((v) => (v.includes(",") ? `"${v}"` : v)).join(",")).join("\n");
+    const csvContent = "﻿" + headers.join(",");
 
     const blob = new Blob([ csvContent ], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
