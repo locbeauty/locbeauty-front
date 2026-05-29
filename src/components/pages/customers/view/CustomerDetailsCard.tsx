@@ -75,10 +75,24 @@ export function CustomerDetailsCard({
                 <Building className="h-4 w-4 text-primary mt-1 shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-sm font-medium text-muted-foreground">
-                    Filial
+                    {(selectedCustomer?.Filials?.length ?? 0) > 1
+                      ? "Filiais"
+                      : "Filial"}
                   </span>
                   <span className="truncate">
-                    {selectedCustomer?.SourceFilial?.filialName}
+                    {(() => {
+                      const sourceName =
+                        selectedCustomer?.SourceFilial?.filialName;
+                      const others = (selectedCustomer?.Filials ?? [])
+                        .filter(
+                          (f) =>
+                            f.filialId !== selectedCustomer?.sourceFilialId,
+                        )
+                        .map((f) => f.filialName);
+                      return [ sourceName, ...others ]
+                        .filter(Boolean)
+                        .join(", ");
+                    })()}
                   </span>
                 </div>
               </div>

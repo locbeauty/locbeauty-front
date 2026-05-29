@@ -15,17 +15,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Controller, useFormContext } from "react-hook-form";
-import { CUSTOMER_STATUSES } from "@/utils/constants";
+import { CUSTOMER_STATUSES, USER_ROLES } from "@/utils/constants";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
 import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
-import { toast } from "sonner";
 import { Customer } from "@/utils/@types/customer";
-import { useEffect, useState } from "react";
-import { fetchWithToken } from "@/utils/fetchWithToken";
-import { ApiResponse } from "@/lib/api";
+import { SelectFilials } from "@/components/shared/SelectFilials";
+import { useAuth } from "@/contexts/auth-provider";
+import { useAccess } from "@/contexts/access-provider";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 interface UpdateCustomerFormProps {
   selectedCustomer: Customer | null;
@@ -35,12 +35,21 @@ export function UpdateCustomerForm({
   selectedCustomer,
 }: UpdateCustomerFormProps) {
   const {
-    handleSubmit,
     formState: { errors },
     register,
     setValue,
     control,
   } = useFormContext<UpdateCustomerFormSchemaType>();
+
+  const { user } = useAuth();
+  const { accesses } = useAccess();
+
+  const accessibleFilialsIds =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+      ? undefined
+      : accesses
+        .filter((a) => a.module === SYSTEM_MODULES.CUSTOMERS && a.canEdit)
+        .map((a) => a.filialId);
 
   // useEffect(() => {
   //     async function getCustomerAddresses(customerId: string) {
@@ -151,6 +160,32 @@ export function UpdateCustomerForm({
                         ))}
                       </SelectContent>
                     </Select>
+                  ) }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Filiais em que atua</Label>
+                {selectedCustomer.SourceFilial && (
+                  <p className="text-xs text-muted-foreground">
+                    Filial de origem:{ " " }
+                    <span className="font-medium">
+                      {selectedCustomer.SourceFilial.filialName}
+                    </span>{ " " }
+                    (sempre incluída)
+                  </p>
+                )}
+                <Controller
+                  control={ control }
+                  name="filialIds"
+                  render={ ({ field }) => (
+                    <SelectFilials
+                      value={ field.value ?? [] }
+                      onChange={ field.onChange }
+                      accessibleFilials={ accessibleFilialsIds }
+                      excludeFilialId={ selectedCustomer.sourceFilialId }
+                      placeholder="Selecione filiais adicionais (opcional)"
+                    />
                   ) }
                 />
               </div>

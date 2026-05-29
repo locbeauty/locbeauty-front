@@ -18,6 +18,7 @@ import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation
 import { Button } from "@/components/ui/button";
 import { X, User, Phone, Mail } from "lucide-react";
 import { SelectFilial } from "@/components/shared/SelectFilial";
+import { SelectFilials } from "@/components/shared/SelectFilials";
 import { useAuth } from "@/contexts/auth-provider";
 
 interface CustomerGeneralInformationFormProps {
@@ -114,6 +115,27 @@ export function CustomerGeneralInformationForm({
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Outras filiais em que atua</Label>
+              <Controller
+                control={ control }
+                name="filialIds"
+                render={ ({ field }) => (
+                  <SelectFilials
+                    value={ field.value ?? [] }
+                    onChange={ field.onChange }
+                    accessibleFilials={ accessibleFilialsIds }
+                    excludeFilialId={ watch("filialId") }
+                    placeholder="Selecione filiais adicionais (opcional)"
+                  />
+                ) }
+              />
+              <p className="text-xs text-muted-foreground">
+                A filial principal selecionada acima já é incluída
+                automaticamente.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

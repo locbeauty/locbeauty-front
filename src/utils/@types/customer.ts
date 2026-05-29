@@ -30,6 +30,10 @@ export interface Customer {
     filialId: string;
     filialName: string;
   };
+  Filials?: {
+    filialId: string;
+    filialName: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
   Addresses: Address[];
