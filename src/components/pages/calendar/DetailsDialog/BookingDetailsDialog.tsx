@@ -34,6 +34,7 @@ import {
   Check,
   FileText,
   CheckCircle2,
+  RotateCcw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -75,6 +76,8 @@ import { AddGearToCheckoutDialog } from "./AddGearToCheckoutDialog";
 import { RemoveBookingFromCheckout } from "@/services/bookings.service";
 import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentStatusBadge";
 import { useAuth } from "@/contexts/auth-provider";
+import { useAccess } from "@/contexts/access-provider";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { formatDate, formatTime, workingHours } from "../bookingViewHelpers";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
@@ -145,7 +148,34 @@ export function BookingDetailsDialog({
   );
 
   const { user } = useAuth();
+  const { can } = useAccess();
   const readOnly = user?.role === USER_ROLES.MOTORISTA;
+
+  // ----- Reabrir agendamento concluído -----
+  const REOPEN_WINDOW_HOURS = 24;
+  const isAdminOrMaster =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER;
+  const canEditBookings = selectedCheckout
+    ? can(SYSTEM_MODULES.BOOKINGS, "canEdit", selectedCheckout.SourceFilial?.filialId)
+    : false;
+  const isConcluded = selectedCheckout?.checkoutStatus === "Concluido";
+  const reopenDeadline = selectedCheckout?.concludedAt
+    ? addMinutes(new Date(selectedCheckout.concludedAt), REOPEN_WINDOW_HOURS * 60)
+    : null;
+  const isWithinReopenWindow = reopenDeadline
+    ? new Date() < reopenDeadline
+    : false;
+  // Admin/Master reabrem a qualquer momento; demais cargos com permissão de
+  // edição têm até 24h após a conclusão.
+  const canReopen =
+    isConcluded &&
+    canEditBookings &&
+    (isAdminOrMaster || isWithinReopenWindow);
+  const formatDeadline = (d: Date) =>
+    `${d.toLocaleDateString("pt-BR")} às ${d.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
   const [ isDeleting, setIsDeleting ] = useState(false);
   const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
@@ -542,6 +572,39 @@ export function BookingDetailsDialog({
       queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
       queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
     }
+  }
+
+  async function handleReopenCheckout() {
+    if (!selectedCheckout) return;
+
+    const response = await UpdateCheckoutStatus({
+      checkoutId: selectedCheckout.checkoutId,
+      date: selectedCheckout.date.toString(),
+      checkoutStatus: "Pendente",
+    });
+
+    if (response.statusCode !== 200) {
+      toast.warning("Erro ao reabrir agendamento.", {
+        style: { fontSize: "1rem" },
+      });
+      return;
+    }
+
+    toast.success("Agendamento reaberto com sucesso.", {
+      style: { fontSize: "1rem" },
+    });
+
+    setSelectedCheckout((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        checkoutStatus: "Pendente",
+        concludedAt: null,
+      };
+    });
+
+    queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+    queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
   }
 
   async function handleDeleteCheckout() {
@@ -1486,42 +1549,84 @@ export function BookingDetailsDialog({
               </div>
 
               {!readOnly && (
-                <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t p-4 flex flex-col sm:flex-row gap-3 justify-end z-10">
-                  <Button
-                    variant="outline"
-                    onClick={ () => setIsCheckoutPaymentMethodDialogOpen(true) }
-                    className="sm:w-auto w-full"
-                  >
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    Gerenciar Pagamento
-                  </Button>
+                <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t p-4 flex flex-col gap-3 z-10">
+                  {isConcluded && canEditBookings && (
+                    <p className="text-xs text-muted-foreground text-center sm:text-right">
+                      {isAdminOrMaster ? (
+                        "Este agendamento pode ser reaberto a qualquer momento."
+                      ) : reopenDeadline && isWithinReopenWindow ? (
+                        <>
+                          Pode ser reaberto até{ " " }
+                          <span className="font-medium text-foreground">
+                            {formatDeadline(reopenDeadline)}
+                          </span>
+                          .
+                        </>
+                      ) : reopenDeadline ? (
+                        <>
+                          O prazo para reabrir expirou em{ " " }
+                          <span className="font-medium text-foreground">
+                            {formatDeadline(reopenDeadline)}
+                          </span>
+                          .
+                        </>
+                      ) : (
+                        "O prazo para reabrir este agendamento não está disponível."
+                      )}
+                    </p>
+                  )}
 
-                  <Button
-                    onClick={ () => {
-                      handleChangeCheckoutStatus(
-                        selectedCheckout.checkoutId,
-                        "Concluido",
-                      );
-                    } }
-                    disabled={
-                      selectedCheckout.checkoutStatus === "Concluido" ||
-                      selectedCheckout.checkoutStatus === "Cancelado"
-                    }
-                    className="sm:w-auto w-full"
-                  >
-                    <Check className="mr-2 h-4 w-4" />
-                    Concluir Agendamento
-                  </Button>
-
-                  {selectedCheckout.checkoutStatus === "Pendente" && (
+                  <div className="flex flex-col sm:flex-row gap-3 justify-end">
                     <Button
-                      variant="destructive"
-                      onClick={ () => setCancelBookingConfirmationDialogOpen(true) }
+                      variant="outline"
+                      onClick={ () => setIsCheckoutPaymentMethodDialogOpen(true) }
                       className="sm:w-auto w-full"
                     >
-                      Cancelamento
+                      <DollarSign className="mr-2 h-4 w-4" />
+                      Gerenciar Pagamento
                     </Button>
-                  )}
+
+                    {isConcluded && canEditBookings && (
+                      <Button
+                        variant="secondary"
+                        onClick={ () => handleReopenCheckout() }
+                        disabled={ !canReopen }
+                        className="sm:w-auto w-full"
+                      >
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Reabrir Agendamento
+                      </Button>
+                    )}
+
+                    <Button
+                      onClick={ () => {
+                        handleChangeCheckoutStatus(
+                          selectedCheckout.checkoutId,
+                          "Concluido",
+                        );
+                      } }
+                      disabled={
+                        selectedCheckout.checkoutStatus === "Concluido" ||
+                        selectedCheckout.checkoutStatus === "Cancelado"
+                      }
+                      className="sm:w-auto w-full"
+                    >
+                      <Check className="mr-2 h-4 w-4" />
+                      Concluir Agendamento
+                    </Button>
+
+                    {selectedCheckout.checkoutStatus === "Pendente" && (
+                      <Button
+                        variant="destructive"
+                        onClick={ () =>
+                          setCancelBookingConfirmationDialogOpen(true)
+                        }
+                        className="sm:w-auto w-full"
+                      >
+                        Cancelamento
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </>

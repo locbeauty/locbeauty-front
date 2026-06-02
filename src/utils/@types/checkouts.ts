@@ -63,6 +63,7 @@ export type Checkout = {
     filialName: string;
   };
   Address: Address;
+  concludedAt?: Date | null;
   isVisible?: boolean;
   driverLat?: number | null;
   driverLng?: number | null;
