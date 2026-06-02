@@ -71,7 +71,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
       href: ROUTES.ROUTES,
       icon: MapPin,
       module: SYSTEM_MODULES.ROUTES,
-      allowedRoles: [ USER_ROLES.MASTER, USER_ROLES.GERENTE, USER_ROLES.MOTORISTA ],
+      allowedRoles: [ USER_ROLES.MASTER, USER_ROLES.GERENTE, USER_ROLES.MOTORISTA, USER_ROLES.LOGISTICA ],
     },
     {
       name: "Calendário",

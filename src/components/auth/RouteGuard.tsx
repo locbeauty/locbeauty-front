@@ -10,6 +10,7 @@ import { getFirstAccessibleRoute } from "@/utils/get-first-accessible-route";
 const ROLE_DEFAULT_ROUTES: Record<string, string> = {
   Motorista: "/calendar",
   Comercial: "/calendar",
+  Logistica: "/calendar",
 };
 
 interface RouteGuardProps {

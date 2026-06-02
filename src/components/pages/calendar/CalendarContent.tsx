@@ -55,10 +55,11 @@ export function CalendarContent({
       return undefined;
     }
 
-    // Motorista: derive filial access from CALENDAR module (not BOOKINGS)
-    const moduleFilter = user?.role === USER_ROLES.MOTORISTA
-      ? SYSTEM_MODULES.CALENDAR
-      : SYSTEM_MODULES.BOOKINGS;
+    // Motorista/Logistica: derive filial access from CALENDAR module (not BOOKINGS)
+    const moduleFilter =
+      user?.role === USER_ROLES.MOTORISTA || user?.role === USER_ROLES.LOGISTICA
+        ? SYSTEM_MODULES.CALENDAR
+        : SYSTEM_MODULES.BOOKINGS;
 
     const permissions = accesses
       .filter((a) => a.module === moduleFilter && a.canView)
