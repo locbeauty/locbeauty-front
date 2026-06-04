@@ -85,6 +85,11 @@ const initialErrors: LocalErrorsType = {
 export type UpdateTrainingPayload = {
   trainingStatus: string;
   payerType: PayerType;
+  // Edição dos detalhes do treinamento (equipamento, data, horário e local)
+  gearId?: string;
+  addressId?: string;
+  dueDate?: Date;
+  hourInMinutes?: number;
   isCourtesy?: boolean;
   wasRefunded?: boolean;
   cancellationFee?: number;

@@ -194,6 +194,7 @@ export async function getDayCheckouts({
     gears: Array<{ gearId: string; gearName: string; individualPrice: string }>;
     date: Date | undefined;
     excludeCheckoutId?: string;
+    excludeTrainingId?: string;
   };
 }) {
   const response = await apiRequest<GetDayCheckoutsResponse[]>({

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Eye, Filter, X, Trash2, RefreshCcw } from "lucide-react";
+import { Eye, Filter, X, Trash2, RefreshCcw, Pencil } from "lucide-react";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
@@ -17,6 +17,7 @@ import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmati
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { VolunteerDetailsDialog } from "./VolunteerDetailsDialog";
+import { UpdateVolunteerDialog } from "./UpdateVolunteerDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -47,6 +48,7 @@ export function VolunteersTable({
     null,
   );
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
+  const [ isEditOpen, setIsEditOpen ] = useState(false);
   const [ isDeleting, setIsDeleting ] = useState(false);
   const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
@@ -70,6 +72,11 @@ export function VolunteersTable({
   const handleOpenDetails = (volunteer: Volunteer) => {
     setSelectedVolunteer(volunteer);
     setIsDetailsOpen(true);
+  };
+
+  const handleEditVolunteer = (volunteer: Volunteer) => {
+    setSelectedVolunteer(volunteer);
+    setIsEditOpen(true);
   };
 
   const handleRestoreVolunteer = (volunteer: Volunteer) => {
@@ -333,6 +340,19 @@ export function VolunteersTable({
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
+                    {isVisible && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Editar"
+                        onClick={ (e) => {
+                          e.stopPropagation();
+                          handleEditVolunteer(volunteer);
+                        } }
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
                     {user?.role === USER_ROLES.MASTER && (
                       <>
                         {!isVisible ? (
@@ -419,6 +439,16 @@ export function VolunteersTable({
         setIsOpen={ setIsDetailsOpen }
         volunteer={ selectedVolunteer }
         allTrainings={ allTrainings }
+        onEdit={ () => {
+          setIsDetailsOpen(false);
+          setIsEditOpen(true);
+        } }
+      />
+
+      <UpdateVolunteerDialog
+        isOpen={ isEditOpen }
+        setIsOpen={ setIsEditOpen }
+        selectedVolunteer={ selectedVolunteer }
       />
 
       <DeleteConfirmationDialog

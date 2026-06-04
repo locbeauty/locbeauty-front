@@ -48,6 +48,7 @@ import { queryClient } from "@/app/(main)/layout";
 import { AddParticipantDialog } from "./AddParticipantDialog";
 // import { UpdateParticipantValuesDialog } from "./UpdateParticipantValuesDialog";
 import EditTrainingFinancialsDialog from "./EditTrainingFinancialsDialog";
+import { EditTrainingDialog } from "./EditTrainingDialog";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
 
@@ -96,6 +97,9 @@ export function TrainingDetailsDialog({
     useState(false);
   const [ financialPayerTypeToEdit, setFinancialPayerTypeToEdit ] =
     useState<PayerType>("TRAINEE");
+
+  const [ isEditTrainingDialogOpen, setIsEditTrainingDialogOpen ] =
+    useState(false);
 
   const { user } = useAuth();
   const [ isRestoring, setIsRestoring ] = useState(false);
@@ -527,6 +531,17 @@ export function TrainingDetailsDialog({
                 </div>
               </div>
               <div className="flex gap-2 ml-auto items-center">
+                {canEditParticipants && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 h-8"
+                    onClick={ () => setIsEditTrainingDialogOpen(true) }
+                  >
+                    <Pencil className="h-3 w-3" />
+                    <span className="hidden sm:inline">Editar</span>
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -1042,6 +1057,13 @@ export function TrainingDetailsDialog({
             setSelectedTraining(updated);
           }
         } }
+      />
+
+      <EditTrainingDialog
+        open={ isEditTrainingDialogOpen }
+        onOpenChange={ setIsEditTrainingDialogOpen }
+        selectedTraining={ selectedTraining }
+        setSelectedTraining={ setSelectedTraining }
       />
     </Dialog>
   );

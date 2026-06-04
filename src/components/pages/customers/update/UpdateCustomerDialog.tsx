@@ -136,6 +136,7 @@ export function UpdateCustomerDialog({
         toast.warning(response.message, { style: { fontSize: "1rem" } });
       } else {
         queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
 
         toast.success(response.message, { style: { fontSize: "1rem" } });
         handleToggleUpdateCustomerDialog(false, null);

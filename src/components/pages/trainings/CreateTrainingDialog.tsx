@@ -515,7 +515,7 @@ export function CreateTrainingDialog({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label>Alunos *</Label>
+                    <Label>Alunos</Label>
                     <SelectTrainee
                       disabled={ !watchFilialId }
                       filialId={ watchFilialId }
@@ -529,7 +529,7 @@ export function CreateTrainingDialog({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label>Pacientes modelo *</Label>
+                    <Label>Pacientes modelo</Label>
                     <SelectVolunteer
                       disabled={ !watchFilialId }
                       filialId={ watchFilialId }

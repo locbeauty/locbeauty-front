@@ -16,6 +16,7 @@ import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmati
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { CustomerDetailsDialog } from "@/components/pages/customers/view/CustomerDetailsDialog";
+import { UpdateCustomerDialog } from "@/components/pages/customers/update/UpdateCustomerDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -46,6 +47,7 @@ export function TraineesTable({
 }: TraineesTableProps) {
   const [ selectedTrainee, setSelectedTrainee ] = useState<Customer | null>(null);
   const [ isDetailsOpen, setIsDetailsOpen ] = useState(false);
+  const [ isUpdateOpen, setIsUpdateOpen ] = useState(false);
   const [ isDeleting, setIsDeleting ] = useState(false);
   const [ isDeleteConfirmationDialogOpen, setIsDeleteConfirmationDialogOpen ] =
     useState(false);
@@ -71,6 +73,16 @@ export function TraineesTable({
     if (onViewDetails) {
       onViewDetails(trainee);
     }
+  };
+
+  const handleToggleUpdateCustomerDialog = (
+    open: boolean,
+    customer: Customer | null,
+  ) => {
+    if (open) {
+      setSelectedTrainee(customer);
+    }
+    setIsUpdateOpen(open);
   };
 
   const handleRestoreTrainee = (trainee: Customer) => {
@@ -418,8 +430,15 @@ export function TraineesTable({
       <CustomerDetailsDialog
         isCustomerDetailsModalOpen={ isDetailsOpen }
         handleToggleCustomerDetailsDialog={ (open) => setIsDetailsOpen(open) }
-        handleToggleUpdateCustomerDialog={ () => {} }
+        handleToggleUpdateCustomerDialog={ handleToggleUpdateCustomerDialog }
         selectedCustomer={ selectedTrainee }
+      />
+
+      <UpdateCustomerDialog
+        isUpdateCustomerDialogOpen={ isUpdateOpen }
+        selectedCustomer={ selectedTrainee }
+        setSelectedCustomer={ setSelectedTrainee }
+        handleToggleUpdateCustomerDialog={ handleToggleUpdateCustomerDialog }
       />
 
       <DeleteConfirmationDialog

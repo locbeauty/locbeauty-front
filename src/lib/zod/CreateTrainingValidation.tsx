@@ -73,12 +73,9 @@ export const CreateTrainingSchema = z.object({
   gearId: z.string().cuid({ message: "Selecione um equipamento" }),
 
   // Mantemos IDs para controle dos seletores de UI (quem está selecionado)
-  volunteerIds: z
-    .array(z.string().cuid())
-    .min(1, { message: "Selecione pelo menos um paciente modelo" }),
-  traineeIds: z
-    .array(z.string().cuid())
-    .min(1, { message: "Selecione pelo menos um aluno" }),
+  // Aluno e paciente modelo são opcionais ao criar um treinamento
+  volunteerIds: z.array(z.string().cuid()).optional(),
+  traineeIds: z.array(z.string().cuid()).optional(),
 
   addressId: z.string().optional().nullable(),
   dueDate: z.date({ message: "Data é obrigatória" }),

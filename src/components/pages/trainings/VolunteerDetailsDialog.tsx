@@ -21,7 +21,9 @@ import {
   Filter,
   Hash,
   Building2,
+  Pencil,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { Volunteer } from "@/utils/@types/volunteer";
 import { Training } from "@/utils/@types/training"; // Assuming Training type is available or needs to be defined
@@ -32,6 +34,7 @@ export interface VolunteerDetailsDialogProps {
   setIsOpen: (isOpen: boolean) => void;
   volunteer: Volunteer | null;
   allTrainings: Training[];
+  onEdit?: () => void;
 }
 
 // --- HELPERS ---
@@ -58,6 +61,7 @@ export function VolunteerDetailsDialog({
   setIsOpen,
   volunteer,
   allTrainings,
+  onEdit,
 }: VolunteerDetailsDialogProps) {
   const [ filterDate, setFilterDate ] = useState<string>("");
   const [ filterId, setFilterId ] = useState<string>("");
@@ -126,6 +130,17 @@ export function VolunteerDetailsDialog({
                   </span>
                 </div>
               </div>
+              {onEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 h-8 ml-auto"
+                  onClick={ onEdit }
+                >
+                  <Pencil className="h-3 w-3" />
+                  <span className="hidden sm:inline">Editar</span>
+                </Button>
+              )}
             </div>
 
             <Separator />
