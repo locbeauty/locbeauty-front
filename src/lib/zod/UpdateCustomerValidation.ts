@@ -49,6 +49,8 @@ export const updateCustomerFormSchema = z.object({
   customerStatus: z
     .enum([ "Ativo", "Inativo", "Inadimplente", "Bloqueado" ])
     .optional(),
+  filialId: z.string().optional(),
+  additionalFilialIds: z.array(z.string()).optional(),
   isVisible: z.boolean().optional(),
 });
 

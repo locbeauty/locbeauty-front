@@ -87,6 +87,9 @@ export function UpdateCustomerDialog({
         secondaryEmail: selectedCustomer.secondaryEmail,
         secondaryEmailDescription: selectedCustomer.secondaryEmailDescription,
         instagram: selectedCustomer.instagram,
+        filialId: selectedCustomer.sourceFilialId,
+        additionalFilialIds:
+          selectedCustomer.AdditionalFilials?.map((f) => f.filialId) ?? [],
       });
     }
   }, [ selectedCustomer, reset ]);
@@ -100,6 +103,21 @@ export function UpdateCustomerDialog({
         cpf: customerData.cpf === "" ? null : customerData.cpf,
         cnpj: customerData.cnpj === "" ? null : customerData.cnpj,
       };
+
+      // "ALL"/vazio não é uma filial válida para um cliente — mantém a atual
+      if (!formattedData.filialId || formattedData.filialId === "ALL") {
+        delete formattedData.filialId;
+      }
+
+      // Filiais adicionais não podem incluir a filial de origem
+      const effectiveSourceFilial =
+        formattedData.filialId || selectedCustomer.sourceFilialId;
+      if (formattedData.additionalFilialIds) {
+        formattedData.additionalFilialIds =
+          formattedData.additionalFilialIds.filter(
+            (id) => id && id !== effectiveSourceFilial,
+          );
+      }
 
       const response = await UpdateCustomer({
         body: formattedData,

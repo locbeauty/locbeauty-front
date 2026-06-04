@@ -20,6 +20,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
+import { SelectFilial } from "@/components/shared/SelectFilial";
+import { SelectAdditionalFilials } from "@/components/shared/SelectAdditionalFilials";
 import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
 import { toast } from "sonner";
 import { Customer } from "@/utils/@types/customer";
@@ -40,7 +42,10 @@ export function UpdateCustomerForm({
     register,
     setValue,
     control,
+    watch,
   } = useFormContext<UpdateCustomerFormSchemaType>();
+
+  const sourceFilialId = watch("filialId");
 
   // useEffect(() => {
   //     async function getCustomerAddresses(customerId: string) {
@@ -151,6 +156,35 @@ export function UpdateCustomerForm({
                         ))}
                       </SelectContent>
                     </Select>
+                  ) }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="filial">Filial de Origem</Label>
+                <SelectFilial
+                  control={ control }
+                  name="filialId"
+                  defaultFilial={ selectedCustomer.sourceFilialId }
+                  className="w-full data-[placeholder]:text-placeholder"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Filiais Adicionais (opcional)</Label>
+                <Controller
+                  name="additionalFilialIds"
+                  control={ control }
+                  render={ ({ field }) => (
+                    <SelectAdditionalFilials
+                      value={ field.value ?? [] }
+                      onChange={ field.onChange }
+                      excludeFilialId={
+                        sourceFilialId && sourceFilialId !== "ALL"
+                          ? sourceFilialId
+                          : selectedCustomer.sourceFilialId
+                      }
+                    />
                   ) }
                 />
               </div>
