@@ -63,39 +63,35 @@ export function ImportBookingsDialog({
   };
 
   const downloadTemplate = () => {
-    // Create a simple CSV template for bookings
     const headers = [
+      "Título",
       "Cliente",
-      "Equipamento",
-      "Data",
-      "Hora Início",
-      "Duração (min)",
-      "Observações",
+      "Criado em",
+      "Data do Agendamento",
+      "Duração",
+      "Local",
+      "Máquina 1",
+      "Valor do equipamento 1",
+      "Máquina 2",
+      "Valor do Equipamento 2",
+      "Máquina 3",
+      "Valor do equipamento 3",
+      "Observação",
+      "Responsável",
+      "Status",
+      "Valor Final",
     ];
-    const rows = [
-      [
-        "Nome do Cliente",
-        "Nome do Equipamento",
-        "2024-01-01",
-        "09:00",
-        "60",
-        "Observação opcional",
-      ],
-    ];
+    const csvContent = "﻿" + headers.join(",");
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      headers.join(",") +
-      "\n" +
-      rows.map((e) => e.join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
+    const blob = new Blob([ csvContent ], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", "template_importacao_agendamentos.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const onSubmit = async (data: { filialId?: string }) => {

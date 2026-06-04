@@ -52,6 +52,8 @@ export const updateCustomerFormSchema = z.object({
   filialId: z.string().optional(),
   additionalFilialIds: z.array(z.string()).optional(),
   isVisible: z.boolean().optional(),
+  // Outras filiais em que o cliente também atua (além da filial de origem).
+  filialIds: z.array(z.string()).optional(),
 });
 
 export type UpdateCustomerFormSchemaType = z.infer<

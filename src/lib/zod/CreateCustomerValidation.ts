@@ -53,6 +53,8 @@ export const createCustomerFormSchema = z
     secondaryCellphoneDescription: z.string().trim().nullable().optional(),
     instagram: z.string().trim().nullable(),
     filialId: z.string().cuid({ message: "Filial é obrigatória" }),
+    // Outras filiais em que o cliente também atua (além da filial de origem).
+    filialIds: z.array(z.string()).optional(),
     isTrainee: z.boolean().default(false).optional(),
     address: addressSchema.extend({
       stateName: z.string().optional().or(z.literal("")),

@@ -87,9 +87,9 @@ export function UpdateCustomerDialog({
         secondaryEmail: selectedCustomer.secondaryEmail,
         secondaryEmailDescription: selectedCustomer.secondaryEmailDescription,
         instagram: selectedCustomer.instagram,
-        filialId: selectedCustomer.sourceFilialId,
-        additionalFilialIds:
-          selectedCustomer.AdditionalFilials?.map((f) => f.filialId) ?? [],
+        filialIds: (selectedCustomer.Filials ?? [])
+          .map((f) => f.filialId)
+          .filter((id) => id !== selectedCustomer.sourceFilialId),
       });
     }
   }, [ selectedCustomer, reset ]);
