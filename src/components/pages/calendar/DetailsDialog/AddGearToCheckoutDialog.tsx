@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Checkout } from "@/utils/@types/checkouts";
 import { Gear } from "@/utils/@types/gears";
@@ -29,13 +30,18 @@ import { useQuery } from "@tanstack/react-query";
 
 export const AdditionalGearSchema = z
   .object({
-    individualPrice: z.string().min(1, "Informe o preço unitário"),
+    isCourtesy: z.boolean(),
+    individualPrice: z.string(), // obrigatório apenas quando não é cortesia
     extraCost: z.string().min(0), // permite vazio
     extraCostDescription: z.string().optional(),
     gear: z.object({
       gearId: z.string().min(1, "Selecione um equipamento"),
       gearName: z.string().min(1, "Selecione um equipamento"),
     }),
+  })
+  .refine((data) => data.isCourtesy || data.individualPrice.length >= 1, {
+    message: "Informe o preço unitário",
+    path: [ "individualPrice" ],
   })
   .refine(
     (data) =>
@@ -128,6 +134,7 @@ export function AddGearToCheckoutDialog({
         gearId: "",
         gearName: "",
       },
+      isCourtesy: false,
       individualPrice: "",
       extraCost: "",
       extraCostDescription: "",
@@ -150,6 +157,7 @@ export function AddGearToCheckoutDialog({
   useEffect(() => {
     if (!isOpen) {
       setValue("gear", { gearId: "", gearName: "" });
+      setValue("isCourtesy", false);
       setValue("individualPrice", "");
       setValue("extraCost", "");
       setValue("extraCostDescription", "");
@@ -166,7 +174,9 @@ export function AddGearToCheckoutDialog({
         gearId: newGearData.gear.gearId,
         gearName: newGearData.gear.gearName,
       },
-      individualPrice: parseStringToCents(newGearData.individualPrice),
+      individualPrice: newGearData.isCourtesy
+        ? 0
+        : parseStringToCents(newGearData.individualPrice),
     };
 
     const response = await AddGearInCheckout(newData);
@@ -244,26 +254,46 @@ export function AddGearToCheckoutDialog({
             </div>
           </div>
 
-          {/* VALOR INDIVIDUAL */}
-          <div className="flex flex-col gap-2">
-            <Label>Valor individual</Label>
-
-            <PriceInput
-              register={ register("individualPrice") }
-              value={ watch("individualPrice") }
-              setValue={ setValue }
-              name="individualPrice"
-              withLabel={ false }
+          {/* CORTESIA */}
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="isCourtesy"
+              checked={ watch("isCourtesy") }
+              onCheckedChange={ (checked) => {
+                const isChecked = checked === true;
+                setValue("isCourtesy", isChecked, { shouldValidate: true });
+                if (isChecked) {
+                  setValue("individualPrice", "", { shouldValidate: true });
+                }
+              } }
             />
-
-            <div className="h-4">
-              {errors.individualPrice && (
-                <span className="text-sm text-red-500">
-                  {errors.individualPrice.message}
-                </span>
-              )}
-            </div>
+            <Label htmlFor="isCourtesy" className="cursor-pointer">
+              Cortesia
+            </Label>
           </div>
+
+          {/* VALOR INDIVIDUAL */}
+          {!watch("isCourtesy") && (
+            <div className="flex flex-col gap-2">
+              <Label>Valor individual</Label>
+
+              <PriceInput
+                register={ register("individualPrice") }
+                value={ watch("individualPrice") }
+                setValue={ setValue }
+                name="individualPrice"
+                withLabel={ false }
+              />
+
+              <div className="h-4">
+                {errors.individualPrice && (
+                  <span className="text-sm text-red-500">
+                    {errors.individualPrice.message}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* VALOR EXTRA */}
           <div className="flex flex-col gap-2">
