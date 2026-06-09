@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   CarFront,
   BedDouble,
@@ -45,6 +46,8 @@ interface AdditionalCostsDialogProps {
   selectedCheckout?: Checkout;
   setSelectedCheckout?: Dispatch<SetStateAction<Checkout | null>>;
   showTrigger?: boolean;
+  // Quando o agendamento está concluído, exige justificativa para a alteração.
+  requireJustification?: boolean;
 }
 
 export function AdditionalCostsDialog({
@@ -53,6 +56,7 @@ export function AdditionalCostsDialog({
   selectedCheckout,
   setSelectedCheckout,
   showTrigger = true,
+  requireJustification = false,
 }: AdditionalCostsDialogProps) {
   const formContext = useFormContext<CreateCheckoutFormSchemaType>();
   const watch = formContext?.watch;
@@ -67,6 +71,7 @@ export function AdditionalCostsDialog({
   const [ foodCost, setFoodCost ] = useState("");
   const [ additionalTransportCost, setAdditionalTransportCost ] = useState("");
   const [ isRoundTrip, setIsRoundTrip ] = useState(true);
+  const [ justification, setJustification ] = useState("");
 
   const isUpdateMode = !!selectedCheckout;
 
@@ -127,6 +132,7 @@ export function AdditionalCostsDialog({
   // Quando o modal abre, preenche os estados locais com o que já está salvo no formulário.
   useEffect(() => {
     if (isAdditionalCostsDialogOpen) {
+      setJustification("");
       if (isUpdateMode && selectedCheckout) {
         setFuelCost(centsToString(selectedCheckout.fuelCost) || "");
         setLodgingCost(centsToString(selectedCheckout.lodgingCost) || "");
@@ -153,6 +159,15 @@ export function AdditionalCostsDialog({
 
   async function handleSaveVariables() {
     if (isUpdateMode && selectedCheckout && setSelectedCheckout) {
+      const trimmedJustification = justification.trim();
+      if (requireJustification && !trimmedJustification) {
+        toast.warning(
+          "Informe uma justificativa para alterar o valor de um agendamento concluído.",
+          { style: { fontSize: "1rem" } },
+        );
+        return;
+      }
+
       const fuelTotal = fuelTotalCents;
       const lodgingTotal = parseStringToCents(lodgingCost);
       const foodTotal = parseStringToCents(foodCost);
@@ -166,6 +181,9 @@ export function AdditionalCostsDialog({
           lodgingCost: lodgingTotal,
           additionalTransportCost: transportTotal,
           foodCost: foodTotal,
+          ...(requireJustification
+            ? { justification: trimmedJustification }
+            : {}),
         },
         checkoutId: selectedCheckout.checkoutId,
       });
@@ -177,6 +195,9 @@ export function AdditionalCostsDialog({
 
       toast.success(response.message, { style: { fontSize: "1rem" } });
       queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+      queryClient.invalidateQueries({
+        queryKey: [ "get-checkout-value-changes" ],
+      });
 
       // Atualiza o estado local mesclando os novos valores para garantir atualização instantânea e preservar relações
       setSelectedCheckout((prev) => {
@@ -446,6 +467,23 @@ export function AdditionalCostsDialog({
             </div>
           </div>
         </div>
+
+        {isUpdateMode && requireJustification && (
+          <div className="space-y-2 border-t pt-4">
+            <Label className="text-destructive">
+              Justificativa da alteração *
+            </Label>
+            <Textarea
+              className="max-h-[150px]"
+              placeholder="Descreva o motivo da alteração dos valores neste agendamento concluído"
+              value={ justification }
+              onChange={ (e) => setJustification(e.target.value) }
+            />
+            <p className="text-xs text-muted-foreground">
+              Esta alteração ficará registrada no histórico do agendamento.
+            </p>
+          </div>
+        )}
 
         <DialogFooter className="flex-col sm:flex-row gap-3 sm:gap-2 border-t pt-4">
           <Button

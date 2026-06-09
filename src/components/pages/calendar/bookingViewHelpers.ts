@@ -386,6 +386,7 @@ export function getEventBasicInfo(event: CalendarEvent) {
     "type" in event && (event.type === "CUSTOMER" || event.type === "EMPLOYEE");
   let id = "";
   let title = "";
+  let city: string | null = null;
   let durationInHours = 0;
   let startDate: Date;
   let endDate: Date;
@@ -437,6 +438,7 @@ export function getEventBasicInfo(event: CalendarEvent) {
       .map((b) => b.Gear.gearName)
       .join(", ");
     title = `${equipment} - ${checkout.Customer.fullname}`;
+    city = checkout.Address?.city ?? null;
     durationInHours = checkout.totalDurationInMinutes / 60;
     startDate = new Date(checkout.date);
     startDate.setHours(Math.floor(checkout.startHourInMinutes / 60));
@@ -464,6 +466,7 @@ export function getEventBasicInfo(event: CalendarEvent) {
     isNotice: "noticeId" in event,
     id,
     title,
+    city,
     durationInHours,
     startDate,
     endDate,

@@ -7,10 +7,19 @@ import {
   isSameDay,
   isToday,
   CalendarEvent,
+  getEventBasicInfo,
 } from "./bookingViewHelpers";
-import { Clock, DollarSign, MapPin, User, GraduationCap } from "lucide-react";
+import {
+  Clock,
+  DollarSign,
+  MapPin,
+  User,
+  GraduationCap,
+  Megaphone,
+} from "lucide-react";
 import { Checkout } from "@/utils/@types/checkouts";
 import { Training } from "@/utils/@types/training";
+import { Notice } from "@/utils/@types/notice";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { CheckoutStatuses } from "@/utils/constants";
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
@@ -26,18 +35,21 @@ export function MobileDayView({
   currentDate,
   openDetails,
 }: MobileDayViewProps) {
-  const dayEvents = events.filter((event) => {
-    const date =
-      "trainingId" in event
-        ? new Date((event as Training).dueDate)
-        : new Date((event as Checkout).date);
-    return isSameDay(date, currentDate);
-  });
+  const dayEvents = events.filter((event) =>
+    isSameDay(getEventBasicInfo(event).startDate, currentDate)
+  );
 
   const getBookingClassNames = (
     durationInHours: number,
-    isTraining: boolean
+    isTraining: boolean,
+    isNotice: boolean
   ) => {
+    if (isNotice) {
+      return cn(
+        "p-3 border-l-4 cursor-pointer hover:bg-muted/20 transition-colors",
+        "bg-blue-800 text-white border-blue-900"
+      );
+    }
     if (isTraining) {
       return cn(
         "p-3 border-l-4 cursor-pointer hover:bg-muted/20 transition-colors",
@@ -86,6 +98,7 @@ export function MobileDayView({
         ) : (
           dayEvents.map((event) => {
             const isTraining = "trainingId" in event;
+            const isNotice = "noticeId" in event;
             let durationInHours = 0;
             let startDate: Date;
             let endDate: Date;
@@ -114,6 +127,21 @@ export function MobileDayView({
                 training.TrainingPayment?.reduce((acc, payment) => acc + payment.totalPrice, 0) || 0
               );
               status = training.trainingStatus;
+            } else if (isNotice) {
+              const notice = event as Notice;
+              key = notice.noticeId;
+              durationInHours = Math.max(
+                (notice.endHourInMinutes - notice.startHourInMinutes) / 60,
+                0.5
+              );
+              startDate = new Date(notice.startDate);
+              startDate.setHours(Math.floor(notice.startHourInMinutes / 60));
+              startDate.setMinutes(notice.startHourInMinutes % 60);
+
+              endDate = new Date(startDate);
+              endDate.setMinutes(endDate.getMinutes() + durationInHours * 60);
+
+              title = notice.description;
             } else {
               const checkout = event as Checkout;
               key = checkout.checkoutId;
@@ -139,43 +167,70 @@ export function MobileDayView({
             return (
               <div
                 key={ key }
-                className={ getBookingClassNames(durationInHours, isTraining) }
+                className={ getBookingClassNames(
+                  durationInHours,
+                  isTraining,
+                  isNotice
+                ) }
                 onClick={ () => openDetails(event) }
               >
                 <div className="font-medium flex items-center gap-2">
                   {isTraining && <GraduationCap className="h-4 w-4" />}
+                  {isNotice && <Megaphone className="h-4 w-4 shrink-0" />}
                   {title}
                 </div>
 
-                <div className="text-sm text-muted-foreground mt-1 dark:text-muted">
+                <div
+                  className={ cn(
+                    "text-sm mt-1",
+                    isNotice
+                      ? "text-white/80"
+                      : "text-muted-foreground dark:text-muted"
+                  ) }
+                >
                   <div className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
                     {formatTime(startDate)} - {formatTime(endDate)}
                   </div>
 
-                  <div className="flex items-center gap-1 mt-1 max-w-[80vw]">
-                    <User className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate whitespace-nowrap max-w-full overflow-hidden text-ellipsis">
-                      {personName}
-                    </span>
-                  </div>
+                  {!isNotice && (
+                    <>
+                      <div className="flex items-center gap-1 mt-1 max-w-[80vw]">
+                        <User className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate whitespace-nowrap max-w-full overflow-hidden text-ellipsis">
+                          {personName}
+                        </span>
+                      </div>
 
-                  <div className="flex items-center gap-1 mt-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {location}
-                  </div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {location}
+                      </div>
 
-                  <div className="flex items-center gap-1 mt-1">
-                    <DollarSign className="h-3.5 w-3.5" />
-                    {price}
-                  </div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <DollarSign className="h-3.5 w-3.5" />
+                        {price}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="mt-2 flex justify-between items-center">
                   <div className="flex gap-2">
-                    <BookingStatusBadge status={ status as CheckoutStatuses } />
+                    {!isNotice && (
+                      <BookingStatusBadge
+                        status={ status as CheckoutStatuses }
+                      />
+                    )}
                   </div>
-                  <span className="text-xs text-muted-foreground dark:text-muted">
+                  <span
+                    className={ cn(
+                      "text-xs",
+                      isNotice
+                        ? "text-white/80"
+                        : "text-muted-foreground dark:text-muted"
+                    ) }
+                  >
                     {durationInHours}h
                   </span>
                 </div>

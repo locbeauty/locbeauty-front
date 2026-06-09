@@ -18,6 +18,9 @@ import { Controller, useFormContext } from "react-hook-form";
 import { CUSTOMER_STATUSES } from "@/utils/constants";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { X } from "lucide-react";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
 import { SelectFilial } from "@/components/shared/SelectFilial";
@@ -43,9 +46,17 @@ export function UpdateCustomerForm({
     setValue,
     control,
     watch,
+    trigger,
+    clearErrors,
   } = useFormContext<UpdateCustomerFormSchemaType>();
 
   const sourceFilialId = watch("filialId");
+  const birthdate = watch("birthdate");
+
+  function clearBirthdate() {
+    setValue("birthdate", null, { shouldDirty: true });
+    clearErrors("birthdate");
+  }
 
   // useEffect(() => {
   //     async function getCustomerAddresses(customerId: string) {
@@ -133,6 +144,52 @@ export function UpdateCustomerForm({
                   {errors.cnpj && (
                     <p className="text-xs font-medium text-destructive">
                       {errors.cnpj.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="birthdate">Data de nascimento</Label>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Controller
+                      control={ control }
+                      name="birthdate"
+                      render={ ({ field }) => (
+                        <DatePicker
+                          id="birthdate"
+                          placeholder="Escolha a data de nascimento"
+                          value={ field.value ?? null }
+                          onChange={ (date) => {
+                            field.onChange(date ?? null);
+                            trigger("birthdate");
+                          } }
+                          classNames={ {
+                            trigger:
+                              errors.birthdate &&
+                              "border-destructive focus-visible:ring-destructive",
+                          } }
+                        />
+                      ) }
+                    />
+                  </div>
+                  {birthdate && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={ clearBirthdate }
+                      className="h-9 w-9 p-0"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="h-3">
+                  {errors.birthdate && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.birthdate.message}
                     </p>
                   )}
                 </div>

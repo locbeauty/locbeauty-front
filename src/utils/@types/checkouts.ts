@@ -69,3 +69,14 @@ export type Checkout = {
   driverLng?: number | null;
   driverLocationAt?: Date | null;
 };
+
+export type CheckoutValueChange = {
+  id: string;
+  checkoutId: string;
+  justification: string;
+  previousTotalPrice: number;
+  newTotalPrice: number;
+  changedByEmployeeId: string | null;
+  changedByName: string;
+  createdAt: string;
+};

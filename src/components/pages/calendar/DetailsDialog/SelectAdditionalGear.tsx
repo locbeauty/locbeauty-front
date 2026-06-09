@@ -37,10 +37,12 @@ export function SelectAdditionalGear({
   onSelect,
   selectedCheckout,
   unavailableGearIds = [],
+  currentGearName,
 }: {
   onSelect: (gear: Gear) => void;
   selectedCheckout: Checkout;
   unavailableGearIds?: string[];
+  currentGearName?: string;
 }) {
   const [ filteredGears, setFilteredGears ] = useState<Gear[] | undefined>([]);
   const { user } = useAuth();
@@ -80,12 +82,14 @@ export function SelectAdditionalGear({
           gears={ filteredGears }
           onSelect={ onSelect }
           unavailableGearIds={ unavailableGearIds }
+          currentGearName={ currentGearName }
         />
       ) : (
         <MobileSelect
           gears={ filteredGears }
           onSelect={ onSelect }
           unavailableGearIds={ unavailableGearIds }
+          currentGearName={ currentGearName }
         />
       )}
     </div>
@@ -96,13 +100,17 @@ function DesktopSelect({
   gears,
   onSelect,
   unavailableGearIds,
+  currentGearName,
 }: {
   gears: Gear[];
   onSelect: (gear: Gear) => void;
   unavailableGearIds: string[];
+  currentGearName?: string;
 }) {
   const [ open, setOpen ] = useState(false);
-  const [ selectedLabel, setSelectedLabel ] = useState<string | null>(null);
+  const [ selectedLabel, setSelectedLabel ] = useState<string | null>(
+    currentGearName ?? null,
+  );
 
   return (
     <Popover open={ open } onOpenChange={ setOpen } modal={ true }>
@@ -135,12 +143,17 @@ function MobileSelect({
   gears,
   onSelect,
   unavailableGearIds,
+  currentGearName,
 }: {
   gears: Gear[];
   onSelect: (gear: Gear) => void;
   unavailableGearIds: string[];
+  currentGearName?: string;
 }) {
   const [ open, setOpen ] = useState(false);
+  const [ selectedLabel, setSelectedLabel ] = useState<string | null>(
+    currentGearName ?? null,
+  );
 
   return (
     <Drawer open={ open } onOpenChange={ setOpen }>
@@ -149,8 +162,12 @@ function MobileSelect({
           variant="outline"
           className="w-full justify-start group cursor-pointer"
         >
-          <span className="text-placeholder group-hover:text-white">
-            Selecione a máquina
+          <span
+            className={ `group-hover:text-white ${
+              !selectedLabel ? "text-placeholder" : ""
+            }` }
+          >
+            {selectedLabel ?? "Selecione a máquina"}
           </span>
         </Button>
       </DrawerTrigger>
@@ -162,7 +179,10 @@ function MobileSelect({
           <GearsList
             gears={ gears }
             setOpen={ setOpen }
-            onSelect={ onSelect }
+            onSelect={ (gear) => {
+              onSelect(gear);
+              setSelectedLabel(gear.gearName);
+            } }
             unavailableGearIds={ unavailableGearIds }
           />
         </div>

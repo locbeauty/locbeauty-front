@@ -17,8 +17,8 @@ import {
   Megaphone,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Label } from "../ui/label";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { useAccess } from "@/contexts/access-provider";
 import { useAuth } from "@/contexts/auth-provider";
@@ -112,15 +112,15 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
         className,
       ) }
     >
-      <div className="flex h-16 items-center border-b border-primary-foreground/10 px-4">
-        <div className="flex items-center justify-center gap-4 w-full">
-          <div className="w-8 h-8 bg-white dark:bg-locbeauty rounded-full flex items-center justify-center">
-            <Users className="size-5 text-black" />
-          </div>
-          <Label className="text-lg font-bold dark:text-locbeauty">
-            Locbeauty
-          </Label>
-        </div>
+      <div className="flex h-16 items-center justify-center border-b border-primary-foreground/10 px-4">
+        <Image
+          src="/logo.png"
+          alt="Locbeauty"
+          width={ 195 }
+          height={ 126 }
+          priority
+          className="h-11 w-auto"
+        />
       </div>
       <nav className="flex-1 overflow-auto py-4">
         <ul className="grid gap-1 px-2">

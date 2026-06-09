@@ -7,6 +7,7 @@ import {
   User,
   GraduationCap,
   Cake,
+  Megaphone,
 } from "lucide-react";
 import {
   CalendarEvent,
@@ -18,6 +19,7 @@ import { Checkout } from "@/utils/@types/checkouts";
 import { centsToString } from "@/utils/centsToString";
 import { Training } from "@/utils/@types/training";
 import { BirthdayEvent } from "@/utils/@types/birthday";
+import { Notice } from "@/utils/@types/notice";
 
 interface MultipleEventBoxProps {
   group: CalendarEvent[];
@@ -49,15 +51,23 @@ export function MultipleEventBox({
   return group.map((event, bookingIndex) => {
     const isTraining = "trainingId" in event;
     const isBirthday = "originalBirthdate" in event;
+    const isNotice = "noticeId" in event;
     const training = isTraining ? (event as Training) : null;
     const birthday = isBirthday ? (event as BirthdayEvent) : null;
-    const checkout = !isTraining && !isBirthday ? (event as Checkout) : null;
+    const notice = isNotice ? (event as Notice) : null;
+    const checkout =
+      !isTraining && !isBirthday && !isNotice ? (event as Checkout) : null;
 
     let durationInHours = 1;
     if (training) {
       durationInHours = 2;
     } else if (checkout) {
       durationInHours = checkout.totalDurationInMinutes / 60;
+    } else if (notice) {
+      durationInHours = Math.max(
+        (notice.endHourInMinutes - notice.startHourInMinutes) / 60,
+        0.5,
+      );
     }
 
     // Calculate booking height
@@ -73,6 +83,8 @@ export function MultipleEventBox({
       startHourInMinutes = training.hourInMinutes;
     } else if (checkout) {
       startHourInMinutes = checkout.startHourInMinutes;
+    } else if (notice) {
+      startHourInMinutes = notice.startHourInMinutes;
     } else if (birthday) {
       const date = new Date(birthday.date);
       startHourInMinutes = date.getHours() * 60 + date.getMinutes();
@@ -85,7 +97,12 @@ export function MultipleEventBox({
 
     return (
       <div
-        key={ training?.trainingId || checkout?.checkoutId || birthday?.id }
+        key={
+          training?.trainingId ||
+          checkout?.checkoutId ||
+          birthday?.id ||
+          notice?.noticeId
+        }
         className={ cn(
           "overflow-y-auto absolute rounded-md border-l-4 p-2 shadow-sm hover:shadow-md transition-shadow",
           !isBirthday && "cursor-pointer",
@@ -94,6 +111,7 @@ export function MultipleEventBox({
             "bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 border-blue-500",
           isBirthday &&
             "bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-100 border-green-500",
+          isNotice && "bg-blue-800 text-white border-blue-900",
           checkout &&
             "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
           // Colors for 4h bookings duration
@@ -122,34 +140,42 @@ export function MultipleEventBox({
         <div className="font-medium text-sm truncate flex items-center gap-1">
           {isTraining && <GraduationCap className="h-3 w-3" />}
           {isBirthday && <Cake className="h-3 w-3" />}
+          {isNotice && <Megaphone className="h-3 w-3 shrink-0" />}
           {isTraining
             ? training!.Gear.gearName
             : isBirthday
               ? birthday!.title
-              : checkout!.Bookings.filter(
-                (booking) => booking.status === "ACTIVE",
-              )
-                .map((item) => item.Gear.gearName)
-                .join(", ")}
+              : isNotice
+                ? notice!.description
+                : checkout!.Bookings.filter(
+                  (booking) => booking.status === "ACTIVE",
+                )
+                  .map((item) => item.Gear.gearName)
+                  .join(", ")}
         </div>
 
-        <div className="flex items-center text-xs gap-1 truncate">
-          {!isBirthday && <User className="h-3 w-3" />}
-          {isTraining
-            ? training!.Trainee?.fullname || "-"
-            : isBirthday
-              ? birthday!.role
-              : checkout!.Customer.fullname}
-        </div>
+        {!isNotice && (
+          <div className="flex items-center text-xs gap-1 truncate">
+            {!isBirthday && <User className="h-3 w-3" />}
+            {isTraining
+              ? training!.Trainee?.fullname || "-"
+              : isBirthday
+                ? birthday!.role
+                : checkout!.Customer.fullname}
+          </div>
+        )}
 
-        <div className="flex items-center text-xs gap-1 truncate">
-          {!isBirthday && <MapPin className="h-3 w-3" />}
-          {isTraining
-            ? training!.SourceFilial.filialName
-            : isBirthday
-              ? null
-              : checkout?.SourceFilial?.filialName || checkout?.Address?.city}
-        </div>
+        {!isNotice && (
+          <div className="flex items-center text-xs gap-1 truncate">
+            {!isBirthday && <MapPin className="h-3 w-3" />}
+            {isTraining
+              ? training!.SourceFilial.filialName
+              : isBirthday
+                ? null
+                : checkout?.SourceFilial?.filialName ||
+                  checkout?.Address?.city}
+          </div>
+        )}
 
         {!isBirthday && (
           <div className="flex items-center text-xs gap-1 truncate">

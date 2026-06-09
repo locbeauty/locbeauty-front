@@ -1,5 +1,6 @@
 "use client";
 
+import { MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   formatTime,
@@ -77,6 +78,7 @@ export function MonthView({
                         isNotice,
                         id,
                         title,
+                        city,
                         durationInHours,
                         startDate,
                         paymentStatus,
@@ -133,27 +135,35 @@ export function MonthView({
                                   ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-500 text-sm font-semibold whitespace-normal h-auto"
                                   : cn(
                                     containerClass,
-                                    "flex items-center gap-1 text-sm cursor-pointer truncate",
+                                    "flex items-start gap-1 text-sm cursor-pointer truncate",
                                   ),
                           ) }
                           onClick={ () => openDetails(event) }
                           title={ `${
                             !isBirthday ? formatTime(startDate) + " - " : ""
-                          }${title}` }
+                          }${title}${isCheckout && city ? ` - ${city}` : ""}` }
                         >
                           {isCheckout && (
                             <div
                               className={ cn(
-                                "w-2 h-2 rounded-full shrink-0",
+                                "w-2 h-2 rounded-full shrink-0 mt-1.5",
                                 dotClass,
                               ) }
                             />
                           )}
-                          <div className={ cn(isCheckout ? "truncate" : "") }>
-                            {!isBirthday && !isNotice && (
-                              <>{formatTime(startDate)} - </>
+                          <div className="min-w-0 flex-1">
+                            <div className={ cn(isCheckout ? "truncate" : "") }>
+                              {!isBirthday && !isNotice && (
+                                <>{formatTime(startDate)} - </>
+                              )}
+                              {title}
+                            </div>
+                            {isCheckout && city && (
+                              <div className="flex items-center gap-0.5 text-xs opacity-80 truncate">
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{city}</span>
+                              </div>
                             )}
-                            {title}
                           </div>
                         </div>
                       );
