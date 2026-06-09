@@ -9,11 +9,20 @@ import {
   isToday,
   formatCurrency,
   CalendarEvent,
+  getEventBasicInfo,
 } from "./bookingViewHelpers";
-import { Clock, User, MapPin, DollarSign, GraduationCap } from "lucide-react";
+import {
+  Clock,
+  User,
+  MapPin,
+  DollarSign,
+  GraduationCap,
+  Megaphone,
+} from "lucide-react";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { Checkout } from "@/utils/@types/checkouts";
 import { Training } from "@/utils/@types/training";
+import { Notice } from "@/utils/@types/notice";
 
 interface MobileWeekViewProps {
   currentDate: Date;
@@ -59,24 +68,14 @@ export function MobileWeekView({
       <div className="space-y-4">
         {weekDays.map((day, dayIndex) => {
           const dayEvents = events
-            .filter((event) => {
-              const date =
-                "trainingId" in event
-                  ? new Date((event as Training).dueDate)
-                  : new Date((event as Checkout).date);
-              return isSameDay(date, day);
-            })
-            .sort((a, b) => {
-              const dateA =
-                "trainingId" in a
-                  ? new Date((a as Training).dueDate)
-                  : new Date((a as Checkout).date);
-              const dateB =
-                "trainingId" in b
-                  ? new Date((b as Training).dueDate)
-                  : new Date((b as Checkout).date);
-              return dateA.getTime() - dateB.getTime();
-            });
+            .filter((event) =>
+              isSameDay(getEventBasicInfo(event).startDate, day)
+            )
+            .sort(
+              (a, b) =>
+                getEventBasicInfo(a).startDate.getTime() -
+                getEventBasicInfo(b).startDate.getTime()
+            );
 
           return (
             <div
@@ -124,6 +123,7 @@ export function MobileWeekView({
                 ) : (
                   dayEvents.map((event) => {
                     const isTraining = "trainingId" in event;
+                    const isNotice = "noticeId" in event;
                     let durationInHours = 0;
                     let startDate: Date;
                     let endDate: Date;
@@ -156,6 +156,26 @@ export function MobileWeekView({
                         training.TrainingPayment?.reduce((acc, payment) => acc + payment.totalPrice, 0) || 0
                       );
                       status = training.trainingStatus;
+                    } else if (isNotice) {
+                      const notice = event as Notice;
+                      key = notice.noticeId;
+                      durationInHours = Math.max(
+                        (notice.endHourInMinutes - notice.startHourInMinutes) /
+                          60,
+                        0.5
+                      );
+                      startDate = new Date(notice.startDate);
+                      startDate.setHours(
+                        Math.floor(notice.startHourInMinutes / 60)
+                      );
+                      startDate.setMinutes(notice.startHourInMinutes % 60);
+
+                      endDate = new Date(startDate);
+                      endDate.setMinutes(
+                        endDate.getMinutes() + durationInHours * 60
+                      );
+
+                      title = notice.description;
                     } else {
                       const checkout = event as Checkout;
                       key = checkout.checkoutId;
@@ -216,6 +236,9 @@ export function MobileWeekView({
                               {isTraining && (
                                 <GraduationCap className="h-4 w-4" />
                               )}
+                              {isNotice && (
+                                <Megaphone className="h-4 w-4 shrink-0" />
+                              )}
                               {title}
                             </div>
                             <div className="text-sm text-gray-500 ml-2">
@@ -231,41 +254,49 @@ export function MobileWeekView({
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-gray-400" />
-                              <span className="truncate">{personName}</span>
-                            </div>
+                            {!isNotice && (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <User className="h-4 w-4 text-gray-400" />
+                                  <span className="truncate">
+                                    {personName}
+                                  </span>
+                                </div>
 
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-gray-400" />
-                              <span className="truncate">{location}</span>
-                            </div>
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="h-4 w-4 text-gray-400" />
+                                  <span className="truncate">{location}</span>
+                                </div>
 
-                            <div className="flex items-center gap-2">
-                              <DollarSign className="h-4 w-4 text-gray-400" />
-                              <span className="font-medium text-gray-900">
-                                {price}
-                              </span>
-                            </div>
+                                <div className="flex items-center gap-2">
+                                  <DollarSign className="h-4 w-4 text-gray-400" />
+                                  <span className="font-medium text-gray-900">
+                                    {price}
+                                  </span>
+                                </div>
+                              </>
+                            )}
                           </div>
 
-                          <div className="flex items-center gap-2 pt-1">
-                            <div
-                              className={ cn(
-                                "px-2 py-1 rounded-full text-xs font-medium",
-                                status === "Concluido" &&
-                                  "bg-green-100 text-green-800",
-                                status === "Pendente" &&
-                                  "bg-yellow-100 text-yellow-800",
-                                status === "Cancelado" &&
-                                  "bg-red-100 text-red-800",
-                                isTraining &&
-                                  "bg-blue-100 text-blue-800 capitalize"
-                              ) }
-                            >
-                              {isTraining ? status.toLowerCase() : status}
+                          {!isNotice && (
+                            <div className="flex items-center gap-2 pt-1">
+                              <div
+                                className={ cn(
+                                  "px-2 py-1 rounded-full text-xs font-medium",
+                                  status === "Concluido" &&
+                                    "bg-green-100 text-green-800",
+                                  status === "Pendente" &&
+                                    "bg-yellow-100 text-yellow-800",
+                                  status === "Cancelado" &&
+                                    "bg-red-100 text-red-800",
+                                  isTraining &&
+                                    "bg-blue-100 text-blue-800 capitalize"
+                                ) }
+                              >
+                                {isTraining ? status.toLowerCase() : status}
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                     );
