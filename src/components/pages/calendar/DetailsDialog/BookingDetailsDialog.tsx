@@ -35,7 +35,9 @@ import {
   FileText,
   CheckCircle2,
   RotateCcw,
+  History,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -69,6 +71,7 @@ import {
   getDayCheckouts,
   GetDayCheckoutsResponse,
   DeleteCheckout,
+  GetCheckoutValueChanges,
 } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { CheckoutPaymentMethodDialog } from "../CheckoutPaymentMethodDialog/CheckoutPaymentMethodDialog";
@@ -159,6 +162,9 @@ export function BookingDetailsDialog({
     ? can(SYSTEM_MODULES.BOOKINGS, "canEdit", selectedCheckout.SourceFilial?.filialId)
     : false;
   const isConcluded = selectedCheckout?.checkoutStatus === "Concluido";
+  // Agendamentos concluídos podem ter os valores financeiros alterados por quem
+  // tem permissão de editar agendamentos, mediante justificativa registrada.
+  const canEditConcludedFinancials = isConcluded && canEditBookings && !readOnly;
   const reopenDeadline = selectedCheckout?.concludedAt
     ? addMinutes(new Date(selectedCheckout.concludedAt), REOPEN_WINDOW_HOURS * 60)
     : null;
@@ -189,6 +195,14 @@ export function BookingDetailsDialog({
   });
 
   const { control, handleSubmit, setValue, reset } = methods;
+
+  const { data: valueChangesResponse } = useQuery({
+    queryKey: [ "get-checkout-value-changes", selectedCheckout?.checkoutId ],
+    queryFn: () => GetCheckoutValueChanges(selectedCheckout!.checkoutId),
+    enabled: isOpen && !!selectedCheckout?.checkoutId,
+    staleTime: 1000 * 30,
+  });
+  const valueChanges = valueChangesResponse?.data ?? [];
 
   useEffect(() => {
     setCheckoutObservations(selectedCheckout?.observations || "");
@@ -1333,7 +1347,9 @@ export function BookingDetailsDialog({
                               </div>
                             )}
 
-                            {checkoutCanBeUpdated && !readOnly && (
+                            {(checkoutCanBeUpdated ||
+                              canEditConcludedFinancials) &&
+                              !readOnly && (
                               <div className="flex justify-end gap-2 pt-1">
                                 <Button
                                   variant="ghost"
@@ -1347,9 +1363,10 @@ export function BookingDetailsDialog({
                                 >
                                   <Pencil className="h-3 w-3" />
                                 </Button>
-                                {selectedCheckout.Bookings.filter(
-                                  (b) => b.status === "ACTIVE",
-                                ).length > 1 && (
+                                {checkoutCanBeUpdated &&
+                                  selectedCheckout.Bookings.filter(
+                                    (b) => b.status === "ACTIVE",
+                                  ).length > 1 && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -1435,13 +1452,9 @@ export function BookingDetailsDialog({
                         </div>
                       )}
 
-                      {checkoutCanBeUpdated && !readOnly && (
+                      {(checkoutCanBeUpdated || canEditConcludedFinancials) &&
+                        !readOnly && (
                         <div className="flex flex-col gap-2 pt-2">
-                          {/* {selectedCheckout.totalDurationInMinutes > 1440 && (
-                            <div className="text-xs font-medium text-destructive mb-1">
-                              Este agendamento ultrapassa a meia-noite.
-                            </div>
-                          )} */}
                           <div className="flex justify-end">
                             <Button
                               variant="outline"
@@ -1512,6 +1525,53 @@ export function BookingDetailsDialog({
                     </Button>
                   </CardContent>
                 </Card>
+
+                {valueChanges.length > 0 && (
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-2">
+                        <History className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+                          Histórico de alterações de valor
+                        </h3>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-3">
+                      {valueChanges.map((change) => (
+                        <div
+                          key={ change.id }
+                          className="rounded-md border bg-muted/20 p-3 text-sm space-y-1"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-medium">
+                              {change.changedByName}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(new Date(change.createdAt))} às{" "}
+                              {formatTime(new Date(change.createdAt))}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground line-through">
+                              {centsToStringWithCurrencyMark(
+                                change.previousTotalPrice,
+                              )}
+                            </span>
+                            <span>→</span>
+                            <span className="font-semibold text-primary">
+                              {centsToStringWithCurrencyMark(
+                                change.newTotalPrice,
+                              )}
+                            </span>
+                          </div>
+                          <p className="whitespace-pre-wrap break-words text-muted-foreground">
+                            {change.justification}
+                          </p>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
 
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
@@ -1668,6 +1728,7 @@ export function BookingDetailsDialog({
         isAdditionalCostsDialogOpen={ isAdditionalCostsDialogOpen }
         setSelectedCheckout={ setSelectedCheckout }
         showTrigger={ false }
+        requireJustification={ isConcluded }
       />
 
       <MachineExtraCostsDialog
@@ -1678,6 +1739,7 @@ export function BookingDetailsDialog({
         setMachineExtraCostsDialogOpen={ () =>
           setSelectedBookingIdForExtraCosts(null)
         }
+        requireJustification={ isConcluded }
       />
 
       <AddGearToCheckoutDialog

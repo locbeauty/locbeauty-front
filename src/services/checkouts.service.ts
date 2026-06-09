@@ -1,5 +1,5 @@
 import { apiRequest, ApiResponse } from "@/lib/api";
-import { Checkout } from "@/utils/@types/checkouts";
+import { Checkout, CheckoutValueChange } from "@/utils/@types/checkouts";
 import { CheckoutStatuses } from "@/utils/constants";
 
 // Helper function to parse date strings into Date objects
@@ -107,6 +107,7 @@ export type UpdateCheckoutBody = {
   startHourInMinutes?: number;
   totalDurationInMinutes?: number;
   isVisible?: boolean;
+  justification?: string;
 };
 
 export async function UpdateCheckout({
@@ -128,6 +129,12 @@ export async function UpdateCheckout({
   }
 
   return response;
+}
+
+export async function GetCheckoutValueChanges(checkoutId: string) {
+  return apiRequest<CheckoutValueChange[]>({
+    endpoint: `checkouts/${checkoutId}/value-changes`,
+  });
 }
 
 export async function UpdateCheckoutStatus({

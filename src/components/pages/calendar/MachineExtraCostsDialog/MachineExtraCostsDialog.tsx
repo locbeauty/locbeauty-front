@@ -28,6 +28,8 @@ interface MachineExtraCostsDialogProps {
   selectedBookingId: string | null;
   selectedCheckout: Checkout | null;
   setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>;
+  // Quando o agendamento está concluído, exige justificativa para a alteração.
+  requireJustification?: boolean;
 }
 
 export function MachineExtraCostsDialog({
@@ -36,6 +38,7 @@ export function MachineExtraCostsDialog({
   selectedBookingId,
   selectedCheckout,
   setSelectedCheckout,
+  requireJustification = false,
 }: MachineExtraCostsDialogProps) {
   const [ individualPrice, setIndividualPrice ] = useState("0");
   const [ extraMachineCosts, setExtraMachineCosts ] = useState("0");
@@ -45,6 +48,7 @@ export function MachineExtraCostsDialog({
     gearId: string;
     gearName: string;
   } | null>(null);
+  const [ justification, setJustification ] = useState("");
 
   const { data } = useQuery<Booking | undefined, Error>({
     queryKey: [ "get-booking-by-id", selectedBookingId ],
@@ -64,6 +68,7 @@ export function MachineExtraCostsDialog({
     setExtraMachineCosts(centsToString(data?.extraMachineCosts ?? 0));
     setExtraMachineCostsDescription(data?.extraMachineCostsDescription || "");
     setIndividualPrice(centsToString(data?.individualPrice ?? 0));
+    setJustification("");
 
     const currentGear =
       selectedCheckout?.Bookings.find((b) => b.bookingId === selectedBookingId)
@@ -76,6 +81,15 @@ export function MachineExtraCostsDialog({
   }, [ isMachineExtraCostsDialogOpen, data, selectedBookingId, selectedCheckout ]);
 
   async function handleUpdateMachineExtraCosts() {
+    const trimmedJustification = justification.trim();
+    if (requireJustification && !trimmedJustification) {
+      toast.warning(
+        "Informe uma justificativa para alterar o valor de um agendamento concluído.",
+        { style: { fontSize: "1rem" } },
+      );
+      return;
+    }
+
     const originalGearId =
       selectedCheckout?.Bookings.find((b) => b.bookingId === selectedBookingId)
         ?.Gear.gearId ?? data?.gear?.gearId;
@@ -88,6 +102,9 @@ export function MachineExtraCostsDialog({
         extraMachineCosts: parseStringToCents(extraMachineCosts),
         extraMachineCostsDescription,
         ...(gearChanged ? { gearId: selectedGear!.gearId } : {}),
+        ...(requireJustification
+          ? { justification: trimmedJustification }
+          : {}),
       },
       bookingId: selectedBookingId!,
     });
@@ -103,6 +120,9 @@ export function MachineExtraCostsDialog({
         queryKey: [ "get-all-checkouts-for-availability" ],
       });
       queryClient.invalidateQueries({ queryKey: [ "get-day-checkouts" ] });
+      queryClient.invalidateQueries({
+        queryKey: [ "get-checkout-value-changes" ],
+      });
 
       if (selectedBookingId) {
         const newExtraMachineCosts = parseStringToCents(extraMachineCosts);
@@ -188,7 +208,7 @@ export function MachineExtraCostsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {selectedCheckout && (
+        {selectedCheckout && !requireJustification && (
           <div className="space-y-2 py-4">
             <Label>Máquina:</Label>
             <SelectAdditionalGear
@@ -232,6 +252,22 @@ export function MachineExtraCostsDialog({
             value={ extraMachineCostsDescription }
           />
         </div>
+        {requireJustification && (
+          <div className="space-y-2 py-2">
+            <Label className="text-destructive">
+              Justificativa da alteração *
+            </Label>
+            <Textarea
+              className="max-h-[150px]"
+              placeholder="Descreva o motivo da alteração do valor neste agendamento concluído"
+              onChange={ (e) => setJustification(e.target.value) }
+              value={ justification }
+            />
+            <p className="text-xs text-muted-foreground">
+              Esta alteração ficará registrada no histórico do agendamento.
+            </p>
+          </div>
+        )}
         <div className="flex justify-end gap-4">
           <Button
             variant={ "outline" }
