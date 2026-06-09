@@ -9,8 +9,10 @@ import {
 } from "./bookingViewHelpers";
 import { MobileDayView } from "./MobileDayView";
 import { CalendarDayHeader } from "./CalendarDayHeader";
+import { CalendarNoticesBand } from "./CalendarNoticesBand";
 import { SingleEventBox } from "./SingleEventBox";
 import { MultipleEventBox } from "./MultipleEventBox";
+import { Notice } from "@/utils/@types/notice";
 
 interface DayViewProps {
   currentDate: Date;
@@ -24,7 +26,13 @@ export function DayView({ currentDate, events, openDetails }: DayViewProps) {
     return isSameDay(startDate, currentDate);
   });
 
-  const eventGroups = groupOverlappingEvents(dayEvents);
+  // Avisos vão para uma faixa própria no topo, fora da grade de horários.
+  const notices = events.filter(
+    (event) => "noticeId" in event,
+  ) as Notice[];
+  const dayTimeEvents = dayEvents.filter((event) => !("noticeId" in event));
+
+  const eventGroups = groupOverlappingEvents(dayTimeEvents);
 
   return (
     <>
@@ -36,6 +44,13 @@ export function DayView({ currentDate, events, openDetails }: DayViewProps) {
 
       <div className="hidden md:block min-w-full">
         <CalendarDayHeader currentDate={ currentDate } />
+
+        <CalendarNoticesBand
+          days={ [ currentDate ] }
+          notices={ notices }
+          openDetails={ openDetails }
+          totalColumns={ 1 }
+        />
 
         <div className="relative">
           {workingHours.map((hour) => (
