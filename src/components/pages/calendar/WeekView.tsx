@@ -10,9 +10,11 @@ import {
   getEventBasicInfo,
 } from "./bookingViewHelpers";
 import { CalendarWeekHeader } from "./CalendarWeekHeader";
+import { CalendarNoticesBand } from "./CalendarNoticesBand";
 import { MobileWeekView } from "./MobileWeekView";
 import { SingleEventBox } from "./SingleEventBox";
 import { MultipleEventBox } from "./MultipleEventBox";
+import { Notice } from "@/utils/@types/notice";
 
 interface WeekViewProps {
   currentDate: Date;
@@ -23,6 +25,12 @@ interface WeekViewProps {
 export function WeekView({ currentDate, events, openDetails }: WeekViewProps) {
   const weekDays = getWeekDays(currentDate);
 
+  // Avisos são exibidos em uma faixa própria no topo, fora da grade de horários.
+  const timeEvents = events.filter((event) => !("noticeId" in event));
+  const notices = events.filter(
+    (event) => "noticeId" in event,
+  ) as Notice[];
+
   return (
     <>
       <MobileWeekView
@@ -32,6 +40,13 @@ export function WeekView({ currentDate, events, openDetails }: WeekViewProps) {
       />
       <div className="hidden md:block min-w-full">
         <CalendarWeekHeader weekDays={ weekDays } />
+
+        <CalendarNoticesBand
+          days={ weekDays }
+          notices={ notices }
+          openDetails={ openDetails }
+          totalColumns={ 7 }
+        />
 
         <div className="relative">
           {workingHours.map((hour) => (
@@ -50,7 +65,7 @@ export function WeekView({ currentDate, events, openDetails }: WeekViewProps) {
           {(() => {
             // Agrupa bookings por dia
             const eventsByDay: Record<number, CalendarEvent[]> = {};
-            events.forEach((event) => {
+            timeEvents.forEach((event) => {
               if (!isAgendamentoInWeek(event, weekDays)) return;
               const { startDate: date } = getEventBasicInfo(event);
               const dayIndex = getDayIndex(date, weekDays);
