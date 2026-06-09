@@ -9,6 +9,7 @@ export async function UpdateBooking({
     individualPrice: number;
     extraMachineCosts: number;
     extraMachineCostsDescription: string;
+    gearId?: string;
   };
   bookingId: string;
 }) {

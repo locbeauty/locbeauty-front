@@ -18,15 +18,12 @@ import { Textarea } from "@/components/ui/textarea";
 import PriceInput from "@/components/shared/PriceInput";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo } from "react";
-import {
-  AddGearInCheckout,
-  GetAllCheckouts,
-} from "@/services/checkouts.service";
+import { useEffect } from "react";
+import { AddGearInCheckout } from "@/services/checkouts.service";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { queryClient } from "@/app/(main)/layout";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useUnavailableGearIds } from "@/hooks/useUnavailableGearIds";
 
 export const AdditionalGearSchema = z
   .object({
@@ -70,61 +67,7 @@ export function AddGearToCheckoutDialog({
   isOpen,
   setIsOpen,
 }: AddGearToCheckoutDialogProps) {
-  // Fetch all checkouts for the day
-  const { data: checkoutsData } = useQuery({
-    queryKey: [
-      "get-all-checkouts-for-availability",
-      selectedCheckout?.date,
-      selectedCheckout?.SourceFilial?.filialId,
-    ],
-    queryFn: () =>
-      GetAllCheckouts({
-        queryParams: {
-          date: selectedCheckout?.date,
-          filialIds: selectedCheckout?.SourceFilial?.filialId
-            ? [ selectedCheckout.SourceFilial.filialId ]
-            : undefined,
-        },
-      }),
-    enabled:
-      !!selectedCheckout?.date &&
-      !!selectedCheckout?.SourceFilial?.filialId &&
-      isOpen,
-  });
-
-  const unavailableGearIds = useMemo(() => {
-    if (!checkoutsData?.data?.items || !selectedCheckout) return [];
-
-    const otherCheckouts = checkoutsData.data.items.filter(
-      (c) =>
-        c.checkoutId !== selectedCheckout.checkoutId &&
-        c.checkoutStatus !== "Cancelado",
-    );
-
-    const currentStart = selectedCheckout.startHourInMinutes;
-    const currentEnd =
-      selectedCheckout.startHourInMinutes +
-      selectedCheckout.totalDurationInMinutes;
-
-    const unavailable = new Set<string>();
-
-    otherCheckouts.forEach((checkout) => {
-      const start = checkout.startHourInMinutes;
-      const end = checkout.startHourInMinutes + checkout.totalDurationInMinutes;
-
-      // Check for overlap
-      // (StartA < EndB) and (EndA > StartB)
-      if (currentStart < end && currentEnd > start) {
-        checkout.Bookings.forEach((booking) => {
-          if (booking.status === "ACTIVE") {
-            unavailable.add(booking.Gear.gearId);
-          }
-        });
-      }
-    });
-
-    return Array.from(unavailable);
-  }, [ checkoutsData, selectedCheckout ]);
+  const unavailableGearIds = useUnavailableGearIds(selectedCheckout, isOpen);
 
   const AddGearMethods = useForm<AdditionalGearData>({
     resolver: zodResolver(AdditionalGearSchema),

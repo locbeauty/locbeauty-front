@@ -1672,6 +1672,7 @@ export function BookingDetailsDialog({
 
       <MachineExtraCostsDialog
         setSelectedCheckout={ setSelectedCheckout }
+        selectedCheckout={ selectedCheckout }
         selectedBookingId={ selectedBookingIdForExtraCosts }
         isMachineExtraCostsDialogOpen={ !!selectedBookingIdForExtraCosts }
         setMachineExtraCostsDialogOpen={ () =>

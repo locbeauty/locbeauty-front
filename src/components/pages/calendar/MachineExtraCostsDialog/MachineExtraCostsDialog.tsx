@@ -19,11 +19,14 @@ import { Booking } from "@/utils/@types/bookings";
 import { centsToString } from "@/utils/centsToString";
 import { queryClient } from "@/app/(main)/layout";
 import { Checkout } from "@/utils/@types/checkouts";
+import { SelectAdditionalGear } from "../DetailsDialog/SelectAdditionalGear";
+import { useUnavailableGearIds } from "@/hooks/useUnavailableGearIds";
 
 interface MachineExtraCostsDialogProps {
   setMachineExtraCostsDialogOpen: Dispatch<SetStateAction<boolean>>;
   isMachineExtraCostsDialogOpen: boolean;
   selectedBookingId: string | null;
+  selectedCheckout: Checkout | null;
   setSelectedCheckout: Dispatch<SetStateAction<Checkout | null>>;
 }
 
@@ -31,12 +34,17 @@ export function MachineExtraCostsDialog({
   isMachineExtraCostsDialogOpen,
   setMachineExtraCostsDialogOpen,
   selectedBookingId,
+  selectedCheckout,
   setSelectedCheckout,
 }: MachineExtraCostsDialogProps) {
   const [ individualPrice, setIndividualPrice ] = useState("0");
   const [ extraMachineCosts, setExtraMachineCosts ] = useState("0");
   const [ extraMachineCostsDescription, setExtraMachineCostsDescription ] =
     useState("");
+  const [ selectedGear, setSelectedGear ] = useState<{
+    gearId: string;
+    gearName: string;
+  } | null>(null);
 
   const { data } = useQuery<Booking | undefined, Error>({
     queryKey: [ "get-booking-by-id", selectedBookingId ],
@@ -45,20 +53,41 @@ export function MachineExtraCostsDialog({
     staleTime: 1000 * 60,
   });
 
+  const unavailableGearIds = useUnavailableGearIds(
+    selectedCheckout,
+    isMachineExtraCostsDialogOpen,
+  );
+
   useEffect(() => {
     if (!isMachineExtraCostsDialogOpen) return;
 
     setExtraMachineCosts(centsToString(data?.extraMachineCosts ?? 0));
     setExtraMachineCostsDescription(data?.extraMachineCostsDescription || "");
     setIndividualPrice(centsToString(data?.individualPrice ?? 0));
-  }, [ isMachineExtraCostsDialogOpen, data ]);
+
+    const currentGear =
+      selectedCheckout?.Bookings.find((b) => b.bookingId === selectedBookingId)
+        ?.Gear ?? data?.gear;
+    setSelectedGear(
+      currentGear
+        ? { gearId: currentGear.gearId, gearName: currentGear.gearName }
+        : null,
+    );
+  }, [ isMachineExtraCostsDialogOpen, data, selectedBookingId, selectedCheckout ]);
 
   async function handleUpdateMachineExtraCosts() {
+    const originalGearId =
+      selectedCheckout?.Bookings.find((b) => b.bookingId === selectedBookingId)
+        ?.Gear.gearId ?? data?.gear?.gearId;
+    const gearChanged =
+      !!selectedGear && selectedGear.gearId !== originalGearId;
+
     const response = await UpdateBooking({
       body: {
         individualPrice: parseStringToCents(individualPrice),
         extraMachineCosts: parseStringToCents(extraMachineCosts),
         extraMachineCostsDescription,
+        ...(gearChanged ? { gearId: selectedGear!.gearId } : {}),
       },
       bookingId: selectedBookingId!,
     });
@@ -70,6 +99,10 @@ export function MachineExtraCostsDialog({
       queryClient.invalidateQueries({
         queryKey: [ "get-booking-by-id", selectedBookingId ],
       });
+      queryClient.invalidateQueries({
+        queryKey: [ "get-all-checkouts-for-availability" ],
+      });
+      queryClient.invalidateQueries({ queryKey: [ "get-day-checkouts" ] });
 
       if (selectedBookingId) {
         const newExtraMachineCosts = parseStringToCents(extraMachineCosts);
@@ -103,6 +136,12 @@ export function MachineExtraCostsDialog({
           if (oldDescription !== extraMachineCostsDescription)
             updatedBooking.extraMachineCostsDescription =
               extraMachineCostsDescription;
+
+          if (gearChanged && selectedGear)
+            updatedBooking.Gear = {
+              gearId: selectedGear.gearId,
+              gearName: selectedGear.gearName,
+            };
 
           updatedCheckout.Bookings[bookingIndex] = updatedBooking;
 
@@ -142,11 +181,32 @@ export function MachineExtraCostsDialog({
     >
       <DialogContent className="max-h-[90vh] w-[90vw] md:w-[600px] overflow-scroll dark:bg-gray-900">
         <DialogHeader>
-          <DialogTitle className="text-xl">Custos extras</DialogTitle>
+          <DialogTitle className="text-xl">Editar equipamento</DialogTitle>
           <DialogDescription>
-            Defina aqui custos extras como quantidade de tiros, etc
+            Troque a máquina e defina o valor e os custos extras (ex: quantidade
+            de tiros).
           </DialogDescription>
         </DialogHeader>
+
+        {selectedCheckout && (
+          <div className="space-y-2 py-4">
+            <Label>Máquina:</Label>
+            <SelectAdditionalGear
+              key={ `${selectedBookingId ?? "none"}-${
+                selectedGear?.gearId ?? "loading"
+              }` }
+              selectedCheckout={ selectedCheckout }
+              unavailableGearIds={ unavailableGearIds }
+              currentGearName={ selectedGear?.gearName }
+              onSelect={ (gear) =>
+                setSelectedGear({
+                  gearId: gear.gearId,
+                  gearName: gear.gearName,
+                })
+              }
+            />
+          </div>
+        )}
 
         <div className="space-y-4 py-4">
           <Label>Valor individual:</Label>
