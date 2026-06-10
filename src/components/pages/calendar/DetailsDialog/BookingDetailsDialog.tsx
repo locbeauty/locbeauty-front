@@ -162,9 +162,11 @@ export function BookingDetailsDialog({
     ? can(SYSTEM_MODULES.BOOKINGS, "canEdit", selectedCheckout.SourceFilial?.filialId)
     : false;
   const isConcluded = selectedCheckout?.checkoutStatus === "Concluido";
-  // Agendamentos concluídos podem ter os valores financeiros alterados por quem
-  // tem permissão de editar agendamentos, mediante justificativa registrada.
-  const canEditConcludedFinancials = isConcluded && canEditBookings && !readOnly;
+  // Apenas o setor Financeiro e administradores (Admin/Master) podem alterar os
+  // valores de um agendamento concluído, mediante justificativa registrada.
+  const canEditConcludedFinancials =
+    isConcluded &&
+    (isAdminOrMaster || user?.role === USER_ROLES.FINANCEIRO);
   const reopenDeadline = selectedCheckout?.concludedAt
     ? addMinutes(new Date(selectedCheckout.concludedAt), REOPEN_WINDOW_HOURS * 60)
     : null;
