@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, FormProvider, Controller } from "react-hook-form";
 import { format, parse } from "date-fns";
 import DateInput from "@/components/shared/DateInput";
@@ -29,8 +29,12 @@ import {
   CreateCustomerFormSchemaType,
   createCustomerFormSchema,
 } from "@/lib/zod/CreateCustomerValidation";
-import { CreateCustomer } from "@/services/customers.service";
+import {
+  CreateCustomer,
+  PromoteCustomerToTrainee,
+} from "@/services/customers.service";
 import { CustomerAddressForm } from "@/components/pages/customers/create/CustomerAddressForm";
+import { PromoteToTraineeDialog } from "@/components/shared/PromoteToTraineeDialog";
 
 interface CreateTraineeDialogProps {
   dialogNovoAluno: boolean;
@@ -56,11 +60,19 @@ export function CreateTraineeDialog({
         ? undefined
         : [];
 
+  const [ promoteState, setPromoteState ] = useState<{
+    open: boolean;
+    customerId: string | null;
+    birthdate: Date | null;
+  }>({ open: false, customerId: null, birthdate: null });
+  const [ isPromoting, setIsPromoting ] = useState(false);
+
   const customerForm = useForm<CreateCustomerFormSchemaType>({
     resolver: zodResolver(createCustomerFormSchema),
     defaultValues: {
       filialId: user?.sourceFilialId || "",
       isTrainee: true,
+      isCustomer: false,
       address: {
         zipCode: "",
         buildingNumber: "",
@@ -99,15 +111,13 @@ export function CreateTraineeDialog({
   const { errors } = customerForm.formState;
 
   const onSubmitTrainee = async (data: CreateCustomerFormSchemaType) => {
-    // Ensure isTrainee is true
+    // Cadastro pela tela de alunos: é aluno e não é cliente "puro"
     data.isTrainee = true;
+    data.isCustomer = false;
 
     const response = await CreateCustomer(data);
 
-    if (response.statusCode !== 201) {
-      toast.warning(response.message, { style: { fontSize: "1rem" } });
-      window.scroll({ top: 0 });
-    } else {
+    if (response.statusCode === 201) {
       // Invalidate both trainees and customers queries to keep data sync
       queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
       queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
@@ -118,10 +128,59 @@ export function CreateTraineeDialog({
       window.scroll({ top: 0 });
       customerForm.reset();
       setDialogNovoAluno(false);
+      return;
+    }
+
+    // CPF/CNPJ já é de um cliente: oferecer conversão para aluno
+    const payload = response.data as
+      | { promotableToTrainee?: boolean; customerId?: string }
+      | undefined;
+    if (
+      response.statusCode === 409 &&
+      payload?.promotableToTrainee &&
+      payload.customerId
+    ) {
+      setPromoteState({
+        open: true,
+        customerId: payload.customerId,
+        birthdate: data.birthdate ?? null,
+      });
+      return;
+    }
+
+    toast.warning(response.message, { style: { fontSize: "1rem" } });
+    window.scroll({ top: 0 });
+  };
+
+  const handleConfirmPromote = async () => {
+    if (!promoteState.customerId) return;
+
+    setIsPromoting(true);
+    const response = await PromoteCustomerToTrainee({
+      customerId: promoteState.customerId,
+      birthdate: promoteState.birthdate,
+    });
+    setIsPromoting(false);
+
+    if (response.statusCode === 201) {
+      queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
+      queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+
+      toast.success("Cliente cadastrado também como aluno!", {
+        style: { fontSize: "1rem" },
+      });
+      setPromoteState({ open: false, customerId: null, birthdate: null });
+      customerForm.reset();
+      setDialogNovoAluno(false);
+    } else {
+      toast.warning(response.message ?? "Não foi possível concluir a conversão.", {
+        style: { fontSize: "1rem" },
+      });
     }
   };
 
   return (
+    <>
     <Dialog open={ dialogNovoAluno } onOpenChange={ setDialogNovoAluno }>
       <DialogTrigger asChild>
         <Button>
@@ -298,5 +357,14 @@ export function CreateTraineeDialog({
         </FormProvider>
       </DialogContent>
     </Dialog>
+
+      <PromoteToTraineeDialog
+        isOpen={ promoteState.open }
+        onOpenChange={ (open) =>
+          setPromoteState((prev) => ({ ...prev, open })) }
+        onConfirm={ handleConfirmPromote }
+        isLoading={ isPromoting }
+      />
+    </>
   );
 }
