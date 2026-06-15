@@ -95,7 +95,7 @@ export default function MetasMensaisPage() {
     queryFn: () =>
       GetAllGoals({
         filialId:
-          filterFilial === "all_filials_placeholder" || !filterFilial
+          filterFilial === "GLOBAL" || !filterFilial
             ? undefined
             : filterFilial,
         isVisible: isVisible ? "false" : undefined,
@@ -110,12 +110,8 @@ export default function MetasMensaisPage() {
 
     let filtered = [ ...goals ];
 
-    if (filterFilial) {
-      if (filterFilial === "GLOBAL") {
-        filtered = filtered.filter((g) => !g.Filial);
-      } else {
-        filtered = filtered.filter((g) => g.Filial?.filialId === filterFilial);
-      }
+    if (filterFilial && filterFilial !== "GLOBAL") {
+      filtered = filtered.filter((g) => g.Filial?.filialId === filterFilial);
     }
     if (filterStatus)
       filtered = filtered.filter((g) => g.status === filterStatus);
@@ -140,9 +136,16 @@ export default function MetasMensaisPage() {
     return Array.from(gearMap.values());
   }, [ filteredGoals ]);
 
-  const filiaisList = Array.from(
-    new Set(goals?.map((g) => g.Filial?.filialName).filter(Boolean) ?? []),
-  );
+  const filiaisList = useMemo(() => {
+    const map = new Map<string, string>();
+    goals?.forEach((g) => {
+      if (g.Filial) map.set(g.Filial.filialId, g.Filial.filialName);
+    });
+    return Array.from(map, ([ filialId, filialName ]) => ({
+      filialId,
+      filialName,
+    }));
+  }, [ goals ]);
 
   const estatisticas = useMemo(
     () => ({
@@ -264,8 +267,8 @@ export default function MetasMensaisPage() {
                       Global (Todas as Filiais)
                     </SelectItem>
                     {filiaisList.map((f) => (
-                      <SelectItem key={ f as string } value={ f as string }>
-                        {f}
+                      <SelectItem key={ f.filialId } value={ f.filialId }>
+                        {f.filialName}
                       </SelectItem>
                     ))}
                   </SelectContent>

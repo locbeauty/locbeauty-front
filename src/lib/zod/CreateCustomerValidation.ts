@@ -54,6 +54,7 @@ export const createCustomerFormSchema = z
     instagram: z.string().trim().nullable(),
     filialId: z.string().cuid({ message: "Filial é obrigatória" }),
     isTrainee: z.boolean().default(false).optional(),
+    isCustomer: z.boolean().default(true).optional(),
     address: addressSchema.extend({
       stateName: z.string().optional().or(z.literal("")),
       cityName: z.string().optional().or(z.literal("")),
