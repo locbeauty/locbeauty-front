@@ -7,8 +7,16 @@ import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation
 import { Customer } from "@/utils/@types/customer";
 
 export async function GetAllTrainees(queryParams?: Record<string, string>) {
-  // Add isTrainee=true to queryParams
-  const params = { ...queryParams, isTrainee: "true" };
+  // A aba "Alunos" carrega todos os alunos e filtra/pagina no client-side.
+  // Sem `limit` o backend assume 10, então alunos além dos 10 primeiros (ordem
+  // alfabética) somem da lista e da busca por nome. Forçamos limit alto para
+  // trazer todos, como já acontece com a lista de voluntários.
+  const params = {
+    ...queryParams,
+    isTrainee: "true",
+    page: "1",
+    limit: "100000",
+  };
   const response = await apiRequest<{ items: Customer[]; total: number }>({
     endpoint: "customers",
     queryParams: params,
