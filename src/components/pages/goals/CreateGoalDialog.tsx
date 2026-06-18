@@ -53,11 +53,20 @@ import { Label } from "@/components/ui/label";
 export function CreateGoalDialog() {
   const [ dialogNovaMeta, setDialogNovaMeta ] = useState(false);
   const [ isSubmitting, setIsSubmitting ] = useState(false);
+  const { user } = useAuth();
   const { getAccessibleFilialsForCreate } = useAccess();
 
-  const accessibleFilials = getAccessibleFilialsForCreate(
-    SYSTEM_MODULES.GOALS,
-  ).map((f) => f.filialId);
+  const accessibleFilialsObjects =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+      ? []
+      : getAccessibleFilialsForCreate(SYSTEM_MODULES.GOALS);
+
+  const accessibleFilials =
+    accessibleFilialsObjects.length > 0
+      ? accessibleFilialsObjects.map((f) => f.filialId)
+      : user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
+        ? undefined
+        : [];
 
   const {
     control,
@@ -96,7 +105,7 @@ export function CreateGoalDialog() {
 
   async function handleCreateGoal(newGoalData: CreateGoalDataType) {
     setIsSubmitting(true);
-    if (newGoalData.isGlobal) {
+    if (newGoalData.isGlobal || newGoalData.filialId === "ALL") {
       newGoalData.filialId = null;
     }
 

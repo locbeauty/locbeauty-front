@@ -134,15 +134,34 @@ export function AdditionalCostsDialog({
     if (isAdditionalCostsDialogOpen) {
       setJustification("");
       if (isUpdateMode && selectedCheckout) {
-        setFuelCost(centsToString(selectedCheckout.fuelCost) || "");
+        // selectedCheckout.fuelCost é o custo TOTAL de combustível (em centavos).
+        // O modal edita o preço por LITRO, então recuperamos o preço por litro a
+        // partir do total + distância (consumo padrão 10, ida e volta). Assim o
+        // campo mostra o valor original (ex.: R$ 7,09) e o cálculo do modal
+        // reproduz exatamente o total já salvo — sem reaplicar a multiplicação
+        // a cada vez que o agendamento é salvo.
+        const storedFuelTotal = Number(selectedCheckout.fuelCost) || 0;
+        const distance = Number(selectedCheckout.distanceInKm) || 0;
+        const defaultConsumption = 10;
+        const roundTrip = true;
+        const litersForTrip =
+          (distance / defaultConsumption) * (roundTrip ? 2 : 1);
+        const pricePerLiterCents =
+          litersForTrip > 0 && storedFuelTotal > 0
+            ? Math.round(storedFuelTotal / litersForTrip)
+            : 0;
+
+        setFuelCost(
+          pricePerLiterCents > 0 ? centsToString(pricePerLiterCents) : "",
+        );
         setLodgingCost(centsToString(selectedCheckout.lodgingCost) || "");
         setFoodCost(centsToString(selectedCheckout.foodCost) || "");
         setAdditionalTransportCost(
           centsToString(selectedCheckout.additionalTransportCost) || "",
         );
-        setDistanceInKM(Number(selectedCheckout.distanceInKm) || 0);
-        // Consumption km per liter is not in Checkout model currently, using default 10
-        setConsumptionKmPerLiter(10);
+        setDistanceInKM(distance);
+        setConsumptionKmPerLiter(defaultConsumption);
+        setIsRoundTrip(roundTrip);
       } else if (getValues) {
         const currentValues = getValues();
 

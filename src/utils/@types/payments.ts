@@ -1,9 +1,22 @@
 import { PayerType } from "@/components/pages/trainings/TrainingPaymentMethodDialog";
 import { PaymentModes, PaymentStatuses } from "../constants";
 
+export type InstallmentStatus = "Pendente" | "Pago";
+
+export interface Installment {
+  number: number;
+  amount: number; // centavos
+  dueDate: string | null;
+  paymentDate: string | null;
+  paymentMethod: string | null;
+  paymentStatus: InstallmentStatus;
+}
+
 export interface CheckoutPayment {
   paymentStatus: PaymentStatuses;
   paymentMode: PaymentModes;
+  installmentsCount?: number;
+  installments?: Installment[] | null;
   firstPaymentDate: string | null;
   firstPaymentAmount: number;
   firstPaymentMethod: string | null;
@@ -23,6 +36,8 @@ export interface TrainingPayment {
   totalPrice: number;
   paymentMode: PaymentModes;
   paymentStatus: PaymentStatuses;
+  installmentsCount?: number;
+  installments?: Installment[] | null;
   firstPaymentDate: string | null;
   firstPaymentAmount: number;
   firstPaymentMethod: string | null;

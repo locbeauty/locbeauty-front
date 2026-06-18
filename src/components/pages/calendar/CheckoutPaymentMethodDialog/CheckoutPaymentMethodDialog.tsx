@@ -705,7 +705,7 @@ import {
 import PriceInput from "@/components/shared/PriceInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkout } from "@/utils/@types/checkouts";
+import { Checkout, CheckoutPayment } from "@/utils/@types/checkouts";
 import { UpdateCheckout } from "@/services/checkouts.service";
 import { toast } from "sonner";
 import { queryClient } from "@/app/(main)/layout";
@@ -724,6 +724,59 @@ import {
 } from "@/utils/constants";
 import { validateCheckoutForm } from "@/utils/validators/update-payment-info";
 import { BookingPaymentStatusBadge } from "../../bookings/common/BookingPaymentStatusBadge";
+import { InstallmentsEditor } from "@/components/shared/InstallmentsEditor";
+import { Installment } from "@/utils/@types/payments";
+import {
+  buildInstallments,
+  deriveStatus,
+  sumPaid,
+  sumTotal,
+} from "@/utils/installments";
+
+// Constrói a lista de parcelas a partir de um pagamento (usa `installments`
+// quando existe; senão converte os campos legados first/second).
+function installmentsFromPayment(
+  payment: CheckoutPayment | null | undefined,
+  totalCents: number,
+): Installment[] {
+  if (payment?.installments && payment.installments.length > 0) {
+    return payment.installments;
+  }
+  if (
+    payment &&
+    (payment.paymentMode === "Parcelado" ||
+      (payment.secondPaymentAmount ?? 0) > 0)
+  ) {
+    return [
+      {
+        number: 1,
+        amount: payment.firstPaymentAmount ?? 0,
+        dueDate: payment.firstPaymentDate,
+        paymentDate:
+          payment.firstPaymentStatus === "Pago"
+            ? payment.firstPaymentDate
+            : null,
+        paymentMethod: payment.firstPaymentMethod,
+        paymentStatus: payment.firstPaymentStatus === "Pago" ? "Pago" : "Pendente",
+      },
+      {
+        number: 2,
+        amount:
+          payment.secondPaymentAmount ??
+          Math.max(0, totalCents - (payment.firstPaymentAmount ?? 0)),
+        dueDate: payment.secondPaymentDate,
+        paymentDate:
+          payment.secondPaymentStatus === "Pago"
+            ? payment.secondPaymentDate
+            : null,
+        paymentMethod: payment.secondPaymentMethod,
+        paymentStatus:
+          payment.secondPaymentStatus === "Pago" ? "Pago" : "Pendente",
+      },
+    ];
+  }
+  return buildInstallments(totalCents, 2);
+}
 
 // type CheckoutStatus = "Pendente" | "Concluido" | "Cancelado";
 // type PaymentStatus = "Pendente" | "Pago" | "Parcial";
@@ -749,6 +802,8 @@ export type LocalErrorsType = {
 export type PaymentMethodData = {
   paymentStatus: PaymentStatuses;
   paymentMode: PaymentModes;
+  installments?: Installment[];
+  installmentsCount?: number;
   firstPaymentAmount: number;
   firstPaymentDate: Date | null;
   firstPaymentMethod: PaymentMethod | null;
@@ -861,6 +916,10 @@ export function CheckoutPaymentMethodDialog({
   const [ secondPaymentStatus, setSecondPaymentStatus ] =
     useState<InstallmentStatus>("Pendente");
 
+  // Parcelamento em N parcelas (fonte da verdade quando status === "Parcial").
+  const [ installments, setInstallments ] = useState<Installment[]>([]);
+  const [ originalInstallmentsKey, setOriginalInstallmentsKey ] = useState("");
+
   const [ errors, setErrors ] = useState<LocalErrorsType>(initialErrors);
   const [ isSubmitting, setIsSubmitting ] = useState(false);
 
@@ -904,6 +963,8 @@ export function CheckoutPaymentMethodDialog({
       secondPaymentMethod === payment.secondPaymentMethod &&
       // Use o valor original com o default correto
       secondPaymentStatus === originalSecondPaymentStatus &&
+      // Parcelamento: detecta edição das parcelas
+      JSON.stringify(installments) === originalInstallmentsKey &&
       // Check refund changes
       isRefunded === selectedCheckout.wasRefunded &&
       (isRefunded
@@ -925,12 +986,21 @@ export function CheckoutPaymentMethodDialog({
     secondPaymentDate,
     secondPaymentMethod,
     secondPaymentStatus,
+    installments,
+    originalInstallmentsKey,
     isRefunded,
     refundAmount,
   ]);
 
   const isRefundedStatus =
     selectedCheckout?.CheckoutPayment?.paymentStatus === "Reembolsado";
+
+  // "É parcelado" não depende só do status "Parcial": um plano parcelado pode
+  // estar totalmente pago (status "Pago"). Nesses casos ainda queremos exibir e
+  // tratar as N parcelas, e não a visão legada de parcela única.
+  const isParcelled =
+    paymentStatus === "Parcial" ||
+    (paymentMode === "Parcelado" && installments.length > 1);
 
   useEffect(() => {
     if (selectedCheckout && isCheckoutPaymentMethodDialogOpen) {
@@ -971,6 +1041,13 @@ export function CheckoutPaymentMethodDialog({
       setSecondPaymentStatus(
         payment.secondPaymentStatus ? payment.secondPaymentStatus : "Pendente",
       );
+
+      const loadedInstallments = installmentsFromPayment(
+        payment,
+        selectedCheckout.totalPrice,
+      );
+      setInstallments(loadedInstallments);
+      setOriginalInstallmentsKey(JSON.stringify(loadedInstallments));
     }
     setErrors({} as LocalErrorsType);
   }, [ selectedCheckout, isCheckoutPaymentMethodDialogOpen ]);
@@ -985,47 +1062,69 @@ export function CheckoutPaymentMethodDialog({
     }
   }, [ setFirstPaymentAmount, selectedCheckout, paymentStatus, paymentMode ]);
 
-  // Auto-calculate second parcel amount when first amount changes
+  // Mantém as parcelas em sincronia com o total quando em modo parcelado.
   useEffect(() => {
     if (
       selectedCheckout &&
-      (paymentMode === "Parcelado" || paymentStatus === "Parcial")
+      paymentStatus === "Parcial" &&
+      installments.length > 0
     ) {
-      const total = selectedCheckout.totalPrice;
-      const first = parseStringToCents(firstPaymentAmount);
-      const remaining = Math.max(0, total - first);
-      setSecondPaymentAmount(centsToString(remaining));
+      const rebuilt = buildInstallments(
+        selectedCheckout.totalPrice,
+        installments.length,
+        installments,
+      );
+      const key = JSON.stringify(rebuilt);
+      if (key !== JSON.stringify(installments)) {
+        setInstallments(rebuilt);
+      }
     }
-  }, [
-    firstPaymentAmount,
-    paymentMode,
-    paymentStatus,
-    selectedCheckout,
-    setSecondPaymentAmount,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ selectedCheckout?.totalPrice, paymentStatus ]);
 
   async function handleSave() {
     // Calculate total cancellation fee and wasRefunded status early for validation
     const calculatedWasRefunded = isRefunded;
 
-    const isValid = validateCheckoutForm({
-      paymentStatus,
-      paymentMode,
-      firstPaymentAmount,
-      firstPaymentDate,
-      firstPaymentMethod,
-      firstPaymentStatus, // Passando o status da 1ª parcela
-      secondPaymentAmount,
-      secondPaymentDate,
-      secondPaymentMethod,
-      secondPaymentStatus,
-      selectedCheckout,
-      initialErrors,
-      isRefunded: calculatedWasRefunded,
-      setErrors,
-    });
-    if (!selectedCheckout || !isValid) {
-      return;
+    if (!selectedCheckout) return;
+
+    // Validação: parcelamento valida as parcelas; demais status usam a
+    // validação legada (entrada à vista).
+    if (isParcelled && !calculatedWasRefunded) {
+      if (sumTotal(installments) !== selectedCheckout.totalPrice) {
+        toast.error("A soma das parcelas deve ser igual ao valor total.");
+        return;
+      }
+      const invalidPaid = installments.find(
+        (i) => i.paymentStatus === "Pago" && (!i.dueDate || !i.paymentMethod),
+      );
+      if (invalidPaid) {
+        toast.error(
+          `Informe data e forma de pagamento da parcela ${invalidPaid.number} (marcada como paga).`,
+        );
+        return;
+      }
+      setErrors(initialErrors);
+    } else {
+      const isValid = validateCheckoutForm({
+        paymentStatus,
+        paymentMode,
+        firstPaymentAmount,
+        firstPaymentDate,
+        firstPaymentMethod,
+        firstPaymentStatus, // Passando o status da 1ª parcela
+        secondPaymentAmount,
+        secondPaymentDate,
+        secondPaymentMethod,
+        secondPaymentStatus,
+        selectedCheckout,
+        initialErrors,
+        isRefunded: calculatedWasRefunded,
+        setErrors,
+      });
+      if (!isValid) {
+        return;
+      }
     }
 
     // Calculate total cancellation fee
@@ -1064,32 +1163,67 @@ export function CheckoutPaymentMethodDialog({
 
     setIsSubmitting(true);
 
+    // As parcelas são a fonte da verdade. Para Pago/Pendente é uma única
+    // parcela; para Parcial, as N parcelas do editor.
+    const total = selectedCheckout.totalPrice;
+    const todayISO = new Date().toISOString().split("T")[0];
+
+    let effectiveInstallments: Installment[];
+    if (isParcelled) {
+      effectiveInstallments = installments;
+    } else if (paymentStatus === "Pago") {
+      effectiveInstallments = [
+        {
+          number: 1,
+          amount: total,
+          dueDate: firstPaymentDate || todayISO,
+          paymentDate: firstPaymentDate || todayISO,
+          paymentMethod: firstPaymentMethod,
+          paymentStatus: "Pago",
+        },
+      ];
+    } else {
+      effectiveInstallments = [
+        {
+          number: 1,
+          amount: total,
+          dueDate: firstPaymentDate || null,
+          paymentDate: null,
+          paymentMethod: firstPaymentMethod ?? null,
+          paymentStatus: "Pendente",
+        },
+      ];
+    }
+
+    const firstInst = effectiveInstallments[0];
+    const secondInst = effectiveInstallments[1];
+
+    const checkoutPaymentPayload: PaymentMethodData = {
+      paymentStatus: calculatedWasRefunded
+        ? "Reembolsado"
+        : deriveStatus(effectiveInstallments),
+      paymentMode: effectiveInstallments.length > 1 ? "Parcelado" : "AVista",
+      installments: effectiveInstallments,
+      installmentsCount: effectiveInstallments.length,
+      // Espelho legado (first/second) para leitores antigos.
+      firstPaymentAmount: firstInst?.amount ?? 0,
+      firstPaymentDate: firstInst?.dueDate ? new Date(firstInst.dueDate) : null,
+      firstPaymentMethod: firstInst?.paymentMethod ?? null,
+      firstPaymentStatus: firstInst?.paymentStatus ?? "Pendente",
+      secondPaymentAmount: Math.max(0, total - (firstInst?.amount ?? 0)),
+      secondPaymentDate: secondInst?.dueDate
+        ? new Date(secondInst.dueDate)
+        : null,
+      secondPaymentMethod: secondInst?.paymentMethod ?? null,
+      secondPaymentStatus: secondInst?.paymentStatus ?? "Pendente",
+    };
+
     const payload: UpdateCheckoutPayload = {
       checkoutStatus,
-      // isCourtesy removed from UI, so we keep existing or default (handled by other logic if needed, but here we just pass existing if possible?
-      // Actually per requirement 'isCourtesy' checkbox removed.
-      // If we don't send isCourtesy, backend might keep it? Or set to false/undefined?
-      // UpdateCheckoutPayload defines isCourtesy as optional.
-      // We should probably preserve the existing value if we aren't changing it.
       isCourtesy: selectedCheckout.isCourtesy,
       wasRefunded: calculatedWasRefunded,
       refundAmount: calculatedRefundAmount,
-      CheckoutPayment: {
-        paymentStatus: calculatedWasRefunded ? "Reembolsado" : paymentStatus,
-        paymentMode,
-
-        firstPaymentAmount: parseStringToCents(firstPaymentAmount),
-        firstPaymentDate: firstPaymentDate ? new Date(firstPaymentDate) : null,
-        firstPaymentMethod,
-        firstPaymentStatus,
-
-        secondPaymentAmount: parseStringToCents(secondPaymentAmount),
-        secondPaymentDate: secondPaymentDate
-          ? new Date(secondPaymentDate)
-          : null,
-        secondPaymentMethod,
-        secondPaymentStatus,
-      },
+      CheckoutPayment: checkoutPaymentPayload,
     };
 
     try {
@@ -1111,28 +1245,18 @@ export function CheckoutPaymentMethodDialog({
           CheckoutPayment: {
             ...selectedCheckout.CheckoutPayment,
             ...payload.CheckoutPayment,
+            installments: isParcelled
+              ? installments
+              : (selectedCheckout.CheckoutPayment?.installments ?? null),
             firstPaymentDate: payload.CheckoutPayment.firstPaymentDate
               ? payload.CheckoutPayment.firstPaymentDate.toISOString()
               : null,
             secondPaymentDate: payload.CheckoutPayment.secondPaymentDate
               ? payload.CheckoutPayment.secondPaymentDate.toISOString()
               : null,
-            firstPaymentStatus:
-              !secondPaymentMethod && !secondPaymentDate
-                ? "Pago"
-                : selectedCheckout.CheckoutPayment?.firstPaymentStatus ||
-                  "Pendente",
-            secondPaymentStatus:
-              secondPaymentMethod && secondPaymentDate
-                ? "Pago"
-                : selectedCheckout.CheckoutPayment?.secondPaymentStatus ||
-                  "Pendente",
-            paymentMode: paymentMode,
-            paymentStatus:
-              secondPaymentMethod && secondPaymentDate
-                ? "Pago"
-                : payload.CheckoutPayment.paymentStatus,
-          },
+            paymentMode: payload.CheckoutPayment.paymentMode,
+            paymentStatus: payload.CheckoutPayment.paymentStatus,
+          } as CheckoutPayment,
         };
 
         // Atualiza o estado local
@@ -1181,9 +1305,12 @@ export function CheckoutPaymentMethodDialog({
                     setPaymentStatus(value);
                     if (value === "Parcial") {
                       setPaymentMode("Parcelado");
-                      setFirstPaymentAmount("0,00");
-                      setFirstPaymentDate(
-                        new Date().toISOString().split("T")[0],
+                      setInstallments((prev) =>
+                        buildInstallments(
+                          selectedCheckout.totalPrice,
+                          prev.length > 1 ? prev.length : 2,
+                          prev,
+                        ),
                       );
                     } else if (value === "Pago") {
                       setPaymentMode("AVista");
@@ -1253,224 +1380,121 @@ export function CheckoutPaymentMethodDialog({
             paymentStatus !== "Cortesia" &&
             paymentStatus !== "Cancelado" && (
             <div className={ "bg-muted/30 p-4 rounded-lg border space-y-6" }>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-bold flex items-center gap-2 text-primary">
-                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs">
+              {isParcelled ? (
+                <InstallmentsEditor
+                  totalCents={ selectedCheckout.totalPrice }
+                  installments={ installments }
+                  onChange={ setInstallments }
+                  disabled={ isRefundedStatus || paymentStatus === "Pago" }
+                />
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-bold flex items-center gap-2 text-primary">
+                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs">
                         1
-                    </div>
+                      </div>
                       Primeira Parcela / Entrada
-                  </Label>
-                  <BookingPaymentStatusBadge
-                    status={
-                      selectedCheckout.CheckoutPayment?.firstPaymentStatus
-                    }
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                  <div className="sm:col-span-4">
-                    <Label className="text-xs text-muted-foreground">
-                        Valor
                     </Label>
-                    <PriceInput
-                      disabled={
-                        isRefundedStatus ||
+                    <BookingPaymentStatusBadge
+                      status={
+                        selectedCheckout.CheckoutPayment?.firstPaymentStatus
+                      }
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    <div className="sm:col-span-4">
+                      <Label className="text-xs text-muted-foreground">
+                        Valor
+                      </Label>
+                      <PriceInput
+                        disabled={
+                          isRefundedStatus ||
                           paymentStatus === "Pago" ||
                           selectedCheckout?.CheckoutPayment?.paymentMode ===
                             "Parcelado" ||
                           firstPaymentStatus === "Pago"
-                      }
-                      withLabel={ false }
-                      value={ firstPaymentAmount || "0,00" }
-                      onChange={ (value) => setFirstPaymentAmount(value) }
-                    />
-                    {errors.paymentInfo?.firstPaymentAmount && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {errors.paymentInfo.firstPaymentAmount}
-                      </p>
-                    )}
-                  </div>
+                        }
+                        withLabel={ false }
+                        value={ firstPaymentAmount || "0,00" }
+                        onChange={ (value) => setFirstPaymentAmount(value) }
+                      />
+                      {errors.paymentInfo?.firstPaymentAmount && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {errors.paymentInfo.firstPaymentAmount}
+                        </p>
+                      )}
+                    </div>
 
-                  <div className="sm:col-span-4">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                      <CalendarIcon className="w-3 h-3" /> Data do Pagamento
-                    </Label>
-                    <Input
-                      disabled={
-                        isRefundedStatus ||
+                    <div className="sm:col-span-4">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                        <CalendarIcon className="w-3 h-3" /> Data do Pagamento
+                      </Label>
+                      <Input
+                        disabled={
+                          isRefundedStatus ||
                           selectedCheckout.CheckoutPayment?.paymentStatus ===
                             "Pago" ||
                           selectedCheckout?.CheckoutPayment?.paymentMode ===
                             "Parcelado" ||
                           firstPaymentStatus === "Pago"
-                      }
-                      type="date"
-                      value={ firstPaymentDate }
-                      onChange={ (e) => setFirstPaymentDate(e.target.value) }
-                    />
-                    {errors.paymentInfo?.firstPaymentDate && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {errors.paymentInfo.firstPaymentDate}
-                      </p>
-                    )}
-                  </div>
+                        }
+                        type="date"
+                        value={ firstPaymentDate }
+                        onChange={ (e) => setFirstPaymentDate(e.target.value) }
+                      />
+                      {errors.paymentInfo?.firstPaymentDate && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {errors.paymentInfo.firstPaymentDate}
+                        </p>
+                      )}
+                    </div>
 
-                  <div className="sm:col-span-4">
-                    <Label className="text-xs text-muted-foreground">
+                    <div className="sm:col-span-4">
+                      <Label className="text-xs text-muted-foreground">
                         Forma de Pagamento
-                    </Label>
-                    <Select
-                      onValueChange={ (value) => setFirstPaymentMethod(value) }
-                      value={ firstPaymentMethod || "" }
-                    >
-                      <SelectTrigger
-                        disabled={
-                          isRefundedStatus ||
+                      </Label>
+                      <Select
+                        onValueChange={ (value) => setFirstPaymentMethod(value) }
+                        value={ firstPaymentMethod || "" }
+                      >
+                        <SelectTrigger
+                          disabled={
+                            isRefundedStatus ||
                             selectedCheckout.CheckoutPayment?.paymentStatus ===
                               "Pago" ||
                             selectedCheckout?.CheckoutPayment?.paymentMode ===
                               "Parcelado" ||
                             firstPaymentStatus === "Pago"
-                        }
-                        className={
-                          errors.paymentInfo?.firstPaymentMethod
-                            ? "border-red-500"
-                            : ""
-                        }
-                      >
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PaymentMethods.map((method) => (
-                          <SelectItem key={ method } value={ method }>
-                            <div className="flex items-center gap-2">
-                              {getPaymentIcon(method)}
-                              <span>{method}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.paymentInfo?.firstPaymentMethod && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {errors.paymentInfo.firstPaymentMethod}
-                      </p>
-                    )}
+                          }
+                          className={
+                            errors.paymentInfo?.firstPaymentMethod
+                              ? "border-red-500"
+                              : ""
+                          }
+                        >
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PaymentMethods.map((method) => (
+                            <SelectItem key={ method } value={ method }>
+                              <div className="flex items-center gap-2">
+                                {getPaymentIcon(method)}
+                                <span>{method}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.paymentInfo?.firstPaymentMethod && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {errors.paymentInfo.firstPaymentMethod}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {(paymentMode === "Parcelado" || paymentStatus === "Parcial") &&
-                  firstPaymentStatus !== "Pendente" && (
-                <>
-                  <div className="h-px bg-border border-dashed" />
-                  <div className="space-y-3 opacity-90">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-bold flex items-center gap-2 text-orange-600">
-                        <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center text-xs">
-                              2
-                        </div>
-                            Segunda Parcela / Restante
-                      </Label>
-                      <BookingPaymentStatusBadge
-                        status={
-                          selectedCheckout.CheckoutPayment
-                            ?.secondPaymentStatus
-                        }
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                      <div className="sm:col-span-4">
-                        <Label className="text-xs text-muted-foreground">
-                              Valor Restante
-                        </Label>
-                        <PriceInput
-                          disabled={ true }
-                          withLabel={ false }
-                          value={ secondPaymentAmount || "0,00" }
-                          onChange={ (value) =>
-                            setSecondPaymentAmount(value)
-                          }
-                        />
-                        {errors.paymentInfo?.secondPaymentAmount && (
-                          <p className="text-xs text-red-500 mt-1">
-                            {errors.paymentInfo.secondPaymentAmount}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="sm:col-span-4">
-                        <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                          <CalendarIcon className="w-3 h-3" /> Data Prevista
-                        </Label>
-                        <Input
-                          disabled={
-                            isRefundedStatus ||
-                                selectedCheckout.CheckoutPayment
-                                  ?.paymentStatus === "Pendente" ||
-                                selectedCheckout.CheckoutPayment
-                                  ?.secondPaymentStatus === "Pago"
-                          }
-                          type="date"
-                          value={ secondPaymentDate }
-                          onChange={ (e) =>
-                            setSecondPaymentDate(e.target.value)
-                          }
-                        />
-                        {errors.paymentInfo?.secondPaymentDate && (
-                          <p className="text-xs text-red-500 mt-1">
-                            {errors.paymentInfo.secondPaymentDate}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="sm:col-span-4">
-                        <Label className="text-xs text-muted-foreground">
-                              Forma Prevista
-                        </Label>
-                        <Select
-                          onValueChange={ (value) =>
-                            setSecondPaymentMethod(value)
-                          }
-                          value={ secondPaymentMethod || "" }
-                        >
-                          <SelectTrigger
-                            disabled={
-                              isRefundedStatus ||
-                                  selectedCheckout.CheckoutPayment
-                                    ?.paymentStatus === "Pendente" ||
-                                  selectedCheckout.CheckoutPayment
-                                    ?.secondPaymentStatus === "Pago"
-                            }
-                            className={
-                              errors.paymentInfo?.secondPaymentMethod
-                                ? "border-red-500"
-                                : ""
-                            }
-                          >
-                            <SelectValue placeholder="Selecione (opcional)..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PaymentMethods.map((method) => (
-                              <SelectItem key={ method } value={ method }>
-                                <div className="flex items-center gap-2">
-                                  {getPaymentIcon(method)}
-                                  <span>{method}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.paymentInfo?.secondPaymentMethod && (
-                          <p className="text-xs text-red-500 mt-1">
-                            {errors.paymentInfo.secondPaymentMethod}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </>
               )}
             </div>
           )}

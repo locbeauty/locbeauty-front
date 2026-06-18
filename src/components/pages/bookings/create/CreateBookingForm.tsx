@@ -427,6 +427,24 @@ export function CreateBookingForm() {
   const handleCreateNewCheckout: SubmitHandler<
     CreateCheckoutFormSchemaType
   > = async (newCheckoutData) => {
+    // O campo fuelCost do formulário é o preço por LITRO. Em todo o resto do
+    // sistema (backend, edição e exibição) fuelCost representa o custo TOTAL de
+    // combustível, então convertemos aqui usando a mesma fórmula do totalPrice.
+    // Mesma fórmula (e mesmo fallback de consumo) do cálculo do totalPrice
+    // acima, para que fuelCost e totalPrice fiquem sempre consistentes.
+    const fuelPerLiterCents = parseStringToCents(newCheckoutData.fuelCost || "0");
+    const distanceKm = newCheckoutData.distanceInKm || 0;
+    const consumptionKmL = newCheckoutData.consumption || 1;
+    const roundTripMultiplier = newCheckoutData.isRoundTrip ? 2 : 1;
+    const totalFuelCents =
+      distanceKm > 0 && fuelPerLiterCents > 0
+        ? Math.round(
+            (distanceKm / consumptionKmL) *
+              fuelPerLiterCents *
+              roundTripMultiplier,
+          )
+        : 0;
+
     const parsed = {
       ...newCheckoutData,
       consumption: newCheckoutData.consumption || 10,
@@ -438,7 +456,7 @@ export function CreateBookingForm() {
       ),
       lodgingCost: parseStringToCents(newCheckoutData.lodgingCost || "0"),
       foodCost: parseStringToCents(newCheckoutData.foodCost || "0"),
-      fuelCost: parseStringToCents(newCheckoutData.fuelCost || "0"),
+      fuelCost: totalFuelCents,
       additionalTransportCost: parseStringToCents(
         newCheckoutData.additionalTransportCost || "0",
       ),

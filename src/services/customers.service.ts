@@ -30,6 +30,31 @@ export async function UpdateCustomer({
   return response;
 }
 
+/**
+ * Promove um cliente já existente a aluno (isTrainee=true), preservando o papel
+ * de cliente (isCustomer permanece como está). Usado após o usuário confirmar a
+ * conversão quando um CPF/CNPJ já cadastrado é inscrito como aluno.
+ */
+export async function PromoteCustomerToTrainee({
+  customerId,
+  birthdate,
+}: {
+  customerId: string;
+  birthdate?: Date | null;
+}) {
+  const response = await apiRequest({
+    endpoint: "customers/update",
+    method: "POST",
+    queryParams: { customerId },
+    body: {
+      isTrainee: true,
+      ...(birthdate ? { birthdate } : {}),
+    },
+  });
+
+  return response;
+}
+
 export interface GetAllCustomersFilters {
   name?: string;
   email?: string;

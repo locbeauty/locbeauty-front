@@ -60,20 +60,24 @@ export function CustomerGeneralInformationForm({
               <User className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-medium">Informações do Cliente</h3>
             </div>
-            {/* <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <Controller
                 control={ control }
                 name="isTrainee"
                 render={ ({ field }) => (
                   <Checkbox
                     id="isTrainee"
-                    checked={ field.value }
-                    onCheckedChange={ field.onChange }
+                    checked={ !!field.value }
+                    onCheckedChange={ (checked) => {
+                      field.onChange(checked === true);
+                      // Revalida data de nascimento (obrigatória para alunos)
+                      trigger("birthdate");
+                    } }
                   />
                 ) }
               />
-              <Label htmlFor="isTrainee">É Aluno?</Label>
-            </div> */}
+              <Label htmlFor="isTrainee">Esse cliente também será Aluno?</Label>
+            </div>
           </div>
 
           <div className="space-y-4">
