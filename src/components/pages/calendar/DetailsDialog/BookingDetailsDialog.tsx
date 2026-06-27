@@ -1200,7 +1200,8 @@ export function BookingDetailsDialog({
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0 text-sm font-medium">
-                      {selectedCheckout.AccountableEmployee.fullname}
+                      {selectedCheckout.AccountableEmployee?.fullname ||
+                        "Não informado"}
                     </CardContent>
                   </Card>
                   <Card className="shadow-sm">

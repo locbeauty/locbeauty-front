@@ -82,44 +82,30 @@ export function MonthView({
                         durationInHours,
                         startDate,
                         paymentStatus,
-                        isPast,
                       } = getEventBasicInfo(event);
 
                       const isCheckout =
                         !isTraining && !isBirthday && !isNotice;
-                      const isPaid = paymentStatus === "Pago";
-                      const isOverdue = isPast && !isPaid;
 
+                      // Cor da bolinha = duração do agendamento
                       let dotClass = "bg-gray-400";
+                      if (durationInHours < 6) {
+                        dotClass = "bg-orange-500"; // Laranja: menos de 6h
+                      } else if (durationInHours < 8) {
+                        dotClass = "bg-yellow-300"; // Amarelo claro: de 6h a 7h
+                      } else {
+                        dotClass = "bg-green-400"; // Verde claro: 8h ou mais
+                      }
+
+                      // Cor de fundo do card = status do pagamento
                       let containerClass =
-                        "bg-gray-100 text-gray-700 border-gray-400";
-
-                      if (isCheckout) {
-                        if (durationInHours >= 8 && durationInHours <= 12) {
-                          dotClass = "bg-green-500";
-                          containerClass =
-                            "bg-green-100 text-green-700 border-green-300";
-                        } else if (durationInHours === 4) {
-                          dotClass = "bg-yellow-300"; // Light Yellow
-                          containerClass =
-                            "bg-yellow-50 text-yellow-900 border-yellow-200";
-                        } else if (
-                          durationInHours >= 5 &&
-                          durationInHours <= 6
-                        ) {
-                          dotClass = "bg-yellow-600"; // Dark Yellow
-                          containerClass =
-                            "bg-yellow-200 text-yellow-900 border-yellow-400";
-                        }
-
-                        // Override background if Paid or Overdue
-                        if (isPaid) {
-                          containerClass =
-                            "bg-green-800 text-white border-green-900";
-                        } else if (isOverdue) {
-                          containerClass =
-                            "bg-red-800 text-white border-red-900";
-                        }
+                        "bg-red-700 text-white border-red-900"; // Pendente (padrão)
+                      if (paymentStatus === "Pago") {
+                        containerClass =
+                          "bg-green-800 text-white border-green-900"; // Verde escuro: concluído
+                      } else if (paymentStatus === "Parcial") {
+                        containerClass =
+                          "bg-yellow-600 text-white border-yellow-700"; // Amarelo escuro: parcial
                       }
 
                       return (
