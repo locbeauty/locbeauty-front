@@ -26,7 +26,7 @@ interface CalendarContentProps {
   currentDate: Date;
   openCheckoutDetails: (_agendamento: Checkout) => void;
   hideCanceled: boolean;
-  selectedFilialId: string;
+  selectedFilialIds: string[];
 }
 
 export function CalendarContent({
@@ -34,7 +34,7 @@ export function CalendarContent({
   currentDate,
   openCheckoutDetails,
   hideCanceled,
-  selectedFilialId,
+  selectedFilialIds,
 }: CalendarContentProps) {
   const { user } = useAuth();
   const { accesses } = useAccess();
@@ -102,9 +102,21 @@ export function CalendarContent({
   }, [ viewType, currentDate ]);
 
   const finalFilialIds = useMemo(() => {
-    if (selectedFilialId === "ALL") return accessibleFilialIds;
-    return [ selectedFilialId ];
-  }, [ selectedFilialId, accessibleFilialIds ]);
+    const isRestricted = accessibleFilialIds !== undefined;
+
+    // No specific selection → "Todas" (respecting RBAC for restricted users)
+    if (selectedFilialIds.length === 0) return accessibleFilialIds;
+
+    // Restricted users: intersect selection with what they can access
+    if (isRestricted && accessibleFilialIds) {
+      const filtered = selectedFilialIds.filter((id) =>
+        accessibleFilialIds.includes(id),
+      );
+      return filtered.length > 0 ? filtered : [ "NO_ACCESS" ];
+    }
+
+    return selectedFilialIds;
+  }, [ selectedFilialIds, accessibleFilialIds ]);
 
   const isMotorista = user?.role === USER_ROLES.MOTORISTA;
 
@@ -131,23 +143,26 @@ export function CalendarContent({
     staleTime: 1000 * 60,
   });
 
+  // Notices/trainings only support a single filial server-side, so we fetch
+  // them all and apply the multi-filial filter on the client.
+  const noticeFilialIds =
+    selectedFilialIds.length === 0
+      ? undefined
+      : finalFilialIds ?? selectedFilialIds;
+
   const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
-    queryKey: [ "get-all-trainings", selectedFilialId ],
-    queryFn: () =>
-      GetAllTrainings(
-        undefined,
-        selectedFilialId === "ALL" ? undefined : selectedFilialId,
-      ),
+    queryKey: [ "get-all-trainings" ],
+    queryFn: () => GetAllTrainings(),
     staleTime: 1000 * 60,
   });
 
   const noticesData = useQuery<ApiResponse<Notice[]>, Error>({
-    queryKey: [ "get-notices", startDate, endDate, selectedFilialId ],
+    queryKey: [ "get-notices", startDate, endDate, noticeFilialIds ],
     queryFn: () =>
       GetNotices({
         startDate: startDate?.toISOString() || "",
         endDate: endDate?.toISOString() || "",
-        filialId: selectedFilialId === "ALL" ? undefined : selectedFilialId,
+        filialIds: noticeFilialIds,
       }),
     enabled: !!startDate && !!endDate,
     staleTime: 1000 * 60,
@@ -157,12 +172,19 @@ export function CalendarContent({
   const trainings = trainingsData.data?.data || [];
   const notices = noticesData.data?.data || [];
 
+  const filialFilteredTrainings =
+    selectedFilialIds.length === 0
+      ? trainings
+      : trainings.filter((t) =>
+          (finalFilialIds ?? selectedFilialIds).includes(t.sourceFilialId),
+        );
+
   const filteredCheckouts = hideCanceled
     ? checkouts.filter((c) => c.checkoutStatus !== "Cancelado")
     : checkouts;
   const filteredTrainings = hideCanceled
-    ? trainings.filter((t) => t.trainingStatus !== "Cancelado")
-    : trainings;
+    ? filialFilteredTrainings.filter((t) => t.trainingStatus !== "Cancelado")
+    : filialFilteredTrainings;
 
   const allEvents: CalendarEvent[] = [
     ...filteredCheckouts,

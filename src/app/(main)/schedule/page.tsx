@@ -24,7 +24,7 @@ export default function AgendamentosPage() {
   );
   const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] =
     useState(false);
-  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("ALL");
+  const [ selectedFilialIds, setSelectedFilialIds ] = useState<string[]>([]);
   const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("mes");
   const [ isMobile, setIsMobile ] = useState(false);
 
@@ -53,7 +53,7 @@ export default function AgendamentosPage() {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Calendário</h1>
+              <h1 className="text-3xl font-bold tracking-tight">Agenda</h1>
               <p className="text-muted-foreground">
                 Visualize agendamentos e treinamentos
               </p>
@@ -96,15 +96,15 @@ export default function AgendamentosPage() {
           setViewType={ setViewType }
           hideCanceled={ hideCanceled }
           setHideCanceled={ setHideCanceled }
-          selectedFilialId={ selectedFilialId }
-          setSelectedFilialId={ setSelectedFilialId }
+          selectedFilialIds={ selectedFilialIds }
+          setSelectedFilialIds={ setSelectedFilialIds }
         />
         <CalendarContent
           currentDate={ currentDate }
           openCheckoutDetails={ openCheckoutDetails }
           viewType={ viewType }
           hideCanceled={ hideCanceled }
-          selectedFilialId={ selectedFilialId }
+          selectedFilialIds={ selectedFilialIds }
         />
         <CalendarFooter />
 

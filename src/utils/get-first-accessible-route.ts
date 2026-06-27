@@ -11,7 +11,7 @@ const MODULE_ROUTE_PRIORITY: ModuleRouteMap[] = [
   { module: SYSTEM_MODULES.DASHBOARD, route: ROUTES.DASHBOARD },
   { module: SYSTEM_MODULES.CUSTOMERS, route: ROUTES.CUSTOMERS },
   { module: SYSTEM_MODULES.BOOKINGS, route: ROUTES.BOOKING_TABLE },
-  { module: SYSTEM_MODULES.CALENDAR, route: ROUTES.CALENDAR },
+  { module: SYSTEM_MODULES.CALENDAR, route: ROUTES.SCHEDULE },
   { module: SYSTEM_MODULES.GEARS, route: ROUTES.GEARS },
   { module: SYSTEM_MODULES.FILIALS, route: ROUTES.FILIALS },
   { module: SYSTEM_MODULES.EMPLOYEES, route: ROUTES.EMPLOYEES },
@@ -29,9 +29,9 @@ export type UserAccess = {
 };
 
 const ROLE_DEFAULT_ROUTES: Record<string, string> = {
-  Motorista: ROUTES.CALENDAR,
-  Comercial: ROUTES.CALENDAR,
-  Logistica: ROUTES.CALENDAR,
+  Motorista: ROUTES.SCHEDULE,
+  Comercial: ROUTES.SCHEDULE,
+  Logistica: ROUTES.SCHEDULE,
 };
 
 /**

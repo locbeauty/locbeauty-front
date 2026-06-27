@@ -12,6 +12,7 @@ interface CreateNoticeInput {
 
 interface GetNoticesInput {
   filialId?: string;
+  filialIds?: string[];
   startDate?: string;
   endDate?: string;
   filterByStartDateOnly?: boolean;
@@ -30,11 +31,12 @@ export async function CreateNotice(
 
 export async function GetNotices({
   filialId,
+  filialIds,
   startDate,
   endDate,
   filterByStartDateOnly,
 }: GetNoticesInput): Promise<ApiResponse<Notice[]>> {
-  const queryParams: Record<string, string> = {};
+  const queryParams: Record<string, string | string[]> = {};
 
   if (startDate) {
     queryParams.startDate = startDate;
@@ -44,7 +46,9 @@ export async function GetNotices({
     queryParams.endDate = endDate;
   }
 
-  if (filialId) {
+  if (filialIds && filialIds.length > 0) {
+    queryParams.filialIds = filialIds;
+  } else if (filialId) {
     queryParams.filialId = filialId;
   }
 

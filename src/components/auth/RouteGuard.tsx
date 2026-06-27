@@ -8,9 +8,9 @@ import { useRouter } from "next/navigation";
 import { getFirstAccessibleRoute } from "@/utils/get-first-accessible-route";
 
 const ROLE_DEFAULT_ROUTES: Record<string, string> = {
-  Motorista: "/calendar",
-  Comercial: "/calendar",
-  Logistica: "/calendar",
+  Motorista: "/schedule",
+  Comercial: "/schedule",
+  Logistica: "/schedule",
 };
 
 interface RouteGuardProps {

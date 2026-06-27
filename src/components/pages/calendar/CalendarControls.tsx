@@ -14,7 +14,7 @@ import { SelectCalendarViewType } from "./SelectCalendarViewType";
 import { Dispatch, SetStateAction } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { SelectFilial } from "@/components/shared/SelectFilial";
+import { SelectFilials } from "@/components/shared/SelectFilials";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
 
@@ -26,8 +26,8 @@ interface CalendarControlsProps {
   hideViewSelect?: boolean;
   hideCanceled?: boolean;
   setHideCanceled?: Dispatch<SetStateAction<boolean>>;
-  selectedFilialId?: string;
-  setSelectedFilialId?: (id: string) => void;
+  selectedFilialIds?: string[];
+  setSelectedFilialIds?: (ids: string[]) => void;
 }
 
 export function CalendarControls({
@@ -38,8 +38,8 @@ export function CalendarControls({
   hideViewSelect = false,
   hideCanceled = false,
   setHideCanceled = () => {},
-  selectedFilialId = "",
-  setSelectedFilialId = () => {},
+  selectedFilialIds = [],
+  setSelectedFilialIds = () => {},
 }: CalendarControlsProps) {
   const { user } = useAuth();
 
@@ -86,10 +86,10 @@ export function CalendarControls({
       {!hideViewSelect && (
         <div className="flex items-center gap-4">
           {user?.role !== USER_ROLES.MOTORISTA && (
-            <div className="w-[160px]">
-              <SelectFilial
-                value={ selectedFilialId }
-                onValueChange={ setSelectedFilialId }
+            <div className="w-[200px]">
+              <SelectFilials
+                value={ selectedFilialIds }
+                onChange={ setSelectedFilialIds }
               />
             </div>
           )}

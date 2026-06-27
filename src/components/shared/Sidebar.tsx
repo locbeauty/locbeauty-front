@@ -5,7 +5,6 @@ import { ROUTES } from "@/utils/routes";
 import {
   BicepsFlexed,
   Building2,
-  Calendar,
   Calendar1,
   Home,
   MapPin,
@@ -61,12 +60,6 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
       module: SYSTEM_MODULES.EMPLOYEES,
     },
     {
-      name: "Agendamentos",
-      href: ROUTES.BOOKING_TABLE,
-      icon: Calendar,
-      module: SYSTEM_MODULES.BOOKINGS,
-    },
-    {
       name: "Rotas",
       href: ROUTES.ROUTES,
       icon: MapPin,
@@ -74,8 +67,8 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
       allowedRoles: [ USER_ROLES.MASTER, USER_ROLES.GERENTE, USER_ROLES.MOTORISTA, USER_ROLES.LOGISTICA ],
     },
     {
-      name: "Calendário",
-      href: ROUTES.CALENDAR,
+      name: "Agenda",
+      href: ROUTES.SCHEDULE,
       icon: Calendar1,
       module: SYSTEM_MODULES.CALENDAR,
     },

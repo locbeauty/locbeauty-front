@@ -17,7 +17,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { GearFilterSelect } from "@/components/pages/bookings/GearFilterSelect";
-import { SelectFilial } from "@/components/shared/SelectFilial";
+import { SelectFilials } from "@/components/shared/SelectFilials";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
 import { useAccess } from "@/contexts/access-provider";
@@ -33,7 +33,7 @@ export default function BookingsPage() {
   const [ date, setDate ] = useState<Date | null>(null);
   const [ checkoutId, setCheckoutId ] = useState("");
   const [ gearId, setGearId ] = useState<string | undefined>();
-  const [ filialId, setFilialId ] = useState<string | undefined>();
+  const [ filialIds, setFilialIds ] = useState<string[]>([]);
 
   const accessibleFilialIds = useMemo(() => {
     // Admin/Master can see all
@@ -58,7 +58,7 @@ export default function BookingsPage() {
     setDate(null);
     setCheckoutId("");
     setGearId(undefined);
-    setFilialId(undefined);
+    setFilialIds([]);
   };
 
   const hasActiveFilters =
@@ -68,7 +68,7 @@ export default function BookingsPage() {
     date ||
     checkoutId ||
     gearId ||
-    filialId;
+    filialIds.length > 0;
 
   return (
     <RouteGuard module={ SYSTEM_MODULES.BOOKINGS }>
@@ -107,7 +107,7 @@ export default function BookingsPage() {
             >
               <Link
                 className="flex justify-center items-center"
-                href={ ROUTES.CALENDAR }
+                href={ ROUTES.SCHEDULE }
               >
                 <Eye className="mr-2 h-4 w-4" />
                 <span className="hidden md:inline">Visualizar Agenda</span>
@@ -147,11 +147,9 @@ export default function BookingsPage() {
               user?.role === USER_ROLES.MASTER ||
               (accessibleFilialIds && accessibleFilialIds.length > 0)) && (
               <div className="w-full md:w-[200px]">
-                <SelectFilial
-                  value={ filialId }
-                  onValueChange={ (val) =>
-                    setFilialId(val === "ALL" ? undefined : val)
-                  }
+                <SelectFilials
+                  value={ filialIds }
+                  onChange={ setFilialIds }
                   placeholder="Filtrar por filial"
                   accessibleFilials={ accessibleFilialIds }
                 />
@@ -160,7 +158,10 @@ export default function BookingsPage() {
             <GearFilterSelect
               value={ gearId }
               onSelect={ setGearId }
-              filialId={ filialId || user?.sourceFilial?.filialId }
+              filialId={
+                (filialIds.length === 1 ? filialIds[0] : undefined) ||
+                user?.sourceFilial?.filialId
+              }
             />
             <DatePicker
               value={ date }
@@ -212,7 +213,7 @@ export default function BookingsPage() {
             date: date || undefined,
             checkoutId,
             gearId,
-            filialIds: filialId ? [ filialId ] : undefined,
+            filialIds: filialIds.length > 0 ? filialIds : undefined,
           } }
         />
       </div>
