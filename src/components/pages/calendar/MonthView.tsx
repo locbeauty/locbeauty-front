@@ -9,6 +9,7 @@ import {
   isToday,
   CalendarEvent,
   getEventBasicInfo,
+  getCheckoutColorClasses,
   isDateInRange,
 } from "./bookingViewHelpers";
 import { CalendarMonthHeader } from "./CalendarMonthHeader";
@@ -82,31 +83,19 @@ export function MonthView({
                         durationInHours,
                         startDate,
                         paymentStatus,
+                        isPast,
                       } = getEventBasicInfo(event);
 
                       const isCheckout =
                         !isTraining && !isBirthday && !isNotice;
 
-                      // Cor da bolinha = duração do agendamento
-                      let dotClass = "bg-gray-400";
-                      if (durationInHours < 6) {
-                        dotClass = "bg-orange-500"; // Laranja: menos de 6h
-                      } else if (durationInHours < 8) {
-                        dotClass = "bg-yellow-300"; // Amarelo claro: de 6h a 7h
-                      } else {
-                        dotClass = "bg-green-400"; // Verde claro: 8h ou mais
-                      }
-
-                      // Cor de fundo do card = status do pagamento
-                      let containerClass =
-                        "bg-red-700 text-white border-red-900"; // Pendente (padrão)
-                      if (paymentStatus === "Pago") {
-                        containerClass =
-                          "bg-green-800 text-white border-green-900"; // Verde escuro: concluído
-                      } else if (paymentStatus === "Parcial") {
-                        containerClass =
-                          "bg-yellow-600 text-white border-yellow-700"; // Amarelo escuro: parcial
-                      }
+                      // Cor de fundo do card:
+                      // antes da locação passar = duração; depois = status do pagamento
+                      const containerClass = getCheckoutColorClasses({
+                        durationInHours,
+                        paymentStatus,
+                        isPast,
+                      });
 
                       return (
                         <div
@@ -129,14 +118,6 @@ export function MonthView({
                             !isBirthday ? formatTime(startDate) + " - " : ""
                           }${title}${isCheckout && city ? ` - ${city}` : ""}` }
                         >
-                          {isCheckout && (
-                            <div
-                              className={ cn(
-                                "w-2 h-2 rounded-full shrink-0 mt-1.5",
-                                dotClass,
-                              ) }
-                            />
-                          )}
                           <div className="min-w-0 flex-1">
                             <div className={ cn(isCheckout ? "truncate" : "") }>
                               {!isBirthday && !isNotice && (

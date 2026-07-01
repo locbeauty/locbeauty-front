@@ -25,6 +25,7 @@ export default function AgendamentosPage() {
   const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] =
     useState(false);
   const [ selectedFilialIds, setSelectedFilialIds ] = useState<string[]>([]);
+  const [ selectedGearIds, setSelectedGearIds ] = useState<string[]>([]);
   const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("mes");
   const [ isMobile, setIsMobile ] = useState(false);
 
@@ -98,6 +99,8 @@ export default function AgendamentosPage() {
           setHideCanceled={ setHideCanceled }
           selectedFilialIds={ selectedFilialIds }
           setSelectedFilialIds={ setSelectedFilialIds }
+          selectedGearIds={ selectedGearIds }
+          setSelectedGearIds={ setSelectedGearIds }
         />
         <CalendarContent
           currentDate={ currentDate }
@@ -105,6 +108,7 @@ export default function AgendamentosPage() {
           viewType={ viewType }
           hideCanceled={ hideCanceled }
           selectedFilialIds={ selectedFilialIds }
+          selectedGearIds={ selectedGearIds }
         />
         <CalendarFooter />
 

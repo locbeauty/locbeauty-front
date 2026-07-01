@@ -15,6 +15,7 @@ import { Dispatch, SetStateAction } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { SelectFilials } from "@/components/shared/SelectFilials";
+import { SelectGears } from "@/components/shared/SelectGears";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
 
@@ -28,6 +29,8 @@ interface CalendarControlsProps {
   setHideCanceled?: Dispatch<SetStateAction<boolean>>;
   selectedFilialIds?: string[];
   setSelectedFilialIds?: (ids: string[]) => void;
+  selectedGearIds?: string[];
+  setSelectedGearIds?: (ids: string[]) => void;
 }
 
 export function CalendarControls({
@@ -40,6 +43,8 @@ export function CalendarControls({
   setHideCanceled = () => {},
   selectedFilialIds = [],
   setSelectedFilialIds = () => {},
+  selectedGearIds = [],
+  setSelectedGearIds = () => {},
 }: CalendarControlsProps) {
   const { user } = useAuth();
 
@@ -90,6 +95,14 @@ export function CalendarControls({
               <SelectFilials
                 value={ selectedFilialIds }
                 onChange={ setSelectedFilialIds }
+              />
+            </div>
+          )}
+          {user?.role !== USER_ROLES.MOTORISTA && (
+            <div className="w-[200px]">
+              <SelectGears
+                value={ selectedGearIds }
+                onChange={ setSelectedGearIds }
               />
             </div>
           )}

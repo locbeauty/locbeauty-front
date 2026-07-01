@@ -122,10 +122,13 @@ export function BookingsTable({ filters }: BookingsTableProps) {
     page: pagination.page,
     limit: pagination.limit,
     isVisible,
-    gearId: undefined,
-    date: undefined,
-    status: undefined,
-    paymentStatus: undefined,
+    // "Todos" significa "sem filtro" → não enviar ao servidor.
+    status:
+      filters?.status && filters.status !== "Todos" ? filters.status : undefined,
+    paymentStatus:
+      filters?.paymentStatus && filters.paymentStatus !== "Todos"
+        ? filters.paymentStatus
+        : undefined,
   };
 
   const { data, isLoading } = useQuery<
@@ -141,50 +144,9 @@ export function BookingsTable({ filters }: BookingsTableProps) {
   const totalCheckouts = data?.data?.total || 0;
   const totalPages = Math.ceil(totalCheckouts / pagination.limit);
 
-  const filteredCheckouts = useMemo(() => {
-    let result = data?.data?.items || [];
-
-    if (filters?.filialIds && filters.filialIds.length > 0) {
-      result = result.filter((c: Checkout) =>
-        filters.filialIds?.includes(
-          c.SourceFilial?.filialId ?? "",
-        ),
-      );
-    }
-
-    if (filters?.gearId) {
-      result = result.filter((c: Checkout) =>
-        c.Bookings.some((b) => b.Gear.gearId === filters.gearId),
-      );
-    }
-
-    if (filters?.date) {
-      const filterDate = new Date(filters.date);
-      filterDate.setHours(0, 0, 0, 0);
-      result = result.filter((c: Checkout) => {
-        const cDate = new Date(c.date);
-        cDate.setHours(0, 0, 0, 0);
-        return cDate.getTime() === filterDate.getTime();
-      });
-    }
-
-    if (filters?.status && filters.status !== "Todos") {
-      result = result.filter(
-        (c: Checkout) => c.checkoutStatus === filters.status,
-      );
-    }
-
-    if (filters?.paymentStatus && filters.paymentStatus !== "Todos") {
-      result = result.filter(
-        (c: Checkout) =>
-          c.CheckoutPayment?.paymentStatus === filters.paymentStatus,
-      );
-    }
-
-    return result;
-  }, [ data?.data?.items, filters ]);
-
-  const checkouts = filteredCheckouts;
+  // A filtragem (filial, máquina, data, status, pagamento) é feita no servidor,
+  // que já devolve os itens filtrados e paginados.
+  const checkouts = data?.data?.items || [];
 
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));

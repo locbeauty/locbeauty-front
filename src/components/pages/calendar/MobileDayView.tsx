@@ -8,6 +8,7 @@ import {
   isToday,
   CalendarEvent,
   getEventBasicInfo,
+  getCheckoutColorClasses,
 } from "./bookingViewHelpers";
 import {
   Clock,
@@ -39,11 +40,15 @@ export function MobileDayView({
     isSameDay(getEventBasicInfo(event).startDate, currentDate)
   );
 
-  const getBookingClassNames = (
-    durationInHours: number,
-    isTraining: boolean,
-    isNotice: boolean
-  ) => {
+  const getBookingClassNames = (params: {
+    durationInHours: number;
+    isTraining: boolean;
+    isNotice: boolean;
+    paymentStatus?: string | null;
+    isPast: boolean;
+  }) => {
+    const { durationInHours, isTraining, isNotice, paymentStatus, isPast } =
+      params;
     if (isNotice) {
       return cn(
         "p-3 border-l-4 cursor-pointer hover:bg-muted/20 transition-colors",
@@ -56,16 +61,10 @@ export function MobileDayView({
         "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-500"
       );
     }
+    // Checkout: duração antes da locação passar, pagamento depois
     return cn(
       "p-3 border-l-4 cursor-pointer hover:bg-muted/20 transition-colors",
-      "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
-      durationInHours === 4 &&
-        "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
-      durationInHours === 6 &&
-        "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
-      durationInHours >= 8 &&
-        durationInHours <= 12 &&
-        "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border"
+      getCheckoutColorClasses({ durationInHours, paymentStatus, isPast })
     );
   };
 
@@ -108,6 +107,7 @@ export function MobileDayView({
             let price = "";
             let status = "";
             let key = "";
+            let paymentStatus: string | null | undefined = null;
 
             if (isTraining) {
               const training = event as Training;
@@ -162,16 +162,21 @@ export function MobileDayView({
               location = checkout.SourceFilial.filialName;
               price = centsToStringWithCurrencyMark(checkout.totalPrice);
               status = checkout.checkoutStatus;
+              paymentStatus = checkout.CheckoutPayment?.paymentStatus;
             }
+
+            const isPast = endDate < new Date();
 
             return (
               <div
                 key={ key }
-                className={ getBookingClassNames(
+                className={ getBookingClassNames({
                   durationInHours,
                   isTraining,
-                  isNotice
-                ) }
+                  isNotice,
+                  paymentStatus,
+                  isPast,
+                }) }
                 onClick={ () => openDetails(event) }
               >
                 <div className="font-medium flex items-center gap-2">

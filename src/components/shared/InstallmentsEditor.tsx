@@ -15,7 +15,12 @@ import {
 import PriceInput from "@/components/shared/PriceInput";
 import { PaymentMethods } from "@/utils/constants";
 import { centsToString } from "@/utils/centsToString";
-import { buildInstallments } from "@/utils/installments";
+import { parseStringToCents } from "@/utils/parseStringToCents";
+import {
+  buildInstallments,
+  redistributeInstallments,
+  sumTotal,
+} from "@/utils/installments";
 import { Installment } from "@/utils/@types/payments";
 
 function getPaymentIcon(method: string) {
@@ -134,7 +139,7 @@ export function InstallmentsEditor({
           />
         </div>
         <p className="text-xs text-muted-foreground pb-2">
-          {count}x de {centsToString(installments[0]?.amount ?? 0)}
+          Total: {centsToString(sumTotal(installments))}
         </p>
       </div>
 
@@ -171,10 +176,18 @@ export function InstallmentsEditor({
             <div className="sm:col-span-4">
               <Label className="text-xs text-muted-foreground">Valor</Label>
               <PriceInput
-                disabled
+                disabled={ disabled || inst.paymentStatus === "Pago" }
                 withLabel={ false }
                 value={ centsToString(inst.amount) }
-                onChange={ () => {} }
+                onChange={ (value) =>
+                  onChange(
+                    redistributeInstallments(
+                      installments,
+                      index,
+                      parseStringToCents(value),
+                      totalCents,
+                    ),
+                  ) }
               />
             </div>
 

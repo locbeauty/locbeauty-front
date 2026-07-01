@@ -544,11 +544,14 @@ export function TrainingPaymentMethodDialog({
   ]);
 
   // Mantém as parcelas em sincronia com o total quando em modo parcelado.
+  // Só re-divide quando o total realmente mudou; caso contrário preserva os
+  // valores customizados das parcelas (não sobrescreve ao reabrir).
   useEffect(() => {
     if (
       selectedTraining &&
       paymentStatus === "Parcial" &&
-      installments.length > 0
+      installments.length > 0 &&
+      sumTotal(installments) !== displayPrice
     ) {
       const rebuilt = buildInstallments(
         displayPrice,

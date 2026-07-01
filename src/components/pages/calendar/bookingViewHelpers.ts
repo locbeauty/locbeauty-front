@@ -474,3 +474,39 @@ export function getEventBasicInfo(event: CalendarEvent) {
     isPast,
   };
 }
+
+//
+// ─── CORES DO AGENDAMENTO ────────────────────────────────────────────────────────
+//
+
+// Antes de a locação terminar → cor pela duração da reserva.
+// Depois de a locação passar → cor pelo status de pagamento.
+export function getCheckoutColorClasses(params: {
+  durationInHours: number;
+  paymentStatus?: string | null;
+  isPast: boolean;
+}): string {
+  const { durationInHours, paymentStatus, isPast } = params;
+
+  // Antes da locação passar → cor pela duração
+  if (!isPast) {
+    if (durationInHours < 6) return "bg-orange-500 text-white border-orange-600"; // laranja: menos de 6h
+    if (durationInHours < 8) return "bg-yellow-200 text-yellow-900 border-yellow-300"; // amarelo claro: 6h a 7h
+    return "bg-green-300 text-green-900 border-green-400"; // verde claro: 8h ou mais
+  }
+
+  // Depois da locação passar → cor pelo status de pagamento
+  switch (paymentStatus) {
+  case "Pago":
+    return "bg-green-800 text-white border-green-900"; // verde escuro: concluído
+  case "Parcial":
+    return "bg-yellow-600 text-white border-yellow-700"; // amarelo escuro: parcial
+  case "Cortesia":
+  case "Reembolsado":
+  case "Cancelado":
+    return "bg-gray-500 text-white border-gray-600"; // cinza: cortesia/reembolsado/cancelado
+  case "Pendente":
+  default:
+    return "bg-red-700 text-white border-red-900"; // vermelho: pendente
+  }
+}

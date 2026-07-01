@@ -8,6 +8,7 @@ import {
   isToday,
   CalendarEvent,
   getEventBasicInfo,
+  getCheckoutColorClasses,
 } from "./bookingViewHelpers";
 import { CalendarMonthHeader } from "./CalendarMonthHeader";
 
@@ -73,25 +74,15 @@ export function MobileMonthView({
 
                       const isCheckout =
                         !isTraining && !isBirthday && !isNotice;
-                      const isPaid = paymentStatus === "Pago";
-                      const isOverdue = isPast && !isPaid;
 
+                      // Barra do checkout: duração antes da locação passar, pagamento depois
                       let barClass = "bg-gray-400";
-
                       if (isCheckout) {
-                        if (durationInHours >= 8 && durationInHours <= 12) {
-                          barClass = "bg-green-500";
-                        } else if (durationInHours === 4) {
-                          barClass = "bg-yellow-300";
-                        } else if (
-                          durationInHours >= 5 &&
-                          durationInHours <= 6
-                        ) {
-                          barClass = "bg-yellow-600";
-                        }
-
-                        if (isPaid) barClass = "bg-green-800";
-                        if (isOverdue) barClass = "bg-red-800";
+                        barClass = getCheckoutColorClasses({
+                          durationInHours,
+                          paymentStatus,
+                          isPast,
+                        });
                       }
 
                       return (

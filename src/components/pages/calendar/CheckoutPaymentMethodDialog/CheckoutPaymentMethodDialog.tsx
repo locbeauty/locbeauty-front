@@ -1063,11 +1063,14 @@ export function CheckoutPaymentMethodDialog({
   }, [ setFirstPaymentAmount, selectedCheckout, paymentStatus, paymentMode ]);
 
   // Mantém as parcelas em sincronia com o total quando em modo parcelado.
+  // Só re-divide quando o total realmente mudou; caso contrário preserva os
+  // valores customizados das parcelas (não sobrescreve ao reabrir).
   useEffect(() => {
     if (
       selectedCheckout &&
       paymentStatus === "Parcial" &&
-      installments.length > 0
+      installments.length > 0 &&
+      sumTotal(installments) !== selectedCheckout.totalPrice
     ) {
       const rebuilt = buildInstallments(
         selectedCheckout.totalPrice,
@@ -1198,10 +1201,16 @@ export function CheckoutPaymentMethodDialog({
     const firstInst = effectiveInstallments[0];
     const secondInst = effectiveInstallments[1];
 
+    // Cortesia é um status especial: não é derivado das parcelas. Quando
+    // selecionado, marcamos isCourtesy e forçamos o status como "Cortesia".
+    const isCourtesySelected = paymentStatus === "Cortesia";
+
     const checkoutPaymentPayload: PaymentMethodData = {
       paymentStatus: calculatedWasRefunded
         ? "Reembolsado"
-        : deriveStatus(effectiveInstallments),
+        : isCourtesySelected
+          ? "Cortesia"
+          : deriveStatus(effectiveInstallments),
       paymentMode: effectiveInstallments.length > 1 ? "Parcelado" : "AVista",
       installments: effectiveInstallments,
       installmentsCount: effectiveInstallments.length,
@@ -1220,7 +1229,7 @@ export function CheckoutPaymentMethodDialog({
 
     const payload: UpdateCheckoutPayload = {
       checkoutStatus,
-      isCourtesy: selectedCheckout.isCourtesy,
+      isCourtesy: isCourtesySelected,
       wasRefunded: calculatedWasRefunded,
       refundAmount: calculatedRefundAmount,
       CheckoutPayment: checkoutPaymentPayload,

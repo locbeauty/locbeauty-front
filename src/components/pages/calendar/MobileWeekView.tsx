@@ -10,6 +10,7 @@ import {
   formatCurrency,
   CalendarEvent,
   getEventBasicInfo,
+  getCheckoutColorClasses,
 } from "./bookingViewHelpers";
 import {
   Clock,
@@ -133,6 +134,7 @@ export function MobileWeekView({
                     let price = "";
                     let status = "";
                     let key = "";
+                    let paymentStatus: string | null | undefined = null;
 
                     if (isTraining) {
                       const training = event as Training;
@@ -202,7 +204,10 @@ export function MobileWeekView({
                         checkout.totalPrice
                       );
                       status = checkout.checkoutStatus;
+                      paymentStatus = checkout.CheckoutPayment?.paymentStatus;
                     }
+
+                    const isPast = endDate < new Date();
 
                     const getBookingClassNames = () => {
                       if (isTraining) {
@@ -211,16 +216,20 @@ export function MobileWeekView({
                           "border-blue-400 bg-blue-50/30"
                         );
                       }
+                      if (isNotice) {
+                        return cn(
+                          "p-4 cursor-pointer hover:bg-gray-50 transition-colors border-l-4",
+                          "border-gray-400"
+                        );
+                      }
+                      // Checkout: duração antes da locação passar, pagamento depois
                       return cn(
-                        "p-4 cursor-pointer hover:bg-gray-50 transition-colors border-l-4",
-                        "border-gray-400",
-                        durationInHours === 4 &&
-                          "border-blue-400 bg-blue-50/30",
-                        durationInHours === 6 &&
-                          "border-green-400 bg-green-50/30",
-                        durationInHours >= 8 &&
-                          durationInHours <= 12 &&
-                          "border-purple-400 bg-purple-50/30"
+                        "p-4 cursor-pointer hover:opacity-90 transition-opacity border-l-4",
+                        getCheckoutColorClasses({
+                          durationInHours,
+                          paymentStatus,
+                          isPast,
+                        })
                       );
                     };
 
@@ -232,7 +241,7 @@ export function MobileWeekView({
                       >
                         <div className="space-y-2">
                           <div className="flex items-start justify-between">
-                            <div className="font-medium text-gray-900 flex-1 flex items-center gap-2">
+                            <div className="font-medium flex-1 flex items-center gap-2">
                               {isTraining && (
                                 <GraduationCap className="h-4 w-4" />
                               )}
@@ -241,14 +250,14 @@ export function MobileWeekView({
                               )}
                               {title}
                             </div>
-                            <div className="text-sm text-gray-500 ml-2">
+                            <div className="text-sm opacity-70 ml-2">
                               {durationInHours}h
                             </div>
                           </div>
 
-                          <div className="space-y-1 text-sm text-gray-600">
+                          <div className="space-y-1 text-sm opacity-90">
                             <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-gray-400" />
+                              <Clock className="h-4 w-4 opacity-70" />
                               <span>
                                 {formatTime(startDate)} - {formatTime(endDate)}
                               </span>
@@ -257,20 +266,20 @@ export function MobileWeekView({
                             {!isNotice && (
                               <>
                                 <div className="flex items-center gap-2">
-                                  <User className="h-4 w-4 text-gray-400" />
+                                  <User className="h-4 w-4 opacity-70" />
                                   <span className="truncate">
                                     {personName}
                                   </span>
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                  <MapPin className="h-4 w-4 text-gray-400" />
+                                  <MapPin className="h-4 w-4 opacity-70" />
                                   <span className="truncate">{location}</span>
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                  <DollarSign className="h-4 w-4 text-gray-400" />
-                                  <span className="font-medium text-gray-900">
+                                  <DollarSign className="h-4 w-4 opacity-70" />
+                                  <span className="font-medium">
                                     {price}
                                   </span>
                                 </div>

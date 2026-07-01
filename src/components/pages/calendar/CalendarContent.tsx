@@ -27,6 +27,7 @@ interface CalendarContentProps {
   openCheckoutDetails: (_agendamento: Checkout) => void;
   hideCanceled: boolean;
   selectedFilialIds: string[];
+  selectedGearIds: string[];
 }
 
 export function CalendarContent({
@@ -35,6 +36,7 @@ export function CalendarContent({
   openCheckoutDetails,
   hideCanceled,
   selectedFilialIds,
+  selectedGearIds,
 }: CalendarContentProps) {
   const { user } = useAuth();
   const { accesses } = useAccess();
@@ -176,20 +178,38 @@ export function CalendarContent({
     selectedFilialIds.length === 0
       ? trainings
       : trainings.filter((t) =>
-          (finalFilialIds ?? selectedFilialIds).includes(t.sourceFilialId),
-        );
+        (finalFilialIds ?? selectedFilialIds).includes(t.sourceFilialId),
+      );
+
+  // Filtro de máquinas (client-side): quando ativo, mostra só eventos que usam
+  // a(s) máquina(s) selecionada(s). Avisos não têm máquina, então são ocultados.
+  const isGearFilterActive = selectedGearIds.length > 0;
+
+  const gearFilteredCheckouts = !isGearFilterActive
+    ? checkouts
+    : checkouts.filter((c) =>
+      c.Bookings.some(
+        (b) => b.status === "ACTIVE" && selectedGearIds.includes(b.Gear.gearId),
+      ),
+    );
+
+  const gearFilteredTrainings = !isGearFilterActive
+    ? filialFilteredTrainings
+    : filialFilteredTrainings.filter((t) => selectedGearIds.includes(t.gearId));
+
+  const gearFilteredNotices = isGearFilterActive ? [] : notices;
 
   const filteredCheckouts = hideCanceled
-    ? checkouts.filter((c) => c.checkoutStatus !== "Cancelado")
-    : checkouts;
+    ? gearFilteredCheckouts.filter((c) => c.checkoutStatus !== "Cancelado")
+    : gearFilteredCheckouts;
   const filteredTrainings = hideCanceled
-    ? filialFilteredTrainings.filter((t) => t.trainingStatus !== "Cancelado")
-    : filialFilteredTrainings;
+    ? gearFilteredTrainings.filter((t) => t.trainingStatus !== "Cancelado")
+    : gearFilteredTrainings;
 
   const allEvents: CalendarEvent[] = [
     ...filteredCheckouts,
     ...filteredTrainings,
-    ...notices,
+    ...gearFilteredNotices,
   ];
 
   const openDetails = (event: CalendarEvent) => {

@@ -43,6 +43,52 @@ export function deriveStatus(
 }
 
 /**
+ * Ao editar a parcela `index` para `newAmount`, mantém as parcelas PAGAS fixas
+ * e divide o saldo restante igualmente entre as demais (não pagas). A soma final
+ * é sempre exatamente igual a `totalCents`.
+ */
+export function redistributeInstallments(
+  installments: Installment[],
+  index: number,
+  newAmount: number,
+  totalCents: number,
+): Installment[] {
+  const total = Math.max(0, Math.round(totalCents || 0));
+
+  // Parcelas pagas (exceto a editada) têm valor fixo e não entram na divisão.
+  const paidSum = installments.reduce(
+    (acc, inst, i) =>
+      i !== index && inst.paymentStatus === "Pago"
+        ? acc + (inst.amount || 0)
+        : acc,
+    0,
+  );
+  const budget = Math.max(0, total - paidSum);
+
+  // Índices das demais parcelas editáveis (não pagas, exceto a editada).
+  const otherIdx = installments
+    .map((inst, i) => ({ inst, i }))
+    .filter(({ inst, i }) => i !== index && inst.paymentStatus !== "Pago")
+    .map(({ i }) => i);
+
+  // Sem outras parcelas para absorver → a editada assume todo o saldo.
+  const edited =
+    otherIdx.length === 0
+      ? budget
+      : Math.max(0, Math.min(Math.round(newAmount || 0), budget));
+  const remaining = budget - edited;
+
+  const splits =
+    otherIdx.length > 0 ? splitEqual(remaining, otherIdx.length) : [];
+
+  return installments.map((inst, i) => {
+    if (i === index) return { ...inst, amount: edited };
+    const pos = otherIdx.indexOf(i);
+    return pos === -1 ? inst : { ...inst, amount: splits[pos] };
+  });
+}
+
+/**
  * Monta a lista de parcelas preservando data/forma/status das parcelas já
  * existentes (mesmo índice) ao recalcular os valores.
  */

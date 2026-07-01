@@ -13,6 +13,8 @@ import {
   CalendarEvent,
   getDistanceFromTop,
   getEventBoxHeigh,
+  getCheckoutColorClasses,
+  getEventBasicInfo,
 } from "./bookingViewHelpers";
 import { cn } from "@/lib/utils";
 import { Checkout } from "@/utils/@types/checkouts";
@@ -95,6 +97,12 @@ export function MultipleEventBox({
 
     const top = getDistanceFromTop(startHour, startMinute);
 
+    // Cor do box do checkout: antes da locação passar = duração; depois = pagamento
+    const { paymentStatus, isPast } = getEventBasicInfo(event);
+    const checkoutColorClass = checkout
+      ? getCheckoutColorClasses({ durationInHours, paymentStatus, isPast })
+      : "";
+
     return (
       <div
         key={
@@ -112,21 +120,8 @@ export function MultipleEventBox({
           isBirthday &&
             "bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-100 border-green-500",
           isNotice && "bg-blue-800 text-white border-blue-900",
-          checkout &&
-            "bg-unknown-duration-background text-unknown-duration-text border-unknown-duration-border",
-          // Colors for 4h bookings duration
-          checkout &&
-            durationInHours === 4 &&
-            "bg-4h-duration-background text-4h-duration-text border-4h-duration-border",
-          // Colors for 6h bookings duration
-          checkout &&
-            durationInHours === 6 &&
-            "bg-6h-duration-background text-6h-duration-text border-6h-duration-border",
-          // Colors for 8 to 12 hours bookings duration
-          checkout &&
-            durationInHours >= 8 &&
-            durationInHours <= 12 &&
-            "bg-8h-12h-duration-background text-8h-12h-duration-text border-8h-12h-duration-border",
+          // Cor do checkout: duração antes da locação passar, pagamento depois
+          checkout && checkoutColorClass,
         ) }
         style={ {
           top: `${top}px`,
