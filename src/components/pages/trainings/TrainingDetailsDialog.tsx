@@ -49,6 +49,7 @@ import { AddParticipantDialog } from "./AddParticipantDialog";
 // import { UpdateParticipantValuesDialog } from "./UpdateParticipantValuesDialog";
 import EditTrainingFinancialsDialog from "./EditTrainingFinancialsDialog";
 import { EditTrainingDialog } from "./EditTrainingDialog";
+import { TrainingEnrollmentsSection } from "./TrainingEnrollmentsSection";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
 
@@ -697,6 +698,14 @@ export function TrainingDetailsDialog({
                 </div>
               </div>
             </div>
+
+            <Separator />
+
+            {/* INSCRIÇÕES (papéis + observação + itens de cobrança) */}
+            <TrainingEnrollmentsSection
+              training={ selectedTraining }
+              disabled={ !canEditParticipants }
+            />
 
             <Separator />
 

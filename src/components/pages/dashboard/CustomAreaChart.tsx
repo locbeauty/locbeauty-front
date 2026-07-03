@@ -24,16 +24,23 @@ interface CustomAreaChartProps {
   fill?: string;
   height?: number;
   valueFormatter?: (_value: number) => string;
+  /** Formatação dos ticks do eixo Y (default: valueFormatter). */
+  yTickFormatter?: (_value: number) => string;
+  /** Permite ticks decimais no eixo Y (default do Recharts: true). */
+  yAllowDecimals?: boolean;
 }
 
 // Atualizar o componente AreaChart para usar Recharts
 export const CustomAreaChart = ({
   data,
   dataKey,
-  stroke = "hsl(var(--primary))",
+  // Cores em hex: var()/hsl(var()) não são resolvidos em atributos SVG.
+  stroke = "#7f2b83",
   fill = "#7f2b83",
   height = 300,
   valueFormatter,
+  yTickFormatter,
+  yAllowDecimals,
 }: CustomAreaChartProps) => {
   return (
     <ResponsiveContainer width="100%" height={ height } className="p-0">
@@ -59,11 +66,13 @@ export const CustomAreaChart = ({
           fontSize={ 12 }
           tickLine={ false }
           axisLine={ false }
-          tickFormatter={ (value) =>
-            valueFormatter ? valueFormatter(value) : value
-          }
+          allowDecimals={ yAllowDecimals }
+          tickFormatter={ (value) => {
+            const formatter = yTickFormatter ?? valueFormatter;
+            return formatter ? formatter(value) : value;
+          } }
         />
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <RechartsTooltip
           content={ ({ active, payload }) => {
             if (active && payload && payload.length) {
@@ -93,7 +102,7 @@ export const CustomAreaChart = ({
           dataKey={ dataKey }
           stroke={ stroke }
           strokeWidth={ 2 }
-          fillOpacity={ 0.08 }
+          fillOpacity={ 1 }
           fill={ `url(#color-${dataKey})` }
         />
       </RechartsAreaChart>

@@ -37,6 +37,8 @@ interface SelectGearsProps {
   placeholder?: string;
   /** Class applied to the trigger button (controls width/style). */
   className?: string;
+  /** Restringe as opções às máquinas dessas filiais (undefined = todas). */
+  filialIds?: string[];
 }
 
 export function SelectGears({
@@ -44,13 +46,14 @@ export function SelectGears({
   onChange,
   placeholder,
   className,
+  filialIds,
 }: SelectGearsProps) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const { data } = useQuery<ApiResponse<Gear[]>, Error>({
-    queryKey: [ "get-all-gears-select" ],
-    queryFn: () => GetAllGears({}),
+    queryKey: [ "get-all-gears-select", filialIds ],
+    queryFn: () => GetAllGears({ filialIds }),
     staleTime: 1000 * 60,
   });
 

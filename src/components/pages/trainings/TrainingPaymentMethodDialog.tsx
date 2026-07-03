@@ -162,6 +162,32 @@ export type UpdateTrainingPayload = {
   removedTrainees?: string[];
   addedVolunteers?: string[];
   removedVolunteers?: string[];
+
+  // Reformulação: tipo, inscrição (papéis/observação), itens de cobrança e novos participantes.
+  trainingType?: "COMUM" | "MPT";
+  observations?: string | null;
+  isTrainee?: boolean;
+  isModel?: boolean;
+  charges?: {
+    kind: "BASE" | "GARANTIA_VAGA" | "DISPAROS" | "EXTRA";
+    description: string;
+    amountCents: number;
+    isRequired?: boolean;
+  }[];
+  addedParticipants?: {
+    customerId: string;
+    isTrainee: boolean;
+    isModel: boolean;
+    observations?: string | null;
+    charges: {
+      kind: "BASE" | "GARANTIA_VAGA" | "DISPAROS" | "EXTRA";
+      description: string;
+      amountCents: number;
+      isRequired?: boolean;
+    }[];
+    paymentStatus?: "Pendente" | "Pago" | "Parcial";
+  }[];
+
   TrainingPayment: {
     totalPrice: number;
     basePrice: number;

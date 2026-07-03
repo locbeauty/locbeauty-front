@@ -27,9 +27,21 @@ export interface CheckoutPayment {
   secondPaymentStatus: "Pendente" | "Pago";
 }
 
+export type TrainingChargeKind = "BASE" | "GARANTIA_VAGA" | "DISPAROS" | "EXTRA";
+
+export interface TrainingCharge {
+  chargeId?: string;
+  kind: TrainingChargeKind;
+  description: string;
+  amountCents: number;
+  isRequired?: boolean;
+}
+
 export interface TrainingPayment {
   paymentId: string;
   payerType: "TRAINEE" | "VOLUNTEER";
+  enrollmentId?: string | null;
+  TrainingCharge?: TrainingCharge[];
   additionalCost: number;
   additionalCostDescription: string;
   basePrice: number;

@@ -40,7 +40,8 @@ import { ROUTES } from "@/utils/routes";
 export interface RoutesTableFilters {
   customerName?: string;
   filialId?: string;
-  date?: Date;
+  startDate?: Date;
+  endDate?: Date;
   status?: string;
 }
 
@@ -90,7 +91,8 @@ export function RoutesTable({ filters }: RoutesTableProps) {
   const queryParams = useMemo(() => ({
     filialIds: finalFilialIds,
     customerName: filters?.customerName,
-    date: filters?.date,
+    startDate: filters?.startDate,
+    endDate: filters?.endDate,
     status: filters?.status && filters.status !== "Todos" ? filters.status : undefined,
     // Motorista só enxerga as próprias rotas
     driverId: isMotorista ? (user?.employeeId ?? user?.sub) : undefined,
@@ -311,8 +313,8 @@ export function RoutesTable({ filters }: RoutesTableProps) {
           const canStart = isToday && isPendente;
           const address = route.Address
             ? [ route.Address.street, route.Address.buildingNumber, route.Address.city, route.Address.state ]
-                .filter(Boolean)
-                .join(", ")
+              .filter(Boolean)
+              .join(", ")
             : "—";
 
           return (

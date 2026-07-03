@@ -15,7 +15,8 @@ import { ROUTES } from "@/utils/routes";
 import { Eye, Plus, Search, X, FileUp } from "lucide-react";
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DateRangePicker } from "@/components/ui/DatePicker";
+import type { DateRange } from "react-day-picker";
 import { GearFilterSelect } from "@/components/pages/bookings/GearFilterSelect";
 import { SelectFilials } from "@/components/shared/SelectFilials";
 import { useAuth } from "@/contexts/auth-provider";
@@ -30,7 +31,9 @@ export default function BookingsPage() {
   const [ customerName, setCustomerName ] = useState("");
   const [ status, setStatus ] = useState<string | undefined>();
   const [ paymentStatus, setPaymentStatus ] = useState<string | undefined>();
-  const [ date, setDate ] = useState<Date | null>(null);
+  const [ dateRange, setDateRange ] = useState<DateRange | undefined>(
+    undefined,
+  );
   const [ checkoutId, setCheckoutId ] = useState("");
   const [ gearId, setGearId ] = useState<string | undefined>();
   const [ filialIds, setFilialIds ] = useState<string[]>([]);
@@ -55,7 +58,7 @@ export default function BookingsPage() {
     setCustomerName("");
     setStatus(undefined);
     setPaymentStatus(undefined);
-    setDate(null);
+    setDateRange(undefined);
     setCheckoutId("");
     setGearId(undefined);
     setFilialIds([]);
@@ -65,7 +68,7 @@ export default function BookingsPage() {
     customerName ||
     status ||
     paymentStatus ||
-    date ||
+    dateRange?.from ||
     checkoutId ||
     gearId ||
     filialIds.length > 0;
@@ -163,12 +166,12 @@ export default function BookingsPage() {
                 user?.sourceFilial?.filialId
               }
             />
-            <DatePicker
-              value={ date }
-              onChange={ (d) => setDate(d || null) }
-              placeholder="Filtrar por data"
+            <DateRangePicker
+              value={ dateRange }
+              onChange={ setDateRange }
+              placeholder="Filtrar por período"
               clearable
-              classNames={ { trigger: "w-full md:w-[180px]" } }
+              classNames={ { trigger: "w-full md:w-[230px]" } }
             />
             <CustomFilterSelect
               items={ FilterBookingStatusTypes }
@@ -210,7 +213,8 @@ export default function BookingsPage() {
             customerName,
             status,
             paymentStatus,
-            date: date || undefined,
+            startDate: dateRange?.from,
+            endDate: dateRange?.to,
             checkoutId,
             gearId,
             filialIds: filialIds.length > 0 ? filialIds : undefined,

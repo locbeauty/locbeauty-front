@@ -168,10 +168,11 @@ export function DefaultsCard() {
                 data={ data }
                 height={ 150 }
                 dataKey="total"
-                // xAxisKey="month" // Removed, CustomAreaChart uses "date" fixed
-                stroke="hsl(var(--destructive))"
-                fill="hsl(var(--destructive))"
+                stroke="#dc2626"
+                fill="#dc2626"
                 valueFormatter={ (value) => `${value} inadimplências` }
+                yTickFormatter={ (value) => String(value) }
+                yAllowDecimals={ false }
               />
             ) : (
               <div className="flex h-[150px] items-center justify-center text-sm text-muted-foreground">

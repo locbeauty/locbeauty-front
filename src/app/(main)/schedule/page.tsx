@@ -14,6 +14,7 @@ import { CalendarFooter } from "@/components/pages/calendar/CalendarFooter";
 import { BookingDetailsDialog } from "@/components/pages/calendar/DetailsDialog/BookingDetailsDialog";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+import type { DateRange } from "react-day-picker";
 
 export default function AgendamentosPage() {
   // Estado para controlar a semana atual
@@ -26,6 +27,9 @@ export default function AgendamentosPage() {
     useState(false);
   const [ selectedFilialIds, setSelectedFilialIds ] = useState<string[]>([]);
   const [ selectedGearIds, setSelectedGearIds ] = useState<string[]>([]);
+  const [ selectedDateRange, setSelectedDateRange ] = useState<
+    DateRange | undefined
+  >(undefined);
   const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("mes");
   const [ isMobile, setIsMobile ] = useState(false);
 
@@ -46,6 +50,13 @@ export default function AgendamentosPage() {
   const openCheckoutDetails = (booking: Checkout) => {
     setSelectedCheckout(booking);
     setBookingDetailsDialogOpen(true);
+  };
+
+  // Ao filtrar por período, navega a agenda para o início do período
+  // (senão o usuário seleciona junho olhando julho e vê tudo vazio).
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setSelectedDateRange(range);
+    if (range?.from) setCurrentDate(range.from);
   };
 
   return (
@@ -101,6 +112,8 @@ export default function AgendamentosPage() {
           setSelectedFilialIds={ setSelectedFilialIds }
           selectedGearIds={ selectedGearIds }
           setSelectedGearIds={ setSelectedGearIds }
+          selectedDateRange={ selectedDateRange }
+          setSelectedDateRange={ handleDateRangeChange }
         />
         <CalendarContent
           currentDate={ currentDate }
@@ -109,6 +122,7 @@ export default function AgendamentosPage() {
           hideCanceled={ hideCanceled }
           selectedFilialIds={ selectedFilialIds }
           selectedGearIds={ selectedGearIds }
+          selectedDateRange={ selectedDateRange }
         />
         <CalendarFooter />
 

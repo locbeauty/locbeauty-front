@@ -6,8 +6,7 @@ import { WeekView } from "./WeekView";
 import { MonthView } from "./MonthView";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
-import { useAccess } from "@/contexts/access-provider";
-import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { useAccessibleFilialIds } from "@/hooks/useAccessibleFilialIds";
 import { Checkout } from "@/utils/@types/checkouts";
 import { useQuery } from "@tanstack/react-query";
 import { GetAllCheckouts } from "@/services/checkouts.service";
@@ -15,7 +14,14 @@ import { useState, useMemo } from "react";
 import { ApiResponse } from "@/lib/api";
 import { Training } from "@/utils/@types/training";
 import { GetAllTrainings } from "@/services/trainings.service";
-import { CalendarEvent, getMonthDays, getWeekDays } from "./bookingViewHelpers";
+import {
+  CalendarEvent,
+  getEventBasicInfo,
+  getMonthDays,
+  getWeekDays,
+} from "./bookingViewHelpers";
+import { startOfDay, endOfDay } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import { TrainingDetailsDialog } from "../trainings/TrainingDetailsDialog";
 import { GetNotices } from "@/services/notices.service";
 import { Notice } from "@/utils/@types/notice";
@@ -28,6 +34,7 @@ interface CalendarContentProps {
   hideCanceled: boolean;
   selectedFilialIds: string[];
   selectedGearIds: string[];
+  selectedDateRange?: DateRange;
 }
 
 export function CalendarContent({
@@ -37,9 +44,9 @@ export function CalendarContent({
   hideCanceled,
   selectedFilialIds,
   selectedGearIds,
+  selectedDateRange,
 }: CalendarContentProps) {
   const { user } = useAuth();
-  const { accesses } = useAccess();
 
   const [ selectedTraining, setSelectedTraining ] = useState<Training | null>(
     null,
@@ -51,27 +58,7 @@ export function CalendarContent({
   const [ isNoticeDetailsDialogOpen, setIsNoticeDetailsDialogOpen ] =
     useState(false);
 
-  const accessibleFilialIds = useMemo(() => {
-    // Admin/Master can see all
-    if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
-      return undefined;
-    }
-
-    // Motorista/Logistica: derive filial access from CALENDAR module (not BOOKINGS)
-    const moduleFilter =
-      user?.role === USER_ROLES.MOTORISTA || user?.role === USER_ROLES.LOGISTICA
-        ? SYSTEM_MODULES.CALENDAR
-        : SYSTEM_MODULES.BOOKINGS;
-
-    const permissions = accesses
-      .filter((a) => a.module === moduleFilter && a.canView)
-      .map((a) => a.filialId);
-
-    const uniquePermissions = Array.from(new Set(permissions));
-
-    // Fail-safe: if restricted user has no permissions, ensures NO_ACCESS
-    return uniquePermissions.length > 0 ? uniquePermissions : [ "NO_ACCESS" ];
-  }, [ user, accesses ]);
+  const accessibleFilialIds = useAccessibleFilialIds();
 
   // Calcula startDate e endDate conforme viewType
   const { startDate, endDate } = useMemo(() => {
@@ -212,6 +199,20 @@ export function CalendarContent({
     ...gearFilteredNotices,
   ];
 
+  // Filtro de período: mantém só eventos que sobrepõem [from, to]
+  // (fim aberto quando só o início foi selecionado).
+  const periodFilteredEvents = !selectedDateRange?.from
+    ? allEvents
+    : allEvents.filter((e) => {
+      const { startDate: eventStart, endDate: eventEnd } =
+          getEventBasicInfo(e);
+      const from = startOfDay(selectedDateRange.from as Date);
+      const to = selectedDateRange.to
+        ? endOfDay(selectedDateRange.to)
+        : undefined;
+      return eventEnd >= from && (!to || eventStart <= to);
+    });
+
   const openDetails = (event: CalendarEvent) => {
     if ("trainingId" in event) {
       setSelectedTraining(event as Training);
@@ -230,26 +231,26 @@ export function CalendarContent({
         {viewType === "dia" && (
           <DayView
             currentDate={ currentDate }
-            events={ allEvents }
+            events={ periodFilteredEvents }
             openDetails={ openDetails }
           />
         )}
         {viewType === "semana" && (
           <WeekView
             currentDate={ currentDate }
-            events={ allEvents }
+            events={ periodFilteredEvents }
             openDetails={ openDetails }
           />
         )}
         {viewType === "mes" && (
           <MonthView
             currentDate={ currentDate }
-            events={ allEvents }
+            events={ periodFilteredEvents }
             openDetails={ openDetails }
           />
         )}
         {isLoading && <div className="p-4 text-center">Carregando...</div>}
-        {!isLoading && allEvents.length === 0 && (
+        {!isLoading && periodFilteredEvents.length === 0 && (
           <div className="p-4 text-center">Nada a mostrar por aqui.</div>
         )}
 

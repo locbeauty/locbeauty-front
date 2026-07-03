@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { SelectFilial } from "@/components/shared/SelectFilial";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DateRangePicker } from "@/components/ui/DatePicker";
+import type { DateRange } from "react-day-picker";
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -25,20 +26,22 @@ export default function RoutesPage() {
   const [ selectedFilialId, setSelectedFilialId ] = useState<string | undefined>(
     isMaster ? undefined : user?.sourceFilialId,
   );
-  const [ selectedDate, setSelectedDate ] = useState<Date | null>(null);
+  const [ dateRange, setDateRange ] = useState<DateRange | undefined>(
+    undefined,
+  );
   const [ status, setStatus ] = useState<string | undefined>();
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
   const hasActiveFilters =
     debouncedSearch ||
-    selectedDate ||
+    dateRange?.from ||
     status ||
     (isMaster && selectedFilialId);
 
   function clearFilters() {
     setSearchQuery("");
-    setSelectedDate(null);
+    setDateRange(undefined);
     setStatus(undefined);
     if (isMaster) setSelectedFilialId(undefined);
   }
@@ -86,12 +89,12 @@ export default function RoutesPage() {
               />
             )}
 
-            <DatePicker
-              value={ selectedDate }
-              onChange={ (d) => setSelectedDate(d || null) }
-              placeholder="Filtrar por data"
+            <DateRangePicker
+              value={ dateRange }
+              onChange={ setDateRange }
+              placeholder="Filtrar por período"
               clearable
-              classNames={ { trigger: "w-full md:w-[180px]" } }
+              classNames={ { trigger: "w-full md:w-[230px]" } }
             />
 
             {/* Status só para gestores */}
@@ -118,7 +121,8 @@ export default function RoutesPage() {
           filters={ {
             customerName: !isMotorista ? debouncedSearch || undefined : undefined,
             filialId: selectedFilialId,
-            date: selectedDate || undefined,
+            startDate: dateRange?.from,
+            endDate: dateRange?.to,
             status: !isMotorista ? status : undefined,
           } }
         />

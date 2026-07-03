@@ -100,45 +100,110 @@ export const CreateTrainingSchema = z.object({
 
 export type CreateTrainingDataType = z.infer<typeof CreateTrainingSchema>;
 
-type ProcessedPaymentInfo = {
-  paymentStatus: string;
-  firstPaymentDate: Date | null;
-  firstPaymentAmount: number | null;
-  firstPaymentMethod: string | null;
-  firstPaymentStatus: string | null;
-  secondPaymentDate: Date | null;
-  secondPaymentAmount: number | null;
-  secondPaymentMethod: string | null;
-  secondPaymentStatus: string | null;
-  refundedAmount: number | null;
-};
+// ===== Reformulação: novo fluxo de criação (participantes + papéis + charges + tipo) =====
 
-// Tipo enviado ao backend (omitindo os campos de UI-only e formatando pagamentos)
-export type CreateTrainingBackendPayload = Omit<
-  CreateTrainingDataType,
-  | "traineePayments"
-  | "volunteerPayments"
-  | "traineeIds"
-  | "volunteerIds"
-  | "zipCode"
-  | "stateName"
-  | "cityName"
-  | "neighborhoodName"
-  | "streetName"
-  | "buildingNumber"
-  | "addressComplement"
-> & {
-  // Backend espera arrays com IDs explícitos dentro
-  traineePayments: {
-    customerId: string;
-    price: number;
-    additionalCost: number;
-    additionalCostDescription?: string;
-    paymentInfo: ProcessedPaymentInfo;
-  }[];
-  volunteerPayments: {
-    volunteerId: string;
-    price: number;
-    paymentInfo: ProcessedPaymentInfo;
-  }[];
-};
+export const ExtraChargeSchema = z.object({
+  description: z.string().min(1, { message: "Descrição obrigatória" }),
+  value: z.string().optional(),
+});
+
+export const TrainingParticipantSchema = z.object({
+  customerId: z.string(),
+  name: z.string().optional(), // UI only
+  document: z.string().optional(), // UI only
+  // Sem .default() para manter input == output no zodResolver; os valores
+  // padrão são fornecidos ao adicionar o participante (append) no formulário.
+  isTrainee: z.boolean(),
+  isModel: z.boolean(),
+  observations: z.string().optional().nullable(),
+
+  // Valores em string (mascarados no input); convertidos para centavos no submit.
+  baseValue: z.string().optional(), // treinamento COMUM
+  placeGuaranteeValue: z.string().optional(), // MPT: garantia de vaga
+  shotsValue: z.string().optional(), // MPT: disparos
+  extraCharges: z.array(ExtraChargeSchema), // "Adicionar cobrança"
+
+  paymentStatus: z.enum([ "Pendente", "Pago", "Parcial" ]),
+});
+
+export type TrainingParticipantForm = z.infer<typeof TrainingParticipantSchema>;
+
+export const NewTrainingSchema = z
+  .object({
+    hourInMinutes: z.number({ message: "Selecione um horário" }),
+    gearId: z.string().cuid({ message: "Selecione um equipamento" }),
+    trainingType: z.enum([ "COMUM", "MPT" ]),
+    filialId: z.string(),
+    dueDate: z.date({ message: "Data é obrigatória" }),
+
+    addressId: z.string().optional().nullable(),
+    zipCode: z.string().optional().nullable(),
+    stateName: z.string().optional(),
+    cityName: z.string().optional(),
+    neighborhoodName: z.string().optional(),
+    streetName: z.string().optional(),
+    buildingNumber: z.string().min(1, { message: "Número é obrigatório" }),
+    addressComplement: z.string().optional().nullable(),
+
+    participants: z
+      .array(TrainingParticipantSchema)
+      .min(1, { message: "Adicione ao menos um participante" })
+      .max(15, { message: "Máximo de 15 vagas por turma" }),
+  })
+  .superRefine((data, ctx) => {
+    data.participants.forEach((p, i) => {
+      if (!p.isTrainee && !p.isModel) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Marque ao menos um papel (aluno ou paciente modelo)",
+          path: [ "participants", i, "isTrainee" ],
+        });
+      }
+      if (data.trainingType === "MPT") {
+        if (!p.placeGuaranteeValue) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Garantia de vaga é obrigatória (MPT)",
+            path: [ "participants", i, "placeGuaranteeValue" ],
+          });
+        }
+        if (!p.shotsValue) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Valor de disparos é obrigatório (MPT)",
+            path: [ "participants", i, "shotsValue" ],
+          });
+        }
+      }
+    });
+  });
+
+export type NewTrainingDataType = z.infer<typeof NewTrainingSchema>;
+
+// --- Payload enviado ao backend (create) ---
+export interface TrainingChargePayload {
+  kind: "BASE" | "GARANTIA_VAGA" | "DISPAROS" | "EXTRA";
+  description: string;
+  amountCents: number;
+  isRequired?: boolean;
+}
+
+export interface TrainingParticipantPayload {
+  customerId: string;
+  isTrainee: boolean;
+  isModel: boolean;
+  observations?: string | null;
+  charges: TrainingChargePayload[];
+  paymentInfo: { paymentStatus: "Pendente" | "Pago" | "Parcial" };
+}
+
+export interface CreateTrainingBackendPayload {
+  hourInMinutes: number;
+  gearId: string;
+  addressId: string;
+  dueDate: Date;
+  filialId: string;
+  trainingType: "COMUM" | "MPT";
+  capacity?: number;
+  participants: TrainingParticipantPayload[];
+}

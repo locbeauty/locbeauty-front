@@ -21,7 +21,9 @@ import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
 
 import { Training } from "@/utils/@types/training";
+import { TrainingPayment } from "@/utils/@types/payments";
 import { Filial } from "@/utils/@types/filials";
+import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { UpdateTrainingPayload } from "./TrainingPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
@@ -35,7 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DateRangePicker } from "@/components/ui/DatePicker";
+import type { DateRange } from "react-day-picker";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
@@ -44,6 +47,34 @@ interface TrainingsTableProps {
   filials?: Filial[];
   isVisible: boolean;
   setIsVisible: (value: boolean) => void;
+}
+
+type AggregatePaymentStatus = "Pendente" | "Parcial" | "Pago" | "Cancelado" | null;
+
+// Agrega os pagamentos (um por participante) num único status, usado tanto
+// pelo badge da coluna "Pagamento" quanto pelo filtro correspondente.
+function getTrainingPaymentStatus(training: Training): AggregatePaymentStatus {
+  const payments = training.TrainingPayment || [];
+  if (payments.length === 0) return null;
+
+  // Pagamentos cancelados/reembolsados não contam para o agregado.
+  const active = payments.filter(
+    (p) => p.paymentStatus !== "Cancelado" && p.paymentStatus !== "Reembolsado",
+  );
+  if (active.length === 0) return "Cancelado";
+
+  const isPaid = (p: TrainingPayment) =>
+    p.paymentStatus === "Pago" ||
+    p.paymentStatus === "Cortesia" ||
+    (p.paymentStatus as string) === "Confirmado";
+
+  if (active.every(isPaid)) return "Pago";
+
+  // Algum progresso (participante pago ou parcela paga), mas não tudo.
+  const anyProgress = active.some(
+    (p) => isPaid(p) || p.paymentStatus === "Parcial",
+  );
+  return anyProgress ? "Parcial" : "Pendente";
 }
 
 export function TrainingsTable({
@@ -87,10 +118,47 @@ export function TrainingsTable({
   const [ searchTerm, setSearchTerm ] = useState("");
   const [ filterStatus, setFilterStatus ] = useState<"ALL" | string>("ALL");
   const [ filterPaymentStatus, setFilterPaymentStatus ] = useState<
-    "ALL" | "PENDING" | "PAID" | "CANCELED"
+    "ALL" | "PENDING" | "PARTIAL" | "PAID" | "CANCELED"
   >("ALL");
-  const [ filterDate, setFilterDate ] = useState<Date | undefined>(undefined);
+  const [ filterDateRange, setFilterDateRange ] = useState<
+    DateRange | undefined
+  >(undefined);
   const [ filterFilial, setFilterFilial ] = useState<string>("ALL");
+  const [ filterGear, setFilterGear ] = useState<string>("ALL");
+
+  // Lista de equipamentos (modelos de máquina) presentes nos treinamentos.
+  const gearOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    (trainings || []).forEach((t) => {
+      if (t.gearId) map.set(t.gearId, t.Gear?.gearName || t.gearId);
+    });
+    return Array.from(map.entries()).map(([ gearId, gearName ]) => ({
+      gearId,
+      gearName,
+    }));
+  }, [ trainings ]);
+
+  // Helpers de exibição (vagas, valor total, nomes de alunos/modelos).
+  const getFilledSlots = (t: Training) =>
+    t.Enrollments?.length ?? t.Trainees?.length ?? 0;
+
+  const getTrainingTotal = (t: Training) =>
+    (t.TrainingPayment || []).reduce((acc, p) => acc + (p.totalPrice || 0), 0);
+
+  const getTraineeNames = (t: Training) =>
+    (t.Enrollments || [])
+      .filter((e) => e.isTrainee)
+      .map((e) => e.Customer?.fullname)
+      .filter(Boolean)
+      .join(", ") ||
+    (t.Trainees || []).map((c) => c.fullname).join(", ");
+
+  const getModelNames = (t: Training) =>
+    (t.Enrollments || [])
+      .filter((e) => e.isModel)
+      .map((e) => e.Customer?.fullname)
+      .filter(Boolean)
+      .join(", ");
 
   const handleOpenDetails = (training: Training) => {
     setSelectedTraining(training);
@@ -174,23 +242,33 @@ export function TrainingsTable({
     setSearchTerm("");
     setFilterStatus("ALL");
     setFilterPaymentStatus("ALL");
-    setFilterDate(undefined);
+    setFilterDateRange(undefined);
     setFilterFilial("ALL");
+    setFilterGear("ALL");
   };
 
   const sortedTrainings = useMemo(() => {
     if (!trainings) return [];
     let result = [ ...trainings ];
 
-    // General Search Filter (ID, Trainee, Volunteer)
+    // Busca geral (ID + nomes dos participantes das inscrições).
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
-      result = result.filter(
-        (t) =>
+      result = result.filter((t) => {
+        const enrollmentNames = (t.Enrollments || [])
+          .map((e) => e.Customer?.fullname || "")
+          .join(" ")
+          .toLowerCase();
+        const legacyNames = (t.Trainees || [])
+          .map((c) => c.fullname || "")
+          .join(" ")
+          .toLowerCase();
+        return (
           t.trainingId.toLowerCase().includes(lowerSearch) ||
-          t.Trainee?.fullname.toLowerCase().includes(lowerSearch) ||
-          t.Volunteer?.name.toLowerCase().includes(lowerSearch),
-      );
+          enrollmentNames.includes(lowerSearch) ||
+          legacyNames.includes(lowerSearch)
+        );
+      });
     }
 
     // Status Filter
@@ -198,27 +276,18 @@ export function TrainingsTable({
       result = result.filter((t) => t.trainingStatus === filterStatus);
     }
 
-    // Payment Status Filter
+    // Payment Status Filter (mesmo agregado exibido no badge da coluna Pagamento)
     if (filterPaymentStatus && filterPaymentStatus !== "ALL") {
-      if (filterPaymentStatus === "PENDING") {
-        result = result.filter((t) =>
-          t.TrainingPayment?.some((p) => p.paymentStatus === "Pendente"),
-        );
-      } else if (filterPaymentStatus === "PAID") {
-        result = result.filter(
-          (t) =>
-            t.TrainingPayment?.length > 0 &&
-            t.TrainingPayment.every(
-              (p) =>
-                p.paymentStatus === "Pago" ||
-                (p.paymentStatus as string) === "Confirmado",
-            ),
-        );
-      } else if (filterPaymentStatus === "CANCELED") {
-        result = result.filter((t) =>
-          t.TrainingPayment?.some((p) => p.paymentStatus === "Cancelado"),
-        );
-      }
+      const statusByFilter = {
+        PENDING: "Pendente",
+        PARTIAL: "Parcial",
+        PAID: "Pago",
+        CANCELED: "Cancelado",
+      } as const;
+      result = result.filter(
+        (t) =>
+          getTrainingPaymentStatus(t) === statusByFilter[filterPaymentStatus],
+      );
     }
 
     // Filial Filter
@@ -226,11 +295,21 @@ export function TrainingsTable({
       result = result.filter((t) => t.sourceFilialId === filterFilial);
     }
 
-    // Date Filter
-    if (filterDate) {
-      // Comparison by Day
-      const filterDay = format(filterDate, "yyyy-MM-dd");
-      result = result.filter((t) => t.dueDate.startsWith(filterDay));
+    // Equipamento (modelo de máquina) Filter
+    if (filterGear && filterGear !== "ALL") {
+      result = result.filter((t) => t.gearId === filterGear);
+    }
+
+    // Date Filter (período: comparação por dia, fim aberto se só o início)
+    if (filterDateRange?.from) {
+      const fromDay = format(filterDateRange.from, "yyyy-MM-dd");
+      const toDay = filterDateRange.to
+        ? format(filterDateRange.to, "yyyy-MM-dd")
+        : undefined;
+      result = result.filter((t) => {
+        const dueDay = t.dueDate.slice(0, 10);
+        return dueDay >= fromDay && (!toDay || dueDay <= toDay);
+      });
     }
 
     return result.sort(
@@ -241,8 +320,9 @@ export function TrainingsTable({
     searchTerm,
     filterStatus,
     filterPaymentStatus,
-    filterDate,
+    filterDateRange,
     filterFilial,
+    filterGear,
   ]);
 
   // Helper to format duration
@@ -256,8 +336,7 @@ export function TrainingsTable({
     let colorClass = "bg-gray-100 text-gray-800";
     if (status === "Pago" || status === "Confirmado" || status === "Concluido")
       colorClass = "bg-green-100 text-green-800";
-    if (status === "Pendente" || status === "Agendado")
-      colorClass = "bg-yellow-100 text-yellow-800";
+    if (status === "Pendente") colorClass = "bg-yellow-100 text-yellow-800";
     if (status === "Cancelado") colorClass = "bg-red-100 text-red-800";
 
     return (
@@ -311,11 +390,11 @@ export function TrainingsTable({
           {/* Date Filter - Spans 2 columns */}
           <div className="space-y-1 lg:col-span-2">
             <Label className="text-xs">Data</Label>
-            <DatePicker
-              value={ filterDate || null }
-              onChange={ (date) => setFilterDate(date || undefined) }
-              placeholder="Selecione data"
-              className="h-9 w-full bg-background"
+            <DateRangePicker
+              value={ filterDateRange }
+              onChange={ setFilterDateRange }
+              placeholder="Selecione o período"
+              classNames={ { trigger: "h-9 w-full bg-background" } }
               clearable
             />
           </div>
@@ -329,7 +408,7 @@ export function TrainingsTable({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Todos</SelectItem>
-                <SelectItem value="Agendado">Agendado</SelectItem>
+                <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Concluido">Concluído</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
@@ -354,6 +433,24 @@ export function TrainingsTable({
             </Select>
           </div>
 
+          {/* Equipment Filter - Spans 2 columns */}
+          <div className="space-y-1 lg:col-span-2">
+            <Label className="text-xs">Equipamento</Label>
+            <Select value={ filterGear } onValueChange={ setFilterGear }>
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todos</SelectItem>
+                {gearOptions.map((g) => (
+                  <SelectItem key={ g.gearId } value={ g.gearId }>
+                    {g.gearName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Payment Status Filter - Spans 2 columns */}
           <div className="space-y-1 lg:col-span-2">
             <Label className="text-xs">Pagamento</Label>
@@ -361,7 +458,7 @@ export function TrainingsTable({
               value={ filterPaymentStatus }
               onValueChange={ (v) =>
                 setFilterPaymentStatus(
-                  v as "ALL" | "PENDING" | "PAID" | "CANCELED",
+                  v as "ALL" | "PENDING" | "PARTIAL" | "PAID" | "CANCELED",
                 )
               }
             >
@@ -371,6 +468,7 @@ export function TrainingsTable({
               <SelectContent>
                 <SelectItem value="ALL">Todos</SelectItem>
                 <SelectItem value="PENDING">Pendente</SelectItem>
+                <SelectItem value="PARTIAL">Parcial</SelectItem>
                 <SelectItem value="PAID">Pago</SelectItem>
                 <SelectItem value="CANCELED">Cancelado</SelectItem>
               </SelectContent>
@@ -382,8 +480,9 @@ export function TrainingsTable({
             {(searchTerm ||
               filterStatus !== "ALL" ||
               filterPaymentStatus !== "ALL" ||
-              filterDate ||
-              filterFilial !== "ALL") && (
+              filterDateRange?.from ||
+              filterFilial !== "ALL" ||
+              filterGear !== "ALL") && (
               <Button
                 variant="outline"
                 size="sm"
@@ -420,7 +519,10 @@ export function TrainingsTable({
               <th className="text-left p-3 font-medium">Data</th>
               <th className="text-left p-3 font-medium">Filial</th>
               <th className="text-left p-3 font-medium">Equipamento</th>
+              <th className="text-center p-3 font-medium">Tipo</th>
+              <th className="text-center p-3 font-medium">Vagas</th>
               <th className="text-center p-3 font-medium">Horário</th>
+              <th className="text-right p-3 font-medium">Valor total</th>
               <th className="text-center p-3 font-medium">Pagamento</th>
               <th className="text-center p-3 font-medium">Status</th>
               <th className="text-center p-3 font-medium">Detalhes</th>
@@ -429,7 +531,7 @@ export function TrainingsTable({
           <tbody>
             {sortedTrainings.length === 0 && (
               <tr>
-                <td className="text-center p-4" colSpan={ 7 }>
+                <td className="text-center p-4" colSpan={ 10 }>
                   {trainings
                     ? "Nenhum treinamento encontrado."
                     : "Carregando..."}
@@ -451,12 +553,23 @@ export function TrainingsTable({
                   {training.Gear?.gearName || "N/A"}
                 </td>
                 <td className="p-3 text-center text-sm">
+                  <Badge variant="outline">
+                    {training.trainingType === "MPT" ? "MPT" : "Comum"}
+                  </Badge>
+                </td>
+                <td className="p-3 text-center text-sm">
+                  {getFilledSlots(training)}/{training.capacity ?? 15}
+                </td>
+                <td className="p-3 text-center text-sm">
                   {formatDuration(training.hourInMinutes)}
+                </td>
+                <td className="p-3 text-right text-sm font-medium">
+                  {centsToStringWithCurrencyMark(getTrainingTotal(training))}
                 </td>
                 <td className="p-3 text-center text-sm">
                   {(() => {
-                    const payments = training.TrainingPayment || [];
-                    if (payments.length === 0)
+                    const paymentStatus = getTrainingPaymentStatus(training);
+                    if (paymentStatus === null)
                       return (
                         <Badge
                           variant="outline"
@@ -466,25 +579,21 @@ export function TrainingsTable({
                         </Badge>
                       );
 
-                    const hasPending = payments.some(
-                      (p) => p.paymentStatus === "Pendente",
-                    );
-                    if (hasPending) {
-                      return (
-                        <Badge
-                          variant="outline"
-                          className="bg-yellow-100 text-yellow-800 border-yellow-200"
-                        >
-                          Pendente
-                        </Badge>
-                      );
-                    }
+                    const badgeClasses: Record<
+                      Exclude<AggregatePaymentStatus, null>,
+                      string
+                    > = {
+                      Pendente: "bg-yellow-100 text-yellow-800 border-yellow-200",
+                      Parcial: "bg-orange-100 text-orange-800 border-orange-200",
+                      Pago: "bg-green-100 text-green-800 border-green-200",
+                      Cancelado: "bg-red-100 text-red-800 border-red-200",
+                    };
                     return (
                       <Badge
                         variant="outline"
-                        className="bg-green-100 text-green-800 border-green-200"
+                        className={ badgeClasses[paymentStatus] }
                       >
-                        Pago
+                        {paymentStatus}
                       </Badge>
                     );
                   })()}
@@ -561,12 +670,27 @@ export function TrainingsTable({
                   itemInfo: training.SourceFilial?.filialName || "N/A",
                 },
                 {
-                  itemLabel: "Aluno: ",
-                  itemInfo: training.Trainee?.fullname || "N/A",
+                  itemLabel: "Tipo: ",
+                  itemInfo:
+                    training.trainingType === "MPT" ? "MPT" : "Comum",
                 },
                 {
-                  itemLabel: "Modelo: ",
-                  itemInfo: training.Volunteer?.name || "N/A",
+                  itemLabel: "Vagas: ",
+                  itemInfo: `${getFilledSlots(training)}/${training.capacity ?? 15}`,
+                },
+                {
+                  itemLabel: "Aluno(s): ",
+                  itemInfo: getTraineeNames(training) || "N/A",
+                },
+                {
+                  itemLabel: "Modelo(s): ",
+                  itemInfo: getModelNames(training) || "N/A",
+                },
+                {
+                  itemLabel: "Valor: ",
+                  itemInfo: centsToStringWithCurrencyMark(
+                    getTrainingTotal(training),
+                  ),
                 },
                 { itemLabel: "Status: ", itemInfo: training.trainingStatus },
               ],

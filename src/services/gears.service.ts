@@ -5,13 +5,20 @@ import { Training } from "@/utils/@types/training";
 
 export async function GetAllGears({
   filialId,
+  filialIds,
   isVisible,
 }: {
   filialId?: string | undefined;
+  /** Restringe às filiais informadas (o backend aceita o param repetido). */
+  filialIds?: string[];
   isVisible?: string;
 }) {
-  const queryParams: Record<string, string> = {};
-  if (filialId) queryParams.filialIds = filialId;
+  const queryParams: Record<string, string | string[]> = {};
+  if (filialIds && filialIds.length > 0) {
+    queryParams.filialIds = filialIds;
+  } else if (filialId) {
+    queryParams.filialIds = filialId;
+  }
   if (isVisible) queryParams.isVisible = isVisible;
 
   const response = await apiRequest<Gear[]>({

@@ -70,7 +70,16 @@ export function CustomerStatusCard() {
     fetchMetric();
   }, [ selectedFilialId ]);
 
-  const COLORS = [ "#22c55e", "#ef4444", "#eab308", "#64748b" ]; // Green, Red, Yellow, Gray
+  // Cor por status (a ordem dos dados vem do banco, então mapear por nome).
+  const STATUS_COLORS: Record<string, string> = {
+    Ativo: "#16a34a", // verde
+    Inadimplente: "#dc2626", // vermelho
+    Inativo: "#6b7280", // cinza
+    Bloqueado: "#334155", // cinza-escuro
+  };
+  const chartColors = data.map(
+    (item) => STATUS_COLORS[item.name] ?? "#a1a1aa",
+  );
 
   return (
     <Card className="col-span-1 md:col-span-2">
@@ -104,7 +113,7 @@ export function CustomerStatusCard() {
             dataKey="value"
             nameKey="name"
             height={ 300 }
-            colors={ COLORS }
+            colors={ chartColors }
           />
         )}
       </CardContent>

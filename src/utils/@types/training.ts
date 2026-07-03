@@ -7,9 +7,24 @@ import { Filial } from "./filials";
 import { TrainingPayment } from "./payments";
 import { CheckoutStatuses } from "../constants";
 
+export type TrainingType = "COMUM" | "MPT";
+
+// Inscrição unificada: a mesma pessoa (Customer) pode ser aluno e/ou modelo.
+export interface TrainingEnrollment {
+  enrollmentId: string;
+  trainingId?: string;
+  customerId: string;
+  isTrainee: boolean;
+  isModel: boolean;
+  observations?: string | null;
+  Customer?: Customer;
+}
+
 export interface Training {
   trainingId: string;
   trainingStatus: CheckoutStatuses;
+  trainingType: TrainingType;
+  capacity: number;
   hourInMinutes: number;
 
   gearId: string;
@@ -23,6 +38,7 @@ export interface Training {
   Gear: Gear;
   Volunteers: Volunteer[];
   Trainees: Customer[];
+  Enrollments: TrainingEnrollment[];
   Trainee?: Trainee; // Keep for backward compatibility if needed, but likely unused
   Volunteer?: Volunteer; // Keep for backward compatibility if needed, but likely unused
   TrainingPayment: TrainingPayment[];

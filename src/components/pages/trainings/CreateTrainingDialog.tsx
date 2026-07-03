@@ -6,6 +6,10 @@ import {
   Controller,
   FormProvider,
   useFieldArray,
+  Control,
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormWatch,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -18,11 +22,15 @@ import {
   GraduationCap,
   Loader2,
   Plus,
-  User,
+  Trash2,
+  Users,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -32,16 +40,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { DatePicker } from "@/components/ui/DatePicker";
 
 // Components
 import { SelectTrainingGear } from "@/components/pages/trainings/SelectTrainingGear";
 import { SelectTrainee } from "./SelectTrainee";
-import { SelectVolunteer } from "./SelectVolunteer";
 import { EmbeddedTrainingAddressForm } from "./EmbeddedTrainingAddressForm";
 import { SelectFilial } from "@/components/shared/SelectFilial";
-import { FinancialInputSection } from "./FinancialInputSection";
+import PriceInput from "@/components/shared/PriceInput";
 
 // Services & Utils
 import { CreateTraining } from "@/services/trainings.service";
@@ -60,14 +74,14 @@ import { SYSTEM_MODULES } from "@/utils/@types/access";
 // Types & Schemas
 import {
   CreateTrainingBackendPayload,
-  CreateTrainingDataType,
-  CreateTrainingSchema,
+  NewTrainingDataType,
+  NewTrainingSchema,
+  TrainingChargePayload,
+  TrainingParticipantPayload,
 } from "@/lib/zod/CreateTrainingValidation";
 import { Gear } from "@/utils/@types/gears";
 import { ApiResponse } from "@/lib/api";
-import { Address } from "@/utils/@types/address";
-import { Customer } from "@/utils/@types/customer";
-import { Volunteer } from "@/utils/@types/volunteer";
+import { Trainee } from "@/utils/@types/trainee";
 
 interface CreateTrainingDialogProps {
   dialogNovoTreinamento: boolean;
@@ -75,28 +89,7 @@ interface CreateTrainingDialogProps {
   gears: Gear[] | undefined;
 }
 
-// Estrutura padrão para inicializar o form
-const defaultPaymentInfoStructure: {
-  paymentStatus: "Pendente" | "Pago" | "Parcial";
-  firstPaymentDate: null;
-  secondPaymentDate: null;
-  firstPaymentAmount: string;
-  firstPaymentStatus: string;
-  secondPaymentAmount: string;
-  secondPaymentStatus: string;
-  secondPaymentMethod: string;
-  firstPaymentMethod: string;
-} = {
-  paymentStatus: "Pendente",
-  firstPaymentDate: null,
-  secondPaymentDate: null,
-  firstPaymentAmount: "0",
-  firstPaymentStatus: "Pendente",
-  secondPaymentAmount: "0",
-  secondPaymentStatus: "Pendente",
-  secondPaymentMethod: "",
-  firstPaymentMethod: "",
-};
+const MAX_CAPACITY = 15;
 
 export function CreateTrainingDialog({
   dialogNovoTreinamento,
@@ -125,19 +118,20 @@ export function CreateTrainingDialog({
         ? user?.sourceFilialId
         : accessibleFilialsIds?.[0];
 
-  const createTrainingMethods = useForm<CreateTrainingDataType>({
-    resolver: zodResolver(CreateTrainingSchema),
+  const emptyDefaults = (): NewTrainingDataType =>
+    ({
+      filialId: defaultFilialId || "",
+      gearId: "",
+      trainingType: "COMUM",
+      buildingNumber: "",
+      participants: [],
+    }) as unknown as NewTrainingDataType;
+
+  const methods = useForm<NewTrainingDataType>({
+    resolver: zodResolver(NewTrainingSchema),
     mode: "onChange",
     reValidateMode: "onChange",
-    defaultValues: {
-      filialId: defaultFilialId || "",
-      traineeIds: [],
-      volunteerIds: [],
-      gearId: "",
-      addressId: "",
-      traineePayments: [],
-      volunteerPayments: [],
-    },
+    defaultValues: emptyDefaults(),
   });
 
   const {
@@ -148,177 +142,111 @@ export function CreateTrainingDialog({
     control,
     reset,
     register,
-  } = createTrainingMethods;
+  } = methods;
 
-  // --- Field Arrays para gerenciar sincronia ---
-  const {
-    fields: traineeFields,
-    append: appendTrainee,
-    remove: removeTrainee,
-  } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
-    name: "traineePayments",
+    name: "participants",
     keyName: "key",
   });
 
-  const {
-    fields: volunteerFields,
-    append: appendVolunteer,
-    remove: removeVolunteer,
-  } = useFieldArray({
-    control,
-    name: "volunteerPayments",
-    keyName: "key",
-  });
+  const [ selectedTrainees, setSelectedTrainees ] = useState<Trainee[]>([]);
 
-  // --- UI States for Participant Names ---
-  const [ selectedTrainees, setSelectedTrainees ] = useState<Customer[]>([]);
-  const [ selectedVolunteers, setSelectedVolunteers ] = useState<Volunteer[]>([]);
-
-  // --- Watchers ---
-  const watchSelectedTraineeIds = watch("traineeIds") || [];
-  const watchSelectedVolunteerIds = watch("volunteerIds") || [];
-  const watchSelectedGear = watch("gearId");
   const watchFilialId = watch("filialId");
+  const watchSelectedGear = watch("gearId");
   const watchDueDate = watch("dueDate");
   const watchHour = watch("hourInMinutes");
+  const watchTrainingType = watch("trainingType");
+  const selectedParticipantIds = fields.map((f) => f.customerId);
 
-  // --- Handlers de Sincronização (Select -> Field Array) ---
-
-  const handleTraineesChange = (trainees: Customer[]) => {
+  // --- Sincroniza a seleção de pessoas com o field array de participantes ---
+  const handleTraineesChange = (trainees: Trainee[]) => {
     setSelectedTrainees(trainees);
-    // Atualiza campo de IDs para validação
-    setValue(
-      "traineeIds",
-      trainees.map((t) => t.customerId),
-      { shouldValidate: true },
-    );
 
-    // Sync Array: Adicionar novos
+    // Adiciona novos
     trainees.forEach((t) => {
-      const exists = traineeFields.some(
-        (field) => field.participantId === t.customerId,
-      );
+      const exists = fields.some((f) => f.customerId === t.customerId);
       if (!exists) {
-        appendTrainee({
-          participantId: t.customerId,
-          price: "",
-          additionalCost: "",
-          additionalCostDescription: "",
-          paymentInfo: { ...defaultPaymentInfoStructure },
+        append({
+          customerId: t.customerId,
+          name: t.fullname,
+          document: t.cpf || t.cnpj || "",
+          isTrainee: true,
+          isModel: false,
+          observations: "",
+          baseValue: "",
+          placeGuaranteeValue: "",
+          shotsValue: "",
+          extraCharges: [],
+          paymentStatus: "Pendente",
         });
       }
     });
 
-    // Sync Array: Remover excluídos
-    // Precisamos iterar ao contrário ou buscar índices cuidadosamente
-    // O jeito mais seguro é reconstruir ou filtrar.
-    // Mas removeTrainee usa index.
-    const idsToKeep = new Set(trainees.map((t) => t.customerId));
-
-    // Encontrar indices para remover (do maior para o menor para não afetar indices subsequentes)
-    const indicesToRemove: number[] = [];
-    traineeFields.forEach((field, index) => {
-      if (!idsToKeep.has(field.participantId)) {
-        indicesToRemove.push(index);
-      }
+    // Remove desmarcados
+    const keep = new Set(trainees.map((t) => t.customerId));
+    const toRemove: number[] = [];
+    fields.forEach((f, index) => {
+      if (!keep.has(f.customerId)) toRemove.push(index);
     });
-
-    // Remove in reverse order
-    indicesToRemove.reverse().forEach((index) => removeTrainee(index));
+    toRemove.reverse().forEach((index) => remove(index));
   };
 
-  const handleVolunteersChange = (volunteers: Volunteer[]) => {
-    setSelectedVolunteers(volunteers);
-    setValue(
-      "volunteerIds",
-      volunteers.map((v) => v.volunteerId),
-      { shouldValidate: true },
-    );
+  const buildChargesForParticipant = (
+    p: NewTrainingDataType["participants"][number],
+    trainingType: "COMUM" | "MPT",
+  ): TrainingChargePayload[] => {
+    const charges: TrainingChargePayload[] = [];
 
-    volunteers.forEach((v) => {
-      const exists = volunteerFields.some(
-        (field) => field.participantId === v.volunteerId,
-      );
-      if (!exists) {
-        appendVolunteer({
-          participantId: v.volunteerId,
-          price: "",
-          paymentInfo: { ...defaultPaymentInfoStructure },
-        });
-      }
+    if (trainingType === "MPT") {
+      charges.push({
+        kind: "GARANTIA_VAGA",
+        description: "Garantia de vaga",
+        amountCents: parseStringToCents(p.placeGuaranteeValue || "0"),
+        isRequired: true,
+      });
+      charges.push({
+        kind: "DISPAROS",
+        description: "Disparos",
+        amountCents: parseStringToCents(p.shotsValue || "0"),
+        isRequired: true,
+      });
+    } else {
+      charges.push({
+        kind: "BASE",
+        description: "Valor base",
+        amountCents: parseStringToCents(p.baseValue || "0"),
+        isRequired: true,
+      });
+    }
+
+    (p.extraCharges || []).forEach((ec) => {
+      charges.push({
+        kind: "EXTRA",
+        description: ec.description || "Cobrança adicional",
+        amountCents: parseStringToCents(ec.value || "0"),
+        isRequired: false,
+      });
     });
 
-    const idsToKeep = new Set(volunteers.map((v) => v.volunteerId));
-    const indicesToRemove: number[] = [];
-    volunteerFields.forEach((field, index) => {
-      if (!idsToKeep.has(field.participantId)) {
-        indicesToRemove.push(index);
-      }
-    });
-    indicesToRemove.reverse().forEach((index) => removeVolunteer(index));
+    return charges;
   };
 
-  // --- Helper de Formatação do Submit ---
-  const formatPaymentPayload = (
-    priceStr: string | undefined,
-    paymentInfo: CreateTrainingDataType["traineePayments"][number]["paymentInfo"],
-    additionalCostStr?: string,
-    additionalCostDesc?: string,
-  ) => {
-    return {
-      price: parseStringToCents(priceStr || "0"),
-      additionalCost: additionalCostStr
-        ? parseStringToCents(additionalCostStr)
-        : 0,
-      additionalCostDescription: additionalCostDesc,
-      paymentInfo: {
-        paymentStatus:
-          paymentInfo.paymentStatus === "Cortesia"
-            ? "Pago"
-            : paymentInfo.paymentStatus || "Pendente",
-        firstPaymentDate: paymentInfo.firstPaymentDate
-          ? new Date(paymentInfo.firstPaymentDate)
-          : null,
-        firstPaymentAmount: paymentInfo.firstPaymentAmount
-          ? parseStringToCents(String(paymentInfo.firstPaymentAmount))
-          : 0,
-        firstPaymentMethod: paymentInfo.firstPaymentMethod || null,
-        firstPaymentStatus: paymentInfo.firstPaymentStatus || "Pendente",
-        secondPaymentDate: paymentInfo.secondPaymentDate
-          ? new Date(paymentInfo.secondPaymentDate)
-          : null,
-        secondPaymentAmount: paymentInfo.secondPaymentAmount
-          ? parseStringToCents(String(paymentInfo.secondPaymentAmount))
-          : 0,
-        secondPaymentMethod: paymentInfo.secondPaymentMethod || null,
-        secondPaymentStatus: paymentInfo.secondPaymentStatus || "Pendente",
-        wasRefunded: paymentInfo.wasRefunded || false,
-        refundedAmount: paymentInfo.refundedAmount
-          ? parseStringToCents(String(paymentInfo.refundedAmount))
-          : 0,
-      },
-    };
-  };
-
-  // --- Submit Handler ---
-  const onSubmitTraining = async (data: CreateTrainingDataType) => {
+  const onSubmit = async (data: NewTrainingDataType) => {
     try {
-      let finalAddressId = data.addressId;
+      let finalAddressId = data.addressId || undefined;
 
       if (!finalAddressId && data.cityName && data.stateName) {
-        const addressPayload = {
-          zipCode: data.zipCode,
-          stateName: data.stateName,
-          cityName: data.cityName,
-          neighborhoodName: data.neighborhoodName,
-          streetName: data.streetName,
-          buildingNumber: data.buildingNumber,
-          addressComplement: data.addressComplement,
-        };
-
         const addressResponse = await CreateGenericAddress({
-          body: addressPayload,
+          body: {
+            zipCode: data.zipCode,
+            stateName: data.stateName,
+            cityName: data.cityName,
+            neighborhoodName: data.neighborhoodName,
+            streetName: data.streetName,
+            buildingNumber: data.buildingNumber,
+            addressComplement: data.addressComplement,
+          },
         });
 
         if (addressResponse?.data?.addressId) {
@@ -330,25 +258,20 @@ export function CreateTrainingDialog({
       }
 
       if (!finalAddressId) {
-        toast.warning("preencha o novo endereço.");
+        toast.warning("Preencha o endereço do treinamento.");
         return;
       }
 
-      // Preparar Arrays de Pagamento Backend
-      const formattedTraineePayments = data.traineePayments.map((p) => ({
-        customerId: p.participantId,
-        ...formatPaymentPayload(
-          p.price,
-          p.paymentInfo,
-          p.additionalCost,
-          p.additionalCostDescription,
-        ),
-      }));
-
-      const formattedVolunteerPayments = data.volunteerPayments.map((p) => ({
-        volunteerId: p.participantId,
-        ...formatPaymentPayload(p.price, p.paymentInfo),
-      }));
+      const participants: TrainingParticipantPayload[] = data.participants.map(
+        (p) => ({
+          customerId: p.customerId,
+          isTrainee: p.isTrainee,
+          isModel: p.isModel,
+          observations: p.observations || null,
+          charges: buildChargesForParticipant(p, data.trainingType),
+          paymentInfo: { paymentStatus: p.paymentStatus || "Pendente" },
+        }),
+      );
 
       const payload: CreateTrainingBackendPayload = {
         hourInMinutes: data.hourInMinutes,
@@ -356,9 +279,9 @@ export function CreateTrainingDialog({
         addressId: finalAddressId,
         dueDate: data.dueDate,
         filialId: data.filialId,
-
-        traineePayments: formattedTraineePayments,
-        volunteerPayments: formattedVolunteerPayments,
+        trainingType: data.trainingType,
+        capacity: MAX_CAPACITY,
+        participants,
       };
 
       const response = await CreateTraining(payload);
@@ -369,18 +292,8 @@ export function CreateTrainingDialog({
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
         queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
         toast.success(response.message, { style: { fontSize: "1rem" } });
-        window.scroll({ top: 0 });
-        reset({
-          filialId: defaultFilialId || "",
-          traineeIds: [],
-          volunteerIds: [],
-          gearId: "",
-          addressId: "",
-          traineePayments: [],
-          volunteerPayments: [],
-        });
+        reset(emptyDefaults());
         setSelectedTrainees([]);
-        setSelectedVolunteers([]);
         setDialogNovoTreinamento(false);
       }
     } catch (error) {
@@ -391,43 +304,19 @@ export function CreateTrainingDialog({
 
   useEffect(() => {
     if (dialogNovoTreinamento) {
-      reset({
-        filialId: defaultFilialId || "",
-        traineeIds: [],
-        volunteerIds: [],
-        gearId: "",
-        addressId: "",
-        traineePayments: [],
-        volunteerPayments: [],
-      });
+      reset(emptyDefaults());
       setSelectedTrainees([]);
-      setSelectedVolunteers([]);
     }
-  }, [ dialogNovoTreinamento, reset, defaultFilialId ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ dialogNovoTreinamento ]);
 
-  // --- Helper: Scroll to top on error ---
   const onInvalid = () => {
-    const dialogContent = document.getElementById(
-      "create-training-dialog-content",
-    );
-    if (dialogContent) {
-      // Small delay to let React render error messages
-      setTimeout(() => {
-        const firstError = dialogContent.querySelector(
-          "p.text-red-600, p.text-destructive",
-        );
-        if (firstError) {
-          firstError.scrollIntoView({ behavior: "smooth", block: "center" });
-        } else {
-          dialogContent.scrollTo({ top: 0, behavior: "smooth" });
-        }
-      }, 100);
-    }
     toast.warning("Verifique os campos obrigatórios.", {
       style: { fontSize: "1rem" },
     });
   };
 
+  // --- Disponibilidade de horários ---
   const availableGears = gears;
   const params = {
     filialId: (watchFilialId || "") as string,
@@ -451,14 +340,11 @@ export function CreateTrainingDialog({
   const checkoutSchedule = data?.data;
 
   useEffect(() => {
-    setValue("hourInMinutes", 0);
+    setValue("hourInMinutes", 0 as unknown as number);
   }, [ setValue, watchSelectedGear ]);
 
   return (
-    <Dialog
-      open={ dialogNovoTreinamento }
-      onOpenChange={ setDialogNovoTreinamento }
-    >
+    <Dialog open={ dialogNovoTreinamento } onOpenChange={ setDialogNovoTreinamento }>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -469,22 +355,46 @@ export function CreateTrainingDialog({
         id="create-training-dialog-content"
         className="max-w-6xl max-h-[90vh] overflow-y-auto bg-card"
       >
-        <form onSubmit={ handleSubmit(onSubmitTraining, onInvalid) }>
-          <FormProvider { ...createTrainingMethods }>
+        <form onSubmit={ handleSubmit(onSubmit, onInvalid) }>
+          <FormProvider { ...methods }>
             <DialogHeader>
-              <DialogTitle>Criar Nova Sessão</DialogTitle>
+              <DialogTitle>Criar Treinamento (Turma)</DialogTitle>
               <DialogDescription>
-                Configure os detalhes do agendamento, participantes e local.
+                Configure o tipo, a data, os participantes (aluno e/ou paciente
+                modelo) e os valores. Máximo de {MAX_CAPACITY} vagas por turma.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-8 py-4">
-              {/* --- BLOCO 1: LOGÍSTICA E PARTICIPANTES --- */}
+              {/* --- TIPO + LOGÍSTICA --- */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-lg border-b pb-2 mb-4">
-                  Logística e Participantes
+                  Tipo e Logística
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Tipo de Treinamento *</Label>
+                    <Controller
+                      control={ control }
+                      name="trainingType"
+                      render={ ({ field }) => (
+                        <Select
+                          value={ field.value }
+                          onValueChange={ field.onChange }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="COMUM">Comum</SelectItem>
+                            <SelectItem value="MPT">
+                              MPT (garantia de vaga + disparos)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) }
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label>Filial *</Label>
                     <SelectFilial
@@ -494,7 +404,9 @@ export function CreateTrainingDialog({
                       defaultFilial={ defaultFilialId }
                     />
                   </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="gearId">Equipamento *</Label>
                     <SelectTrainingGear
@@ -512,42 +424,11 @@ export function CreateTrainingDialog({
                     )}
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Alunos</Label>
-                    <SelectTrainee
-                      disabled={ !watchFilialId }
-                      filialId={ watchFilialId }
-                      selectedTraineeIds={ watchSelectedTraineeIds }
-                      onTraineesChange={ handleTraineesChange }
-                    />
-                    {errors.traineeIds && (
-                      <p className="text-sm text-red-600">
-                        {errors.traineeIds.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Pacientes modelo</Label>
-                    <SelectVolunteer
-                      disabled={ !watchFilialId }
-                      filialId={ watchFilialId }
-                      selectedVolunteerIds={ watchSelectedVolunteerIds }
-                      onVolunteersChange={ handleVolunteersChange }
-                    />
-                    {errors.volunteerIds && (
-                      <p className="text-sm text-red-600">
-                        {errors.volunteerIds.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
               </div>
 
               <Separator />
 
-              {/* --- BLOCO 2: DATA E HORA --- */}
+              {/* --- DATA E HORA --- */}
               <div className="space-y-4">
                 <h4 className="flex items-center gap-2 font-medium text-muted-foreground">
                   <CalendarIcon className="h-4 w-4" /> Data e Horário
@@ -562,9 +443,7 @@ export function CreateTrainingDialog({
                         <DatePicker
                           modal={ true }
                           value={ field.value || null }
-                          onChange={ (e) => {
-                            field.onChange(e);
-                          } }
+                          onChange={ (e) => field.onChange(e) }
                           placeholder="Selecione a data"
                           clearable
                         />
@@ -583,17 +462,15 @@ export function CreateTrainingDialog({
                         <Clock className="h-4 w-4" /> Horário de Início *
                       </Label>
                     )}
-                    {(!watchFilialId ||
-                      !watchDueDate ||
-                      !watchSelectedGear) && (
+                    {(!watchFilialId || !watchDueDate || !watchSelectedGear) && (
                       <p className="text-sm text-muted-foreground italic">
-                        Selecione Filial, Equipamento e Data para visualizar os
+                        Selecione Filial, Equipamento e Data para ver os
                         horários.
                       </p>
                     )}
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2">
                       {checkoutSchedule?.map((hour) => {
-                        const hasSomeAvailableGapTime = hour.availability.some(
+                        const hasGap = hour.availability.some(
                           (item) => item.available,
                         );
                         return (
@@ -606,17 +483,13 @@ export function CreateTrainingDialog({
                                 : "outline"
                             }
                             size="sm"
-                            disabled={ !hasSomeAvailableGapTime }
+                            disabled={ !hasGap }
                             onClick={ () =>
                               setValue("hourInMinutes", hour.hourInMinutes, {
                                 shouldValidate: true,
                               })
                             }
-                            className={ `text-xs h-9 transition-all ${
-                              watchHour === hour.hourInMinutes
-                                ? "ring-2 ring-primary ring-offset-2"
-                                : ""
-                            } ${!hasSomeAvailableGapTime ? "opacity-50" : "hover:scale-105"}` }
+                            className="text-xs h-9"
                           >
                             {hour.formattedTime}
                             {watchHour === hour.hourInMinutes && (
@@ -637,83 +510,62 @@ export function CreateTrainingDialog({
 
               <Separator />
 
-              {/* --- BLOCO 3: LOCALIZAÇÃO --- */}
+              {/* --- LOCALIZAÇÃO --- */}
+              <div className="space-y-2">
+                <EmbeddedTrainingAddressForm />
+              </div>
+
+              <Separator />
+
+              {/* --- PARTICIPANTES --- */}
               <div className="space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h4 className="flex items-center gap-2 font-semibold text-lg">
+                    <Users className="h-5 w-5" /> Participantes
+                  </h4>
+                  <span className="text-sm text-muted-foreground">
+                    Vagas: {fields.length}/{MAX_CAPACITY}
+                  </span>
+                </div>
+
                 <div className="space-y-2">
-                  <EmbeddedTrainingAddressForm />
-                  {errors.addressId && (
+                  <Label>Adicionar pessoas</Label>
+                  <SelectTrainee
+                    disabled={ !watchFilialId }
+                    filialId={ watchFilialId }
+                    selectedTraineeIds={ selectedParticipantIds }
+                    onTraineesChange={ handleTraineesChange }
+                  />
+                  {errors.participants && (
                     <p className="text-sm text-red-600">
-                      {errors.addressId.message}
+                      {errors.participants.message as string}
                     </p>
                   )}
                 </div>
-                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-sm rounded-md">
-                  <p>
-                    O endereço informado será automaticamente vinculado a este
-                    treinamento.
-                  </p>
-                </div>
-              </div>
-              <Separator />
 
-              {/* --- BLOCO 4: FINANCEIRO E CUSTOS --- */}
-              <div className="space-y-6">
-                <h4 className="flex items-center gap-2 font-medium text-muted-foreground">
-                  <DollarSign className="h-4 w-4" /> Financeiro e Custos
-                </h4>
-
-                <div className="flex flex-col gap-8">
-                  {/* --- BLOCO ALUNO --- */}
-                  <div className="border rounded-md p-5 bg-muted/10 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4 border-b pb-2">
-                      <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
-                        <GraduationCap className="h-5 w-5 text-blue-600 dark:text-blue-300" />
-                      </div>
-                      <h3 className="font-semibold text-lg">
-                        Financeiro do Aluno
-                      </h3>
-                    </div>
-
-                    <FinancialInputSection
+                <div className="flex flex-col gap-4">
+                  {fields.map((field, index) => (
+                    <ParticipantCard
+                      key={ field.key }
+                      index={ index }
+                      trainingType={ watchTrainingType }
                       control={ control }
                       register={ register }
-                      setValue={ setValue }
                       watch={ watch }
-                      errors={ errors }
-                      participants={ selectedTrainees.map((t) => ({
-                        id: t.customerId,
-                        name: t.fullname,
-                      })) }
-                      type="trainee"
-                      fields={ traineeFields }
-                    />
-                  </div>
-
-                  {/* --- BLOCO MODELO --- */}
-                  <div className="border rounded-md p-5 bg-muted/10 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4 border-b pb-2">
-                      <div className="p-2 bg-green-100 dark:bg-green-900 rounded-full">
-                        <User className="h-5 w-5 text-green-600 dark:text-green-300" />
-                      </div>
-                      <h3 className="font-semibold text-lg">
-                        Financeiro do Paciente Modelo
-                      </h3>
-                    </div>
-
-                    <FinancialInputSection
-                      control={ control }
-                      register={ register }
                       setValue={ setValue }
-                      watch={ watch }
-                      errors={ errors }
-                      participants={ selectedVolunteers.map((v) => ({
-                        id: v.volunteerId,
-                        name: v.name,
-                      })) }
-                      type="volunteer"
-                      fields={ volunteerFields }
+                      onRemove={ () => {
+                        remove(index);
+                        setSelectedTrainees((prev) =>
+                          prev.filter((t) => t.customerId !== field.customerId),
+                        );
+                      } }
                     />
-                  </div>
+                  ))}
+                  {fields.length === 0 && (
+                    <p className="text-sm text-muted-foreground italic">
+                      Nenhum participante adicionado.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -737,5 +589,217 @@ export function CreateTrainingDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface ParticipantCardProps {
+  index: number;
+  trainingType: "COMUM" | "MPT";
+  control: Control<NewTrainingDataType>;
+  register: UseFormRegister<NewTrainingDataType>;
+  watch: UseFormWatch<NewTrainingDataType>;
+  setValue: UseFormSetValue<NewTrainingDataType>;
+  onRemove: () => void;
+}
+
+function ParticipantCard({
+  index,
+  trainingType,
+  control,
+  register,
+  watch,
+  setValue,
+  onRemove,
+}: ParticipantCardProps) {
+  const base = `participants.${index}` as const;
+
+  const {
+    fields: chargeFields,
+    append: appendCharge,
+    remove: removeCharge,
+  } = useFieldArray({
+    control,
+    name: `${base}.extraCharges` as "participants.0.extraCharges",
+    keyName: "key",
+  });
+
+  const name = watch(`${base}.name` as "participants.0.name");
+  const isTrainee = watch(`${base}.isTrainee` as "participants.0.isTrainee");
+  const isModel = watch(`${base}.isModel` as "participants.0.isModel");
+
+  return (
+    <div className="border rounded-md p-4 bg-muted/10 shadow-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
+            <GraduationCap className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+          </div>
+          <span className="font-semibold">{name || "Participante"}</span>
+        </div>
+        <Button type="button" variant="ghost" size="sm" onClick={ onRemove }>
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </Button>
+      </div>
+
+      {/* Papéis */}
+      <div className="flex items-center gap-6">
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <Checkbox
+            checked={ isTrainee }
+            onCheckedChange={ (c) =>
+              setValue(
+                `${base}.isTrainee` as "participants.0.isTrainee",
+                c === true,
+                { shouldValidate: true },
+              )
+            }
+          />
+          Aluno
+        </label>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <Checkbox
+            checked={ isModel }
+            onCheckedChange={ (c) =>
+              setValue(
+                `${base}.isModel` as "participants.0.isModel",
+                c === true,
+                { shouldValidate: true },
+              )
+            }
+          />
+          Paciente modelo
+        </label>
+      </div>
+
+      {/* Observação */}
+      <div className="space-y-1">
+        <Label className="text-xs uppercase text-muted-foreground">
+          Observação
+        </Label>
+        <Textarea
+          { ...register(
+            `${base}.observations` as "participants.0.observations",
+          ) }
+          placeholder="Anotação livre desta inscrição..."
+          className="resize-none min-h-[40px]"
+          rows={ 1 }
+        />
+      </div>
+
+      {/* Valores */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {trainingType === "MPT" ? (
+          <>
+            <div className="space-y-1">
+              <Label>Garantia de vaga *</Label>
+              <PriceInput
+                withLabel={ false }
+                value={
+                  (watch(
+                    `${base}.placeGuaranteeValue` as "participants.0.placeGuaranteeValue",
+                  ) as string) || ""
+                }
+                onChange={ (v) =>
+                  setValue(
+                    `${base}.placeGuaranteeValue` as "participants.0.placeGuaranteeValue",
+                    v,
+                    { shouldValidate: true },
+                  )
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Disparos *</Label>
+              <PriceInput
+                withLabel={ false }
+                value={
+                  (watch(
+                    `${base}.shotsValue` as "participants.0.shotsValue",
+                  ) as string) || ""
+                }
+                onChange={ (v) =>
+                  setValue(
+                    `${base}.shotsValue` as "participants.0.shotsValue",
+                    v,
+                    { shouldValidate: true },
+                  )
+                }
+              />
+            </div>
+          </>
+        ) : (
+          <div className="space-y-1">
+            <Label>Valor base</Label>
+            <PriceInput
+              withLabel={ false }
+              value={
+                (watch(
+                  `${base}.baseValue` as "participants.0.baseValue",
+                ) as string) || ""
+              }
+              onChange={ (v) =>
+                setValue(`${base}.baseValue` as "participants.0.baseValue", v)
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Cobranças adicionais */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2 text-sm">
+            <DollarSign className="h-4 w-4" /> Cobranças adicionais
+          </Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={ () => appendCharge({ description: "", value: "" }) }
+          >
+            <Plus className="h-3 w-3 mr-1" /> Adicionar cobrança
+          </Button>
+        </div>
+
+        {chargeFields.map((c, ci) => (
+          <div key={ c.key } className="flex items-end gap-2">
+            <div className="flex-1 space-y-1">
+              <Label className="text-xs">Descrição</Label>
+              <Input
+                { ...register(
+                  `${base}.extraCharges.${ci}.description` as "participants.0.extraCharges.0.description",
+                ) }
+                placeholder="Ex.: Disparos adicionais"
+              />
+            </div>
+            <div className="w-40 space-y-1">
+              <Label className="text-xs">Valor</Label>
+              <PriceInput
+                withLabel={ false }
+                value={
+                  (watch(
+                    `${base}.extraCharges.${ci}.value` as "participants.0.extraCharges.0.value",
+                  ) as string) || ""
+                }
+                onChange={ (v) =>
+                  setValue(
+                    `${base}.extraCharges.${ci}.value` as "participants.0.extraCharges.0.value",
+                    v,
+                  )
+                }
+              />
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={ () => removeCharge(ci) }
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
