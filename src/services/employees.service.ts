@@ -24,15 +24,18 @@ export async function GetAllEmployees({
   limit,
   isVisible,
 }: {
-  employeeRole?: ROLES | undefined;
+  employeeRole?: ROLES | readonly ROLES[] | undefined;
   filialId?: string;
   page?: number;
   limit?: number;
   isVisible?: string;
 }) {
-  const queryParams: Record<string, string> = {};
+  const queryParams: Record<string, string | string[]> = {};
 
-  if (employeeRole) queryParams.employeeRole = employeeRole;
+  if (employeeRole) {
+    queryParams.employeeRole =
+      typeof employeeRole === "string" ? employeeRole : [ ...employeeRole ];
+  }
   if (filialId) queryParams.filialId = filialId;
   if (page) queryParams.page = page.toString();
   if (limit) queryParams.limit = limit.toString();

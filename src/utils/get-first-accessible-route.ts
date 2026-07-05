@@ -30,6 +30,7 @@ export type UserAccess = {
 
 const ROLE_DEFAULT_ROUTES: Record<string, string> = {
   Motorista: ROUTES.SCHEDULE,
+  "Motorista Chefe": ROUTES.SCHEDULE,
   Comercial: ROUTES.SCHEDULE,
   Logistica: ROUTES.SCHEDULE,
 };

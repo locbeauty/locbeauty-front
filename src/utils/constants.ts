@@ -36,11 +36,18 @@ export const USER_ROLES = {
   ADMIN: "ADMIN",
   MASTER: "Master",
   MOTORISTA: "Motorista",
+  MOTORISTA_CHEFE: "Motorista Chefe",
   LOGISTICA: "Logistica",
   FINANCEIRO: "Financeiro",
 } as const;
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+
+// Cargos que podem ser atribuídos como motorista de um agendamento
+export const DRIVER_ROLES = [
+  USER_ROLES.MOTORISTA,
+  USER_ROLES.MOTORISTA_CHEFE,
+] as const;
 
 export const BRAZILIAN_STATES = [
   "AC",

@@ -9,7 +9,7 @@ import { SYSTEM_MODULES } from "@/utils/@types/access";
 /**
  * Filiais que o usuário pode visualizar na agenda:
  * - Admin/Master → undefined (todas);
- * - Motorista/Logistica → filiais com canView no módulo CALENDAR;
+ * - Motorista/Motorista Chefe/Logistica → filiais com canView no módulo CALENDAR;
  * - demais → filiais com canView no módulo BOOKINGS;
  * - fail-safe ["NO_ACCESS"] quando o usuário restrito não tem permissão alguma.
  */
@@ -23,9 +23,11 @@ export function useAccessibleFilialIds(): string[] | undefined {
       return undefined;
     }
 
-    // Motorista/Logistica: derive filial access from CALENDAR module (not BOOKINGS)
+    // Motorista/Motorista Chefe/Logistica: derive filial access from CALENDAR module (not BOOKINGS)
     const moduleFilter =
-      user?.role === USER_ROLES.MOTORISTA || user?.role === USER_ROLES.LOGISTICA
+      user?.role === USER_ROLES.MOTORISTA ||
+      user?.role === USER_ROLES.MOTORISTA_CHEFE ||
+      user?.role === USER_ROLES.LOGISTICA
         ? SYSTEM_MODULES.CALENDAR
         : SYSTEM_MODULES.BOOKINGS;
 

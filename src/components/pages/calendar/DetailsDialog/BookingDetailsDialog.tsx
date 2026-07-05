@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  DRIVER_ROLES,
   PaymentMethods,
   PaymentMethodsType,
   USER_ROLES,
@@ -1244,7 +1245,7 @@ export function BookingDetailsDialog({
                           <SelectEmployee
                             control={ control }
                             name="driverId"
-                            employeeRole="Motorista"
+                            employeeRole={ DRIVER_ROLES }
                             filialId={ selectedCheckout.SourceFilial.filialId }
                             onEmployeeSelect={ (employee) =>
                               setSelectedDriverData(employee)

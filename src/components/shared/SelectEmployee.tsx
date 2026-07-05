@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils";
 type SelectEmployeeProps<T extends FieldValues> = {
   control: Control<T>;
   name: FieldPath<T>;
-  employeeRole?: ROLES;
+  employeeRole?: ROLES | readonly ROLES[];
   filialId?: string;
   setDriverString?: Dispatch<SetStateAction<string>>;
   onEmployeeSelect?: (employee: Employee | User) => void;

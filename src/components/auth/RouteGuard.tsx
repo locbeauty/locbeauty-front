@@ -9,6 +9,7 @@ import { getFirstAccessibleRoute } from "@/utils/get-first-accessible-route";
 
 const ROLE_DEFAULT_ROUTES: Record<string, string> = {
   Motorista: "/schedule",
+  "Motorista Chefe": "/schedule",
   Comercial: "/schedule",
   Logistica: "/schedule",
 };

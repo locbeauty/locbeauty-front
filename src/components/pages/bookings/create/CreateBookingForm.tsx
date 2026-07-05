@@ -32,7 +32,7 @@ import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import PriceInput from "@/components/shared/PriceInput";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-provider";
-import { USER_ROLES } from "@/utils/constants";
+import { DRIVER_ROLES, USER_ROLES } from "@/utils/constants";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import CheckoutTimeSelector from "./CheckoutTimeSelector";
 import CheckoutEndTimeSelector from "./CheckoutEndTimeSelector";
@@ -630,7 +630,7 @@ export function CreateBookingForm() {
                     control={ control }
                     name="driverId"
                     setDriverString={ setDriverString }
-                    employeeRole="Motorista"
+                    employeeRole={ DRIVER_ROLES }
                     filialId={ watchFilialId }
 
                     // filialId={

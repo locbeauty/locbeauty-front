@@ -5,4 +5,5 @@ export const ROLES = [
   "Financeiro",
   "Logistica",
   "Motorista",
+  "Motorista Chefe",
 ] as const;

@@ -54,6 +54,12 @@ export default function RouteDetailsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isMotorista = user?.role === USER_ROLES.MOTORISTA;
+  // Motorista Chefe acompanha rotas da filial como gestor, mas nas rotas
+  // atribuídas a ele próprio segue o fluxo de motorista
+  const isMotoristaChefe = user?.role === USER_ROLES.MOTORISTA_CHEFE;
+  const myEmployeeId = user?.employeeId ?? user?.sub;
+  const isDriverForCheckout = (c?: { driverId?: string | null } | null) =>
+    isMotorista || (isMotoristaChefe && !!c && c.driverId === myEmployeeId);
 
   const [ reportOpen, setReportOpen ] = useState(false);
   const [ confirmEntregaOpen, setConfirmEntregaOpen ] = useState(false);
@@ -71,10 +77,12 @@ export default function RouteDetailsPage() {
     enabled: !!routeId,
     retry: 1,
     // Poll every 30s for admin tracking; driver doesn't need polling (it pushes)
-    refetchInterval: !isMotorista ? 30000 : false,
+    refetchInterval: (query) =>
+      isDriverForCheckout(query.state.data?.data) ? false : 30000,
   });
 
   const checkout = checkoutData?.data;
+  const isAssignedDriver = isDriverForCheckout(checkout);
 
   const { data: filialsData, isLoading: isLoadingFilials } = useQuery({
     queryKey: [ "filials-all" ],
@@ -105,7 +113,7 @@ export default function RouteDetailsPage() {
 
   // Driver GPS broadcast: send location every 30s when route is active
   useEffect(() => {
-    if (!isMotorista) return;
+    if (!isAssignedDriver) return;
     const activeStatuses: CheckoutStatuses[] = [ "Em_Andamento", "Entregue" ];
     if (!checkout || !activeStatuses.includes(checkout.checkoutStatus)) return;
     if (!navigator.geolocation) return;
@@ -128,7 +136,7 @@ export default function RouteDetailsPage() {
     const interval = setInterval(sendLocation, 30000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ isMotorista, checkout?.checkoutStatus, routeId ]);
+  }, [ isAssignedDriver, checkout?.checkoutStatus, routeId ]);
 
   const isPageLoading = isLoading || isLoadingFilials;
 
@@ -260,7 +268,7 @@ export default function RouteDetailsPage() {
         {/* Mapa */}
         <div className="w-full md:w-[55%] space-y-2">
           {/* Live tracking badge for admin */}
-          {!isMotorista && isActive && driverLocation && (
+          {!isAssignedDriver && isActive && driverLocation && (
             <div className="flex items-center gap-2 text-xs bg-primary/5 border border-primary/20 rounded-md px-3 py-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
@@ -279,7 +287,7 @@ export default function RouteDetailsPage() {
             <RouteDetailsMap
               origin={ pickupAddress }
               destination={ destinationAddress }
-              driverLocation={ !isMotorista ? driverLocation : null }
+              driverLocation={ !isAssignedDriver ? driverLocation : null }
             />
           </div>
 
@@ -328,7 +336,7 @@ export default function RouteDetailsPage() {
             )}
 
             {/* Driver live location info for admin */}
-            {!isMotorista && checkout?.driver && isActive && (
+            {!isAssignedDriver && checkout?.driver && isActive && (
               <div className="border-t pt-3">
                 <p className="text-muted-foreground mb-0.5">Motorista</p>
                 <div className="flex items-center gap-2">
@@ -343,16 +351,16 @@ export default function RouteDetailsPage() {
             )}
           </div>
 
-          {/* Botões — ações apenas para Motorista */}
+          {/* Botões — ações apenas para o motorista atribuído à rota */}
           <div className="flex flex-col gap-2 pt-6">
-            {isMotorista && isEmAndamento && (
+            {isAssignedDriver && isEmAndamento && (
               <Button className="w-full" onClick={ () => setConfirmEntregaOpen(true) } disabled={ isUpdatingStatus }>
                 {isUpdatingStatus && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Equipamento Entregue
               </Button>
             )}
 
-            {isMotorista && isEntregue && (
+            {isAssignedDriver && isEntregue && (
               <Button className="w-full" onClick={ openRecolhidoDialog } disabled={ isUpdatingStatus }>
                 {isUpdatingStatus && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Equipamento Recolhido
@@ -369,7 +377,7 @@ export default function RouteDetailsPage() {
               <Button variant="outline" className="flex-1" onClick={ () => router.back() }>
                 Voltar
               </Button>
-              {isMotorista && (
+              {isAssignedDriver && (
                 <button
                   className="flex-1 text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 disabled:opacity-40 disabled:cursor-not-allowed"
                   onClick={ () => setReportOpen(true) }

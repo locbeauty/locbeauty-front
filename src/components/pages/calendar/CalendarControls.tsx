@@ -106,7 +106,8 @@ export function CalendarControls({
             clearable
             classNames={ { trigger: "w-[230px]" } }
           />
-          {user?.role !== USER_ROLES.MOTORISTA && (
+          {user?.role !== USER_ROLES.MOTORISTA &&
+            user?.role !== USER_ROLES.MOTORISTA_CHEFE && (
             <div className="w-[200px]">
               <SelectFilials
                 value={ selectedFilialIds }

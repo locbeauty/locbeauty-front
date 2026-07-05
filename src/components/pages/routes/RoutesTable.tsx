@@ -66,6 +66,10 @@ export function RoutesTable({ filters }: RoutesTableProps) {
 
   const isMaster = user?.role === USER_ROLES.MASTER || user?.role === USER_ROLES.ADMIN;
   const isMotorista = user?.role === USER_ROLES.MOTORISTA;
+  // Motorista Chefe vê todas as rotas da filial (visão de gestor), mas também
+  // pode iniciar as rotas atribuídas a ele próprio
+  const isMotoristaChefe = user?.role === USER_ROLES.MOTORISTA_CHEFE;
+  const myId = user?.employeeId ?? user?.sub;
   // Gerente e qualquer outro cargo com acesso
   const isGestor = !isMotorista;
 
@@ -179,7 +183,7 @@ export function RoutesTable({ filters }: RoutesTableProps) {
               <TableHead>Equipamentos</TableHead>
               {isGestor && <TableHead>Status</TableHead>}
               {isGestor && <TableHead className="text-right">Valor</TableHead>}
-              {isMotorista && <TableHead className="w-[140px]">Ação</TableHead>}
+              {(isMotorista || isMotoristaChefe) && <TableHead className="w-[140px]">Ação</TableHead>}
               <TableHead className="w-[56px]" />
             </TableRow>
           </TableHeader>
@@ -189,6 +193,8 @@ export function RoutesTable({ filters }: RoutesTableProps) {
               const isPendente = route.checkoutStatus === "Pendente";
               const isEmAndamento = route.checkoutStatus === "Em_Andamento";
               const canStart = isToday && isPendente;
+              const showRouteAction =
+                isMotorista || (isMotoristaChefe && route.driverId === myId);
 
               return (
                 <TableRow key={ route.checkoutId }>
@@ -262,9 +268,9 @@ export function RoutesTable({ filters }: RoutesTableProps) {
                     </TableCell>
                   )}
 
-                  {isMotorista && (
+                  {(isMotorista || isMotoristaChefe) && (
                     <TableCell>
-                      {isPendente || isEmAndamento ? (
+                      {showRouteAction && (isPendente || isEmAndamento) ? (
                         <Button
                           size="sm"
                           disabled={ !canStart || isStarting || isEmAndamento }
@@ -282,9 +288,9 @@ export function RoutesTable({ filters }: RoutesTableProps) {
                           <Navigation className="h-3.5 w-3.5" />
                           {isEmAndamento ? "Em Andamento" : "Iniciar Rota"}
                         </Button>
-                      ) : (
+                      ) : isMotorista ? (
                         <BookingStatusBadge status={ route.checkoutStatus } />
-                      )}
+                      ) : null}
                     </TableCell>
                   )}
                   <TableCell>
@@ -311,6 +317,8 @@ export function RoutesTable({ filters }: RoutesTableProps) {
           const isPendente = route.checkoutStatus === "Pendente";
           const isEmAndamento = route.checkoutStatus === "Em_Andamento";
           const canStart = isToday && isPendente;
+          const showRouteAction =
+            isMotorista || (isMotoristaChefe && route.driverId === myId);
           const address = route.Address
             ? [ route.Address.street, route.Address.buildingNumber, route.Address.city, route.Address.state ]
               .filter(Boolean)
@@ -364,7 +372,7 @@ export function RoutesTable({ filters }: RoutesTableProps) {
 
               {/* Row 6: Ações */}
               <div className="flex items-center gap-2 pt-1 border-t">
-                {isMotorista && canStart && (
+                {showRouteAction && canStart && (
                   <Button
                     size="sm"
                     className="flex-1 gap-1.5"
