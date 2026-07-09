@@ -42,6 +42,11 @@ interface CustomAreaChartProps {
   yAllowDecimals?: boolean;
   /** Largura reservada para os ticks do eixo Y (default do Recharts: 60). */
   yAxisWidth?: number;
+  /**
+   * "area" (padrão): linha com preenchimento em gradiente.
+   * "line": apenas a linha, sem preenchimento (usado no Receita Total).
+   */
+  variant?: "area" | "line";
   /** Quando informado, renderiza uma Area por item (comparação de múltiplas séries) com legenda inferior. Ignora dataKey/stroke/fill. */
   series?: ChartSeries[];
 }
@@ -58,9 +63,13 @@ export const CustomAreaChart = ({
   yTickFormatter,
   yAllowDecimals,
   yAxisWidth,
+  variant = "area",
   series,
 }: CustomAreaChartProps) => {
   const isMultiSeries = !!series && series.length > 0;
+  // Área preenchida com gradiente apenas na variante "area" e fora do modo
+  // de comparação de múltiplas séries (que é sempre em linhas).
+  const useGradient = variant === "area" && !isMultiSeries;
 
   return (
     <ResponsiveContainer width="100%" height={ height } className="p-0">
@@ -68,6 +77,14 @@ export const CustomAreaChart = ({
         data={ data }
         margin={ { top: 0, right: 0, left: 0, bottom: isMultiSeries ? 8 : 0 } }
       >
+        {useGradient && (
+          <defs>
+            <linearGradient id={ `color-${dataKey}` } x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={ fill } stopOpacity={ 0.3 } />
+              <stop offset="95%" stopColor={ fill } stopOpacity={ 0 } />
+            </linearGradient>
+          </defs>
+        )}
         <XAxis
           dataKey="date"
           stroke="var(--muted-foreground)"
@@ -80,7 +97,7 @@ export const CustomAreaChart = ({
           fontSize={ 12 }
           tickLine={ false }
           axisLine={ false }
-          width={ yAxisWidth }
+          { ...(yAxisWidth !== undefined && { width: yAxisWidth }) }
           allowDecimals={ yAllowDecimals }
           tickFormatter={ (value) => {
             const formatter = yTickFormatter ?? valueFormatter;
@@ -168,7 +185,8 @@ export const CustomAreaChart = ({
               dataKey={ dataKey }
               stroke={ stroke }
               strokeWidth={ 2 }
-              fill="none"
+              fill={ useGradient ? `url(#color-${dataKey})` : "none" }
+              fillOpacity={ 1 }
             />
           )}
       </RechartsAreaChart>

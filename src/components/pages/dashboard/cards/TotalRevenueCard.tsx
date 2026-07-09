@@ -305,6 +305,7 @@ export function TotalRevenueCard({
           height={ 200 }
           stroke="#9B72CF"
           fill="#9B72CF"
+          variant="line"
           series={ series.length > 0 ? series : undefined }
           valueFormatter={ (value) =>
             value.toLocaleString("pt-BR", {
