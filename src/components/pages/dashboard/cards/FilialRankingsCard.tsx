@@ -9,6 +9,12 @@ import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { CustomPieChart } from "../CustomPieChart";
 import { useEffect, useState } from "react";
 import { getFilialBookingsRanking } from "@/services/dashboard.service";
+import { apiRequest } from "@/lib/api";
+import {
+  buildFilialColorMap,
+  FILIAL_COLOR_PALETTE,
+  OTHERS_COLOR,
+} from "@/utils/filial-colors";
 
 interface FilialRankingsCardProps {
   selectedYear: string;
@@ -20,11 +26,40 @@ export function FilialRankingsCard({
   availableYears,
 }: FilialRankingsCardProps) {
   const [ rankingData, setRankingData ] = useState<
-    { name: string; value: number }[]
+    {
+      name: string;
+      value: number;
+      detail?: { label: string; value: number }[];
+    }[]
   >([]);
   const [ localSelectedYear, setLocalSelectedYear ] =
     useState<string>(initialYear);
   const [ loading, setLoading ] = useState(false);
+  // Cor fixa por filial, compartilhada com o gráfico de Receita Total.
+  const [ filialColors, setFilialColors ] = useState<Record<string, string>>(
+    {},
+  );
+
+  useEffect(() => {
+    async function fetchFilialColors() {
+      try {
+        const { data } = await apiRequest<
+          { filialId: string; filialName: string }[]
+        >({
+          endpoint: "filials",
+          method: "GET",
+        });
+        if (data) {
+          setFilialColors(
+            buildFilialColorMap(data.map((filial) => filial.filialName)),
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch filials for colors", error);
+      }
+    }
+    fetchFilialColors();
+  }, []);
 
   // Sync with prop if needed, or just initialize.
   // For this card, lets allow independent year selection if that's the design pattern (like other cards seem to imply with CustomFilterSelect inside them)
@@ -46,11 +81,32 @@ export function FilialRankingsCard({
           year: Number(localSelectedYear),
         });
 
-        const formattedData = ranking.map((item) => ({
-          name: item.filialName,
-          value: item.count,
-        }));
-        setRankingData(formattedData);
+        // Filiais com menos de 3% das locações são agrupadas em "Outras";
+        // a composição fica no `detail`, exibido no tooltip da fatia.
+        const total = ranking.reduce((acc, item) => acc + item.count, 0);
+        const MIN_SHARE = 0.03;
+
+        const mainFilials: {
+          name: string;
+          value: number;
+          detail?: { label: string; value: number }[];
+        }[] = [];
+        const others: { label: string; value: number }[] = [];
+        for (const item of ranking) {
+          if (total > 0 && item.count / total < MIN_SHARE) {
+            others.push({ label: item.filialName, value: item.count });
+          } else {
+            mainFilials.push({ name: item.filialName, value: item.count });
+          }
+        }
+        if (others.length > 0) {
+          mainFilials.push({
+            name: "Outras",
+            value: others.reduce((acc, item) => acc + item.value, 0),
+            detail: others,
+          });
+        }
+        setRankingData(mainFilials);
       } catch (error) {
         console.error("Failed to fetch filial ranking", error);
         setRankingData([]);
@@ -88,7 +144,15 @@ export function FilialRankingsCard({
             dataKey="value"
             nameKey="name"
             height={ 320 }
-            valueFormatter={ (value) => `${value} locações` }
+            colors={ rankingData.map((item, index) =>
+              item.name === "Outras"
+                ? OTHERS_COLOR
+                : (filialColors[item.name] ??
+                  FILIAL_COLOR_PALETTE[index % FILIAL_COLOR_PALETTE.length]),
+            ) }
+            valueFormatter={ (value) =>
+              `${value} ${value === 1 ? "locação" : "locações"}`
+            }
           />
         )}
       </CardContent>

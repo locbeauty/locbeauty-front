@@ -12,7 +12,7 @@ import {
   FilterBookingStatusTypes,
 } from "@/utils/filterOptions";
 import { ROUTES } from "@/utils/routes";
-import { Eye, Plus, Search, X, FileUp } from "lucide-react";
+import { Eye, Plus, Search, X, FolderCog } from "lucide-react";
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { DateRangePicker } from "@/components/ui/DatePicker";
@@ -90,8 +90,8 @@ export default function BookingsPage() {
                 className="flex justify-center items-center"
                 onClick={ () => setIsImportDialogOpen(true) }
               >
-                <FileUp className="mr-2 h-4 w-4" />
-                <span className="hidden md:inline">Importar</span>
+                <FolderCog className="mr-2 h-4 w-4" />
+                <span className="hidden md:inline">Gerenciar Arquivos</span>
               </Button>
               <Button className="flex justify-center items-center" asChild>
                 <Link

@@ -147,23 +147,26 @@ export default function MetasMensaisPage() {
     }));
   }, [ goals ]);
 
-  const estatisticas = useMemo(
-    () => ({
+  const estatisticas = useMemo(() => {
+    const atingidas = filteredGoals.filter(
+      (m) => m.status === "Concluida",
+    ).length;
+    const naoAtingidas = filteredGoals.filter(
+      (m) => m.status === "NAO_ATINGIDA",
+    ).length;
+    // Taxa de sucesso considera apenas metas já decididas (atingidas ou
+    // não atingidas); metas em andamento não contam como fracasso.
+    const decididas = atingidas + naoAtingidas;
+
+    return {
       total: filteredGoals.length,
       emAndamento: filteredGoals.filter((m) => m.status === "EM_ANDAMENTO")
         .length,
-      atingidas: filteredGoals.filter((m) => m.status === "Concluida").length,
-      naoAtingidas: filteredGoals.filter((m) => m.status === "NAO_ATINGIDA")
-        .length,
-      mediaPercentual:
-        filteredGoals.length > 0
-          ? (filteredGoals.filter((m) => m.status === "Concluida").length /
-              filteredGoals.length) *
-            100
-          : 0,
-    }),
-    [ filteredGoals ],
-  );
+      atingidas,
+      naoAtingidas,
+      mediaPercentual: decididas > 0 ? (atingidas / decididas) * 100 : 0,
+    };
+  }, [ filteredGoals ]);
 
   return (
     <RouteGuard module={ SYSTEM_MODULES.GOALS }>

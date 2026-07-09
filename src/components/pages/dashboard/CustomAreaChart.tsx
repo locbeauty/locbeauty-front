@@ -2,6 +2,7 @@ import {
   Area,
   AreaChart as RechartsAreaChart,
   CartesianGrid,
+  Legend as RechartsLegend,
   Tooltip as RechartsTooltip,
   XAxis,
   YAxis,
@@ -17,8 +18,19 @@ interface OcupacaoData {
   TaxaDeOcupacao: number;
 }
 
+export interface ChartSeries {
+  dataKey: string;
+  label: string;
+  stroke: string;
+  fill: string;
+}
+
 interface CustomAreaChartProps {
-  data: ReceitaData[] | OcupacaoData[] | { date: string; total: number }[];
+  data:
+    | ReceitaData[]
+    | OcupacaoData[]
+    | { date: string; total: number }[]
+    | Record<string, string | number>[];
   dataKey: string;
   stroke?: string;
   fill?: string;
@@ -28,6 +40,10 @@ interface CustomAreaChartProps {
   yTickFormatter?: (_value: number) => string;
   /** Permite ticks decimais no eixo Y (default do Recharts: true). */
   yAllowDecimals?: boolean;
+  /** Largura reservada para os ticks do eixo Y (default do Recharts: 60). */
+  yAxisWidth?: number;
+  /** Quando informado, renderiza uma Area por item (comparação de múltiplas séries) com legenda inferior. Ignora dataKey/stroke/fill. */
+  series?: ChartSeries[];
 }
 
 // Atualizar o componente AreaChart para usar Recharts
@@ -41,19 +57,17 @@ export const CustomAreaChart = ({
   valueFormatter,
   yTickFormatter,
   yAllowDecimals,
+  yAxisWidth,
+  series,
 }: CustomAreaChartProps) => {
+  const isMultiSeries = !!series && series.length > 0;
+
   return (
     <ResponsiveContainer width="100%" height={ height } className="p-0">
       <RechartsAreaChart
         data={ data }
-        margin={ { top: 0, right: 0, left: 0, bottom: 0 } }
+        margin={ { top: 0, right: 0, left: 0, bottom: isMultiSeries ? 8 : 0 } }
       >
-        <defs>
-          <linearGradient id={ `color-${dataKey}` } x1="0" y1="0" x2="0" y2="1">
-            <stop offset="50%" stopColor={ fill } stopOpacity={ 0.3 } />
-            <stop offset="99%" stopColor={ fill } stopOpacity={ 0.1 } />
-          </linearGradient>
-        </defs>
         <XAxis
           dataKey="date"
           stroke="var(--muted-foreground)"
@@ -66,6 +80,7 @@ export const CustomAreaChart = ({
           fontSize={ 12 }
           tickLine={ false }
           axisLine={ false }
+          width={ yAxisWidth }
           allowDecimals={ yAllowDecimals }
           tickFormatter={ (value) => {
             const formatter = yTickFormatter ?? valueFormatter;
@@ -76,6 +91,37 @@ export const CustomAreaChart = ({
         <RechartsTooltip
           content={ ({ active, payload }) => {
             if (active && payload && payload.length) {
+              if (isMultiSeries) {
+                return (
+                  <div className="rounded-lg border bg-background p-2 shadow-sm min-w-[160px]">
+                    <span className="text-xs text-muted-foreground">
+                      {payload[0].payload.date}
+                    </span>
+                    <div className="mt-1 flex flex-col gap-1">
+                      {payload.map((entry) => (
+                        <div
+                          key={ entry.dataKey }
+                          className="flex items-center justify-between gap-3 text-sm"
+                        >
+                          <span className="flex items-center gap-1.5 text-muted-foreground">
+                            <span
+                              className="inline-block h-2 w-2 shrink-0 rounded-full"
+                              style={ { backgroundColor: entry.color } }
+                            />
+                            {entry.name}
+                          </span>
+                          <span className="font-bold">
+                            {valueFormatter
+                              ? valueFormatter(Number(entry.value ?? 0))
+                              : entry.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div className="rounded-lg border bg-background p-2 shadow-sm">
                   <div className="grid grid-cols-2 gap-2">
@@ -84,7 +130,6 @@ export const CustomAreaChart = ({
                         {payload[0].payload.date}
                       </span>
                       <span className="font-bold text-sm">
-                        {/* {valueFormatter ? valueFormatter(payload[0].value) : payload[0].value} */}
                         {valueFormatter
                           ? valueFormatter(Number(payload[0].value ?? 0))
                           : payload[0].value}
@@ -97,14 +142,35 @@ export const CustomAreaChart = ({
             return null;
           } }
         />
-        <Area
-          type="monotone"
-          dataKey={ dataKey }
-          stroke={ stroke }
-          strokeWidth={ 2 }
-          fillOpacity={ 1 }
-          fill={ `url(#color-${dataKey})` }
-        />
+        {isMultiSeries
+          ? [
+            ...series!.map((s) => (
+              <Area
+                key={ s.dataKey }
+                type="monotone"
+                dataKey={ s.dataKey }
+                name={ s.label }
+                stroke={ s.stroke }
+                strokeWidth={ 2 }
+                fill="none"
+              />
+            )),
+            <RechartsLegend
+              key="legend"
+              verticalAlign="bottom"
+              iconType="circle"
+              wrapperStyle={ { fontSize: 12, paddingTop: 8 } }
+            />,
+          ]
+          : (
+            <Area
+              type="monotone"
+              dataKey={ dataKey }
+              stroke={ stroke }
+              strokeWidth={ 2 }
+              fill="none"
+            />
+          )}
       </RechartsAreaChart>
     </ResponsiveContainer>
   );

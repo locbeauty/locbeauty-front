@@ -63,6 +63,9 @@ export function GoalCard({ goal }: { goal: Goal }) {
   const estimated = isMoney
     ? (goal.estimatedCents ?? 0)
     : (goal.estimatedQuantity ?? 0);
+  // Progresso da meta = valor contratado (recebido + a receber), a mesma
+  // base do gráfico de Receita Total.
+  const contracted = current + estimated;
 
   const formatValue = (v: number) =>
     isMoney
@@ -222,12 +225,12 @@ export function GoalCard({ goal }: { goal: Goal }) {
           </div>
 
           <div className="flex flex-col items-end">
-            {current < target && (
+            {contracted < target && (
               <span className="text-[10px] text-muted-foreground">
-                {formatValue(current)} / {formatValue(target)}
+                {formatValue(contracted)} / {formatValue(target)}
               </span>
             )}
-            {current >= target && (
+            {contracted >= target && (
               <span className="text-green-600 font-medium text-[10px]">
                 Meta Batida!
               </span>
