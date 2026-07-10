@@ -24,6 +24,7 @@ import { Training } from "@/utils/@types/training";
 import { TrainingPayment } from "@/utils/@types/payments";
 import { Filial } from "@/utils/@types/filials";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
+import { normalizeGearName } from "@/utils/groupGearsByName";
 import { UpdateTrainingPayload } from "./TrainingPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
@@ -126,21 +127,41 @@ export function TrainingsTable({
   const [ filterFilial, setFilterFilial ] = useState<string>("ALL");
   const [ filterGear, setFilterGear ] = useState<string>("ALL");
 
-  // Lista de equipamentos (modelos de máquina) presentes nos treinamentos.
+  // Lista de equipamentos (modelos de máquina) presentes nos treinamentos,
+  // agrupada por nome — a mesma máquina em filiais diferentes aparece uma vez.
   const gearOptions = useMemo(() => {
     const map = new Map<string, string>();
     (trainings || []).forEach((t) => {
-      if (t.gearId) map.set(t.gearId, t.Gear?.gearName || t.gearId);
+      const gearName = t.Gear?.gearName || t.gearId;
+      if (!gearName) return;
+      const key = normalizeGearName(gearName);
+      if (!map.has(key)) map.set(key, gearName);
     });
-    return Array.from(map.entries()).map(([ gearId, gearName ]) => ({
-      gearId,
+    return Array.from(map.entries()).map(([ key, gearName ]) => ({
+      key,
       gearName,
     }));
   }, [ trainings ]);
 
   // Helpers de exibição (vagas, valor total, nomes de alunos/modelos).
-  const getFilledSlots = (t: Training) =>
-    t.Enrollments?.length ?? t.Trainees?.length ?? 0;
+  // Sem inscrições (treinamento legado, anterior ao backfill), conta os dados
+  // antigos como o backfill contaria: alunos + modelos dedupe por documento.
+  const getFilledSlots = (t: Training) => {
+    if (t.Enrollments?.length) return t.Enrollments.length;
+    const trainees = t.Trainees ?? [];
+    const traineeDocs = new Set(
+      trainees.flatMap((c) =>
+        [ c.cpf, c.cnpj ]
+          .filter((doc): doc is string => !!doc)
+          .map((doc) => doc.replace(/\D/g, "")),
+      ),
+    );
+    const extraModels = (t.Volunteers ?? []).filter((v) => {
+      const doc = (v.documentNumber ?? "").replace(/\D/g, "");
+      return !doc || !traineeDocs.has(doc);
+    }).length;
+    return trainees.length + extraModels;
+  };
 
   const getTrainingTotal = (t: Training) =>
     (t.TrainingPayment || []).reduce((acc, p) => acc + (p.totalPrice || 0), 0);
@@ -295,9 +316,13 @@ export function TrainingsTable({
       result = result.filter((t) => t.sourceFilialId === filterFilial);
     }
 
-    // Equipamento (modelo de máquina) Filter
+    // Equipamento (modelo de máquina) Filter — por nome normalizado, para
+    // cobrir a mesma máquina em filiais diferentes.
     if (filterGear && filterGear !== "ALL") {
-      result = result.filter((t) => t.gearId === filterGear);
+      result = result.filter(
+        (t) =>
+          normalizeGearName(t.Gear?.gearName || t.gearId || "") === filterGear,
+      );
     }
 
     // Date Filter (período: comparação por dia, fim aberto se só o início)
@@ -443,7 +468,7 @@ export function TrainingsTable({
               <SelectContent>
                 <SelectItem value="ALL">Todos</SelectItem>
                 {gearOptions.map((g) => (
-                  <SelectItem key={ g.gearId } value={ g.gearId }>
+                  <SelectItem key={ g.key } value={ g.key }>
                     {g.gearName}
                   </SelectItem>
                 ))}

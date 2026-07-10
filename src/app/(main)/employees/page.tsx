@@ -1,7 +1,6 @@
 "use client";
 import { EmployeesTable } from "@/components/pages/employees/view/EmployeesTable";
 import { RouteGuard } from "@/components/auth/RouteGuard";
-import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/utils/routes";

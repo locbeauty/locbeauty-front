@@ -13,6 +13,7 @@ import {
 import type { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
+import { useHoverOpen } from "@/hooks/useHoverOpen";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -44,7 +45,9 @@ export function DateRangePicker({
   classNames,
   modal = false,
 }: DateRangePickerProps) {
-  const [ open, setOpen ] = useState(false);
+  // Hover só fora de dialogs (modal); dentro deles fica click-only.
+  const { open, setOpen, onOpenChange, triggerProps, contentProps } =
+    useHoverOpen({ enabled: !modal });
   const [ monthYearPicker, setMonthYearPicker ] = useState<
     "month" | "year" | false
   >(false);
@@ -99,8 +102,8 @@ export function DateRangePicker({
   }, [ value, placeholder ]);
 
   return (
-    <Popover open={ open } onOpenChange={ setOpen } modal={ modal }>
-      <PopoverTrigger asChild>
+    <Popover open={ open } onOpenChange={ onOpenChange } modal={ modal }>
+      <PopoverTrigger asChild { ...triggerProps }>
         <div
           className={ cn(
             "flex md:w-fit w-full justify-center cursor-pointer items-center h-9 ps-3 pe-1 font-normal border border-input rounded-md text-sm shadow-sm",
@@ -143,6 +146,7 @@ export function DateRangePicker({
       <PopoverContent
         className="w-auto p-2"
         onOpenAutoFocus={ (e) => e.preventDefault() }
+        { ...contentProps }
       >
         <div className="flex items-center justify-between">
           <div className="text-md font-bold ms-2 flex items-center cursor-pointer">

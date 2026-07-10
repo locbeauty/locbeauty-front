@@ -4,7 +4,7 @@ import { BookingsTable } from "@/components/pages/calendar/BookingsTable";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
-import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
+import { FilterSelect } from "@/components/shared/FilterSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,7 +35,8 @@ export default function BookingsPage() {
     undefined,
   );
   const [ checkoutId, setCheckoutId ] = useState("");
-  const [ gearId, setGearId ] = useState<string | undefined>();
+  // Ids da máquina selecionada (a mesma máquina pode existir em várias filiais).
+  const [ gearIds, setGearIds ] = useState<string[] | undefined>();
   const [ filialIds, setFilialIds ] = useState<string[]>([]);
 
   const accessibleFilialIds = useMemo(() => {
@@ -60,7 +61,7 @@ export default function BookingsPage() {
     setPaymentStatus(undefined);
     setDateRange(undefined);
     setCheckoutId("");
-    setGearId(undefined);
+    setGearIds(undefined);
     setFilialIds([]);
   };
 
@@ -70,7 +71,7 @@ export default function BookingsPage() {
     paymentStatus ||
     dateRange?.from ||
     checkoutId ||
-    gearId ||
+    (gearIds && gearIds.length > 0) ||
     filialIds.length > 0;
 
   return (
@@ -159,11 +160,12 @@ export default function BookingsPage() {
               </div>
             )}
             <GearFilterSelect
-              value={ gearId }
-              onSelect={ setGearId }
-              filialId={
-                (filialIds.length === 1 ? filialIds[0] : undefined) ||
-                user?.sourceFilial?.filialId
+              value={ gearIds }
+              onSelect={ setGearIds }
+              // Lista as máquinas do mesmo escopo da tabela: filiais filtradas
+              // ou tudo que o usuário pode ver (undefined = todas p/ admin).
+              filialIds={
+                filialIds.length > 0 ? filialIds : accessibleFilialIds
               }
             />
             <DateRangePicker
@@ -173,25 +175,19 @@ export default function BookingsPage() {
               clearable
               classNames={ { trigger: "w-full md:w-[230px]" } }
             />
-            <CustomFilterSelect
+            <FilterSelect
               items={ FilterBookingStatusTypes }
               placeholder="Status do agendamento"
               value={ status }
               onValueChange={ setStatus }
-              triggerProps={ {
-                className: "w-full md:w-[200px]",
-                disabled: false,
-              } }
+              triggerProps={ { className: "w-full md:w-[200px]" } }
             />
-            <CustomFilterSelect
+            <FilterSelect
               items={ FilterBookingPaymentStatusTypes }
               placeholder="Status do pagamento"
               value={ paymentStatus }
               onValueChange={ setPaymentStatus }
-              triggerProps={ {
-                className: "w-full md:w-[200px]",
-                disabled: false,
-              } }
+              triggerProps={ { className: "w-full md:w-[200px]" } }
             />
           </div>
           {hasActiveFilters && (
@@ -216,7 +212,7 @@ export default function BookingsPage() {
             startDate: dateRange?.from,
             endDate: dateRange?.to,
             checkoutId,
-            gearId,
+            gearIds,
             filialIds: filialIds.length > 0 ? filialIds : undefined,
           } }
         />

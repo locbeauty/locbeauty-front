@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft, Table, Eye } from "lucide-react";
 import { Can } from "@/components/auth/Can";
@@ -14,23 +14,30 @@ import { CalendarFooter } from "@/components/pages/calendar/CalendarFooter";
 import { BookingDetailsDialog } from "@/components/pages/calendar/DetailsDialog/BookingDetailsDialog";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { useScheduleFilters } from "@/hooks/useScheduleFilters";
 import type { DateRange } from "react-day-picker";
 
 export default function AgendamentosPage() {
   // Estado para controlar a semana atual
   const [ currentDate, setCurrentDate ] = useState(new Date());
-  const [ hideCanceled, setHideCanceled ] = useState(true);
+  // Filtros persistidos em localStorage (sobrevivem à navegação e ao reload).
+  const {
+    hideCanceled,
+    setHideCanceled,
+    selectedFilialIds,
+    setSelectedFilialIds,
+    selectedGearIds,
+    setSelectedGearIds,
+    selectedDateRange,
+    setSelectedDateRange,
+    viewType,
+    setViewType,
+  } = useScheduleFilters();
   const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(
     null,
   );
   const [ isBookingDetailsDialogOpen, setBookingDetailsDialogOpen ] =
     useState(false);
-  const [ selectedFilialIds, setSelectedFilialIds ] = useState<string[]>([]);
-  const [ selectedGearIds, setSelectedGearIds ] = useState<string[]>([]);
-  const [ selectedDateRange, setSelectedDateRange ] = useState<
-    DateRange | undefined
-  >(undefined);
-  const [ viewType, setViewType ] = useState<"dia" | "semana" | "mes">("mes");
   const [ isMobile, setIsMobile ] = useState(false);
 
   useEffect(() => {
@@ -58,6 +65,17 @@ export default function AgendamentosPage() {
     setSelectedDateRange(range);
     if (range?.from) setCurrentDate(range.from);
   };
+
+  // Mesma regra quando um período salvo é restaurado do localStorage pós-mount
+  // (o calendário abre em "hoje", mas o filtro pode apontar para outro mês).
+  const appliedRestoredRange = useRef(false);
+  useEffect(() => {
+    if (appliedRestoredRange.current) return;
+    if (selectedDateRange?.from) {
+      appliedRestoredRange.current = true;
+      setCurrentDate(selectedDateRange.from);
+    }
+  }, [ selectedDateRange ]);
 
   return (
     <RouteGuard module={ SYSTEM_MODULES.CALENDAR }>

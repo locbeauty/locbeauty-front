@@ -41,7 +41,7 @@ export interface BookingsTableFilters {
   startDate?: Date;
   endDate?: Date;
   checkoutId?: string;
-  gearId?: string;
+  gearIds?: string[];
   filialIds?: string[];
 }
 

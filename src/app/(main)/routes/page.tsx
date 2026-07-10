@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { SelectFilial } from "@/components/shared/SelectFilial";
 import { DateRangePicker } from "@/components/ui/DatePicker";
 import type { DateRange } from "react-day-picker";
-import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
+import { FilterSelect } from "@/components/shared/FilterSelect";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 import { useAuth } from "@/contexts/auth-provider";
@@ -99,7 +99,7 @@ export default function RoutesPage() {
 
             {/* Status só para gestores */}
             {!isMotorista && (
-              <CustomFilterSelect
+              <FilterSelect
                 items={ FilterBookingStatusTypes }
                 placeholder="Status"
                 value={ status }

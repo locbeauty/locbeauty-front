@@ -27,8 +27,13 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { useHoverOpen } from "@/hooks/useHoverOpen";
 import { useMounted } from "@/hooks/useMounted";
 import { cn } from "@/lib/utils";
+import {
+  GearNameGroup,
+  groupGearsByName,
+} from "@/utils/groupGearsByName";
 
 interface SelectGearsProps {
   value: string[];
@@ -50,6 +55,7 @@ export function SelectGears({
 }: SelectGearsProps) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const { open, onOpenChange, triggerProps, contentProps } = useHoverOpen();
 
   const { data } = useQuery<ApiResponse<Gear[]>, Error>({
     queryKey: [ "get-all-gears-select", filialIds ],
@@ -80,11 +86,16 @@ export function SelectGears({
   );
 
   return isDesktop ? (
-    <Popover modal={ true }>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+    // modal={false}: popover modal bloqueia pointer-events no body, o que
+    // quebra o abre/fecha por hover.
+    <Popover open={ open } onOpenChange={ onOpenChange } modal={ false }>
+      <PopoverTrigger asChild { ...triggerProps }>{trigger}</PopoverTrigger>
       <PopoverContent
         className="p-0 w-[var(--radix-popover-trigger-width)]"
         align="start"
+        // Não roubar o foco do teclado quando abre por hover.
+        onOpenAutoFocus={ (e) => e.preventDefault() }
+        { ...contentProps }
       >
         <GearsList options={ options } value={ value } onChange={ onChange } />
       </PopoverContent>
@@ -108,12 +119,27 @@ function triggerLabel(value: string[], options: Gear[], placeholder?: string) {
     return <span>{placeholder || "Todas as máquinas"}</span>;
   }
 
-  if (value.length === 1) {
-    const gear = options.find((g) => g.gearId === value[0]);
-    return <span className="truncate">{gear?.gearName ?? "1 máquina"}</span>;
+  // Conta nomes (grupos), não ids: a mesma máquina em várias filiais é uma só.
+  const selectedGroups = groupGearsByName(options).filter((group) =>
+    group.gearIds.some((id) => value.includes(id)),
+  );
+
+  if (selectedGroups.length === 1) {
+    return <span className="truncate">{selectedGroups[0].gearName}</span>;
   }
 
-  return <span>{value.length} máquinas selecionadas</span>;
+  if (selectedGroups.length > 1) {
+    return <span>{selectedGroups.length} máquinas selecionadas</span>;
+  }
+
+  // Opções ainda carregando (ou ids obsoletos): cai no total de ids.
+  return (
+    <span>
+      {value.length === 1
+        ? "1 máquina"
+        : `${value.length} máquinas selecionadas`}
+    </span>
+  );
 }
 
 interface GearsListProps {
@@ -123,11 +149,22 @@ interface GearsListProps {
 }
 
 function GearsList({ options, value, onChange }: GearsListProps) {
-  const toggle = (id: string) => {
-    if (value.includes(id)) {
-      onChange(value.filter((v) => v !== id));
+  // Uma entrada por nome; selecionar um nome seleciona todos os gearIds dele.
+  const groups = groupGearsByName(options);
+
+  // ANY-match: seleções parciais (ex.: localStorage anterior ao dedupe)
+  // aparecem marcadas; desmarcar remove todos os ids do grupo.
+  const isGroupSelected = (group: GearNameGroup) =>
+    group.gearIds.some((id) => value.includes(id));
+
+  const toggle = (group: GearNameGroup) => {
+    if (isGroupSelected(group)) {
+      onChange(value.filter((v) => !group.gearIds.includes(v)));
     } else {
-      onChange([ ...value, id ]);
+      onChange([
+        ...value,
+        ...group.gearIds.filter((id) => !value.includes(id)),
+      ]);
     }
   };
 
@@ -150,25 +187,22 @@ function GearsList({ options, value, onChange }: GearsListProps) {
             />
             Todas
           </CommandItem>
-          {options.map((gear) => {
-            const isSelected = value.includes(gear.gearId);
-            return (
-              <CommandItem
-                key={ gear.gearId }
-                value={ gear.gearName }
-                onSelect={ () => toggle(gear.gearId) }
-                className="cursor-pointer"
-              >
-                <Check
-                  className={ cn(
-                    "mr-2 h-4 w-4",
-                    isSelected ? "opacity-100" : "opacity-0",
-                  ) }
-                />
-                {gear.gearName}
-              </CommandItem>
-            );
-          })}
+          {groups.map((group) => (
+            <CommandItem
+              key={ group.key }
+              value={ group.gearName }
+              onSelect={ () => toggle(group) }
+              className="cursor-pointer"
+            >
+              <Check
+                className={ cn(
+                  "mr-2 h-4 w-4",
+                  isGroupSelected(group) ? "opacity-100" : "opacity-0",
+                ) }
+              />
+              {group.gearName}
+            </CommandItem>
+          ))}
         </CommandGroup>
       </CommandList>
     </Command>

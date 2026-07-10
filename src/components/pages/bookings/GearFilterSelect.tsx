@@ -17,48 +17,61 @@ import { GetAllGears } from "@/services/gears.service";
 import { Gear } from "@/utils/@types/gears";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useHoverOpen } from "@/hooks/useHoverOpen";
+import { groupGearsByName } from "@/utils/groupGearsByName";
 
 interface GearFilterSelectProps {
-  value?: string;
-  onSelect: (gearId: string | undefined) => void;
-  filialId?: string;
+  /** gearIds do nome selecionado (a mesma máquina em várias filiais). */
+  value?: string[];
+  onSelect: (gearIds: string[] | undefined) => void;
+  /** Filiais cujas máquinas entram na lista (undefined = todas). */
+  filialIds?: string[];
 }
 
 export function GearFilterSelect({
   value,
   onSelect,
-  filialId,
+  filialIds,
 }: GearFilterSelectProps) {
-  const [ open, setOpen ] = useState(false);
+  const { open, onOpenChange, triggerProps, contentProps } = useHoverOpen();
 
   const { data } = useQuery<ApiResponse<Gear[]>, Error>({
-    queryKey: [ "get-all-gears-filter", filialId ],
-    queryFn: () => GetAllGears({ filialId }),
+    queryKey: [ "get-all-gears-filter", filialIds ],
+    queryFn: () => GetAllGears({ filialIds }),
     staleTime: 1000 * 60,
   });
 
-  const gears = data?.data || [];
-  const selectedGear = gears.find((g) => g.gearId === value);
+  // Um item por nome de máquina; selecionar = todos os gearIds daquele nome.
+  const groups = groupGearsByName(data?.data || []);
+  const selectedGroup = groups.find((group) =>
+    group.gearIds.some((id) => value?.includes(id)),
+  );
 
   return (
-    <Popover open={ open } onOpenChange={ setOpen }>
-      <PopoverTrigger asChild>
+    // modal={false}: popover modal bloqueia pointer-events no body, o que
+    // quebra o abre/fecha por hover.
+    <Popover open={ open } onOpenChange={ onOpenChange } modal={ false }>
+      <PopoverTrigger asChild { ...triggerProps }>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={ open }
           className={ cn(
             "w-full justify-between md:w-[200px]",
-            !selectedGear && "text-placeholder",
+            !selectedGroup && "text-placeholder",
           ) }
         >
-          {selectedGear ? selectedGear.gearName : "Filtrar por máquina"}
+          {selectedGroup ? selectedGroup.gearName : "Filtrar por máquina"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent
+        className="w-[200px] p-0"
+        // Não roubar o foco do teclado quando abre por hover.
+        onOpenAutoFocus={ (e) => e.preventDefault() }
+        { ...contentProps }
+      >
         <Command>
           <CommandInput placeholder="Buscar máquina..." />
           <CommandList>
@@ -68,33 +81,39 @@ export function GearFilterSelect({
                 value="all"
                 onSelect={ () => {
                   onSelect(undefined);
-                  setOpen(false);
+                  onOpenChange(false);
                 } }
               >
                 <Check
                   className={ cn(
                     "mr-2 h-4 w-4",
-                    !value ? "opacity-100" : "opacity-0"
+                    !selectedGroup ? "opacity-100" : "opacity-0"
                   ) }
                 />
                 Todas
               </CommandItem>
-              {gears.map((gear) => (
+              {groups.map((group) => (
                 <CommandItem
-                  key={ gear.gearId }
-                  value={ gear.gearName }
+                  key={ group.key }
+                  value={ group.gearName }
                   onSelect={ () => {
-                    onSelect(gear.gearId === value ? undefined : gear.gearId);
-                    setOpen(false);
+                    onSelect(
+                      group.key === selectedGroup?.key
+                        ? undefined
+                        : group.gearIds,
+                    );
+                    onOpenChange(false);
                   } }
                 >
                   <Check
                     className={ cn(
                       "mr-2 h-4 w-4",
-                      value === gear.gearId ? "opacity-100" : "opacity-0"
+                      group.key === selectedGroup?.key
+                        ? "opacity-100"
+                        : "opacity-0"
                     ) }
                   />
-                  {gear.gearName}
+                  {group.gearName}
                 </CommandItem>
               ))}
             </CommandGroup>

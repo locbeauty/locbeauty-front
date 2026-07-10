@@ -26,6 +26,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { useHoverOpen } from "@/hooks/useHoverOpen";
 import { useMounted } from "@/hooks/useMounted";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +50,7 @@ export function SelectFilials({
 }: SelectFilialsProps) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const { open, onOpenChange, triggerProps, contentProps } = useHoverOpen();
 
   const { data: filials } = useQuery<Filial[], Error>({
     queryKey: [ "get-all-filials" ],
@@ -81,11 +83,16 @@ export function SelectFilials({
   );
 
   return isDesktop ? (
-    <Popover modal={ true }>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+    // modal={false}: popover modal bloqueia pointer-events no body, o que
+    // quebra o abre/fecha por hover.
+    <Popover open={ open } onOpenChange={ onOpenChange } modal={ false }>
+      <PopoverTrigger asChild { ...triggerProps }>{trigger}</PopoverTrigger>
       <PopoverContent
         className="p-0 w-[var(--radix-popover-trigger-width)]"
         align="start"
+        // Não roubar o foco do teclado quando abre por hover.
+        onOpenAutoFocus={ (e) => e.preventDefault() }
+        { ...contentProps }
       >
         <FilialsList options={ options } value={ value } onChange={ onChange } />
       </PopoverContent>

@@ -7,7 +7,6 @@ import { Can } from "@/components/auth/Can";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { FilialFilter } from "@/components/pages/customers/view/FilialFilter";
-import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/utils/routes";
