@@ -8,9 +8,25 @@ import { centsToString } from "@/utils/centsToString";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { z } from "zod";
 
+// Parcela individual do parcelamento (valores em centavos; datas ISO).
+export const installmentSchema = z.object({
+  number: z.number().int(),
+  amount: z.number().int(),
+  dueDate: z.string().nullable(),
+  paymentDate: z.string().nullable(),
+  paymentMethod: z.string().nullable(),
+  paymentStatus: z.enum([ "Pendente", "Pago" ]),
+});
+
+export type InstallmentSchemaType = z.infer<typeof installmentSchema>;
+
 export const checkoutPaymentDataSchema = z
   .object({
     paymentStatus: z.enum(paymentStatuses),
+
+    // Fonte da verdade do pagamento "Parcial" (N parcelas). Validado no
+    // superRefine do formulário, que tem acesso ao totalPrice.
+    installments: z.array(installmentSchema).optional(),
 
     firstPaymentDate: z.coerce.date().optional().nullable(),
     firstPaymentAmount: z.string().optional(),
@@ -29,34 +45,34 @@ export const checkoutPaymentDataSchema = z
       .optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.paymentStatus === "Pendente") {
+    // "Parcial" é validado pelas parcelas (no superRefine do formulário);
+    // "Pendente" não exige nada.
+    if (data.paymentStatus !== "Pago") {
       return;
     }
 
-    // Se "Pago" ou "Parcial", a 1ª parcela é obrigatória.
-    if (data.paymentStatus === "Pago" || data.paymentStatus === "Parcial") {
-      const firstPaymentCents = parseStringToCents(data.firstPaymentAmount);
-      if (firstPaymentCents === 0) {
-        ctx.addIssue({
-          path: [ "firstPaymentAmount" ],
-          code: z.ZodIssueCode.custom,
-          message: "O valor da 1ª parcela é obrigatório.",
-        });
-      }
-      if (!data.firstPaymentDate) {
-        ctx.addIssue({
-          path: [ "firstPaymentDate" ],
-          code: z.ZodIssueCode.custom,
-          message: "A data da 1ª parcela é obrigatória.",
-        });
-      }
-      if (!data.firstPaymentMethod) {
-        ctx.addIssue({
-          path: [ "firstPaymentMethod" ],
-          code: z.ZodIssueCode.custom,
-          message: "A forma da 1ª parcela é obrigatória.",
-        });
-      }
+    // Se "Pago", a 1ª parcela (valor total) é obrigatória.
+    const firstPaymentCents = parseStringToCents(data.firstPaymentAmount);
+    if (firstPaymentCents === 0) {
+      ctx.addIssue({
+        path: [ "firstPaymentAmount" ],
+        code: z.ZodIssueCode.custom,
+        message: "O valor da 1ª parcela é obrigatório.",
+      });
+    }
+    if (!data.firstPaymentDate) {
+      ctx.addIssue({
+        path: [ "firstPaymentDate" ],
+        code: z.ZodIssueCode.custom,
+        message: "A data da 1ª parcela é obrigatória.",
+      });
+    }
+    if (!data.firstPaymentMethod) {
+      ctx.addIssue({
+        path: [ "firstPaymentMethod" ],
+        code: z.ZodIssueCode.custom,
+        message: "A forma da 1ª parcela é obrigatória.",
+      });
     }
   });
 
@@ -195,22 +211,61 @@ export const createCheckoutFormSchema = z
       }
     }
 
-    // 🎯 REGRA NOVA: Se "Parcial", o valor da 1ª parcela deve ser MENOR que o total.
+    // Pagamento "Parcial": as parcelas são a fonte da verdade. Toda parcela
+    // precisa de data de vencimento (é ela que guia a inadimplência: parcela
+    // vencida + 24h). Forma de pagamento é opcional.
     if (data.paymentStatus === "Parcial") {
       const totalCents = parseStringToCents(data.totalPrice);
-      const firstPaymentCents = parseStringToCents(
-        data.paymentInfo.firstPaymentAmount,
-      );
+      const installments = data.paymentInfo.installments ?? [];
+      const path = [ "paymentInfo", "installments" ];
 
-      // A validação de (firstPaymentCents === 0) já é feita pelo esquema aninhado.
-      // Aqui, só precisamos checar se é >= ao total.
-      if (firstPaymentCents > 0 && firstPaymentCents >= totalCents) {
+      if (installments.length < 2) {
         ctx.addIssue({
-          path: [ "paymentInfo", "firstPaymentAmount" ], // Anexa o erro ao campo de valor
+          path,
           code: z.ZodIssueCode.custom,
-          message:
-            "O valor parcial deve ser menor que o total. Para quitar, selecione 'Pago'.",
+          message: "Configure as parcelas do pagamento parcial (mínimo de 2).",
         });
+      } else {
+        const missingDueDate = installments.find((i) => !i.dueDate);
+        if (missingDueDate) {
+          ctx.addIssue({
+            path,
+            code: z.ZodIssueCode.custom,
+            message: `Informe a data de vencimento da parcela ${missingDueDate.number}.`,
+          });
+        }
+
+        const installmentsSum = installments.reduce(
+          (acc, i) => acc + i.amount,
+          0,
+        );
+        if (installmentsSum !== totalCents) {
+          ctx.addIssue({
+            path,
+            code: z.ZodIssueCode.custom,
+            message: "A soma das parcelas deve ser igual ao valor total.",
+          });
+        }
+
+        const paidCount = installments.filter(
+          (i) => i.paymentStatus === "Pago",
+        ).length;
+        if (paidCount === 0) {
+          ctx.addIssue({
+            path,
+            code: z.ZodIssueCode.custom,
+            message:
+              "Marque a(s) parcela(s) já paga(s). Se nada foi pago, use o status 'Pendente'.",
+          });
+        }
+        if (installments.length >= 2 && paidCount === installments.length) {
+          ctx.addIssue({
+            path,
+            code: z.ZodIssueCode.custom,
+            message:
+              "Todas as parcelas estão pagas; selecione o status 'Pago'.",
+          });
+        }
       }
     }
 
@@ -294,6 +349,8 @@ export type CreateCheckoutValidationWithMoneyInCents = Omit<
   }[];
   paymentInfo: {
     paymentStatus: (typeof paymentStatuses)[number] | undefined;
+    installmentsCount?: number;
+    installments?: InstallmentSchemaType[];
     firstPaymentDate: Date | null;
     firstPaymentAmount: number | null;
     firstPaymentMethod?: (typeof PaymentMethods)[number];

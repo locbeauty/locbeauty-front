@@ -57,6 +57,7 @@ import { ApiResponse } from "@/lib/api";
 import {
   createCheckoutFormSchema,
   CreateCheckoutFormSchemaType,
+  CreateCheckoutValidationWithMoneyInCents,
 } from "@/lib/zod/CreateBookingValidation";
 import {
   CreateCheckout,
@@ -71,6 +72,58 @@ import { queryClient } from "@/app/(main)/layout";
 import { SelectCustomer } from "./SelectCustomer";
 import { useAccess } from "@/contexts/access-provider";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+
+// Converte o paymentInfo do formulário para o payload da API (centavos).
+// No status "Parcial" as parcelas do editor são a fonte da verdade e os
+// campos first/second viram apenas o espelho legado (parcelas 1 e 2).
+function buildPaymentInfoPayload(
+  data: CreateCheckoutFormSchemaType,
+): CreateCheckoutValidationWithMoneyInCents["paymentInfo"] {
+  const info = data.paymentInfo;
+  type PaymentMethodType = CreateCheckoutValidationWithMoneyInCents["paymentInfo"]["firstPaymentMethod"];
+
+  if (data.paymentStatus === "Parcial" && info.installments?.length) {
+    const installments = info.installments;
+    const first = installments[0];
+    const second = installments[1];
+    const totalCents = parseStringToCents(data.totalPrice || "0");
+
+    return {
+      paymentStatus: "Parcial",
+      installmentsCount: installments.length,
+      installments,
+
+      firstPaymentDate: first?.dueDate ? new Date(first.dueDate) : null,
+      firstPaymentAmount: first?.amount ?? null,
+      firstPaymentMethod: (first?.paymentMethod ??
+        undefined) as PaymentMethodType,
+      firstPaymentStatus: first?.paymentStatus,
+
+      secondPaymentDate: second?.dueDate ? new Date(second.dueDate) : null,
+      secondPaymentAmount: Math.max(0, totalCents - (first?.amount ?? 0)),
+      secondPaymentMethod: (second?.paymentMethod ??
+        undefined) as PaymentMethodType,
+      secondPaymentStatus: second?.paymentStatus ?? "Pendente",
+    };
+  }
+
+  return {
+    paymentStatus: info.paymentStatus,
+    firstPaymentDate: info.firstPaymentDate ?? null,
+    firstPaymentAmount: info.firstPaymentAmount
+      ? parseStringToCents(info.firstPaymentAmount)
+      : null,
+    firstPaymentMethod: info.firstPaymentMethod ?? undefined,
+    firstPaymentStatus: info.firstPaymentStatus,
+
+    secondPaymentDate: info.secondPaymentDate ?? null,
+    secondPaymentAmount: info.secondPaymentAmount
+      ? parseStringToCents(info.secondPaymentAmount)
+      : null,
+    secondPaymentMethod: info.secondPaymentMethod ?? undefined,
+    secondPaymentStatus: info.secondPaymentStatus ?? undefined,
+  };
+}
 
 export function GearsSection() {
   const {
@@ -439,10 +492,10 @@ export function CreateBookingForm() {
     const totalFuelCents =
       distanceKm > 0 && fuelPerLiterCents > 0
         ? Math.round(
-            (distanceKm / consumptionKmL) *
+          (distanceKm / consumptionKmL) *
               fuelPerLiterCents *
               roundTripMultiplier,
-          )
+        )
         : 0;
 
     const parsed = {
@@ -462,26 +515,7 @@ export function CreateBookingForm() {
       ),
       totalPrice: parseStringToCents(newCheckoutData.totalPrice || "0"),
 
-      paymentInfo: {
-        paymentStatus: newCheckoutData.paymentInfo.paymentStatus,
-        firstPaymentDate: newCheckoutData.paymentInfo.firstPaymentDate ?? null,
-        firstPaymentAmount: newCheckoutData.paymentInfo.firstPaymentAmount
-          ? parseStringToCents(newCheckoutData.paymentInfo.firstPaymentAmount)
-          : null,
-        firstPaymentMethod:
-          newCheckoutData.paymentInfo.firstPaymentMethod ?? undefined,
-        firstPaymentStatus: newCheckoutData.paymentInfo.firstPaymentStatus,
-
-        secondPaymentDate:
-          newCheckoutData.paymentInfo.secondPaymentDate ?? null,
-        secondPaymentAmount: newCheckoutData.paymentInfo.secondPaymentAmount
-          ? parseStringToCents(newCheckoutData.paymentInfo.secondPaymentAmount)
-          : null,
-        secondPaymentMethod:
-          newCheckoutData.paymentInfo.secondPaymentMethod ?? undefined,
-        secondPaymentStatus:
-          newCheckoutData.paymentInfo.secondPaymentStatus ?? undefined,
-      },
+      paymentInfo: buildPaymentInfoPayload(newCheckoutData),
 
       gears: newCheckoutData.gears.map((item) => ({
         ...item,

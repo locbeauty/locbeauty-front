@@ -729,25 +729,28 @@ import { Installment } from "@/utils/@types/payments";
 import {
   buildInstallments,
   deriveStatus,
+  fillMissingDueDates,
   sumPaid,
   sumTotal,
 } from "@/utils/installments";
 
 // Constrói a lista de parcelas a partir de um pagamento (usa `installments`
-// quando existe; senão converte os campos legados first/second).
+// quando existe; senão converte os campos legados first/second). Parcelas
+// antigas sem vencimento ganham data derivada da 1ª parcela mês a mês
+// (1ª: 01/07 -> 2ª: 01/08...), editável antes de salvar.
 function installmentsFromPayment(
   payment: CheckoutPayment | null | undefined,
   totalCents: number,
 ): Installment[] {
   if (payment?.installments && payment.installments.length > 0) {
-    return payment.installments;
+    return fillMissingDueDates(payment.installments);
   }
   if (
     payment &&
     (payment.paymentMode === "Parcelado" ||
       (payment.secondPaymentAmount ?? 0) > 0)
   ) {
-    return [
+    return fillMissingDueDates([
       {
         number: 1,
         amount: payment.firstPaymentAmount ?? 0,
@@ -773,7 +776,7 @@ function installmentsFromPayment(
         paymentStatus:
           payment.secondPaymentStatus === "Pago" ? "Pago" : "Pendente",
       },
-    ];
+    ]);
   }
   return buildInstallments(totalCents, 2);
 }
@@ -1098,12 +1101,21 @@ export function CheckoutPaymentMethodDialog({
         toast.error("A soma das parcelas deve ser igual ao valor total.");
         return;
       }
+      // O vencimento guia a inadimplência (parcela vencida + 24h), então toda
+      // parcela precisa de data. Forma de pagamento só é exigida nas pagas.
+      const missingDueDate = installments.find((i) => !i.dueDate);
+      if (missingDueDate) {
+        toast.error(
+          `Informe a data de vencimento da parcela ${missingDueDate.number}.`,
+        );
+        return;
+      }
       const invalidPaid = installments.find(
-        (i) => i.paymentStatus === "Pago" && (!i.dueDate || !i.paymentMethod),
+        (i) => i.paymentStatus === "Pago" && !i.paymentMethod,
       );
       if (invalidPaid) {
         toast.error(
-          `Informe data e forma de pagamento da parcela ${invalidPaid.number} (marcada como paga).`,
+          `Informe a forma de pagamento da parcela ${invalidPaid.number} (marcada como paga).`,
         );
         return;
       }

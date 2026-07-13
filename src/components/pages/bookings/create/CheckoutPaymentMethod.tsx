@@ -36,22 +36,32 @@ import {
 } from "@/utils/constants";
 import { useEffect } from "react";
 import { parseStringToCents } from "@/utils/parseStringToCents";
-import { Input } from "@/components/ui/input";
-import { centsToString } from "@/utils/centsToString";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { InstallmentsEditor } from "@/components/shared/InstallmentsEditor";
+import { buildInstallments, fillMissingDueDates } from "@/utils/installments";
+
+const todayISO = () => new Date().toISOString().split("T")[0];
 
 export function CheckoutPaymentMethod() {
   const {
     setValue,
+    getValues,
     control,
-    register,
     watch,
     formState: { errors },
   } = useFormContext<CreateCheckoutFormSchemaType>();
 
   const watchedPaymentStatus = watch("paymentStatus");
   const watchedTotalPrice = watch("totalPrice");
-  const watchedFirstPaymentAmount = watch("paymentInfo.firstPaymentAmount");
+
+  const installmentsError =
+    (errors.paymentInfo?.installments as { message?: string } | undefined)
+      ?.message ??
+    (
+      errors.paymentInfo?.installments as
+        | { root?: { message?: string } }
+        | undefined
+    )?.root?.message;
 
   useEffect(() => {
     if (!watchedPaymentStatus) return;
@@ -60,6 +70,7 @@ export function CheckoutPaymentMethod() {
 
     if (watchedPaymentStatus === "Pago") {
       setValue("paymentInfo.paymentStatus", "Pago");
+      setValue("paymentInfo.installments", undefined);
       setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
       setValue("paymentInfo.firstPaymentStatus", "Pago");
       setValue("paymentInfo.secondPaymentAmount", "0,00");
@@ -67,36 +78,42 @@ export function CheckoutPaymentMethod() {
     }
 
     if (watchedPaymentStatus === "Parcial") {
+      // As parcelas do editor são a fonte da verdade do pagamento parcial.
+      // Inicializa com 2 parcelas: a 1ª (entrada) marcada como paga hoje e a
+      // 2ª vencendo um mês depois — datas editáveis parcela a parcela.
       setValue("paymentInfo.paymentStatus", "Parcial");
-      setValue("paymentInfo.firstPaymentStatus", "Pago");
-      setValue("paymentInfo.secondPaymentStatus", "Pendente");
 
-      const firstCents = parseStringToCents(watchedFirstPaymentAmount || "0");
-      const remainingCents = totalCents - firstCents;
-
-      if (remainingCents > 0) {
-        setValue(
-          "paymentInfo.secondPaymentAmount",
-          centsToString(remainingCents),
+      const current = getValues("paymentInfo.installments") ?? [];
+      const count = current.length >= 2 ? current.length : 2;
+      let next = buildInstallments(totalCents, count, current);
+      if (current.length === 0) {
+        const today = todayISO();
+        next = next.map((inst, idx) =>
+          idx === 0
+            ? {
+              ...inst,
+              paymentStatus: "Pago" as const,
+              dueDate: today,
+              paymentDate: today,
+            }
+            : inst,
         );
-      } else {
-        setValue("paymentInfo.secondPaymentAmount", "0,00");
+      }
+      next = fillMissingDueDates(next);
+      if (JSON.stringify(next) !== JSON.stringify(current)) {
+        setValue("paymentInfo.installments", next);
       }
     }
 
     if (watchedPaymentStatus === "Pendente") {
       setValue("paymentInfo.paymentStatus", "Pendente");
+      setValue("paymentInfo.installments", undefined);
       setValue("paymentInfo.firstPaymentStatus", "Pendente");
       setValue("paymentInfo.firstPaymentAmount", watchedTotalPrice);
       setValue("paymentInfo.secondPaymentAmount", "0,00");
       setValue("paymentInfo.secondPaymentStatus", undefined);
     }
-  }, [
-    watchedPaymentStatus,
-    watchedTotalPrice,
-    watchedFirstPaymentAmount,
-    setValue,
-  ]);
+  }, [ watchedPaymentStatus, watchedTotalPrice, setValue, getValues ]);
 
   function getPaymentIcon(method: string) {
     switch (method) {
@@ -229,8 +246,32 @@ export function CheckoutPaymentMethod() {
           </div> */}
         </div>
 
+        {watchedPaymentStatus === "Parcial" && (
+          <div className="bg-muted/30 p-4 rounded-lg border space-y-4">
+            <Controller
+              name="paymentInfo.installments"
+              control={ control }
+              render={ ({ field }) => (
+                <InstallmentsEditor
+                  totalCents={ parseStringToCents(watchedTotalPrice || "0") }
+                  installments={ field.value ?? [] }
+                  onChange={ field.onChange }
+                  twoColumns
+                />
+              ) }
+            />
+            <p className="text-xs text-muted-foreground">
+              A data de vencimento é obrigatória em todas as parcelas: é ela
+              que define a inadimplência (parcela vencida há mais de 24h).
+            </p>
+            {installmentsError && (
+              <p className="text-xs text-red-500">{installmentsError}</p>
+            )}
+          </div>
+        )}
+
         <div
-          className={ `bg-muted/30 p-4 rounded-lg border space-y-6 ${watchedPaymentStatus === "Pendente" ? "hidden" : "block"}` }
+          className={ `bg-muted/30 p-4 rounded-lg border space-y-6 ${watchedPaymentStatus === "Pago" ? "block" : "hidden"}` }
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -338,7 +379,8 @@ export function CheckoutPaymentMethod() {
 
         {errors.paymentInfo &&
           !errors.paymentInfo.firstPaymentAmount &&
-          !errors.paymentInfo.firstPaymentMethod && (
+          !errors.paymentInfo.firstPaymentMethod &&
+          !installmentsError && (
           <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-md text-sm">
             <AlertCircle className="h-4 w-4" />
             <p>Verifique os dados de pagamento.</p>

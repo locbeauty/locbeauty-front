@@ -18,6 +18,7 @@ import { centsToString } from "@/utils/centsToString";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import {
   buildInstallments,
+  fillMissingDueDates,
   redistributeInstallments,
   sumTotal,
 } from "@/utils/installments";
@@ -58,6 +59,8 @@ interface InstallmentsEditorProps {
   disabled?: boolean;
   /** Quando true, não permite alterar o número de parcelas (ex.: já há parcela paga salva). */
   lockCount?: boolean;
+  /** Exibe as parcelas em duas colunas em telas largas (ex.: página de criação). */
+  twoColumns?: boolean;
 }
 
 const MAX_INSTALLMENTS = 60;
@@ -68,6 +71,7 @@ export function InstallmentsEditor({
   onChange,
   disabled,
   lockCount,
+  twoColumns,
 }: InstallmentsEditorProps) {
   const count = installments.length || 1;
 
@@ -81,7 +85,9 @@ export function InstallmentsEditor({
 
   function handleCountChange(value: number) {
     const next = Math.max(1, Math.min(MAX_INSTALLMENTS, Math.floor(value || 1)));
-    onChange(buildInstallments(totalCents, next, installments));
+    // Novas parcelas nascem com vencimento derivado da 1ª (mês a mês); a data
+    // continua editável parcela a parcela.
+    onChange(fillMissingDueDates(buildInstallments(totalCents, next, installments)));
   }
 
   function handleCountInputChange(value: string) {
@@ -143,101 +149,109 @@ export function InstallmentsEditor({
         </p>
       </div>
 
-      {installments.map((inst, index) => (
-        <div
-          key={ index }
-          className="space-y-3 rounded-md border p-3 bg-background/60"
-        >
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-bold flex items-center gap-2 text-primary">
-              <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs">
-                {inst.number}
-              </div>
+      <div
+        className={
+          twoColumns
+            ? "grid grid-cols-1 xl:grid-cols-2 gap-4"
+            : "space-y-4"
+        }
+      >
+        {installments.map((inst, index) => (
+          <div
+            key={ index }
+            className="space-y-3 rounded-md border p-3 bg-background/60"
+          >
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-bold flex items-center gap-2 text-primary">
+                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs">
+                  {inst.number}
+                </div>
               Parcela {inst.number}
-            </Label>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id={ `installment-paid-${index}` }
-                checked={ inst.paymentStatus === "Pago" }
-                disabled={ disabled }
-                onCheckedChange={ (checked) =>
-                  togglePaid(index, checked === true) }
-              />
-              <Label
-                htmlFor={ `installment-paid-${index}` }
-                className="text-xs cursor-pointer"
-              >
+              </Label>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id={ `installment-paid-${index}` }
+                  checked={ inst.paymentStatus === "Pago" }
+                  disabled={ disabled }
+                  onCheckedChange={ (checked) =>
+                    togglePaid(index, checked === true) }
+                />
+                <Label
+                  htmlFor={ `installment-paid-${index}` }
+                  className="text-xs cursor-pointer"
+                >
                 Paga
-              </Label>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div className="sm:col-span-4">
-              <Label className="text-xs text-muted-foreground">Valor</Label>
-              <PriceInput
-                disabled={ disabled || inst.paymentStatus === "Pago" }
-                withLabel={ false }
-                value={ centsToString(inst.amount) }
-                onChange={ (value) =>
-                  onChange(
-                    redistributeInstallments(
-                      installments,
-                      index,
-                      parseStringToCents(value),
-                      totalCents,
-                    ),
-                  ) }
-              />
+                </Label>
+              </div>
             </div>
 
-            <div className="sm:col-span-4">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                <CalendarIcon className="w-3 h-3" /> Data
-              </Label>
-              <Input
-                type="date"
-                disabled={ disabled }
-                value={ formatDateForInput(inst.dueDate) }
-                onChange={ (e) => {
-                  const value = e.target.value || null;
-                  updateAt(index, {
-                    dueDate: value,
-                    ...(inst.paymentStatus === "Pago"
-                      ? { paymentDate: value }
-                      : {}),
-                  });
-                } }
-              />
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div className="sm:col-span-4">
+                <Label className="text-xs text-muted-foreground">Valor</Label>
+                <PriceInput
+                  disabled={ disabled || inst.paymentStatus === "Pago" }
+                  withLabel={ false }
+                  value={ centsToString(inst.amount) }
+                  onChange={ (value) =>
+                    onChange(
+                      redistributeInstallments(
+                        installments,
+                        index,
+                        parseStringToCents(value),
+                        totalCents,
+                      ),
+                    ) }
+                />
+              </div>
 
-            <div className="sm:col-span-4">
-              <Label className="text-xs text-muted-foreground">
+              <div className="sm:col-span-4">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CalendarIcon className="w-3 h-3" /> Data
+                </Label>
+                <Input
+                  type="date"
+                  disabled={ disabled }
+                  value={ formatDateForInput(inst.dueDate) }
+                  onChange={ (e) => {
+                    const value = e.target.value || null;
+                    updateAt(index, {
+                      dueDate: value,
+                      ...(inst.paymentStatus === "Pago"
+                        ? { paymentDate: value }
+                        : {}),
+                    });
+                  } }
+                />
+              </div>
+
+              <div className="sm:col-span-4">
+                <Label className="text-xs text-muted-foreground">
                 Forma de pagamento
-              </Label>
-              <Select
-                value={ inst.paymentMethod || "" }
-                onValueChange={ (value) =>
-                  updateAt(index, { paymentMethod: value }) }
-              >
-                <SelectTrigger disabled={ disabled }>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {PaymentMethods.map((method) => (
-                    <SelectItem key={ method } value={ method }>
-                      <div className="flex items-center gap-2">
-                        {getPaymentIcon(method)}
-                        <span>{method}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                </Label>
+                <Select
+                  value={ inst.paymentMethod || "" }
+                  onValueChange={ (value) =>
+                    updateAt(index, { paymentMethod: value }) }
+                >
+                  <SelectTrigger disabled={ disabled }>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PaymentMethods.map((method) => (
+                      <SelectItem key={ method } value={ method }>
+                        <div className="flex items-center gap-2">
+                          {getPaymentIcon(method)}
+                          <span>{method}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

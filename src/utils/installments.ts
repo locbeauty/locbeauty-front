@@ -88,6 +88,57 @@ export function redistributeInstallments(
   });
 }
 
+/** "YYYY-MM-DD" da data local. */
+function toISODay(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/** Interpreta "YYYY-MM-DD" no fuso local (new Date(iso) seria UTC). */
+function parseISODay(value: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/**
+ * Soma `months` meses a uma data ISO preservando o dia; quando o dia não
+ * existe no mês de destino, usa o último dia (31/01 + 1 mês -> 28/02).
+ */
+export function addMonthsISO(iso: string, months: number): string | null {
+  const base = parseISODay(iso);
+  if (!base) return null;
+  const day = base.getDate();
+  base.setDate(1);
+  base.setMonth(base.getMonth() + months);
+  const lastDay = new Date(
+    base.getFullYear(),
+    base.getMonth() + 1,
+    0,
+  ).getDate();
+  base.setDate(Math.min(day, lastDay));
+  return toISODay(base);
+}
+
+/**
+ * Preenche vencimentos ausentes replicando a data da 1ª parcela mês a mês
+ * (1ª: 01/07 -> 2ª: 01/08 -> 3ª: 01/09...). O vencimento das parcelas guia a
+ * inadimplência de pagamentos parciais, então toda parcela precisa de data.
+ * Sem data-base na 1ª parcela, retorna a lista inalterada.
+ */
+export function fillMissingDueDates(
+  installments: Installment[],
+): Installment[] {
+  const base = installments[0]?.dueDate ?? installments[0]?.paymentDate;
+  if (!base) return installments;
+  return installments.map((inst, idx) =>
+    inst.dueDate ? inst : { ...inst, dueDate: addMonthsISO(base, idx) },
+  );
+}
+
 /**
  * Monta a lista de parcelas preservando data/forma/status das parcelas já
  * existentes (mesmo índice) ao recalcular os valores.
