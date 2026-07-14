@@ -14,35 +14,36 @@ import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { USER_ROLES } from "@/utils/constants";
 import { Loader2 } from "lucide-react";
 
+export type BirthdayUserType = "all" | "customers" | "employees";
+
 export function BirthdayCalendarContent({
   currentDate,
+  userType = "all",
 }: {
   currentDate: Date;
+  userType?: BirthdayUserType;
 }) {
   const { user } = useAuth();
   const { accesses } = useAccess();
 
-  const customerFilialIds = useMemo(() => {
+  // A visibilidade dos aniversários (clientes E colaboradores) é regida
+  // apenas pelo módulo BIRTHDAYS: cada usuário enxerga os aniversariantes
+  // das filiais onde tem canView, sem depender de acesso aos módulos
+  // CUSTOMERS/EMPLOYEES (ver a data de aniversário não é o mesmo que acessar
+  // o cadastro). Admin/Master veem todas as filiais.
+  const birthdayFilialIds = useMemo(() => {
     if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
       return undefined;
     }
     const permissions = accesses
-      .filter((a) => a.module === SYSTEM_MODULES.CUSTOMERS && a.canView)
+      .filter((a) => a.module === SYSTEM_MODULES.BIRTHDAYS && a.canView)
       .map((a) => a.filialId);
     const unique = Array.from(new Set(permissions));
     return unique.length > 0 ? unique : [ "NO_ACCESS" ];
   }, [ user, accesses ]);
 
-  const employeeFilialIds = useMemo(() => {
-    if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
-      return undefined;
-    }
-    const permissions = accesses
-      .filter((a) => a.module === SYSTEM_MODULES.EMPLOYEES && a.canView)
-      .map((a) => a.filialId);
-    const unique = Array.from(new Set(permissions));
-    return unique.length > 0 ? unique : [ "NO_ACCESS" ];
-  }, [ user, accesses ]);
+  const customerFilialIds = birthdayFilialIds;
+  const employeeFilialIds = birthdayFilialIds;
 
   // Default to Month view logic
   const startDate = new Date(
@@ -87,7 +88,15 @@ export function BirthdayCalendarContent({
     staleTime: 1000 * 60,
   });
 
-  const birthdays = birthdaysData?.data || [];
+  // Filtro "Usuários": Todos / Clientes / Colaboradores (aplicado localmente,
+  // sem refetch ao alternar).
+  const birthdays = (birthdaysData?.data || []).filter(
+    (b) =>
+      userType === "all" ||
+      (userType === "customers"
+        ? b.type === "CUSTOMER"
+        : b.type === "EMPLOYEE"),
+  );
   const allEvents: CalendarEvent[] = [ ...birthdays ];
 
   return (
