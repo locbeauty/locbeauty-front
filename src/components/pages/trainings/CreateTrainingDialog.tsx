@@ -205,12 +205,15 @@ export function CreateTrainingDialog({
         amountCents: parseStringToCents(p.placeGuaranteeValue || "0"),
         isRequired: true,
       });
-      charges.push({
-        kind: "DISPAROS",
-        description: "Disparos",
-        amountCents: parseStringToCents(p.shotsValue || "0"),
-        isRequired: true,
-      });
+      // Disparos é cobrado apenas de pacientes modelos.
+      if (p.isModel) {
+        charges.push({
+          kind: "DISPAROS",
+          description: "Disparos",
+          amountCents: parseStringToCents(p.shotsValue || "0"),
+          isRequired: true,
+        });
+      }
     } else {
       charges.push({
         kind: "BASE",
@@ -708,24 +711,27 @@ function ParticipantCard({
                 }
               />
             </div>
-            <div className="space-y-1">
-              <Label>Disparos *</Label>
-              <PriceInput
-                withLabel={ false }
-                value={
-                  (watch(
-                    `${base}.shotsValue` as "participants.0.shotsValue",
-                  ) as string) || ""
-                }
-                onChange={ (v) =>
-                  setValue(
-                    `${base}.shotsValue` as "participants.0.shotsValue",
-                    v,
-                    { shouldValidate: true },
-                  )
-                }
-              />
-            </div>
+            {/* Disparos é cobrado apenas de pacientes modelos. */}
+            {isModel && (
+              <div className="space-y-1">
+                <Label>Disparos *</Label>
+                <PriceInput
+                  withLabel={ false }
+                  value={
+                    (watch(
+                      `${base}.shotsValue` as "participants.0.shotsValue",
+                    ) as string) || ""
+                  }
+                  onChange={ (v) =>
+                    setValue(
+                      `${base}.shotsValue` as "participants.0.shotsValue",
+                      v,
+                      { shouldValidate: true },
+                    )
+                  }
+                />
+              </div>
+            )}
           </>
         ) : (
           <div className="space-y-1">

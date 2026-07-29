@@ -219,9 +219,12 @@ export function BookingDetailsDialog({
 
     const isPaid = selectedCheckout.CheckoutPayment?.paymentStatus === "Pago";
     const isPast = selectedCheckout.date <= new Date();
+    const isDelivered = selectedCheckout.checkoutStatus === "Entregue";
     const isNotPending = selectedCheckout.checkoutStatus !== "Pendente";
 
-    setCheckoutCanBeUpdated(!(isPaid || isNotPending));
+    // "Entregue" é totalmente editável (mesmo já pago); demais status seguem a
+    // regra anterior (só "Pendente" e não pago).
+    setCheckoutCanBeUpdated(isDelivered || !(isPaid || isNotPending));
 
     setEditingDate(new Date(selectedCheckout.date));
     setEditingStartHour(selectedCheckout.startHourInMinutes);

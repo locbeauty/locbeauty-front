@@ -2,6 +2,7 @@ export const FilterBookingStatusTypes = [
   "Todos",
   "Pendente",
   { value: "Em_Andamento", label: "Em Andamento" },
+  { value: "Entregue", label: "Entregue" },
   { value: "Concluido", label: "Concluído" },
   "Cancelado",
 ] as const;

@@ -167,10 +167,11 @@ export const NewTrainingSchema = z
             path: [ "participants", i, "placeGuaranteeValue" ],
           });
         }
-        if (!p.shotsValue) {
+        // Disparos é obrigatório apenas para pacientes modelos.
+        if (p.isModel && !p.shotsValue) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Valor de disparos é obrigatório (MPT)",
+            message: "Valor de disparos é obrigatório (paciente modelo)",
             path: [ "participants", i, "shotsValue" ],
           });
         }
