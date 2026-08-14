@@ -4,7 +4,7 @@ import { RouteGuard } from "@/components/auth/RouteGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/utils/routes";
-import { Plus, Search, Upload } from "lucide-react";
+import { FolderCog, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
@@ -35,10 +35,11 @@ export default function CustomersPage() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
+                className="flex justify-center items-center"
                 onClick={ () => setDialogImportCustomers(true) }
               >
-                <Upload className="mr-2 h-4 w-4" />
-                <span className="hidden md:inline">Importar</span>
+                <FolderCog className="mr-2 h-4 w-4" />
+                <span className="hidden md:inline">Gerenciar Arquivos</span>
               </Button>
               <Button className="flex justify-center items-center" asChild>
                 <Link href={ ROUTES.CREATE_CUSTOMER }>

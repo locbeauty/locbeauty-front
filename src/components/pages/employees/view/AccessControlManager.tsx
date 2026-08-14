@@ -252,6 +252,7 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
                                 SYSTEM_MODULES.DASHBOARD,
                                 SYSTEM_MODULES.CALENDAR,
                                 SYSTEM_MODULES.BIRTHDAYS,
+                                SYSTEM_MODULES.AUDITORIA,
                               ] as SYSTEM_MODULES[];
 
                               const isCreateDisabled =

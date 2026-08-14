@@ -5,23 +5,30 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileUp, Download, Loader2 } from "lucide-react";
-import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FileUp, FileDown, FileSpreadsheet, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { SelectFilial } from "@/components/shared/SelectFilial";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useAuth } from "@/contexts/auth-provider";
 import { useAccess } from "@/contexts/access-provider";
 import { USER_ROLES } from "@/utils/constants";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
-import { ImportCustomers } from "@/services/customers.service";
+import { GetAllCustomers, ImportCustomers } from "@/services/customers.service";
+import { findAllFilials } from "@/services/filials.service";
+import { Filial } from "@/utils/@types/filials";
+import { Customer } from "@/utils/@types/customer";
 import { queryClient } from "@/app/(main)/layout";
 
 interface ImportCustomersDialogProps {
@@ -29,14 +36,177 @@ interface ImportCustomersDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type ExportFileType = "csv" | "xlsx";
+
+interface ImportPreview {
+  validCount: number;
+  failedCount: number;
+  errors: string[];
+  skipped: string[];
+}
+
+const EXPORT_LIMIT = 100000;
+
+// Todas as colunas são obrigatórias na importação, exceto Instagram,
+// Complemento e Último agendamento.
+const EXPORT_HEADERS = [
+  "Nome",
+  "CPF/CNPJ",
+  "Empresa",
+  "Email",
+  "Descrição Email",
+  "Celular",
+  "Descrição Telefone",
+  "Aniversário",
+  "CEP",
+  "Cidade",
+  "Estado",
+  "Bairro",
+  "Rua",
+  "Número",
+  "Complemento",
+  "Instagram",
+  "Último agendamento",
+];
+
+const formatDate = (value: Date | string | null | undefined) =>
+  value ? new Date(value).toLocaleDateString("pt-BR") : "";
+
+function buildExportRows(items: Customer[]): (string | number)[][] {
+  return items.map((customer) => {
+    // Exporta o endereço ativo — é o que a importação lê de volta.
+    const address =
+      customer.Addresses?.find((item) => item.isActive) ??
+      customer.Addresses?.[0];
+
+    return [
+      customer.fullname ?? "",
+      customer.cpf || customer.cnpj || "",
+      customer.companyName ?? "",
+      customer.email ?? "",
+      customer.emailDescription ?? "",
+      customer.cellphone ?? "",
+      customer.cellphoneDescription ?? "",
+      formatDate(customer.birthdate),
+      address?.zipCode ?? "",
+      address?.city ?? "",
+      address?.state ?? "",
+      address?.neighborhood ?? "",
+      address?.street ?? "",
+      address?.buildingNumber ?? "",
+      address?.addressComplement ?? "",
+      customer.instagram ?? "",
+      formatDate(customer.lastBooking),
+    ];
+  });
+}
+
+function toCsvCell(value: string | number): string {
+  const text =
+    typeof value === "number"
+      ? value.toLocaleString("pt-BR", { useGrouping: false })
+      : value;
+  return /[";\n]/.test(text) ? `"${text.replace(/"/g, "\"\"")}"` : text;
+}
+
+/** Gera e baixa a planilha no formato escolhido. Usado pela exportação e pelo modelo. */
+async function downloadSheet(
+  headers: string[],
+  rows: (string | number)[][],
+  baseName: string,
+  fileType: ExportFileType,
+) {
+  if (fileType === "xlsx") {
+    const XLSX = await import("xlsx");
+    const worksheet = XLSX.utils.aoa_to_sheet([ headers, ...rows ]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes");
+    XLSX.writeFile(workbook, `${baseName}.xlsx`);
+    return;
+  }
+
+  // CSV com BOM e separador ";" (compatível com Excel em pt-BR).
+  const csv =
+    "﻿" +
+    [ headers, ...rows ].map((row) => row.map(toCsvCell).join(";")).join("\n");
+  const blob = new Blob([ csv ], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${baseName}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+// Linhas de exemplo: uma com CPF e outra com CNPJ. Só Complemento, Instagram
+// e Último agendamento podem ficar vazios.
+const TEMPLATE_ROWS: (string | number)[][] = [
+  [
+    "Maria Silva",
+    "123.456.789-00",
+    "Clínica Maria Silva",
+    "maria@email.com",
+    "Pessoal",
+    "(91) 98888-7777",
+    "WhatsApp",
+    "15/03/1990",
+    "66000-000",
+    "Belém",
+    "PA",
+    "Guanabara",
+    "Rua da Pedreirinha",
+    "79",
+    "Sala 2",
+    "@mariasilva",
+    "",
+  ],
+  [
+    "Clínica Estética LTDA",
+    "12.345.678/0001-90",
+    "Clínica Estética LTDA",
+    "contato@clinica.com",
+    "",
+    "(91) 3222-1111",
+    "",
+    "20/07/1985",
+    "67000-000",
+    "Ananindeua",
+    "PA",
+    "Centro",
+    "Avenida Nazaré",
+    "1200",
+    "",
+    "",
+    "",
+  ],
+];
+
 export function ImportCustomersDialog({
   open,
   onOpenChange,
 }: ImportCustomersDialogProps) {
   const [ file, setFile ] = useState<File | null>(null);
   const [ isSubmitting, setIsSubmitting ] = useState(false);
+  const [ isExporting, setIsExporting ] = useState(false);
+  const [ preview, setPreview ] = useState<ImportPreview | null>(null);
+  const [ filials, setFilials ] = useState<Filial[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { user } = useAuth();
   const { getAccessibleFilialsForCreate } = useAccess();
+
+  useEffect(() => {
+    async function fetchFilials() {
+      try {
+        const data = await findAllFilials();
+        if (data) setFilials(data);
+      } catch (error) {
+        console.error("Failed to fetch filials", error);
+      }
+    }
+    fetchFilials();
+  }, []);
 
   const accessibleFilialsObjects =
     user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER
@@ -50,58 +220,36 @@ export function ImportCustomersDialog({
         ? undefined
         : [];
 
-  const { control, handleSubmit, reset } = useForm({
+  const { control, handleSubmit, reset, getValues } = useForm<{
+    filialId?: string;
+    fileType: ExportFileType;
+  }>({
     defaultValues: {
       filialId: user?.sourceFilialId,
+      fileType: "csv",
     },
   });
+
+  const selectedFilialName = (filialId?: string) =>
+    filials.find((filial) => filial.filialId === filialId)?.filialName ??
+    "selecionada";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      setPreview(null);
     }
   };
 
-  const downloadTemplate = () => {
-    // Create a simple CSV template
-    const headers = [
-      "Nome",
-      "CPF/CNPJ",
-      "Email",
-      "Celular",
-      "Instagram",
-      "Aniversário",
-      "Empresa",
-      "Último agendamento",
-    ];
-    const rows = [
-      [
-        "Exemplo Silva",
-        "12345678901",
-        "exemplo@email.com",
-        "11999999999",
-        "@exemplosilva",
-        "1990-01-01",
-        "Empresa Exemplo",
-        "2023-01-01",
-      ],
-    ];
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      headers.join(",") +
-      "\n" +
-      rows.map((e) => e.join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "template_importacao_clientes.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const buildImportFormData = (filialId: string, dryRun: boolean) => {
+    const formData = new FormData();
+    formData.append("file", file!);
+    formData.append("filialId", filialId);
+    formData.append("dryRun", String(dryRun));
+    return formData;
   };
 
+  // Fase 1: valida a planilha (dry-run) e abre a confirmação.
   const onSubmit = async (data: { filialId?: string }) => {
     if (!file) {
       toast.warning("Por favor, selecione um arquivo.");
@@ -114,35 +262,126 @@ export function ImportCustomersDialog({
     }
 
     setIsSubmitting(true);
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("filialId", data.filialId);
-
     try {
-      const response = await ImportCustomers(formData);
+      const response = await ImportCustomers(
+        buildImportFormData(data.filialId, true),
+      );
+
+      if (response.validCount !== undefined) {
+        setPreview({
+          validCount: response.validCount,
+          failedCount: response.failedCount ?? 0,
+          errors: response.errors ?? [],
+          skipped: response.skipped ?? [],
+        });
+      } else {
+        toast.error(response.message || "Erro ao validar a planilha.");
+      }
+    } catch {
+      toast.error("Erro ao processar a planilha.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Fase 2: confirmação — grava as linhas válidas.
+  const handleConfirmImport = async () => {
+    const { filialId } = getValues();
+    if (!file || !filialId) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await ImportCustomers(
+        buildImportFormData(filialId, false),
+      );
 
       if (response.successCount !== undefined) {
         toast.success(
-          `Importação concluída! Sucesso: ${response.successCount}, Falhas: ${response.failedCount}`
+          `Importação concluída! ${response.successCount} cliente(s) importado(s).`,
         );
+
         if (response.errors && response.errors.length > 0) {
           console.error("Import Errors:", response.errors);
           toast.error(
-            "Alguns registros falharam. Verifique o console para detalhes."
+            `${response.errors.length} linha(s) falharam. Verifique o console para detalhes.`,
           );
         }
+
         queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
         onOpenChange(false);
         setFile(null);
+        setPreview(null);
         reset();
       } else {
         toast.error(response.message || "Erro ao importar clientes.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro ao processar importação.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleExport = async () => {
+    const { filialId, fileType } = getValues();
+
+    if (!filialId) {
+      toast.warning("Por favor, selecione uma filial nos filtros.");
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const response = await GetAllCustomers(
+        { filialId },
+        { page: 1, limit: EXPORT_LIMIT },
+      );
+
+      const items = response.data?.items ?? [];
+      if (items.length === 0) {
+        toast.warning("Nenhum cliente encontrado para os filtros selecionados.");
+        return;
+      }
+
+      const filialSlug = selectedFilialName(filialId)
+        .toLocaleLowerCase("pt-BR")
+        .replace(/\s+/g, "_");
+      const baseName = `clientes_${filialSlug}_${new Date()
+        .toISOString()
+        .slice(0, 10)}`;
+
+      await downloadSheet(
+        EXPORT_HEADERS,
+        buildExportRows(items),
+        baseName,
+        fileType,
+      );
+
+      toast.success(
+        `${items.length} cliente(s) exportado(s) em ${fileType.toUpperCase()}.`,
+      );
+    } catch (error) {
+      console.error("Failed to export customers", error);
+      toast.error("Erro ao exportar clientes.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    const { fileType } = getValues();
+
+    try {
+      await downloadSheet(
+        EXPORT_HEADERS,
+        TEMPLATE_ROWS,
+        "modelo_importacao_clientes",
+        fileType,
+      );
+      toast.success(`Modelo baixado em ${fileType.toUpperCase()}.`);
+    } catch (error) {
+      console.error("Failed to download template", error);
+      toast.error("Erro ao baixar o modelo.");
     }
   };
 
@@ -150,54 +389,203 @@ export function ImportCustomersDialog({
     <Dialog open={ open } onOpenChange={ onOpenChange }>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Importar Clientes em Massa</DialogTitle>
+          <DialogTitle>Gerência de Arquivos</DialogTitle>
           <DialogDescription>
-            Selecione a filial e o arquivo Excel/CSV para importar.
+            Importe clientes em massa a partir de uma planilha ou exporte os
+            registros.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={ handleSubmit(onSubmit) } className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Filial de Destino</Label>
-            <SelectFilial
-              control={ control }
-              name="filialId"
-              accessibleFilials={ accessibleFilialsIds }
-              defaultFilial={ user?.sourceFilialId }
-            />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="file">Arquivo de Importação</Label>
+        {preview ? (
+          // Etapa de confirmação: resumo da validação antes de gravar.
+          <div className="space-y-4 pt-2">
+            <p className="text-sm font-semibold">Confirmar Importação</p>
+            {preview.validCount > 0 ? (
+              <p className="text-sm">
+                Você está importando{" "}
+                <span className="font-bold">
+                  {preview.validCount} cliente(s)
+                </span>{" "}
+                para a filial{" "}
+                <span className="font-bold">
+                  {selectedFilialName(getValues().filialId)}
+                </span>
+                . Confirmar?
+              </p>
+            ) : (
+              <p className="text-sm">
+                Nenhuma linha válida para importar. Corrija os erros abaixo e
+                tente novamente.
+              </p>
+            )}
+
+            {preview.skipped.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {preview.skipped.length} já cadastrado(s) — serão ignorados,
+                  nada é sobrescrito:
+                </p>
+                <div className="max-h-28 space-y-0.5 overflow-y-auto rounded-md border bg-muted/40 p-2">
+                  {preview.skipped.map((item) => (
+                    <p key={ item } className="text-xs text-muted-foreground">
+                      {item}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {preview.errors.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-destructive">
+                  {preview.errors.length} linha(s) com erro (não serão
+                  importadas):
+                </p>
+                <div className="max-h-36 space-y-0.5 overflow-y-auto rounded-md border border-destructive/30 bg-destructive/5 p-2">
+                  {preview.errors.map((error) => (
+                    <p key={ error } className="text-xs text-destructive">
+                      {error}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
-              <Input
-                id="file"
-                type="file"
-                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                onChange={ handleFileChange }
-              />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full mt-2"
-              onClick={ downloadTemplate }
-            >
-              <Download className="mr-2 h-4 w-4" /> Baixar Modelo CSV
-            </Button>
-          </div>
-
-          <DialogFooter>
-            <Button type="submit" disabled={ isSubmitting }>
-              {isSubmitting ? (
-                <Loader2 className="animate-spin mr-2" />
-              ) : (
-                <FileUp className="mr-2 h-4 w-4" />
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                disabled={ isSubmitting }
+                onClick={ () => setPreview(null) }
+              >
+                Cancelar
+              </Button>
+              {preview.validCount > 0 && (
+                <Button
+                  type="button"
+                  className="flex-1"
+                  disabled={ isSubmitting }
+                  onClick={ handleConfirmImport }
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="animate-spin mr-2" />
+                  ) : (
+                    <FileUp className="mr-2 h-4 w-4" />
+                  )}
+                  Confirmar Importação
+                </Button>
               )}
-              Importar
-            </Button>
-          </DialogFooter>
-        </form>
+            </div>
+          </div>
+        ) : (
+          <>
+            <form onSubmit={ handleSubmit(onSubmit) } className="space-y-4 pt-2">
+              {/* Filtros compartilhados: definem a filial e o tipo de arquivo
+                  usados tanto na importação quanto na exportação. */}
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Filtros</p>
+                <Label>Filial</Label>
+                <SelectFilial
+                  control={ control }
+                  name="filialId"
+                  accessibleFilials={ accessibleFilialsIds }
+                  defaultFilial={ user?.sourceFilialId }
+                />
+                <Label>Tipo de arquivo</Label>
+                <Controller
+                  control={ control }
+                  name="fileType"
+                  render={ ({ field }) => (
+                    <Select value={ field.value } onValueChange={ field.onChange }>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tipo de arquivo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="csv">CSV</SelectItem>
+                        <SelectItem value="xlsx">XLSX (Excel)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Os filtros selecionados valem para a importação e a
+                  exportação. Os clientes são importados para a filial
+                  selecionada acima.
+                </p>
+              </div>
+
+              <div className="space-y-2 border-t pt-4">
+                <p className="text-sm font-semibold">Importação</p>
+                <Label htmlFor="file">Planilha (Excel/CSV)</Label>
+                {/* Input nativo escondido: a área clicável fica restrita ao botão. */}
+                <div className="flex items-center gap-3 rounded-md border border-input px-1.5 py-1.5 shadow-xs">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="shrink-0 bg-gray-200 font-medium text-gray-800 hover:bg-gray-300"
+                    onClick={ () => fileInputRef.current?.click() }
+                  >
+                    Escolher arquivo
+                  </Button>
+                  <span className="truncate text-sm text-muted-foreground">
+                    {file ? file.name : "Nenhum arquivo escolhido"}
+                  </span>
+                  <input
+                    ref={ fileInputRef }
+                    id="file"
+                    type="file"
+                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    className="hidden"
+                    onChange={ handleFileChange }
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={ isSubmitting }
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="animate-spin mr-2" />
+                    ) : (
+                      <FileUp className="mr-2 h-4 w-4" />
+                    )}
+                    Importar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={ handleDownloadTemplate }
+                    title="Baixar planilha modelo com as colunas esperadas"
+                  >
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    Modelo
+                  </Button>
+                </div>
+              </div>
+            </form>
+
+            <div className="space-y-2 border-t pt-4">
+              <p className="text-sm font-semibold">Exportação</p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={ isExporting }
+                onClick={ handleExport }
+              >
+                {isExporting ? (
+                  <Loader2 className="animate-spin mr-2" />
+                ) : (
+                  <FileDown className="mr-2 h-4 w-4" />
+                )}
+                Exportar Clientes
+              </Button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

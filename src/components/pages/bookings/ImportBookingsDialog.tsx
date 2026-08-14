@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileUp, FileDown, Loader2 } from "lucide-react";
+import { FileUp, FileDown, FileSpreadsheet, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { SelectFilial } from "@/components/shared/SelectFilial";
@@ -60,6 +60,9 @@ const formatCurrency = (cents: number) =>
 
 const EXPORT_HEADERS = [
   "Cliente",
+  // Chave de identificação do cliente na importação — precisa sair no export
+  // para que o ciclo exportar → editar → reimportar continue funcionando.
+  "CPF/CNPJ",
   "Filial",
   "Cidade",
   "Equipamentos",
@@ -76,6 +79,7 @@ const EXPORT_HEADERS = [
 function buildExportRows(items: Checkout[]): (string | number)[][] {
   return items.map((checkout) => [
     checkout.Customer?.fullname ?? "",
+    checkout.Customer?.cpf || checkout.Customer?.cnpj || "",
     checkout.SourceFilial?.filialName ?? "",
     checkout.Address?.city ?? "",
     (checkout.Bookings ?? [])
@@ -101,6 +105,75 @@ function toCsvCell(value: string | number): string {
       : value;
   return /[";\n]/.test(text) ? `"${text.replace(/"/g, "\"\"")}"` : text;
 }
+
+/** Gera e baixa a planilha no formato escolhido. Usado pela exportação e pelo modelo. */
+async function downloadSheet(
+  headers: string[],
+  rows: (string | number)[][],
+  baseName: string,
+  fileType: ExportFileType,
+) {
+  if (fileType === "xlsx") {
+    const XLSX = await import("xlsx");
+    const worksheet = XLSX.utils.aoa_to_sheet([ headers, ...rows ]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Agendamentos");
+    XLSX.writeFile(workbook, `${baseName}.xlsx`);
+    return;
+  }
+
+  // CSV com BOM e separador ";" (compatível com Excel em pt-BR).
+  const csv =
+    "﻿" +
+    [ headers, ...rows ].map((row) => row.map(toCsvCell).join(";")).join("\n");
+  const blob = new Blob([ csv ], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${baseName}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+// O modelo NÃO traz a coluna "Filial": ela é ignorada na importação (a filial
+// vem do seletor do diálogo), e oferecê-la só induziria a preenchê-la em vão.
+// A exportação mantém a coluna porque ali ela é informação útil.
+const TEMPLATE_HEADERS = EXPORT_HEADERS.filter(
+  (header) => header !== "Filial",
+);
+
+// Linhas de exemplo: cobrem o caso de uma máquina e o de várias (por vírgula).
+const TEMPLATE_ROWS: (string | number)[][] = [
+  [
+    "Maria Silva",
+    "123.456.789-00",
+    "Belém",
+    "ACRUS",
+    "15/08/2026",
+    "08:00",
+    "20:00",
+    720,
+    "Pendente",
+    "Pendente",
+    1300,
+    "Exemplo — apague estas linhas antes de importar",
+  ],
+  [
+    "Clínica Estética LTDA",
+    "12.345.678/0001-90",
+    "Ananindeua",
+    "ACRUS, LAVIEEN",
+    "16/08/2026",
+    "09:00",
+    "13:00",
+    240,
+    "Concluído",
+    "Pago",
+    2500,
+    "CPF ou CNPJ — é o campo que identifica o cliente",
+  ],
+];
 
 export function ImportBookingsDialog({
   open,
@@ -281,30 +354,12 @@ export function ImportBookingsDialog({
         .toISOString()
         .slice(0, 10)}`;
 
-      const rows = buildExportRows(items);
-
-      if (fileType === "xlsx") {
-        const XLSX = await import("xlsx");
-        const worksheet = XLSX.utils.aoa_to_sheet([ EXPORT_HEADERS, ...rows ]);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Agendamentos");
-        XLSX.writeFile(workbook, `${baseName}.xlsx`);
-      } else {
-        // CSV com BOM e separador ";" (compatível com Excel em pt-BR).
-        const csv =
-          "﻿" +
-          [ EXPORT_HEADERS, ...rows ]
-            .map((row) => row.map(toCsvCell).join(";"))
-            .join("\n");
-        const blob = new Blob([ csv ], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `${baseName}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-      }
+      await downloadSheet(
+        EXPORT_HEADERS,
+        buildExportRows(items),
+        baseName,
+        fileType,
+      );
 
       toast.success(
         `${items.length} agendamento(s) exportado(s) em ${fileType.toUpperCase()}.`,
@@ -314,6 +369,25 @@ export function ImportBookingsDialog({
       toast.error("Erro ao exportar agendamentos.");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Baixa uma planilha vazia com o cabeçalho esperado e linhas de exemplo, no
+  // mesmo formato escolhido nos filtros.
+  const handleDownloadTemplate = async () => {
+    const { fileType } = getValues();
+
+    try {
+      await downloadSheet(
+        TEMPLATE_HEADERS,
+        TEMPLATE_ROWS,
+        "modelo_importacao_agendamentos",
+        fileType,
+      );
+      toast.success(`Modelo baixado em ${fileType.toUpperCase()}.`);
+    } catch (error) {
+      console.error("Failed to download template", error);
+      toast.error("Erro ao baixar o modelo.");
     }
   };
 
@@ -464,18 +538,30 @@ export function ImportBookingsDialog({
                     onChange={ handleFileChange }
                   />
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={ isSubmitting }
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="animate-spin mr-2" />
-                  ) : (
-                    <FileUp className="mr-2 h-4 w-4" />
-                  )}
-                  Importar
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={ isSubmitting }
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="animate-spin mr-2" />
+                    ) : (
+                      <FileUp className="mr-2 h-4 w-4" />
+                    )}
+                    Importar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={ handleDownloadTemplate }
+                    title="Baixar planilha modelo com as colunas esperadas"
+                  >
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    Modelo
+                  </Button>
+                </div>
               </div>
             </form>
 
