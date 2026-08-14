@@ -89,7 +89,22 @@ export async function GetAllCustomers(
   return response;
 }
 
-export async function ImportCustomers(formData: FormData) {
+export interface ImportCustomersResult {
+  successCount?: number;
+  failedCount?: number;
+  skippedCount?: number;
+  skipped?: string[];
+  errors?: string[];
+  validCount?: number;
+  dryRun?: boolean;
+  batchId?: string;
+  message?: string;
+  statusCode?: number;
+}
+
+export async function ImportCustomers(
+  formData: FormData,
+): Promise<ImportCustomersResult> {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 

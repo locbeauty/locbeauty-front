@@ -8,12 +8,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LoaderCircle, LogOut } from "lucide-react";
+import { ChevronDown, LoaderCircle, LogOut, ScrollText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DarkModeSwitcher } from "@/components/shared/DarkModeSwitcher";
 import { useAuth } from "@/contexts/auth-provider";
 import Link from "next/link";
 import { User } from "lucide-react";
+import { Can } from "@/components/auth/Can";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 export function UserDropdown() {
   const { user, isLoading, handleLogout } = useAuth();
@@ -73,6 +75,21 @@ export function UserDropdown() {
             </Link>
           </Button>
         </DropdownMenuItem>
+
+        <Can module={ SYSTEM_MODULES.AUDITORIA } action="canView">
+          <DropdownMenuItem asChild>
+            <Button
+              variant="ghost"
+              className="cursor-pointer w-full justify-start h-auto px-2 py-1.5"
+              asChild
+            >
+              <Link href="/audit">
+                <ScrollText className="mr-2 h-4 w-4" />
+                <span>Auditoria</span>
+              </Link>
+            </Button>
+          </DropdownMenuItem>
+        </Can>
 
         <DropdownMenuSeparator />
         <DarkModeSwitcher />

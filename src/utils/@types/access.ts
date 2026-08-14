@@ -11,6 +11,7 @@ export enum SYSTEM_MODULES {
   TRAININGS = "TRAININGS",
   BIRTHDAYS = "BIRTHDAYS",
   NOTICES = "NOTICES",
+  AUDITORIA = "AUDITORIA",
 }
 
 export type AccessPermissions = {
