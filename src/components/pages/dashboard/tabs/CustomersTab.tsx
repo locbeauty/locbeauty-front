@@ -23,6 +23,7 @@ import { DefaultsCard } from "../cards/DefaultsCard";
 import { InactiveClientsCard } from "../cards/InactiveClientsCard";
 import { ActiveClientsCard } from "../cards/ActiveClientsCard";
 import { CustomerStatusCard } from "../cards/CustomerStatusCard";
+import { CustomerSegmentsCard } from "../cards/CustomerSegmentsCard";
 import { useState } from "react";
 
 const MONTHS = [
@@ -61,6 +62,7 @@ export function CustomersTab() {
         </div>
       </div>
       <CustomerStatusCard />
+      <CustomerSegmentsCard />
       <TopCustomersCard />
     </div>
   );

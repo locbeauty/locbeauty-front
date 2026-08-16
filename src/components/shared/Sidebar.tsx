@@ -105,6 +105,8 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
         className,
       ) }
     >
+      {/* A altura h-16 acompanha a do DashboardHeader: as duas bordas
+          inferiores ficam na mesma linha. O texto vem abaixo dela. */}
       <div className="flex h-16 items-center justify-center border-b border-primary-foreground/10 px-4">
         <Image
           src="/logo.png"
@@ -115,6 +117,9 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
           className="h-11 w-auto"
         />
       </div>
+      <p className="px-3 pt-3 text-center text-xs font-bold leading-tight text-white">
+        Sistema de Gestão - LocBeauty
+      </p>
       <nav className="flex-1 overflow-auto py-4">
         <ul className="grid gap-1 px-2">
           {routes

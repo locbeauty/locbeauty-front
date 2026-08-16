@@ -16,6 +16,8 @@ export interface Filial {
   neighborhood?: string | null;
   city?: string | null;
   state?: string | null;
+  // Filiais vinculadas: compartilham todos os dados nos filtros por filial.
+  LinkedFilials?: { filialId: string; filialName: string }[];
 }
 
 export interface FilialStats {

@@ -13,16 +13,13 @@ import {
 } from "@/services/checkouts.service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookingDetailsDialog } from "./DetailsDialog/BookingDetailsDialog";
-import {
-  ChevronLeft,
-  ChevronsLeft,
-  Eye,
-  Pencil,
-  RefreshCcw,
-  Trash2,
-} from "lucide-react";
+import { Eye, Pencil, RefreshCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
+import {
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
 import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
@@ -57,7 +54,10 @@ export function BookingsTable({ filters }: BookingsTableProps) {
   const [ selectedCheckout, setSelectedCheckout ] = useState<Checkout | null>(
     null,
   );
-  const [ pagination, setPagination ] = useState({ page: 1, limit: 10 });
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
   const [ isVisible, setIsVisible ] = useState(true);
   const [ checkoutToRestore, setCheckoutToRestore ] = useState<Checkout | null>(
     null,
@@ -143,7 +143,6 @@ export function BookingsTable({ filters }: BookingsTableProps) {
   });
 
   const totalCheckouts = data?.data?.total || 0;
-  const totalPages = Math.ceil(totalCheckouts / pagination.limit);
 
   // A filtragem (filial, máquina, data, status, pagamento) é feita no servidor,
   // que já devolve os itens filtrados e paginados.
@@ -261,6 +260,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
             <tr>
               <th className="text-left p-3 font-medium text-sm">Cliente</th>
               <th className="text-left p-3 font-medium text-sm">Filial</th>
+              <th className="text-left p-3 font-medium text-sm">Cidade</th>
               <th className="text-left p-3 font-medium text-sm">Equipamento</th>
               <th className="text-center p-3 font-medium text-sm">Data</th>
               <th className="text-center p-3 font-medium text-sm">
@@ -281,7 +281,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
           <tbody>
             {isEmpty && (
               <tr>
-                <td className="text-center p-4" colSpan={ 10 }>
+                <td className="text-center p-4" colSpan={ 11 }>
                   Nada a mostrar por aqui.
                 </td>
               </tr>
@@ -298,6 +298,9 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                     </td>
                     <td className="p-3 text-sm">
                       {checkout.SourceFilial?.filialName || "N/A"}
+                    </td>
+                    <td className="p-3 text-sm">
+                      {checkout.Address?.city || "N/A"}
                     </td>
                     <td className="p-3 text-sm">
                       {checkout.Bookings.map((b) => b.Gear.gearName).join(", ")}
@@ -369,7 +372,7 @@ export function BookingsTable({ filters }: BookingsTableProps) {
             ) : (
               <tr>
                 <td
-                  colSpan={ 10 }
+                  colSpan={ 11 }
                   className="p-4 text-center text-muted-foreground"
                 >
                   Carregando...
@@ -402,6 +405,10 @@ export function BookingsTable({ filters }: BookingsTableProps) {
                 {
                   itemLabel: "Filial: ",
                   itemInfo: checkout.SourceFilial?.filialName || "N/A",
+                },
+                {
+                  itemLabel: "Cidade: ",
+                  itemInfo: checkout.Address?.city || "N/A",
                 },
                 {
                   itemLabel: "Data: ",
@@ -442,84 +449,14 @@ export function BookingsTable({ filters }: BookingsTableProps) {
         ))}
       </div>
 
-      <div className="flex items-center justify-end space-x-2 py-4 px-4 bg-white border-t">
-        <div className="flex-1 text-sm text-muted-foreground hidden md:block">
-          {totalCheckouts} agendamento(s) encontrado(s)
-        </div>
-        <div className="space-x-2 flex items-center justify-center w-full md:w-auto">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(1) }
-            disabled={ pagination.page === 1 }
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(pagination.page - 1) }
-            disabled={ pagination.page === 1 }
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-          <div className="flex items-center gap-1">
-            {(() => {
-              const MAX_VISIBLE_PAGES = 5;
-              const pages = [];
-              let startPage = Math.max(
-                1,
-                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2),
-              );
-              const endPage = Math.min(
-                totalPages,
-                startPage + MAX_VISIBLE_PAGES - 1,
-              );
-
-              if (endPage - startPage + 1 < MAX_VISIBLE_PAGES) {
-                startPage = Math.max(1, endPage - MAX_VISIBLE_PAGES + 1);
-              }
-
-              for (let i = startPage; i <= endPage; i++) {
-                pages.push(
-                  <Button
-                    key={ i }
-                    variant={ pagination.page === i ? "default" : "outline" }
-                    size="sm"
-                    className="h-8 w-8"
-                    onClick={ () => handlePageChange(i) }
-                  >
-                    {i}
-                  </Button>,
-                );
-              }
-              return pages;
-            })()}
-          </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(pagination.page + 1) }
-            disabled={ pagination.page === totalPages || totalPages === 0 }
-          >
-            <ChevronLeft className="h-4 w-4 rotate-180" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(totalPages) }
-            disabled={ pagination.page === totalPages || totalPages === 0 }
-          >
-            <ChevronsLeft className="h-4 w-4 rotate-180" />
-          </Button>
-        </div>
-      </div>
+      <ListPagination
+        page={ pagination.page }
+        limit={ pagination.limit }
+        totalItems={ totalCheckouts }
+        onPageChange={ handlePageChange }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="agendamento(s)"
+      />
 
       <BookingDetailsDialog
         isOpen={ isBookingDetailsDialogOpen }

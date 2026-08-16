@@ -41,8 +41,10 @@ import {
 } from "@/utils/@types/import-batch";
 import { RevertImportDialog } from "./RevertImportDialog";
 import { ImportBatchDetailsDialog } from "./ImportBatchDetailsDialog";
-
-const PAGE_SIZE = 20;
+import {
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 
 /** ID curto exibido na tabela — mesmo formato usado no histórico de treinos. */
 function shortId(batchId: string) {
@@ -69,6 +71,7 @@ export function ImportBatchesTable() {
   const [ fileName, setFileName ] = useState("");
   const [ batchIdSearch, setBatchIdSearch ] = useState("");
   const [ page, setPage ] = useState(1);
+  const [ limit, setLimit ] = useState(DEFAULT_PAGE_SIZE);
 
   const debouncedEmployeeName = useDebounce(employeeName);
   const debouncedFileName = useDebounce(fileName);
@@ -128,6 +131,7 @@ export function ImportBatchesTable() {
       debouncedFileName,
       debouncedBatchId,
       page,
+      limit,
     ],
     queryFn: () =>
       GetImportBatches(
@@ -141,13 +145,12 @@ export function ImportBatchesTable() {
           ...(debouncedFileName ? { fileName: debouncedFileName } : {}),
           ...(debouncedBatchId ? { batchId: debouncedBatchId } : {}),
         },
-        { page, limit: PAGE_SIZE },
+        { page, limit },
       ),
   });
 
   const batches = data?.data?.items ?? [];
   const total = data?.data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function clearFilters() {
     setTypeFilter("ALL");
@@ -411,29 +414,17 @@ export function ImportBatchesTable() {
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end gap-2">
-          <span className="text-muted-foreground text-sm">
-            Página {page} de {totalPages} ({total} importações)
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={ page === 1 }
-            onClick={ () => setPage((current) => current - 1) }
-          >
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={ page >= totalPages }
-            onClick={ () => setPage((current) => current + 1) }
-          >
-            Próxima
-          </Button>
-        </div>
-      )}
+      <ListPagination
+        page={ page }
+        limit={ limit }
+        totalItems={ total }
+        onPageChange={ setPage }
+        onLimitChange={ (newLimit) => {
+          setPage(1);
+          setLimit(newLimit);
+        } }
+        itemLabel="importação(ões)"
+      />
 
       <RevertImportDialog
         batch={ batchToRevert }

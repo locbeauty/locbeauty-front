@@ -8,6 +8,7 @@ import {
   Users,
   TrendingUp,
   Calendar,
+  Link2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,9 +48,19 @@ export function FilialDetailsCard({ selectedFilial }: FilialDetailsCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 flex-wrap">
           <Building className="h-5 w-5" />
           {selectedFilial.filialName}
+          {selectedFilial.LinkedFilials?.map((linked) => (
+            <Badge
+              key={ linked.filialId }
+              variant="outline"
+              className="bg-purple-50 text-purple-700 border-purple-200"
+            >
+              <Link2 className="h-3 w-3 mr-1" />
+              Vinculada a {linked.filialName}
+            </Badge>
+          ))}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">

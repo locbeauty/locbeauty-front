@@ -9,6 +9,7 @@ export const updateFilialFormSchema = z.object({
     .optional(),
   filialName: z.string().optional(),
   managerEmployeeId: z.string().optional(),
+  linkedFilialIds: z.array(z.string()).optional(),
   zipCode: z.string().regex(/^\d{5}-\d{3}$/, "CEP inválido (use 00000-000)").optional(),
   street: z.string().optional(),
   buildingNumber: z.string().optional(),

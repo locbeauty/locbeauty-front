@@ -54,6 +54,8 @@ export function UpdateFilialDialog({
         cellphone: formatPhone(selectedFilial.cellphone),
         filialName: selectedFilial.filialName,
         managerEmployeeId: selectedFilial.managerEmployee?.employeeId,
+        linkedFilialIds:
+          selectedFilial.LinkedFilials?.map((f) => f.filialId) ?? [],
         zipCode: selectedFilial.zipCode ?? "",
         street: selectedFilial.street ?? "",
         buildingNumber: selectedFilial.buildingNumber ?? "",

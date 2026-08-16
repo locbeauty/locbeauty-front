@@ -188,6 +188,16 @@ export type UpdateTrainingPayload = {
     paymentStatus?: "Pendente" | "Pago" | "Parcial";
   }[];
 
+  // Justificativa obrigatória ao alterar valores de um treinamento concluído.
+  justification?: string;
+
+  // Gestão de alunos: cancelar inscrição / remanejar para outro treinamento.
+  canceledParticipants?: string[];
+  transferredParticipants?: {
+    customerId: string;
+    targetTrainingId: string;
+  }[];
+
   TrainingPayment: {
     totalPrice: number;
     basePrice: number;

@@ -25,6 +25,8 @@ import {
 interface Props {
   training: Training;
   disabled?: boolean;
+  /** Treinamento concluído: alterar valores exige justificativa registrada. */
+  requireJustification?: boolean;
 }
 
 interface ChargeRow {
@@ -41,7 +43,11 @@ const KIND_LABEL: Record<TrainingChargeKind, string> = {
   EXTRA: "Cobrança adicional",
 };
 
-export function TrainingEnrollmentsSection({ training, disabled }: Props) {
+export function TrainingEnrollmentsSection({
+  training,
+  disabled,
+  requireJustification,
+}: Props) {
   const enrollments = training.Enrollments || [];
 
   if (enrollments.length === 0) {
@@ -61,6 +67,7 @@ export function TrainingEnrollmentsSection({ training, disabled }: Props) {
             training={ training }
             enrollment={ enrollment }
             disabled={ disabled }
+            requireJustification={ requireJustification }
           />
         ))}
       </div>
@@ -72,10 +79,12 @@ function EnrollmentCard({
   training,
   enrollment,
   disabled,
+  requireJustification,
 }: {
   training: Training;
   enrollment: TrainingEnrollment;
   disabled?: boolean;
+  requireJustification?: boolean;
 }) {
   const payment =
     training.TrainingPayment?.find(
@@ -98,6 +107,7 @@ function EnrollmentCard({
     enrollment.observations ?? "",
   );
   const [ charges, setCharges ] = useState<ChargeRow[]>(initialCharges);
+  const [ justification, setJustification ] = useState("");
   const [ savingObs, setSavingObs ] = useState(false);
   const [ savingCharges, setSavingCharges ] = useState(false);
 
@@ -106,8 +116,12 @@ function EnrollmentCard({
     0,
   );
 
-  const refresh = () =>
+  const refresh = () => {
     queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+    queryClient.invalidateQueries({
+      queryKey: [ "get-training-value-changes" ],
+    });
+  };
 
   const saveObservations = async () => {
     setSavingObs(true);
@@ -130,6 +144,14 @@ function EnrollmentCard({
   };
 
   const saveCharges = async () => {
+    const trimmedJustification = justification.trim();
+    if (requireJustification && !trimmedJustification) {
+      toast.warning(
+        "Informe uma justificativa para alterar os valores de um treinamento concluído.",
+      );
+      return;
+    }
+
     setSavingCharges(true);
     try {
       const response = await UpdateTraining({
@@ -142,10 +164,14 @@ function EnrollmentCard({
             amountCents: parseStringToCents(c.value || "0"),
             isRequired: c.isRequired,
           })),
+          ...(requireJustification
+            ? { justification: trimmedJustification }
+            : {}),
         },
       });
       if (response.statusCode === 200) {
         toast.success("Cobranças atualizadas.");
+        setJustification("");
         refresh();
       } else {
         toast.warning(response.message || "Erro ao salvar cobranças.");
@@ -272,6 +298,23 @@ function EnrollmentCard({
             )}
           </div>
         ))}
+
+        {!disabled && requireJustification && (
+          <div className="space-y-1 border-t pt-3">
+            <Label className="text-xs uppercase text-destructive">
+              Justificativa da alteração *
+            </Label>
+            <Textarea
+              value={ justification }
+              onChange={ (e) => setJustification(e.target.value) }
+              placeholder="Descreva o motivo da alteração dos valores neste treinamento concluído"
+              className="resize-none min-h-[60px]"
+            />
+            <p className="text-xs text-muted-foreground">
+              Esta alteração ficará registrada no histórico do treinamento.
+            </p>
+          </div>
+        )}
 
         {!disabled && (
           <div className="flex items-center justify-between pt-1">

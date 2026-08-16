@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import PhoneInput from "../../../shared/PhoneInput";
 import DocumentInput from "../../../shared/DocumentInput";
 import { Controller, useFormContext } from "react-hook-form";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { MaskedDateInput } from "@/components/pages/employees/forms/MaskedDateInput";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 import { Button } from "@/components/ui/button";
 import { X, User, Phone, Mail } from "lucide-react";
@@ -175,19 +175,14 @@ export function CustomerGeneralInformationForm({
                     control={ control }
                     name="birthdate"
                     render={ () => (
-                      <DatePicker
+                      <MaskedDateInput
                         id="birthdate"
-                        placeholder="Escolha a data de nascimento"
                         value={ birthdate ?? null }
                         onChange={ (date) => {
                           setValue("birthdate", date ? date : null);
                           trigger("birthdate");
                         } }
-                        classNames={ {
-                          trigger:
-                            errors.birthdate &&
-                            "border-destructive focus-visible:ring-destructive",
-                        } }
+                        error={ errors.birthdate?.message }
                       />
                     ) }
                   />

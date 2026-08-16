@@ -180,6 +180,30 @@ export function BookingDetailsDialog({
     isConcluded &&
     canEditBookings &&
     (isAdminOrMaster || isWithinReopenWindow);
+
+  // ----- Reabrir agendamento cancelado -----
+  // Restrito aos cargos Master, Gerente, Comercial e Financeiro. Master
+  // reabre a qualquer momento; os demais têm até 24h após o cancelamento.
+  const isCanceled = selectedCheckout?.checkoutStatus === "Cancelado";
+  const isMaster = user?.role === USER_ROLES.MASTER;
+  const hasCancelReopenRole =
+    user?.role === USER_ROLES.MASTER ||
+    user?.role === USER_ROLES.GERENTE ||
+    user?.role === USER_ROLES.COMERCIAL ||
+    user?.role === USER_ROLES.FINANCEIRO;
+  const cancelReopenDeadline = selectedCheckout?.cancellationDate
+    ? addMinutes(
+      new Date(selectedCheckout.cancellationDate),
+      REOPEN_WINDOW_HOURS * 60,
+    )
+    : null;
+  const isWithinCancelReopenWindow = cancelReopenDeadline
+    ? new Date() < cancelReopenDeadline
+    : false;
+  const showReopenCanceled = isCanceled && hasCancelReopenRole && canEditBookings;
+  const canReopenCanceled =
+    showReopenCanceled && (isMaster || isWithinCancelReopenWindow);
+
   const formatDeadline = (d: Date) =>
     `${d.toLocaleDateString("pt-BR")} às ${d.toLocaleTimeString("pt-BR", {
       hour: "2-digit",
@@ -616,10 +640,20 @@ export function BookingDetailsDialog({
 
     setSelectedCheckout((prev) => {
       if (!prev) return prev;
+      const wasCanceled = prev.checkoutStatus === "Cancelado";
       return {
         ...prev,
         checkoutStatus: "Pendente",
         concludedAt: null,
+        cancellationDate: wasCanceled ? null : prev.cancellationDate,
+        // Reabertura de cancelado: o backend devolve o pagamento "Cancelado"
+        // para "Pendente".
+        CheckoutPayment:
+          wasCanceled &&
+          prev.CheckoutPayment &&
+          prev.CheckoutPayment.paymentStatus === "Cancelado"
+            ? { ...prev.CheckoutPayment, paymentStatus: "Pendente" }
+            : prev.CheckoutPayment,
       };
     });
 
@@ -1643,6 +1677,32 @@ export function BookingDetailsDialog({
                     </p>
                   )}
 
+                  {showReopenCanceled && (
+                    <p className="text-xs text-muted-foreground text-center sm:text-right">
+                      {isMaster ? (
+                        "Este agendamento cancelado pode ser reaberto a qualquer momento."
+                      ) : cancelReopenDeadline && isWithinCancelReopenWindow ? (
+                        <>
+                          Pode ser reaberto até{ " " }
+                          <span className="font-medium text-foreground">
+                            {formatDeadline(cancelReopenDeadline)}
+                          </span>
+                          .
+                        </>
+                      ) : cancelReopenDeadline ? (
+                        <>
+                          O prazo para reabrir expirou em{ " " }
+                          <span className="font-medium text-foreground">
+                            {formatDeadline(cancelReopenDeadline)}
+                          </span>
+                          .
+                        </>
+                      ) : (
+                        "O prazo para reabrir este agendamento não está disponível."
+                      )}
+                    </p>
+                  )}
+
                   <div className="flex flex-col sm:flex-row gap-3 justify-end">
                     <Button
                       variant="outline"
@@ -1658,6 +1718,18 @@ export function BookingDetailsDialog({
                         variant="secondary"
                         onClick={ () => handleReopenCheckout() }
                         disabled={ !canReopen }
+                        className="sm:w-auto w-full"
+                      >
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Reabrir Agendamento
+                      </Button>
+                    )}
+
+                    {showReopenCanceled && (
+                      <Button
+                        variant="secondary"
+                        onClick={ () => handleReopenCheckout() }
+                        disabled={ !canReopenCanceled }
                         className="sm:w-auto w-full"
                       >
                         <RotateCcw className="mr-2 h-4 w-4" />

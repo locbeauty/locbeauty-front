@@ -2,14 +2,11 @@
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { Button } from "@/components/ui/button";
 import { Employee } from "@/utils/@types/employee";
+import { Eye, Pencil, Trash2, RefreshCcw } from "lucide-react";
 import {
-  Eye,
-  Pencil,
-  ChevronLeft,
-  ChevronsLeft,
-  Trash2,
-  RefreshCcw,
-} from "lucide-react";
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 import { Fragment, useEffect, useState } from "react";
 import { UpdateEmployeeDialog } from "../update/UpdateEmployeeDialog";
 import { EmployeeDetailsDialog } from "./EmployeeDetailsDialog";
@@ -40,7 +37,10 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
     useState(false);
   const [ allEmployees, setAllEmployees ] = useState<Employee[] | null>(null);
   const [ totalEmployees, setTotalEmployees ] = useState(0);
-  const [ pagination, setPagination ] = useState({ page: 1, limit: 10 });
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
   const [ selectedEmployee, setSelectedEmployee ] = useState<Employee | null>(
     null,
   );
@@ -69,8 +69,6 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
     useState<Employee | null>(null);
 
   const [ isVisible, setIsVisible ] = useState<boolean>(false);
-
-  const totalPages = Math.ceil(totalEmployees / pagination.limit);
 
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
@@ -389,87 +387,6 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
         </table>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-end space-x-2 py-4 hidden md:flex">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {totalEmployees} funcionário(s) encontrado(s)
-        </div>
-        <div className="space-x-2 flex items-center">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(1) }
-            disabled={ pagination.page === 1 }
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(pagination.page - 1) }
-            disabled={ pagination.page === 1 }
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-          {/* Numbered Pages */}
-          <div className="flex items-center gap-1">
-            {(() => {
-              const MAX_VISIBLE_PAGES = 5;
-              const pages = [];
-              let startPage = Math.max(
-                1,
-                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2),
-              );
-              const endPage = Math.min(
-                totalPages,
-                startPage + MAX_VISIBLE_PAGES - 1,
-              );
-
-              if (endPage - startPage + 1 < MAX_VISIBLE_PAGES) {
-                startPage = Math.max(1, endPage - MAX_VISIBLE_PAGES + 1);
-              }
-
-              for (let i = startPage; i <= endPage; i++) {
-                pages.push(
-                  <Button
-                    key={ i }
-                    variant={ pagination.page === i ? "default" : "outline" }
-                    size="sm"
-                    className="h-8 w-8"
-                    onClick={ () => handlePageChange(i) }
-                  >
-                    {i}
-                  </Button>,
-                );
-              }
-              return pages;
-            })()}
-          </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(pagination.page + 1) }
-            disabled={ pagination.page === totalPages || totalPages === 0 }
-          >
-            <ChevronLeft className="h-4 w-4 rotate-180" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(totalPages) }
-            disabled={ pagination.page === totalPages || totalPages === 0 }
-          >
-            <ChevronsLeft className="h-4 w-4 rotate-180" />
-          </Button>
-        </div>
-      </div>
-
       <div className="md:hidden flex flex-col gap-4">
         {allEmployees
           ?.filter(
@@ -499,86 +416,14 @@ export function EmployeesTable({ searchName, filialId }: EmployeesTableProps) {
           ))}
       </div>
 
-      {/* Pagination Controls Mobile */}
-      <div className="flex flex-col items-center justify-center space-y-4 py-4 md:hidden">
-        <div className="text-sm text-muted-foreground w-full text-center">
-          {totalEmployees} funcionário(s) encontrado(s)
-        </div>
-        <div className="flex items-center justify-center space-x-2 w-full">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(1) }
-            disabled={ pagination.page === 1 }
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(pagination.page - 1) }
-            disabled={ pagination.page === 1 }
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-          {/* Numbered Pages */}
-          <div className="flex items-center gap-1">
-            {(() => {
-              const MAX_VISIBLE_PAGES = 3; // Smaller for mobile
-              const pages = [];
-              let startPage = Math.max(
-                1,
-                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2),
-              );
-              const endPage = Math.min(
-                totalPages,
-                startPage + MAX_VISIBLE_PAGES - 1,
-              );
-
-              if (endPage - startPage + 1 < MAX_VISIBLE_PAGES) {
-                startPage = Math.max(1, endPage - MAX_VISIBLE_PAGES + 1);
-              }
-
-              for (let i = startPage; i <= endPage; i++) {
-                pages.push(
-                  <Button
-                    key={ i }
-                    variant={ pagination.page === i ? "default" : "outline" }
-                    size="sm"
-                    className="h-8 w-8"
-                    onClick={ () => handlePageChange(i) }
-                  >
-                    {i}
-                  </Button>,
-                );
-              }
-              return pages;
-            })()}
-          </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(pagination.page + 1) }
-            disabled={ pagination.page === totalPages || totalPages === 0 }
-          >
-            <ChevronLeft className="h-4 w-4 rotate-180" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(totalPages) }
-            disabled={ pagination.page === totalPages || totalPages === 0 }
-          >
-            <ChevronsLeft className="h-4 w-4 rotate-180" />
-          </Button>
-        </div>
-      </div>
+      <ListPagination
+        page={ pagination.page }
+        limit={ pagination.limit }
+        totalItems={ totalEmployees }
+        onPageChange={ handlePageChange }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="funcionário(s)"
+      />
 
       <EmployeeDetailsDialog
         selectedEmployee={ selectedEmployee }

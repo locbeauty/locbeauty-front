@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-provider";
-import { useAccess } from "@/contexts/access-provider";
 import { USER_ROLES } from "@/utils/constants";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { useAccessibleFilialIds } from "@/hooks/useAccessibleFilialIds";
 import { GetAllCheckouts, UpdateCheckoutStatus } from "@/services/checkouts.service";
 import { Checkout } from "@/utils/@types/checkouts";
 import { ApiResponse } from "@/lib/api";
@@ -22,15 +22,11 @@ import { Badge } from "@/components/ui/badge";
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
 import { centsToString } from "@/utils/centsToString";
+import { Eye, Loader2, MapPin, Navigation, Truck } from "lucide-react";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Loader2,
-  MapPin,
-  Navigation,
-  Truck,
-} from "lucide-react";
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -59,10 +55,16 @@ function isRouteAvailableToday(routeDate: Date | string): boolean {
 
 export function RoutesTable({ filters }: RoutesTableProps) {
   const { user } = useAuth();
-  const { accesses } = useAccess();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [ pagination, setPagination ] = useState({ page: 1, limit: 15 });
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [ filters ]);
 
   const isMaster = user?.role === USER_ROLES.MASTER || user?.role === USER_ROLES.ADMIN;
   const isMotorista = user?.role === USER_ROLES.MOTORISTA;
@@ -73,15 +75,9 @@ export function RoutesTable({ filters }: RoutesTableProps) {
   // Gerente e qualquer outro cargo com acesso
   const isGestor = !isMotorista;
 
-  // Filiais acessíveis (para gestores)
-  const accessibleFilialIds = useMemo(() => {
-    if (isMaster) return undefined;
-    const permissions = accesses
-      .filter((a) => a.module === SYSTEM_MODULES.ROUTES && a.canView)
-      .map((a) => a.filialId);
-    const unique = Array.from(new Set(permissions));
-    return unique.length > 0 ? unique : [ "NO_ACCESS" ];
-  }, [ isMaster, accesses ]);
+  // Filiais acessíveis (undefined = todas, para Master/Admin). Usa o mesmo
+  // hook da agenda para que os dois escopos nunca divirjam.
+  const accessibleFilialIds = useAccessibleFilialIds(SYSTEM_MODULES.ROUTES);
 
   const finalFilialIds = useMemo(() => {
     if (isMaster) return filters?.filialId ? [ filters.filialId ] : undefined;
@@ -121,7 +117,6 @@ export function RoutesTable({ filters }: RoutesTableProps) {
   );
 
   const totalRoutes = data?.data?.total || 0;
-  const totalPages = Math.ceil(totalRoutes / pagination.limit);
 
   const { mutate: iniciarRota, isPending: isStarting } = useMutation({
     mutationFn: (checkout: Checkout) =>
@@ -403,33 +398,14 @@ export function RoutesTable({ filters }: RoutesTableProps) {
         })}
       </div>
 
-      {/* Paginação */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2">
-          <p className="text-sm text-muted-foreground">
-            {routes.length} de {totalRoutes} rotas
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={ pagination.page <= 1 }
-              onClick={ () => setPagination((p) => ({ ...p, page: p.page - 1 })) }
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm">{pagination.page} / {totalPages}</span>
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={ pagination.page >= totalPages }
-              onClick={ () => setPagination((p) => ({ ...p, page: p.page + 1 })) }
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <ListPagination
+        page={ pagination.page }
+        limit={ pagination.limit }
+        totalItems={ totalRoutes }
+        onPageChange={ (page) => setPagination((prev) => ({ ...prev, page })) }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="rota(s)"
+      />
     </>
   );
 }

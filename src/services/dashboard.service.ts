@@ -171,9 +171,9 @@ export async function getInactiveClientsMetric({
   startMonth: number;
   endMonth: number;
 }): Promise<{
-  activeCount: number;
+  /** Clientes com status "Inativo" — mesma contagem do gráfico de status. */
   inactiveCount: number;
-  inactivePercentage: number;
+  totalClients: number;
   inactiveList: {
     customerId: string;
     customerName: string;
@@ -193,9 +193,8 @@ export async function getInactiveClientsMetric({
   }
 
   const { data } = await apiRequest<{
-    activeCount: number;
     inactiveCount: number;
-    inactivePercentage: number;
+    totalClients: number;
     inactiveList: {
       customerId: string;
       customerName: string;
@@ -228,10 +227,8 @@ export async function getActiveClientsMetric({
   endMonth: number;
 }): Promise<{
   totalClients: number;
+  /** Clientes com status "Ativo" — mesma contagem do gráfico de status. */
   activeClients: number;
-  activePercentage: number;
-  newClients: number;
-  recurringClients: number;
 }> {
   const queryParams: Record<string, string> = {
     year: String(year),
@@ -246,9 +243,6 @@ export async function getActiveClientsMetric({
   const { data } = await apiRequest<{
     totalClients: number;
     activeClients: number;
-    activePercentage: number;
-    newClients: number;
-    recurringClients: number;
   }>({
     endpoint: "dashboard/metrics/active-clients",
     method: "GET",

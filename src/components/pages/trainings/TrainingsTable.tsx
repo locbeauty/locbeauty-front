@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import {
   Eye,
@@ -42,6 +42,10 @@ import { DateRangePicker } from "@/components/ui/DatePicker";
 import type { DateRange } from "react-day-picker";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 
 interface TrainingsTableProps {
   trainings: Training[] | undefined;
@@ -114,6 +118,14 @@ export function TrainingsTable({
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Excluir treinamento (soft delete, diferente de cancelar): permitido para
+  // Master, Gerente e Comercial. Restaurar continua junto, mas só aparece na
+  // visão "Ver Excluídos", acessível apenas a Master/Admin.
+  const canDeleteTraining =
+    user?.role === USER_ROLES.MASTER ||
+    user?.role === USER_ROLES.GERENTE ||
+    user?.role === USER_ROLES.COMERCIAL;
 
   // Filters state
   const [ searchTerm, setSearchTerm ] = useState("");
@@ -350,6 +362,35 @@ export function TrainingsTable({
     filterGear,
   ]);
 
+  // Paginação local (a listagem de treinamentos vem completa do servidor).
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [
+    searchTerm,
+    filterStatus,
+    filterPaymentStatus,
+    filterDateRange,
+    filterFilial,
+    filterGear,
+    isVisible,
+  ]);
+
+  const totalTrainings = sortedTrainings.length;
+  const totalPagesCount = Math.max(
+    1,
+    Math.ceil(totalTrainings / pagination.limit),
+  );
+  const currentPage = Math.min(pagination.page, totalPagesCount);
+  const pagedTrainings = sortedTrainings.slice(
+    (currentPage - 1) * pagination.limit,
+    currentPage * pagination.limit,
+  );
+
   // Helper to format duration
   const formatDuration = (minutes: number) => {
     const h = Math.floor(minutes / 60);
@@ -563,7 +604,7 @@ export function TrainingsTable({
                 </td>
               </tr>
             )}
-            {sortedTrainings.map((training) => (
+            {pagedTrainings.map((training) => (
               <tr
                 key={ training.trainingId }
                 className="border-t hover:bg-muted/50"
@@ -643,7 +684,7 @@ export function TrainingsTable({
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  {user?.role === USER_ROLES.MASTER && (
+                  {canDeleteTraining && (
                     <>
                       {!isVisible ? (
                         <Button
@@ -679,7 +720,7 @@ export function TrainingsTable({
 
       {/* Mobile View */}
       <div className="md:hidden space-y-4">
-        {sortedTrainings.map((training) => (
+        {pagedTrainings.map((training) => (
           <ResponsiveCard
             key={ training.trainingId }
             cardData={ {
@@ -730,6 +771,15 @@ export function TrainingsTable({
           </p>
         )}
       </div>
+
+      <ListPagination
+        page={ currentPage }
+        limit={ pagination.limit }
+        totalItems={ totalTrainings }
+        onPageChange={ (page) => setPagination((prev) => ({ ...prev, page })) }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="treinamento(s)"
+      />
 
       {selectedTraining && (
         <TrainingDetailsDialog

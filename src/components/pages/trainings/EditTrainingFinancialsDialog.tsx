@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray, FormProvider } from "react-hook-form";
 import {
   Dialog,
@@ -23,6 +23,8 @@ import { parseStringToCents } from "@/utils/parseStringToCents";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { FinancialInputSection } from "./FinancialInputSection";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   CreateTrainingDataType,
   IndividualPaymentSchema,
@@ -36,6 +38,8 @@ interface EditTrainingFinancialsDialogProps {
   onOpenChange: (open: boolean) => void;
   training: Training;
   payerType: "TRAINEE" | "VOLUNTEER";
+  /** Treinamento concluído: alterar valores exige justificativa registrada. */
+  requireJustification?: boolean;
   onSuccess: (updatedTraining: Training) => void;
 }
 
@@ -44,9 +48,11 @@ export default function EditTrainingFinancialsDialog({
   onOpenChange,
   training,
   payerType,
+  requireJustification,
   onSuccess,
 }: EditTrainingFinancialsDialogProps) {
   const queryClient = useQueryClient();
+  const [ justification, setJustification ] = useState("");
   const methods = useForm<CreateTrainingDataType>({
     defaultValues: {
       traineePayments: [],
@@ -216,6 +222,14 @@ export default function EditTrainingFinancialsDialog({
         return;
       }
 
+      const trimmedJustification = justification.trim();
+      if (requireJustification && !trimmedJustification) {
+        toast.warning(
+          "Informe uma justificativa para alterar os valores de um treinamento concluído.",
+        );
+        return;
+      }
+
       // We need to update each participant individually
       const updatePromises = payments.map(async (p) => {
         const priceCents = parseStringToCents(p.price || "0");
@@ -238,6 +252,9 @@ export default function EditTrainingFinancialsDialog({
           volunteerId: payerType === "VOLUNTEER" ? p.participantId : undefined,
           isCourtesy:
             p.paymentInfo.paymentStatus === ("Cortesia" as PaymentStatuses),
+          ...(requireJustification
+            ? { justification: trimmedJustification }
+            : {}),
           TrainingPayment: {
             basePrice: priceCents,
             additionalCost: additionalCostCents,
@@ -280,7 +297,11 @@ export default function EditTrainingFinancialsDialog({
 
       if (allSuccessful) {
         toast.success("Financeiro atualizado com sucesso!");
+        setJustification("");
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({
+          queryKey: [ "get-training-value-changes" ],
+        });
 
         // Fetch fresh data to ensure parent dialog has the latest prices
         try {
@@ -334,6 +355,23 @@ export default function EditTrainingFinancialsDialog({
                 participants={ participants }
                 type={ payerType === "TRAINEE" ? "trainee" : "volunteer" }
               />
+              {requireJustification && (
+                <div className="space-y-2 border-t pt-4 mt-4">
+                  <Label className="text-destructive">
+                    Justificativa da alteração *
+                  </Label>
+                  <Textarea
+                    className="max-h-[150px]"
+                    placeholder="Descreva o motivo da alteração dos valores neste treinamento concluído"
+                    value={ justification }
+                    onChange={ (e) => setJustification(e.target.value) }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Esta alteração ficará registrada no histórico do
+                    treinamento.
+                  </p>
+                </div>
+              )}
             </div>
 
             <DialogFooter className="p-6 border-t bg-muted/20">

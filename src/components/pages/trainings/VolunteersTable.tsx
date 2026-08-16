@@ -1,5 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Eye, Filter, X, Trash2, RefreshCcw, Pencil } from "lucide-react";
+import {
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
 import { DeleteConfirmationDialog } from "@/components/shared/DeleteConfirmationDialog";
@@ -212,6 +216,27 @@ export function VolunteersTable({
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }, [ volunteers, filterName, filterPending, filterFilial, allTrainings ]);
 
+  // Paginação local (a listagem de modelos vem completa do servidor).
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [ filterName, filterPending, filterFilial, isVisible ]);
+
+  const totalVolunteers = sortedVolunteers.length;
+  const totalPagesCount = Math.max(
+    1,
+    Math.ceil(totalVolunteers / pagination.limit),
+  );
+  const currentPage = Math.min(pagination.page, totalPagesCount);
+  const pagedVolunteers = sortedVolunteers.slice(
+    (currentPage - 1) * pagination.limit,
+    currentPage * pagination.limit,
+  );
+
   const handleToggleDialog = (open: boolean, data: unknown) => {
     if (open && data) {
       handleOpenDetails(data as Volunteer);
@@ -317,7 +342,7 @@ export function VolunteersTable({
                 </td>
               </tr>
             )}
-            {sortedVolunteers.map((volunteer) => {
+            {pagedVolunteers.map((volunteer) => {
               return (
                 <tr
                   key={ volunteer.volunteerId }
@@ -394,7 +419,7 @@ export function VolunteersTable({
 
       {/* Mobile View */}
       <div className="md:hidden space-y-4">
-        {sortedVolunteers.map((volunteer) => {
+        {pagedVolunteers.map((volunteer) => {
           const volunteerFilials = Array.from(
             new Set(
               allTrainings
@@ -433,6 +458,15 @@ export function VolunteersTable({
           </p>
         )}
       </div>
+
+      <ListPagination
+        page={ currentPage }
+        limit={ pagination.limit }
+        totalItems={ totalVolunteers }
+        onPageChange={ (page) => setPagination((prev) => ({ ...prev, page })) }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="modelo(s)"
+      />
 
       <VolunteerDetailsDialog
         isOpen={ isDetailsOpen }

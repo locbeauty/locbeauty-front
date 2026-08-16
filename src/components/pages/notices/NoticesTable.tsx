@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/table";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import {
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth-provider";
@@ -40,6 +44,16 @@ export function NoticesTable() {
 
   const [ startDate, setStartDate ] = useState<Date | undefined>(undefined);
   const [ filialId, setFilialId ] = useState<string | undefined>();
+
+  // Paginação local (a listagem de avisos vem completa do servidor).
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [ startDate, filialId ]);
 
   const accessibleFilialsIds = useMemo(() => {
     if (user?.role === "ADMIN" || user?.role === "MASTER") {
@@ -98,6 +112,17 @@ export function NoticesTable() {
 
   const notices = data?.data || [];
 
+  const totalNotices = notices.length;
+  const totalPagesCount = Math.max(
+    1,
+    Math.ceil(totalNotices / pagination.limit),
+  );
+  const currentPage = Math.min(pagination.page, totalPagesCount);
+  const pagedNotices = notices.slice(
+    (currentPage - 1) * pagination.limit,
+    currentPage * pagination.limit,
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex gap-4 items-end">
@@ -148,7 +173,7 @@ export function NoticesTable() {
                 </TableCell>
               </TableRow>
             )}
-            {notices.map((notice) => (
+            {pagedNotices.map((notice) => (
               <TableRow key={ notice.noticeId }>
                 <TableCell className="font-medium truncate max-w-[200px]">
                   {notice.description}
@@ -226,7 +251,7 @@ export function NoticesTable() {
             Nenhum aviso encontrado.
           </p>
         )}
-        {notices.map((notice) => (
+        {pagedNotices.map((notice) => (
           <ResponsiveCard
             key={ notice.noticeId }
             cardData={ {
@@ -263,6 +288,15 @@ export function NoticesTable() {
           />
         ))}
       </div>
+
+      <ListPagination
+        page={ currentPage }
+        limit={ pagination.limit }
+        totalItems={ totalNotices }
+        onPageChange={ (page) => setPagination((prev) => ({ ...prev, page })) }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="aviso(s)"
+      />
 
       <NoticeDetailsDialog
         open={ isDetailsOpen }

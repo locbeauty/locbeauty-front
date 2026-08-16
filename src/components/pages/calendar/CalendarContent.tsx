@@ -133,11 +133,10 @@ export function CalendarContent({
   });
 
   // Notices/trainings only support a single filial server-side, so we fetch
-  // them all and apply the multi-filial filter on the client.
-  const noticeFilialIds =
-    selectedFilialIds.length === 0
-      ? undefined
-      : finalFilialIds ?? selectedFilialIds;
+  // them and apply the multi-filial filter on the client. Sem seleção
+  // explícita o escopo continua sendo o das filiais liberadas (mandar
+  // `undefined` fazia a agenda listar avisos/treinamentos de TODAS as filiais).
+  const noticeFilialIds = finalFilialIds;
 
   const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
     queryKey: [ "get-all-trainings" ],
@@ -161,6 +160,8 @@ export function CalendarContent({
   const trainings = trainingsData.data?.data || [];
   const notices = noticesData.data?.data || [];
 
+  // O escopo por permissão é aplicado no servidor; aqui só entra o filtro
+  // escolhido explicitamente na tela.
   const filialFilteredTrainings =
     selectedFilialIds.length === 0
       ? trainings

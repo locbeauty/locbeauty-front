@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Eye, Filter, X, Trash2, RefreshCcw } from "lucide-react";
+import {
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQueryClient } from "@tanstack/react-query";
 import { DeleteTrainee, UpdateTrainee } from "@/services/trainees.service";
@@ -210,6 +214,27 @@ export function TraineesTable({
     return result.sort((a, b) => a.fullname.localeCompare(b.fullname));
   }, [ trainees, filterName, filterPending, filterFilial, allTrainings ]);
 
+  // Paginação local (a listagem de alunos vem completa do servidor).
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [ filterName, filterPending, filterFilial, isVisible ]);
+
+  const totalTrainees = sortedTrainees.length;
+  const totalPagesCount = Math.max(
+    1,
+    Math.ceil(totalTrainees / pagination.limit),
+  );
+  const currentPage = Math.min(pagination.page, totalPagesCount);
+  const pagedTrainees = sortedTrainees.slice(
+    (currentPage - 1) * pagination.limit,
+    currentPage * pagination.limit,
+  );
+
   const handleToggleDialog = (open: boolean, data: unknown) => {
     if (open && data) {
       handleOpenDetails(data as Customer);
@@ -316,7 +341,7 @@ export function TraineesTable({
                 </td>
               </tr>
             )}
-            {sortedTrainees.map((trainee) => {
+            {pagedTrainees.map((trainee) => {
               return (
                 <tr
                   key={ trainee.customerId }
@@ -383,7 +408,7 @@ export function TraineesTable({
 
       {/* Mobile View */}
       <div className="md:hidden space-y-4">
-        {sortedTrainees.map((trainee) => {
+        {pagedTrainees.map((trainee) => {
           const traineeFilials = Array.from(
             new Set(
               allTrainings
@@ -426,6 +451,15 @@ export function TraineesTable({
           </p>
         )}
       </div>
+
+      <ListPagination
+        page={ currentPage }
+        limit={ pagination.limit }
+        totalItems={ totalTrainees }
+        onPageChange={ (page) => setPagination((prev) => ({ ...prev, page })) }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="aluno(s)"
+      />
 
       <CustomerDetailsDialog
         isCustomerDetailsModalOpen={ isDetailsOpen }

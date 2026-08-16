@@ -2,17 +2,7 @@
 import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
 import { FilialFilter } from "./FilialFilter";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
-import {
-  Eye,
-  Pencil,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  X,
-  Trash2,
-  RefreshCcw,
-} from "lucide-react";
+import { Eye, Pencil, X, Trash2, RefreshCcw } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -61,9 +51,27 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
+import {
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
+import {
+  CUSTOMER_SEGMENT_OPTIONS,
+  CUSTOMER_SEGMENTS,
+  CustomerSegment,
+} from "@/utils/customer-segments";
+
+/** Segmento vindo da URL (link "Ver todos em Clientes" do dashboard). */
+function parseSegmentParam(value: string | null): CustomerSegment | undefined {
+  return CUSTOMER_SEGMENTS.includes(value as CustomerSegment)
+    ? (value as CustomerSegment)
+    : undefined;
+}
 
 export function CustomersTable() {
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [ isDeleting, setIsDeleting ] = useState(false);
@@ -86,7 +94,10 @@ export function CustomersTable() {
   const [ customerToHardDelete, setCustomerToHardDelete ] =
     useState<Customer | null>(null);
 
-  const [ pagination, setPagination ] = useState({ page: 1, limit: 10 });
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
   const [ filters, setFilters ] = useState<GetAllCustomersFilters>({
     name: "",
     email: "",
@@ -94,6 +105,7 @@ export function CustomersTable() {
     phone: "",
     filialId: "",
     status: undefined,
+    segment: parseSegmentParam(searchParams.get("segment")),
     isTrainee: undefined,
   });
 
@@ -108,7 +120,6 @@ export function CustomersTable() {
 
   const customers = data?.data?.items || [];
   const totalCustomers = data?.data?.total || 0;
-  const totalPages = Math.ceil(totalCustomers / pagination.limit);
 
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
@@ -319,6 +330,29 @@ export function CustomersTable() {
             <SelectItem value="Bloqueado">Bloqueado</SelectItem>
           </SelectContent>
         </Select>
+        {/* Segmentos calculados sobre o mês corrente. */}
+        <Select
+          value={ filters.segment || "ALL" }
+          onValueChange={ (value) =>
+            setFilters({
+              ...filters,
+              segment:
+                value === "ALL" ? undefined : (value as CustomerSegment),
+            })
+          }
+        >
+          <SelectTrigger className="w-[260px]">
+            <SelectValue placeholder="Segmento" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Todos os segmentos</SelectItem>
+            {CUSTOMER_SEGMENT_OPTIONS.map((option) => (
+              <SelectItem key={ option.value } value={ option.value }>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {(user?.role === USER_ROLES.MASTER ||
           user?.role === USER_ROLES.ADMIN) && (
           <div className="flex items-center space-x-2">
@@ -353,6 +387,7 @@ export function CustomersTable() {
           filters.document ||
           filters.filialId ||
           filters.status ||
+          filters.segment ||
           filters.isTrainee ||
           filters.isVisible) && (
           <Button
@@ -366,6 +401,7 @@ export function CustomersTable() {
                 filialId: "",
                 isVisible: undefined,
                 status: undefined,
+                segment: undefined,
                 isTrainee: undefined,
               })
             }
@@ -531,86 +567,14 @@ export function CustomersTable() {
         </Table>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {totalCustomers} cliente(s) encontrado(s)
-        </div>
-        <div className="space-x-2 flex items-center">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(1) }
-            disabled={ pagination.page === 1 }
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(pagination.page - 1) }
-            disabled={ pagination.page === 1 }
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-          {/* Numbered Pages */}
-          <div className="flex items-center gap-1">
-            {(() => {
-              const MAX_VISIBLE_PAGES = 5;
-              const pages = [];
-              let startPage = Math.max(
-                1,
-                pagination.page - Math.floor(MAX_VISIBLE_PAGES / 2),
-              );
-              const endPage = Math.min(
-                totalPages,
-                startPage + MAX_VISIBLE_PAGES - 1,
-              );
-
-              if (endPage - startPage + 1 < MAX_VISIBLE_PAGES) {
-                startPage = Math.max(1, endPage - MAX_VISIBLE_PAGES + 1);
-              }
-
-              for (let i = startPage; i <= endPage; i++) {
-                pages.push(
-                  <Button
-                    key={ i }
-                    variant={ pagination.page === i ? "default" : "outline" }
-                    size="sm"
-                    className="h-8 w-8"
-                    onClick={ () => handlePageChange(i) }
-                  >
-                    {i}
-                  </Button>,
-                );
-              }
-              return pages;
-            })()}
-          </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(pagination.page + 1) }
-            disabled={ pagination.page >= totalPages }
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={ () => handlePageChange(totalPages) }
-            disabled={ pagination.page >= totalPages }
-          >
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <ListPagination
+        page={ pagination.page }
+        limit={ pagination.limit }
+        totalItems={ totalCustomers }
+        onPageChange={ handlePageChange }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="cliente(s)"
+      />
 
       <div className="md:hidden flex flex-col gap-4">
         {isLoading ? (

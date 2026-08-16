@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2, RefreshCcw } from "lucide-react";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { FilialDetailsDialog } from "./FilialDetailsDialog";
 import { UpdateFilialDialog } from "../update/UpdateFilialDialog";
@@ -18,8 +18,26 @@ import { USER_ROLES } from "@/utils/constants";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 
-export function FilialsTable() {
+interface FilialsTableProps {
+  /** Busca livre por nome, cidade/estado, gerente ou e-mail. */
+  searchTerm?: string;
+}
+
+// Faixa dos sinais diacríticos combinantes, em ASCII para evitar ambiguidade.
+const DIACRITICS = new RegExp("[\\u0300-\\u036f]", "g");
+
+/** Normaliza para busca: sem acento e sem diferenciar maiúsculas. */
+function normalize(value?: string | null) {
+  return (value ?? "").normalize("NFD").replace(DIACRITICS, "").toLowerCase();
+}
+
+export function FilialsTable({ searchTerm }: FilialsTableProps) {
   const [ isUpdateFilialDialogOpen, setIsUpdateFilialDialogOpen ] =
     useState(false);
   const [ selectedFilial, setSelectedFilial ] = useState<Filial | null>(null);
@@ -38,6 +56,16 @@ export function FilialsTable() {
     useState(false);
 
   const [ isVisible, setIsVisible ] = useState<boolean>(false);
+
+  // Paginação local (a listagem de filiais vem completa do servidor).
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [ isVisible, searchTerm ]);
 
   const { user } = useAuth();
 
@@ -164,6 +192,33 @@ export function FilialsTable() {
     handleGetAllFilials();
   }, [ refreshCounter, isVisible ]);
 
+  // Busca livre (sem acento/caixa) por nome, cidade, estado, gerente ou e-mail.
+  const filteredFilials = useMemo(() => {
+    const term = normalize(searchTerm).trim();
+    if (!term || !allFilials) return allFilials ?? [];
+
+    return allFilials.filter((filial) =>
+      [
+        filial.filialName,
+        filial.city,
+        filial.state,
+        filial.managerEmployee?.fullname,
+        filial.email,
+      ].some((field) => normalize(field).includes(term)),
+    );
+  }, [ allFilials, searchTerm ]);
+
+  const totalFilials = filteredFilials.length;
+  const totalPagesCount = Math.max(
+    1,
+    Math.ceil(totalFilials / pagination.limit),
+  );
+  const currentPage = Math.min(pagination.page, totalPagesCount);
+  const pagedFilials = filteredFilials.slice(
+    (currentPage - 1) * pagination.limit,
+    currentPage * pagination.limit,
+  );
+
   return (
     <>
       {(user?.role === USER_ROLES.MASTER ||
@@ -184,6 +239,7 @@ export function FilialsTable() {
           <thead className="bg-muted">
             <tr>
               <th className="text-left p-3 font-medium text-sm">Filial</th>
+              <th className="text-center p-3 font-medium text-sm">Vínculos</th>
               <th className="p-3 font-medium text-sm text-center">Gerente</th>
               <th className="text-center p-3 font-medium text-sm">Telefone</th>
               <th className="text-center p-3 font-medium text-sm">Email</th>
@@ -191,21 +247,41 @@ export function FilialsTable() {
             </tr>
           </thead>
           <tbody>
-            {allFilials?.length === 0 && (
+            {allFilials && filteredFilials.length === 0 && (
               <tr>
                 <td className="text-center p-4" colSpan={ 7 }>
-                  Nada a mostrar por aqui.
+                  {searchTerm
+                    ? "Nenhuma filial encontrada para esta busca."
+                    : "Nada a mostrar por aqui."}
                 </td>
               </tr>
             )}
             {allFilials ? (
-              allFilials.map((filial) => (
+              pagedFilials.map((filial) => (
                 <tr
                   key={ filial.filialId }
                   className="border-t hover:bg-muted/50"
                 >
                   <td className="p-3 text-sm truncate max-w-[200px]">
                     {filial.filialName}
+                  </td>
+                  <td className="p-3 text-sm text-center">
+                    {filial.LinkedFilials?.length ? (
+                      <div className="flex flex-wrap justify-center gap-1">
+                        {filial.LinkedFilials.map((linked) => (
+                          <Badge
+                            key={ linked.filialId }
+                            variant="outline"
+                            className="bg-purple-50 text-purple-700 border-purple-200"
+                            title="Filial vinculada: os dados são compartilhados entre as duas filiais"
+                          >
+                            {linked.filialName}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">--</span>
+                    )}
                   </td>
                   <td className="p-3 text-sm text-center">
                     {filial.managerEmployee?.fullname || "--"}
@@ -278,9 +354,9 @@ export function FilialsTable() {
         </table>
       </div>
 
-      <div className="md:hi dden flex flex-col gap -4">
+      <div className="md:hidden flex flex-col gap-4">
         {allFilials &&
-          allFilials.map((filial) => (
+          pagedFilials.map((filial) => (
             <Fragment key={ filial.filialId }>
               <Can module={ SYSTEM_MODULES.FILIALS } action="canView">
                 <ResponsiveCard
@@ -293,6 +369,13 @@ export function FilialsTable() {
                         itemLabel: "Telefone: ",
                         itemInfo:  filial.cellphone,
                       },
+                      {
+                        itemLabel: "Vínculos: ",
+                        itemInfo:
+                          filial.LinkedFilials?.map(
+                            (linked) => linked.filialName,
+                          ).join(", ") || "--",
+                      },
                     ],
                   } }
                   rawData={ filial }
@@ -302,6 +385,15 @@ export function FilialsTable() {
             </Fragment>
           ))}
       </div>
+
+      <ListPagination
+        page={ currentPage }
+        limit={ pagination.limit }
+        totalItems={ totalFilials }
+        onPageChange={ (page) => setPagination((prev) => ({ ...prev, page })) }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="filial(is)"
+      />
 
       <FilialDetailsDialog
         selectedFilial={ selectedFilial }

@@ -15,6 +15,7 @@ import { RoutesTable } from "@/components/pages/routes/RoutesTable";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { FilterBookingStatusTypes } from "@/utils/filterOptions";
+import { useAccessibleFilialIds } from "@/hooks/useAccessibleFilialIds";
 
 export default function RoutesPage() {
   const { user } = useAuth();
@@ -22,9 +23,15 @@ export default function RoutesPage() {
   const isMaster = user?.role === USER_ROLES.MASTER || user?.role === USER_ROLES.ADMIN;
   const isMotorista = user?.role === USER_ROLES.MOTORISTA;
 
+  // Filiais liberadas para o usuário (undefined = todas, para Master/Admin).
+  const accessibleFilialIds = useAccessibleFilialIds(SYSTEM_MODULES.ROUTES);
+
+  // Sem filtro escolhido, a tela mostra TODAS as filiais liberadas — antes o
+  // estado inicial era a filial de origem, o que escondia as rotas das demais
+  // filiais habilitadas em "Gerenciar Acessos".
   const [ searchQuery, setSearchQuery ] = useState("");
   const [ selectedFilialId, setSelectedFilialId ] = useState<string | undefined>(
-    isMaster ? undefined : user?.sourceFilialId,
+    undefined,
   );
   const [ dateRange, setDateRange ] = useState<DateRange | undefined>(
     undefined,
@@ -33,17 +40,22 @@ export default function RoutesPage() {
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
+  // O seletor de filial só faz sentido para quem enxerga mais de uma.
+  const canFilterByFilial =
+    !isMotorista &&
+    (isMaster || (accessibleFilialIds?.length ?? 0) > 1);
+
   const hasActiveFilters =
     debouncedSearch ||
     dateRange?.from ||
     status ||
-    (isMaster && selectedFilialId);
+    selectedFilialId;
 
   function clearFilters() {
     setSearchQuery("");
     setDateRange(undefined);
     setStatus(undefined);
-    if (isMaster) setSelectedFilialId(undefined);
+    setSelectedFilialId(undefined);
   }
 
   return (
@@ -77,8 +89,8 @@ export default function RoutesPage() {
               </div>
             )}
 
-            {/* Master: seletor de filial */}
-            {isMaster && (
+            {/* Seletor de filial para quem tem acesso a mais de uma */}
+            {canFilterByFilial && (
               <SelectFilial
                 value={ selectedFilialId }
                 onValueChange={ (val) =>
@@ -86,6 +98,7 @@ export default function RoutesPage() {
                 }
                 placeholder="Filtrar por filial"
                 className="w-full md:w-[220px]"
+                accessibleFilials={ accessibleFilialIds }
               />
             )}
 

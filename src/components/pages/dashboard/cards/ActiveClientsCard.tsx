@@ -10,6 +10,7 @@ import { getActiveClientsMetric } from "@/services/dashboard.service";
 import { apiRequest } from "@/lib/api";
 import { Loader2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import { formatShareOfBase } from "@/utils/formatShareOfBase";
 
 interface Filial {
   filialId: string;
@@ -20,9 +21,6 @@ export function ActiveClientsCard() {
   const [ metric, setMetric ] = useState<{
     totalClients: number;
     activeClients: number;
-    activePercentage: number;
-    newClients: number;
-    recurringClients: number;
   } | null>(null);
   const [ loading, setLoading ] = useState(true);
   const [ filials, setFilials ] = useState<Filial[]>([]);
@@ -100,7 +98,7 @@ export function ActiveClientsCard() {
             <div className="text-2xl font-bold">{metric.activeClients}</div>
             <p className="text-sm text-muted-foreground mt-1">
               <span className="text-muted-foreground">
-                {(metric.activePercentage ?? 0).toFixed(1)}%
+                {formatShareOfBase(metric.activeClients, metric.totalClients)}
               </span>{" "}
               da base de clientes
             </p>

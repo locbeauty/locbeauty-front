@@ -27,7 +27,11 @@ import {
   Pencil,
   Copy,
   RefreshCcw,
+  ArrowRightLeft,
+  Ban,
+  History,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { BookingStatusBadge } from "../bookings/common/BookingStatusBadge";
 import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStatusBadge";
@@ -41,7 +45,17 @@ import { centsToString } from "@/utils/centsToString";
 import { Training } from "@/utils/@types/training";
 import { TrainingPayment } from "@/utils/@types/payments";
 import { CancelTrainingConfirmationDialog } from "./CancelTrainingConfirmationDialog";
-import { UpdateTraining } from "@/services/trainings.service";
+import {
+  UpdateTraining,
+  GetTrainingValueChanges,
+} from "@/services/trainings.service";
+import {
+  canRoleEditConcludedTraining,
+  formatEditDeadline,
+  getConcludedTrainingEditDeadline,
+  hasUnlimitedConcludedTrainingEdit,
+  isWithinConcludedTrainingEditWindow,
+} from "@/utils/concludedTrainingEdit";
 import { toast } from "sonner";
 import { FinishTrainingConfirmationDialog } from "./FinishTrainingConfirmationDialog";
 import { queryClient } from "@/app/(main)/layout";
@@ -49,6 +63,7 @@ import { AddParticipantDialog } from "./AddParticipantDialog";
 // import { UpdateParticipantValuesDialog } from "./UpdateParticipantValuesDialog";
 import EditTrainingFinancialsDialog from "./EditTrainingFinancialsDialog";
 import { EditTrainingDialog } from "./EditTrainingDialog";
+import { TransferTraineeDialog } from "./TransferTraineeDialog";
 import { TrainingEnrollmentsSection } from "./TrainingEnrollmentsSection";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
@@ -101,6 +116,12 @@ export function TrainingDetailsDialog({
 
   const [ isEditTrainingDialogOpen, setIsEditTrainingDialogOpen ] =
     useState(false);
+
+  const [ isTransferDialogOpen, setIsTransferDialogOpen ] = useState(false);
+  const [ traineeToTransfer, setTraineeToTransfer ] = useState<{
+    customerId: string;
+    name: string;
+  } | null>(null);
 
   const { user } = useAuth();
   const [ isRestoring, setIsRestoring ] = useState(false);
@@ -337,6 +358,42 @@ export function TrainingDetailsDialog({
     }
   };
 
+  // Cancela apenas a inscrição do aluno: ele sai da turma (libera a vaga) e o
+  // registro financeiro é mantido com status "Cancelado".
+  const onCancelParticipant = async (customerId: string, name: string) => {
+    if (
+      !window.confirm(
+        `Cancelar a inscrição de ${name} neste treinamento? A vaga será liberada e o registro financeiro ficará como "Cancelado".`,
+      )
+    )
+      return;
+
+    try {
+      const response = await UpdateTraining({
+        trainingId: selectedTraining.trainingId,
+        body: { canceledParticipants: [ customerId ] },
+      });
+      if (response && response.statusCode === 200) {
+        toast.success("Inscrição do aluno cancelada.");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+        if (setSelectedTraining && response.data) {
+          setSelectedTraining(response.data);
+        }
+      } else {
+        toast.error(response?.message || "Erro ao cancelar inscrição.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao cancelar inscrição.");
+    }
+  };
+
+  const handleOpenTransferDialog = (customerId: string, name: string) => {
+    setTraineeToTransfer({ customerId, name });
+    setIsTransferDialogOpen(true);
+  };
+
   const handleUpdateTrainingStatus = async (
     trainingId: string,
     trainingStatus: "Concluido" | "Cancelado",
@@ -462,9 +519,35 @@ export function TrainingDetailsDialog({
   // Helper para formatar moeda
   const formatCurrency = (val: number) => `R$ ${centsToString(val)}`;
 
+  // ----- Alteração de treinamento concluído -----
+  // Master, Gerente e Comercial podem alterar por até 48h após a conclusão
+  // (Master sem prazo). Alterar valores exige justificativa registrada.
+  const isConcluded = currentTrainingStatus === "Concluido";
+  const concludedEditDeadline = getConcludedTrainingEditDeadline(
+    selectedTraining.concludedAt,
+  );
+  const hasConcludedEditRole = canRoleEditConcludedTraining(user?.role);
+  const canEditConcludedTraining =
+    isConcluded &&
+    hasConcludedEditRole &&
+    (hasUnlimitedConcludedTrainingEdit(user?.role) ||
+      isWithinConcludedTrainingEditWindow(selectedTraining.concludedAt));
+
   const canEditParticipants =
-    currentTrainingStatus !== "Concluido" &&
-    currentTrainingStatus !== "Cancelado";
+    (currentTrainingStatus !== "Concluido" &&
+      currentTrainingStatus !== "Cancelado") ||
+    canEditConcludedTraining;
+
+  // Alterações de valor num treinamento concluído exigem justificativa.
+  const requireValueJustification = canEditConcludedTraining;
+
+  const { data: valueChangesResponse } = useQuery({
+    queryKey: [ "get-training-value-changes", selectedTraining.trainingId ],
+    queryFn: () => GetTrainingValueChanges(selectedTraining.trainingId),
+    enabled: open && !!selectedTraining.trainingId,
+    staleTime: 1000 * 30,
+  });
+  const valueChanges = valueChangesResponse?.data ?? [];
 
   const handleCopySummary = () => {
     // Calculate start time
@@ -701,10 +784,39 @@ export function TrainingDetailsDialog({
 
             <Separator />
 
+            {/* Aviso do prazo de edição de treinamento concluído */}
+            {isConcluded && hasConcludedEditRole && (
+              <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                {hasUnlimitedConcludedTrainingEdit(user?.role) ? (
+                  "Este treinamento está concluído e pode ser alterado a qualquer momento. Alterações de valor exigem justificativa."
+                ) : canEditConcludedTraining && concludedEditDeadline ? (
+                  <>
+                    Treinamento concluído: pode ser alterado até{ " " }
+                    <span className="font-medium text-foreground">
+                      {formatEditDeadline(concludedEditDeadline)}
+                    </span>
+                    . Alterações de valor exigem justificativa.
+                  </>
+                ) : concludedEditDeadline ? (
+                  <>
+                    O prazo de 48h para alterar este treinamento concluído
+                    expirou em{ " " }
+                    <span className="font-medium text-foreground">
+                      {formatEditDeadline(concludedEditDeadline)}
+                    </span>
+                    .
+                  </>
+                ) : (
+                  "O prazo para alterar este treinamento concluído não está disponível."
+                )}
+              </div>
+            )}
+
             {/* INSCRIÇÕES (papéis + observação + itens de cobrança) */}
             <TrainingEnrollmentsSection
               training={ selectedTraining }
               disabled={ !canEditParticipants }
+              requireJustification={ requireValueJustification }
             />
 
             <Separator />
@@ -759,6 +871,9 @@ export function TrainingDetailsDialog({
                         : payment?.paymentStatus || "Pendente";
                       const canRemove =
                         canEditParticipants && status === "Pendente";
+                      const canCancel =
+                        canEditParticipants &&
+                        (status === "Pendente" || status === "Parcial");
 
                       return (
                         <div
@@ -815,6 +930,42 @@ export function TrainingDetailsDialog({
                                 Gerenciar Pagamento
                               </span>
                             </Button>
+                            {canEditParticipants && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                title="Remanejar para outro treinamento"
+                                onClick={ () =>
+                                  handleOpenTransferDialog(
+                                    trainee.customerId,
+                                    trainee.fullname,
+                                  )
+                                }
+                              >
+                                <ArrowRightLeft className="h-4 w-4" />
+                                <span className="sr-only">Remanejar</span>
+                              </Button>
+                            )}
+                            {canCancel && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
+                                title="Cancelar inscrição do aluno"
+                                onClick={ () =>
+                                  onCancelParticipant(
+                                    trainee.customerId,
+                                    trainee.fullname,
+                                  )
+                                }
+                              >
+                                <Ban className="h-4 w-4" />
+                                <span className="sr-only">
+                                  Cancelar inscrição
+                                </span>
+                              </Button>
+                            )}
                             {canRemove && (
                               <Button
                                 variant="ghost"
@@ -971,6 +1122,54 @@ export function TrainingDetailsDialog({
               </div>
             </div>
 
+            {valueChanges.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <History className="h-3 w-3" /> Histórico de alterações de
+                    valor
+                  </h4>
+                  <div className="space-y-3">
+                    {valueChanges.map((change) => (
+                      <div
+                        key={ change.id }
+                        className="rounded-md border bg-muted/20 p-3 text-sm space-y-1"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium">
+                            {change.changedByName}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(change.createdAt).toLocaleDateString(
+                              "pt-BR",
+                            )}{" "}
+                            às{" "}
+                            {new Date(change.createdAt).toLocaleTimeString(
+                              "pt-BR",
+                              { hour: "2-digit", minute: "2-digit" },
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground line-through">
+                            {formatCurrency(change.previousTotalPrice)}
+                          </span>
+                          <span>→</span>
+                          <span className="font-semibold text-primary">
+                            {formatCurrency(change.newTotalPrice)}
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap break-words text-muted-foreground">
+                          {change.justification}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
             <Separator />
           </div>
         </div>
@@ -1061,6 +1260,7 @@ export function TrainingDetailsDialog({
         onOpenChange={ setIsEditFinancialsDialogOpen }
         training={ selectedTraining }
         payerType={ financialPayerTypeToEdit }
+        requireJustification={ requireValueJustification }
         onSuccess={ (updated) => {
           if (setSelectedTraining) {
             setSelectedTraining(updated);
@@ -1073,6 +1273,22 @@ export function TrainingDetailsDialog({
         onOpenChange={ setIsEditTrainingDialogOpen }
         selectedTraining={ selectedTraining }
         setSelectedTraining={ setSelectedTraining }
+      />
+
+      <TransferTraineeDialog
+        open={ isTransferDialogOpen }
+        onOpenChange={ (value) => {
+          setIsTransferDialogOpen(value);
+          if (!value) setTraineeToTransfer(null);
+        } }
+        sourceTraining={ selectedTraining }
+        customerId={ traineeToTransfer?.customerId ?? null }
+        customerName={ traineeToTransfer?.name }
+        onSuccess={ (updated) => {
+          if (setSelectedTraining) {
+            setSelectedTraining(updated);
+          }
+        } }
       />
     </Dialog>
   );

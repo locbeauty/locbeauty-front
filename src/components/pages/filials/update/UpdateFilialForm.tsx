@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import { CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import PhoneInput from "@/components/shared/PhoneInput";
 import { SelectEmployee } from "../../../shared/SelectEmployee";
+import { SelectFilials } from "@/components/shared/SelectFilials";
 import { Loader2, MapPin, CheckCircle2, AlertCircle } from "lucide-react";
 import { Filial } from "@/utils/@types/filials";
 import { USER_ROLES } from "@/utils/constants";
@@ -51,17 +52,17 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
     formState: { errors },
   } = useFormContext<UpdateFilialFormSchemaType>();
 
-  const [cepRaw, setCepRaw] = useState(
+  const [ cepRaw, setCepRaw ] = useState(
     selectedFilial.zipCode ? formatCep(selectedFilial.zipCode) : "",
   );
-  const [cepStatus, setCepStatus] = useState<CepStatus>("idle");
-  const [cepError, setCepError] = useState("");
+  const [ cepStatus, setCepStatus ] = useState<CepStatus>("idle");
+  const [ cepError, setCepError ] = useState("");
 
   useEffect(() => {
     setCepRaw(selectedFilial.zipCode ? formatCep(selectedFilial.zipCode) : "");
     setCepStatus("idle");
     setCepError("");
-  }, [selectedFilial.zipCode]);
+  }, [ selectedFilial.zipCode ]);
 
   async function handleCepChange(raw: string) {
     const formatted = formatCep(raw);
@@ -98,7 +99,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
       <div className="space-y-2">
         <Label htmlFor="filialName">Nome</Label>
         <Input
-          {...register("filialName")}
+          { ...register("filialName") }
           placeholder="Nome da filial"
           className="placeholder:text-placeholder"
         />
@@ -110,7 +111,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="telefone">Telefone</Label>
-          <PhoneInput control={control} name="cellphone" />
+          <PhoneInput control={ control } name="cellphone" />
           {errors.cellphone && (
             <p className="text-sm font-medium text-destructive">{errors.cellphone.message}</p>
           )}
@@ -120,14 +121,36 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
       <div className="space-y-2">
         <Label htmlFor="gerente">Gerente</Label>
         <SelectEmployee
-          control={control}
+          control={ control }
           name="managerEmployeeId"
-          modal={true}
-          excludeRoles={[USER_ROLES.MASTER]}
+          modal={ true }
+          excludeRoles={ [ USER_ROLES.MASTER ] }
         />
         {errors.managerEmployeeId && (
           <p className="text-sm font-medium text-destructive">{errors.managerEmployeeId.message}</p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <Label>Filiais vinculadas</Label>
+        <Controller
+          control={ control }
+          name="linkedFilialIds"
+          render={ ({ field }) => (
+            <SelectFilials
+              value={ field.value ?? [] }
+              onChange={ field.onChange }
+              excludeIds={ [ selectedFilial.filialId ] }
+              placeholder="Nenhuma filial vinculada"
+              clearLabel="Nenhuma"
+            />
+          ) }
+        />
+        <p className="text-xs text-muted-foreground">
+          Filiais vinculadas compartilham todos os dados entre si
+          (agendamentos, treinamentos, avisos, metas...) nos filtros por
+          filial.
+        </p>
       </div>
 
       {/* Endereço */}
@@ -144,9 +167,9 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
             <Input
               className="pl-9 placeholder:text-placeholder"
               placeholder="00000-000"
-              value={cepRaw}
-              onChange={(e) => handleCepChange(e.target.value)}
-              maxLength={9}
+              value={ cepRaw }
+              onChange={ (e) => handleCepChange(e.target.value) }
+              maxLength={ 9 }
             />
             {cepStatus === "loading" && (
               <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
@@ -171,7 +194,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
           <div className="col-span-2 space-y-2">
             <Label>Rua</Label>
             <Input
-              {...register("street")}
+              { ...register("street") }
               placeholder="Av. Paulista"
               className="placeholder:text-placeholder"
             />
@@ -182,7 +205,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
           <div className="space-y-2">
             <Label>Número</Label>
             <Input
-              {...register("buildingNumber")}
+              { ...register("buildingNumber") }
               placeholder="123"
               className="placeholder:text-placeholder"
             />
@@ -197,7 +220,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
           <div className="space-y-2">
             <Label>Complemento</Label>
             <Input
-              {...register("addressComplement")}
+              { ...register("addressComplement") }
               placeholder="Sala 301"
               className="placeholder:text-placeholder"
             />
@@ -205,7 +228,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
           <div className="space-y-2">
             <Label>Bairro</Label>
             <Input
-              {...register("neighborhood")}
+              { ...register("neighborhood") }
               placeholder="Centro"
               className="placeholder:text-placeholder"
             />
@@ -217,7 +240,7 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
           <div className="col-span-2 space-y-2">
             <Label>Cidade</Label>
             <Input
-              {...register("city")}
+              { ...register("city") }
               placeholder="Recife"
               className="placeholder:text-placeholder"
             />
@@ -228,11 +251,11 @@ export function UpdateFilialForm({ selectedFilial }: UpdateFilialFormProps) {
           <div className="space-y-2">
             <Label>Estado</Label>
             <Input
-              {...register("state")}
+              { ...register("state") }
               placeholder="PE"
-              maxLength={2}
+              maxLength={ 2 }
               className="placeholder:text-placeholder uppercase"
-              onChange={(e) => setValue("state", e.target.value.toUpperCase())}
+              onChange={ (e) => setValue("state", e.target.value.toUpperCase()) }
             />
             {errors.state && (
               <p className="text-sm font-medium text-destructive">{errors.state.message}</p>

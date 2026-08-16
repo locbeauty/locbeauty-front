@@ -8,7 +8,7 @@ import { FolderCog, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { Can } from "@/components/auth/Can";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { ImportCustomersDialog } from "@/components/pages/customers/ImportCustomersDialog";
 
 const CustomerFilterStatusTypes = [
@@ -51,7 +51,11 @@ export default function CustomersPage() {
           </Can>
         </div>
 
-        <CustomersTable />
+        {/* CustomersTable lê o parâmetro `segment` da URL (atalho vindo do
+            dashboard), e useSearchParams exige um limite de Suspense. */}
+        <Suspense fallback={ null }>
+          <CustomersTable />
+        </Suspense>
 
         <ImportCustomersDialog
           open={ dialogImportCustomers }

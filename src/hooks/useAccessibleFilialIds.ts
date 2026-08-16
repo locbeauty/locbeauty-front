@@ -6,14 +6,30 @@ import { useAccess } from "@/contexts/access-provider";
 import { USER_ROLES } from "@/utils/constants";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 
+// Cargos operacionais (motorista/logística) não têm acesso a BOOKINGS: para
+// eles, "filial habilitada" significa ter CALENDAR ou ROUTES liberado. Os dois
+// módulos entram juntos para que agenda e rotas nunca divirjam.
+const OPERATIONAL_ROLES: string[] = [
+  USER_ROLES.MOTORISTA,
+  USER_ROLES.MOTORISTA_CHEFE,
+  USER_ROLES.LOGISTICA,
+];
+
+const OPERATIONAL_MODULES = [
+  SYSTEM_MODULES.CALENDAR,
+  SYSTEM_MODULES.ROUTES,
+];
+
 /**
- * Filiais que o usuário pode visualizar na agenda:
+ * Filiais que o usuário pode visualizar:
  * - Admin/Master → undefined (todas);
- * - Motorista/Motorista Chefe/Logistica → filiais com canView no módulo CALENDAR;
- * - demais → filiais com canView no módulo BOOKINGS;
+ * - Motorista/Motorista Chefe/Logistica → filiais com canView em CALENDAR ou ROUTES;
+ * - demais → filiais com canView no módulo informado (padrão: BOOKINGS);
  * - fail-safe ["NO_ACCESS"] quando o usuário restrito não tem permissão alguma.
  */
-export function useAccessibleFilialIds(): string[] | undefined {
+export function useAccessibleFilialIds(
+  module: SYSTEM_MODULES = SYSTEM_MODULES.BOOKINGS,
+): string[] | undefined {
   const { user } = useAuth();
   const { accesses } = useAccess();
 
@@ -23,21 +39,17 @@ export function useAccessibleFilialIds(): string[] | undefined {
       return undefined;
     }
 
-    // Motorista/Motorista Chefe/Logistica: derive filial access from CALENDAR module (not BOOKINGS)
-    const moduleFilter =
-      user?.role === USER_ROLES.MOTORISTA ||
-      user?.role === USER_ROLES.MOTORISTA_CHEFE ||
-      user?.role === USER_ROLES.LOGISTICA
-        ? SYSTEM_MODULES.CALENDAR
-        : SYSTEM_MODULES.BOOKINGS;
+    const allowedModules = OPERATIONAL_ROLES.includes(user?.role ?? "")
+      ? OPERATIONAL_MODULES
+      : [ module ];
 
     const permissions = accesses
-      .filter((a) => a.module === moduleFilter && a.canView)
+      .filter((a) => allowedModules.includes(a.module) && a.canView)
       .map((a) => a.filialId);
 
     const uniquePermissions = Array.from(new Set(permissions));
 
     // Fail-safe: if restricted user has no permissions, ensures NO_ACCESS
     return uniquePermissions.length > 0 ? uniquePermissions : [ "NO_ACCESS" ];
-  }, [ user, accesses ]);
+  }, [ user, accesses, module ]);
 }

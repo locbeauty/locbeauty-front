@@ -12,6 +12,7 @@ import {
   Loader2,
   MapPin,
   Package,
+  Tag,
 } from "lucide-react";
 
 import {
@@ -27,6 +28,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { DatePicker } from "@/components/ui/DatePicker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { SelectTrainingGear } from "./SelectTrainingGear";
 import { EmbeddedTrainingAddressForm } from "./EmbeddedTrainingAddressForm";
@@ -56,6 +64,9 @@ export function EditTrainingDialog({
   setSelectedTraining,
 }: EditTrainingDialogProps) {
   const [ gearId, setGearId ] = useState(selectedTraining.gearId);
+  const [ trainingType, setTrainingType ] = useState<"COMUM" | "MPT">(
+    selectedTraining.trainingType || "COMUM",
+  );
   const [ dueDate, setDueDate ] = useState<Date | null>(
     new Date(selectedTraining.dueDate),
   );
@@ -73,6 +84,7 @@ export function EditTrainingDialog({
   useEffect(() => {
     if (open) {
       setGearId(selectedTraining.gearId);
+      setTrainingType(selectedTraining.trainingType || "COMUM");
       setDueDate(new Date(selectedTraining.dueDate));
       setHourInMinutes(selectedTraining.hourInMinutes);
       setChangeAddress(false);
@@ -179,6 +191,7 @@ export function EditTrainingDialog({
         trainingId: selectedTraining.trainingId,
         body: {
           gearId,
+          trainingType,
           dueDate,
           hourInMinutes,
           addressId: finalAddressId,
@@ -215,11 +228,43 @@ export function EditTrainingDialog({
         <DialogHeader>
           <DialogTitle>Editar Treinamento</DialogTitle>
           <DialogDescription>
-            Altere o equipamento, a data, o horário e o local do treinamento.
+            Altere o tipo, o equipamento, a data, o horário e o local do
+            treinamento.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-2">
+          {/* TIPO DO TREINAMENTO */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Tag className="h-4 w-4" /> Tipo de Treinamento
+            </Label>
+            <Select
+              value={ trainingType }
+              onValueChange={ (value) =>
+                setTrainingType(value as "COMUM" | "MPT")
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="COMUM">Comum</SelectItem>
+                <SelectItem value="MPT">
+                  MPT (garantia de vaga + disparos)
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            {trainingType !== (selectedTraining.trainingType || "COMUM") && (
+              <p className="text-xs text-muted-foreground">
+                A alteração do tipo não muda automaticamente as cobranças já
+                lançadas dos participantes — ajuste-as se necessário.
+              </p>
+            )}
+          </div>
+
+          <Separator />
+
           {/* EQUIPAMENTO */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">

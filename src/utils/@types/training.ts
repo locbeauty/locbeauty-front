@@ -20,12 +20,26 @@ export interface TrainingEnrollment {
   Customer?: Customer;
 }
 
+// Auditoria de alteração de valor de um treinamento concluído.
+export interface TrainingValueChange {
+  id: string;
+  trainingId: string;
+  justification: string;
+  previousTotalPrice: number;
+  newTotalPrice: number;
+  changedByEmployeeId: string | null;
+  changedByName: string;
+  createdAt: string;
+}
+
 export interface Training {
   trainingId: string;
   trainingStatus: CheckoutStatuses;
   trainingType: TrainingType;
   capacity: number;
   hourInMinutes: number;
+  // Momento da conclusão: baliza a janela de 48h para editar o treinamento.
+  concludedAt?: string | null;
 
   gearId: string;
   volunteerId?: string;

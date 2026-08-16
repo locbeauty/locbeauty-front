@@ -10,8 +10,9 @@ import {
   CreateFilialFormSchemaType,
 } from "@/lib/zod/CreateFilialValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormProvider, useForm } from "react-hook-form";
+import { Controller, FormProvider, useForm } from "react-hook-form";
 import PhoneInput from "../../../shared/PhoneInput";
+import { SelectFilials } from "@/components/shared/SelectFilials";
 import { toast } from "sonner";
 import { fetchWithToken } from "@/utils/fetchWithToken";
 import { useAuth } from "@/contexts/auth-provider";
@@ -44,15 +45,16 @@ async function lookupCep(digits: string) {
 
 export function CreateFilialForm() {
   const { user } = useAuth();
-  const [cepRaw, setCepRaw] = useState("");
-  const [cepStatus, setCepStatus] = useState<CepStatus>("idle");
-  const [cepError, setCepError] = useState("");
+  const [ cepRaw, setCepRaw ] = useState("");
+  const [ cepStatus, setCepStatus ] = useState<CepStatus>("idle");
+  const [ cepError, setCepError ] = useState("");
 
   const createFilialMethods = useForm<CreateFilialFormSchemaType>({
     resolver: zodResolver(createFilialFormSchema),
     defaultValues: {
       filialName: "",
       cellphone: "",
+      linkedFilialIds: [],
       zipCode: "",
       street: "",
       buildingNumber: "",
@@ -136,10 +138,10 @@ export function CreateFilialForm() {
   return (
     <form
       id="create-filial-form"
-      onSubmit={handleSubmit(handleCreateFilial)}
+      onSubmit={ handleSubmit(handleCreateFilial) }
       className="flex flex-col gap-5"
     >
-      <FormProvider {...createFilialMethods}>
+      <FormProvider { ...createFilialMethods }>
         <CardContent className="space-y-6">
 
           {/* Informações básicas */}
@@ -147,7 +149,7 @@ export function CreateFilialForm() {
             <div className="space-y-2">
               <Label>Nome da Filial <span className="text-destructive">*</span></Label>
               <Input
-                {...register("filialName")}
+                { ...register("filialName") }
                 placeholder="Ex: LocRecife"
                 className="placeholder:text-placeholder"
               />
@@ -158,7 +160,7 @@ export function CreateFilialForm() {
 
             <div className="space-y-2">
               <Label>Telefone <span className="text-destructive">*</span></Label>
-              <PhoneInput control={control} name="cellphone" />
+              <PhoneInput control={ control } name="cellphone" />
               {errors.cellphone && (
                 <p className="text-sm font-medium text-destructive">{errors.cellphone.message}</p>
               )}
@@ -166,10 +168,31 @@ export function CreateFilialForm() {
 
             <div className="space-y-2">
               <Label>Gerente</Label>
-              <SelectEmployee control={control} name="managerEmployeeId" currentUser={user} />
+              <SelectEmployee control={ control } name="managerEmployeeId" currentUser={ user } />
               {errors.managerEmployeeId && (
                 <p className="text-sm font-medium text-destructive">{errors.managerEmployeeId.message}</p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Filiais vinculadas</Label>
+              <Controller
+                control={ control }
+                name="linkedFilialIds"
+                render={ ({ field }) => (
+                  <SelectFilials
+                    value={ field.value ?? [] }
+                    onChange={ field.onChange }
+                    placeholder="Nenhuma filial vinculada"
+                    clearLabel="Nenhuma"
+                  />
+                ) }
+              />
+              <p className="text-xs text-muted-foreground">
+                Filiais vinculadas compartilham todos os dados entre si
+                (agendamentos, treinamentos, avisos, metas...) nos filtros por
+                filial.
+              </p>
             </div>
           </div>
 
@@ -187,9 +210,9 @@ export function CreateFilialForm() {
                 <Input
                   className="pl-9 placeholder:text-placeholder"
                   placeholder="00000-000"
-                  value={cepRaw}
-                  onChange={(e) => handleCepChange(e.target.value)}
-                  maxLength={9}
+                  value={ cepRaw }
+                  onChange={ (e) => handleCepChange(e.target.value) }
+                  maxLength={ 9 }
                 />
                 {cepStatus === "loading" && (
                   <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
@@ -214,7 +237,7 @@ export function CreateFilialForm() {
               <div className="col-span-2 space-y-2">
                 <Label>Rua <span className="text-destructive">*</span></Label>
                 <Input
-                  {...register("street")}
+                  { ...register("street") }
                   placeholder="Av. Paulista"
                   className="placeholder:text-placeholder"
                 />
@@ -226,7 +249,7 @@ export function CreateFilialForm() {
               <div className="space-y-2">
                 <Label>Número <span className="text-destructive">*</span></Label>
                 <Input
-                  {...register("buildingNumber")}
+                  { ...register("buildingNumber") }
                   placeholder="123"
                   className="placeholder:text-placeholder"
                 />
@@ -241,7 +264,7 @@ export function CreateFilialForm() {
               <div className="space-y-2">
                 <Label>Complemento</Label>
                 <Input
-                  {...register("addressComplement")}
+                  { ...register("addressComplement") }
                   placeholder="Sala 301"
                   className="placeholder:text-placeholder"
                 />
@@ -250,7 +273,7 @@ export function CreateFilialForm() {
               <div className="space-y-2">
                 <Label>Bairro</Label>
                 <Input
-                  {...register("neighborhood")}
+                  { ...register("neighborhood") }
                   placeholder="Centro"
                   className="placeholder:text-placeholder"
                 />
@@ -262,7 +285,7 @@ export function CreateFilialForm() {
               <div className="col-span-2 space-y-2">
                 <Label>Cidade <span className="text-destructive">*</span></Label>
                 <Input
-                  {...register("city")}
+                  { ...register("city") }
                   placeholder="Recife"
                   className="placeholder:text-placeholder"
                 />
@@ -274,11 +297,11 @@ export function CreateFilialForm() {
               <div className="space-y-2">
                 <Label>Estado <span className="text-destructive">*</span></Label>
                 <Input
-                  {...register("state")}
+                  { ...register("state") }
                   placeholder="PE"
-                  maxLength={2}
+                  maxLength={ 2 }
                   className="placeholder:text-placeholder uppercase"
-                  onChange={(e) => setValue("state", e.target.value.toUpperCase())}
+                  onChange={ (e) => setValue("state", e.target.value.toUpperCase()) }
                 />
                 {errors.state && (
                   <p className="text-sm font-medium text-destructive">{errors.state.message}</p>

@@ -35,8 +35,12 @@ interface SelectFilialsProps {
   onChange: (ids: string[]) => void;
   /** Restrict the selectable filials (e.g. RBAC). When undefined, all are shown. */
   accessibleFilials?: string[];
+  /** Filials hidden from the list (e.g. the filial being edited). */
+  excludeIds?: string[];
   /** Label shown when no filial is selected (defaults to "Todas as filiais"). */
   placeholder?: string;
+  /** Label of the option that clears the selection (defaults to "Todas"). */
+  clearLabel?: string;
   /** Class applied to the trigger button (controls width/style). */
   className?: string;
 }
@@ -45,7 +49,9 @@ export function SelectFilials({
   value,
   onChange,
   accessibleFilials,
+  excludeIds,
   placeholder,
+  clearLabel,
   className,
 }: SelectFilialsProps) {
   const isMounted = useMounted();
@@ -59,7 +65,9 @@ export function SelectFilials({
   });
 
   const options = (filials || []).filter(
-    (f) => !accessibleFilials || accessibleFilials.includes(f.filialId),
+    (f) =>
+      (!accessibleFilials || accessibleFilials.includes(f.filialId)) &&
+      !excludeIds?.includes(f.filialId),
   );
 
   if (!isMounted) {
@@ -94,7 +102,12 @@ export function SelectFilials({
         onOpenAutoFocus={ (e) => e.preventDefault() }
         { ...contentProps }
       >
-        <FilialsList options={ options } value={ value } onChange={ onChange } />
+        <FilialsList
+          options={ options }
+          value={ value }
+          onChange={ onChange }
+          clearLabel={ clearLabel }
+        />
       </PopoverContent>
     </Popover>
   ) : (
@@ -107,6 +120,7 @@ export function SelectFilials({
               options={ options }
               value={ value }
               onChange={ onChange }
+              clearLabel={ clearLabel }
             />
           </div>
         </DrawerTitle>
@@ -136,9 +150,10 @@ interface FilialsListProps {
   options: Filial[];
   value: string[];
   onChange: (ids: string[]) => void;
+  clearLabel?: string;
 }
 
-function FilialsList({ options, value, onChange }: FilialsListProps) {
+function FilialsList({ options, value, onChange, clearLabel }: FilialsListProps) {
   const toggle = (id: string) => {
     if (value.includes(id)) {
       onChange(value.filter((v) => v !== id));
@@ -164,7 +179,7 @@ function FilialsList({ options, value, onChange }: FilialsListProps) {
                 value.length === 0 ? "opacity-100" : "opacity-0",
               ) }
             />
-            Todas
+            {clearLabel || "Todas"}
           </CommandItem>
           {options.map((filial) => {
             const isSelected = value.includes(filial.filialId);

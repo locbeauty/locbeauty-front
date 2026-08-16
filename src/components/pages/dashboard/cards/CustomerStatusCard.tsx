@@ -81,12 +81,24 @@ export function CustomerStatusCard() {
     (item) => STATUS_COLORS[item.name] ?? "#a1a1aa",
   );
 
+  // Total exibido para conferência: tem que bater com o total da tela de
+  // Clientes (mesmo recorte de base).
+  const totalClients = data.reduce((acc, item) => acc + item.value, 0);
+
   return (
     <Card className="col-span-1 md:col-span-2">
       <CardHeader>
         <CardTitle>Distribuição por Status</CardTitle>
         <CardDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span>Status dos clientes</span>
+          <span>
+            Status dos clientes
+            {!loading && totalClients > 0 && (
+              <span className="text-muted-foreground">
+                {" "}
+                · {totalClients} clientes na base
+              </span>
+            )}
+          </span>
           <Select value={ selectedFilialId } onValueChange={ setSelectedFilialId }>
             <SelectTrigger className="w-[140px] h-8">
               <SelectValue placeholder="Filial" />

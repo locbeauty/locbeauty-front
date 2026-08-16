@@ -2,6 +2,7 @@ import { apiRequest } from "@/lib/api";
 import { CreateCustomerFormSchemaType } from "@/lib/zod/CreateCustomerValidation";
 import { UpdateCustomerFormSchemaType } from "@/lib/zod/UpdateCustomerValidation";
 import { Customer } from "@/utils/@types/customer";
+import { CustomerSegment } from "@/utils/customer-segments";
 
 export async function CreateCustomer(body: CreateCustomerFormSchemaType) {
   const response = await apiRequest({
@@ -65,6 +66,12 @@ export interface GetAllCustomersFilters {
   status?: "Ativo" | "Inativo" | "Inadimplente" | "Bloqueado";
   isTrainee?: boolean;
   includeAllTrainees?: boolean;
+  /** Segmento de acompanhamento (novos do mês, sem retorno etc.). */
+  segment?: CustomerSegment;
+  /** Mês de referência do segmento, 1-12. Sem ele, vale o mês corrente. */
+  referenceMonth?: number;
+  /** Ano de referência do segmento. Sem ele, vale o ano corrente. */
+  referenceYear?: number;
 }
 
 export async function GetAllCustomers(
@@ -80,6 +87,14 @@ export async function GetAllCustomers(
 
   if (filters?.isTrainee !== undefined) {
     queryParams.isTrainee = String(filters.isTrainee);
+  }
+
+  if (filters?.referenceMonth !== undefined) {
+    queryParams.referenceMonth = String(filters.referenceMonth);
+  }
+
+  if (filters?.referenceYear !== undefined) {
+    queryParams.referenceYear = String(filters.referenceYear);
   }
 
   const response = await apiRequest<{ items: Customer[]; total: number }>({

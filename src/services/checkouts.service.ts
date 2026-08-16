@@ -9,20 +9,23 @@ function parseCheckoutDates(checkout: Record<string, any>): Checkout {
     ...(checkout as Checkout),
     date: new Date(checkout.date),
     concludedAt: checkout.concludedAt ? new Date(checkout.concludedAt) : null,
+    cancellationDate: checkout.cancellationDate
+      ? new Date(checkout.cancellationDate)
+      : null,
     Customer: checkout.Customer
       ? {
-          ...checkout.Customer,
-          lastBooking: checkout.Customer.lastBooking
-            ? new Date(checkout.Customer.lastBooking)
-            : null,
-        }
+        ...checkout.Customer,
+        lastBooking: checkout.Customer.lastBooking
+          ? new Date(checkout.Customer.lastBooking)
+          : null,
+      }
       : checkout.Customer,
     Address: checkout.Address
       ? {
-          ...checkout.Address,
-          createdAt: new Date(checkout.Address.createdAt),
-          updatedAt: new Date(checkout.Address.updatedAt),
-        }
+        ...checkout.Address,
+        createdAt: new Date(checkout.Address.createdAt),
+        updatedAt: new Date(checkout.Address.updatedAt),
+      }
       : checkout.Address,
   };
 }

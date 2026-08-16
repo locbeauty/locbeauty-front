@@ -1,7 +1,7 @@
 import { UpdateTrainingPayload } from "@/components/pages/trainings/TrainingPaymentMethodDialog";
 import { apiRequest } from "@/lib/api";
 import { CreateTrainingBackendPayload } from "@/lib/zod/CreateTrainingValidation";
-import { Training } from "@/utils/@types/training";
+import { Training, TrainingValueChange } from "@/utils/@types/training";
 
 interface UpdateTrainingRequest {
   trainingId: string;
@@ -56,6 +56,12 @@ export async function UpdateTraining({
   });
 
   return response;
+}
+
+export async function GetTrainingValueChanges(trainingId: string) {
+  return apiRequest<TrainingValueChange[]>({
+    endpoint: `trainings/${trainingId}/value-changes`,
+  });
 }
 
 export async function DeleteTraining(trainingId: string) {

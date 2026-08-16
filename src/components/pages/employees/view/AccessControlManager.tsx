@@ -8,6 +8,10 @@ import { toast } from "sonner";
 import { findAllFilials } from "@/services/filials.service";
 import { Filial } from "@/utils/@types/filials";
 import { Loader2 } from "lucide-react";
+import {
+  getRoleDefaultAccess,
+  RoleModuleAccess,
+} from "@/utils/role-default-access";
 
 import {
   Accordion,
@@ -95,59 +99,65 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
     }
   }
 
+  // Habilitar uma filial concede o acesso padrão do CARGO naquela filial.
+  // Cargos sem padrão (ex.: Financeiro) caem no comportamento antigo: acesso
+  // total a todos os módulos.
+  const roleDefaultAccess = getRoleDefaultAccess(employee.role);
+
+  const grantedByEnabling: RoleModuleAccess[] =
+    roleDefaultAccess.length > 0
+      ? roleDefaultAccess
+      : Object.values(SYSTEM_MODULES).map((module) => ({
+        module,
+        permissions: { canView: true, canCreate: true, canEdit: true },
+      }));
+
   function getFilialAccessState(filialId: string): "all" | "some" | "none" {
     const filialData = accessesByFilial[filialId];
     if (!filialData) return "none";
 
-    const allPermissions = Object.values(filialData.modules).flatMap((mod) => [
-      mod.canView,
-      mod.canCreate,
-      mod.canEdit,
-    ]);
+    const PERMISSIONS = [ "canView", "canCreate", "canEdit" ] as const;
 
-    // Ensure we consider all potential modules vs just the ones in DB?
-    // Logic: if DB record exists, use value. If not, it's false.
-    // We have `modules` list (SYSTEM_MODULES values). We should check against THAT full set for "All".
-
-    const allSystemModules = Object.values(SYSTEM_MODULES);
-    // Calculate total possible permissions count
-    // const totalPossible = allSystemModules.length * 4;
-
-    // Actually, easier way: Iterate over all system modules and check values
-    let trueCount = 0;
-    let totalCount = 0;
-
-    allSystemModules.forEach((modKey) => {
-      const modAccess = filialData.modules[modKey];
-      trueCount += modAccess?.canView ? 1 : 0;
-      trueCount += modAccess?.canCreate ? 1 : 0;
-      trueCount += modAccess?.canEdit ? 1 : 0;
-      totalCount += 3;
+    // "Habilitada" = tem todas as permissões que o cargo recebe por padrão.
+    // Permissões concedidas manualmente além disso contam como "some".
+    const hasAllDefaults = grantedByEnabling.every(({ module, permissions }) => {
+      const modAccess = filialData.modules[module];
+      return PERMISSIONS.every(
+        (perm) => !permissions[perm] || !!modAccess?.[perm],
+      );
     });
 
-    if (trueCount === totalCount) return "all";
-    if (trueCount > 0) return "some";
-    return "none";
+    if (hasAllDefaults) return "all";
+
+    const hasAny = Object.values(filialData.modules).some(
+      (mod) => mod.canView || mod.canCreate || mod.canEdit,
+    );
+
+    return hasAny ? "some" : "none";
   }
 
   async function toggleFilialAccess(filialId: string, checked: boolean) {
     const toastId = toast.loading("Atualizando permissões...");
-    const modulesList = Object.values(SYSTEM_MODULES);
 
-    const shouldEnable = checked;
-
-    const promises = modulesList.map((module) =>
-      manageAccess({
-        targetEmployeeId: employee.employeeId,
-        filialId: filialId,
-        module: module,
-        permissions: {
-          canView: shouldEnable,
-          canCreate: shouldEnable,
-          canEdit: shouldEnable,
-        },
-      })
-    );
+    // Ao desabilitar, todos os módulos são zerados (inclusive os que foram
+    // concedidos manualmente fora do padrão do cargo).
+    const promises = checked
+      ? grantedByEnabling.map(({ module, permissions }) =>
+        manageAccess({
+          targetEmployeeId: employee.employeeId,
+          filialId,
+          module,
+          permissions,
+        }),
+      )
+      : Object.values(SYSTEM_MODULES).map((module) =>
+        manageAccess({
+          targetEmployeeId: employee.employeeId,
+          filialId,
+          module,
+          permissions: { canView: false, canCreate: false, canEdit: false },
+        }),
+      );
 
     try {
       await Promise.all(promises);
@@ -157,8 +167,8 @@ export function AccessControlManager({ employee }: AccessControlManagerProps) {
       setAccesses(accessData);
 
       toast.success(
-        shouldEnable
-          ? "Todos os acessos habilitados."
+        checked
+          ? "Filial habilitada com as permissões do cargo."
           : "Todos os acessos removidos.",
         { id: toastId }
       );

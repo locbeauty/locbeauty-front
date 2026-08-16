@@ -20,6 +20,10 @@ import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { queryClient } from "@/app/(main)/layout";
+import {
+  ListPagination,
+  DEFAULT_PAGE_SIZE,
+} from "@/components/shared/ListPagination";
 
 interface GearsTableProps {
   searchName?: string;
@@ -46,6 +50,24 @@ export function GearsTable({ searchName, filialId }: GearsTableProps) {
 
   const { user } = useAuth();
   const { accesses } = useAccess();
+
+  // Paginação local (a listagem de equipamentos vem completa do servidor).
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    limit: DEFAULT_PAGE_SIZE,
+  });
+
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [ searchName, filialId, isVisible ]);
+
+  const totalGears = gears?.length ?? 0;
+  const totalPagesCount = Math.max(1, Math.ceil(totalGears / pagination.limit));
+  const currentPage = Math.min(pagination.page, totalPagesCount);
+  const pagedGears = (gears ?? []).slice(
+    (currentPage - 1) * pagination.limit,
+    currentPage * pagination.limit,
+  );
 
   const accessibleFilialIds = useMemo(() => {
     // Admin/Master can see all
@@ -250,7 +272,7 @@ export function GearsTable({ searchName, filialId }: GearsTableProps) {
               </tr>
             )}
             {gears ? (
-              gears.map((gear) => (
+              pagedGears.map((gear) => (
                 <tr
                   key={ gear.gearId }
                   className="border-t hover:bg-muted/50 items-stretch"
@@ -321,7 +343,7 @@ export function GearsTable({ searchName, filialId }: GearsTableProps) {
       </div>
       <div className="md:hidden flex flex-col gap-4">
         {gears &&
-          gears.map((gear) => (
+          pagedGears.map((gear) => (
             <Fragment key={ gear.gearId }>
               <ResponsiveCard
                 cardData={ {
@@ -350,6 +372,16 @@ export function GearsTable({ searchName, filialId }: GearsTableProps) {
             </Fragment>
           ))}
       </div>
+
+      <ListPagination
+        page={ currentPage }
+        limit={ pagination.limit }
+        totalItems={ totalGears }
+        onPageChange={ (page) => setPagination((prev) => ({ ...prev, page })) }
+        onLimitChange={ (limit) => setPagination({ page: 1, limit }) }
+        itemLabel="equipamento(s)"
+      />
+
       <GearDetailsDialog
         handleToggleUpdateGearDialog={ handleToggleUpdateGearDialog }
         handleToggleGearDetailsDialog={ handleToggleGearDetailsDialog }
