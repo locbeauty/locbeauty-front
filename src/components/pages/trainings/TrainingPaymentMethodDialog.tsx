@@ -191,10 +191,18 @@ export type UpdateTrainingPayload = {
   // Justificativa obrigatória ao alterar valores de um treinamento concluído.
   justification?: string;
 
-  // Gestão de alunos: cancelar inscrição / remanejar para outro treinamento.
+  // Gestão de participantes (alunos e pacientes modelo): cancelar inscrição /
+  // remanejar para outro treinamento.
   canceledParticipants?: string[];
   transferredParticipants?: {
     customerId: string;
+    targetTrainingId: string;
+  }[];
+
+  // Mesmas operações para pacientes modelo legados (registro Volunteer).
+  canceledVolunteers?: string[];
+  transferredVolunteers?: {
+    volunteerId: string;
     targetTrainingId: string;
   }[];
 
@@ -344,7 +352,13 @@ export function TrainingPaymentMethodDialog({
             (p.traineeId === participantId || p.customerId === participantId)
           );
         } else {
-          return matchesType && p.volunteerId === participantId;
+          // O paciente modelo pode ser um Volunteer legado (volunteerId) ou uma
+          // inscrição unificada, cujo pagamento VOLUNTEER é chaveado pelo
+          // customerId.
+          return (
+            matchesType &&
+            (p.volunteerId === participantId || p.customerId === participantId)
+          );
         }
       });
     }
@@ -732,6 +746,14 @@ export function TrainingPaymentMethodDialog({
       secondPaymentStatus: secondInst?.paymentStatus ?? "Pendente",
     };
 
+    // Paciente modelo vindo da inscrição unificada: o pagamento VOLUNTEER é
+    // identificado pelo customerId (não existe registro Volunteer), então o id
+    // recebido precisa viajar no campo certo para o backend achar o pagamento.
+    const isEnrollmentModel =
+      payerType === "VOLUNTEER" &&
+      !currentPaymentData?.volunteerId &&
+      Boolean(currentPaymentData?.customerId || participantId);
+
     const payload: UpdateTrainingPayload = {
       trainingStatus: trainingStatus,
       payerType: payerType,
@@ -748,9 +770,11 @@ export function TrainingPaymentMethodDialog({
               currentPaymentData?.traineeId ||
               currentPaymentData?.customerId) ??
             undefined)
-          : undefined,
+          : isEnrollmentModel
+            ? ((currentPaymentData?.customerId || participantId) ?? undefined)
+            : undefined,
       volunteerId:
-        payerType === "VOLUNTEER"
+        payerType === "VOLUNTEER" && !isEnrollmentModel
           ? ((participantId || currentPaymentData?.volunteerId) ?? undefined)
           : undefined,
       TrainingPayment: trainingPaymentData,
@@ -801,14 +825,18 @@ export function TrainingPaymentMethodDialog({
         selectedTraining.Trainees?.[0]?.fullname ||
         "Aluno"
       );
-    } else {
-      if (participantId && selectedTraining.Volunteers) {
-        return (
-          selectedTraining.Volunteers.find(
-            (v) => v.volunteerId === participantId,
-          )?.name || "Modelo"
-        );
-      }
+    } else if (participantId) {
+      const volunteer = selectedTraining.Volunteers?.find(
+        (v) => v.volunteerId === participantId,
+      );
+      if (volunteer) return volunteer.name || "Modelo";
+
+      // Paciente modelo da inscrição unificada: o id é o do Customer.
+      return (
+        selectedTraining.Enrollments?.find(
+          (e) => e.customerId === participantId,
+        )?.Customer?.fullname || "Modelo"
+      );
     }
   }, [ payerType, participantId, selectedTraining ]);
 

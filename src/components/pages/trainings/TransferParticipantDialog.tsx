@@ -30,12 +30,24 @@ import { queryClient } from "@/app/(main)/layout";
 import { Training } from "@/utils/@types/training";
 import { ApiResponse } from "@/lib/api";
 
-interface TransferTraineeDialogProps {
+/**
+ * Participante a remanejar. `CUSTOMER` é a inscrição unificada (aluno e/ou
+ * paciente modelo) e `VOLUNTEER`, o paciente modelo legado — cada um viaja por
+ * um campo diferente do update porque são entidades distintas no banco.
+ */
+export type TransferParticipant = {
+  kind: "CUSTOMER" | "VOLUNTEER";
+  id: string;
+  name?: string;
+  /** Rótulo usado nos textos do diálogo ("Aluno" / "Paciente Modelo"). */
+  roleLabel: string;
+};
+
+interface TransferParticipantDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sourceTraining: Training;
-  customerId: string | null;
-  customerName?: string;
+  participant: TransferParticipant | null;
   onSuccess?: (updatedSourceTraining: Training) => void;
 }
 
@@ -44,14 +56,13 @@ const formatHour = (hourInMinutes: number) =>
     hourInMinutes % 60,
   ).padStart(2, "0")}`;
 
-export function TransferTraineeDialog({
+export function TransferParticipantDialog({
   open,
   onOpenChange,
   sourceTraining,
-  customerId,
-  customerName,
+  participant,
   onSuccess,
-}: TransferTraineeDialogProps) {
+}: TransferParticipantDialogProps) {
   const [ targetTrainingId, setTargetTrainingId ] = useState<string | null>(null);
   const [ isTransferring, setIsTransferring ] = useState(false);
 
@@ -76,20 +87,31 @@ export function TransferTraineeDialog({
       );
   }, [ data, sourceTraining.trainingId ]);
 
+  const roleLabel = participant?.roleLabel ?? "Participante";
+
   const handleTransfer = async () => {
-    if (!customerId || !targetTrainingId) return;
+    if (!participant || !targetTrainingId) return;
 
     setIsTransferring(true);
     try {
       const response = await UpdateTraining({
         trainingId: sourceTraining.trainingId,
-        body: {
-          transferredParticipants: [ { customerId, targetTrainingId } ],
-        },
+        body:
+          participant.kind === "CUSTOMER"
+            ? {
+              transferredParticipants: [
+                { customerId: participant.id, targetTrainingId },
+              ],
+            }
+            : {
+              transferredVolunteers: [
+                { volunteerId: participant.id, targetTrainingId },
+              ],
+            },
       });
 
       if (response && response.statusCode === 200) {
-        toast.success("Aluno remanejado com sucesso!", {
+        toast.success(`${roleLabel} remanejado(a) com sucesso!`, {
           style: { fontSize: "1rem" },
         });
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
@@ -99,13 +121,15 @@ export function TransferTraineeDialog({
         }
         onOpenChange(false);
       } else {
-        toast.error(response?.message || "Erro ao remanejar aluno.", {
+        toast.error(response?.message || `Erro ao remanejar ${roleLabel.toLowerCase()}.`, {
           style: { fontSize: "1rem" },
         });
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao remanejar aluno.", { style: { fontSize: "1rem" } });
+      toast.error(`Erro ao remanejar ${roleLabel.toLowerCase()}.`, {
+        style: { fontSize: "1rem" },
+      });
     } finally {
       setIsTransferring(false);
     }
@@ -122,12 +146,12 @@ export function TransferTraineeDialog({
       <DialogContent className="max-h-[90vh] w-[90vw] md:w-[650px] overflow-y-auto flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ArrowRightLeft className="h-5 w-5" /> Remanejar Aluno
+            <ArrowRightLeft className="h-5 w-5" /> Remanejar {roleLabel}
           </DialogTitle>
           <DialogDescription>
             Selecione o treinamento de destino
-            {customerName ? ` para ${customerName}` : ""}. A inscrição e os
-            pagamentos (com as cobranças) serão movidos para a nova turma.
+            {participant?.name ? ` para ${participant.name}` : ""}. A inscrição
+            e os pagamentos (com as cobranças) serão movidos para a nova turma.
           </DialogDescription>
         </DialogHeader>
 
@@ -147,12 +171,19 @@ export function TransferTraineeDialog({
           {candidateTrainings.map((training) => {
             const enrolledCount = training.Enrollments?.length || 0;
             const capacity = training.capacity ?? 15;
-            const isFull = enrolledCount >= capacity;
+            // Modelos legados (Volunteer) não ocupam vaga de inscrição, então a
+            // lotação da turma não os impede de serem remanejados.
+            const isFull =
+              participant?.kind === "CUSTOMER" && enrolledCount >= capacity;
             const alreadyEnrolled = Boolean(
-              customerId &&
-                training.Enrollments?.some(
-                  (e) => e.customerId === customerId,
-                ),
+              participant &&
+                (participant.kind === "CUSTOMER"
+                  ? training.Enrollments?.some(
+                    (e) => e.customerId === participant.id,
+                  )
+                  : training.Volunteers?.some(
+                    (v) => v.volunteerId === participant.id,
+                  )),
             );
             const isSelected = targetTrainingId === training.trainingId;
             const disabled = isFull || alreadyEnrolled;
@@ -195,7 +226,7 @@ export function TransferTraineeDialog({
                         <Users className="h-3 w-3" />
                         {enrolledCount}/{capacity}
                         {isFull && " (lotado)"}
-                        {alreadyEnrolled && " (já inscrito)"}
+                        {alreadyEnrolled && " (já está na turma)"}
                       </span>
                     </div>
                   </div>
@@ -220,7 +251,7 @@ export function TransferTraineeDialog({
           <Button
             type="button"
             onClick={ handleTransfer }
-            disabled={ isTransferring || !targetTrainingId || !customerId }
+            disabled={ isTransferring || !targetTrainingId || !participant }
           >
             {isTransferring ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

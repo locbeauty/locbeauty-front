@@ -35,7 +35,8 @@ import { ROUTES } from "@/utils/routes";
 
 export interface RoutesTableFilters {
   customerName?: string;
-  filialId?: string;
+  /** Filiais escolhidas no filtro; lista vazia/ausente = todas as acessíveis. */
+  filialIds?: string[];
   startDate?: Date;
   endDate?: Date;
   status?: string;
@@ -80,13 +81,20 @@ export function RoutesTable({ filters }: RoutesTableProps) {
   const accessibleFilialIds = useAccessibleFilialIds(SYSTEM_MODULES.ROUTES);
 
   const finalFilialIds = useMemo(() => {
-    if (isMaster) return filters?.filialId ? [ filters.filialId ] : undefined;
-    if (filters?.filialId) {
-      const intersect = accessibleFilialIds?.filter((id) => id === filters.filialId);
-      return intersect && intersect.length > 0 ? intersect : [ "NO_ACCESS" ];
-    }
-    return accessibleFilialIds;
-  }, [ isMaster, filters?.filialId, accessibleFilialIds ]);
+    const requested = filters?.filialIds ?? [];
+
+    // Master/Admin não têm restrição: vale o que foi pedido (nada = todas).
+    if (isMaster) return requested.length > 0 ? requested : undefined;
+
+    // Demais cargos: o filtro da tela só pode restringir o que já é acessível,
+    // nunca ampliar. Sem escolha, mostra todas as filiais liberadas.
+    if (requested.length === 0) return accessibleFilialIds;
+
+    const intersect = (accessibleFilialIds ?? []).filter((id) =>
+      requested.includes(id),
+    );
+    return intersect.length > 0 ? intersect : [ "NO_ACCESS" ];
+  }, [ isMaster, filters?.filialIds, accessibleFilialIds ]);
 
   const queryParams = useMemo(() => ({
     filialIds: finalFilialIds,
@@ -96,6 +104,12 @@ export function RoutesTable({ filters }: RoutesTableProps) {
     status: filters?.status && filters.status !== "Todos" ? filters.status : undefined,
     // Motorista só enxerga as próprias rotas
     driverId: isMotorista ? (user?.employeeId ?? user?.sub) : undefined,
+    // "Rota" = agendamento com motorista atribuído. Filtrar isso no servidor é
+    // obrigatório: o backend pagina antes de responder, então descartar
+    // agendamentos sem motorista aqui deixaria páginas inteiras vazias (o
+    // sintoma de "nenhuma rota" com o filtro de filial em "Todas", quando os
+    // agendamentos mais recentes ainda não têm motorista) e o total errado.
+    hasDriver: true,
     page: pagination.page,
     limit: pagination.limit,
   }), [ finalFilialIds, filters, isMotorista, user, pagination ]);
@@ -110,11 +124,10 @@ export function RoutesTable({ filters }: RoutesTableProps) {
     enabled: !!user,
   });
 
-  // Apenas checkouts com motorista atribuído
-  const routes = useMemo(
-    () => (data?.data?.items || []).filter((c) => !!c.driverId),
-    [ data?.data?.items ],
-  );
+  // A seleção de "só com motorista" é feita pelo backend (`hasDriver`), então a
+  // página recebida já é a lista final — nunca filtre por motorista aqui, sob
+  // pena de reintroduzir páginas vazias e total divergente.
+  const routes = data?.data?.items || [];
 
   const totalRoutes = data?.data?.total || 0;
 

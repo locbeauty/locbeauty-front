@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { SelectFilial } from "@/components/shared/SelectFilial";
+import { SelectFilials } from "@/components/shared/SelectFilials";
 import { DateRangePicker } from "@/components/ui/DatePicker";
 import type { DateRange } from "react-day-picker";
 import { FilterSelect } from "@/components/shared/FilterSelect";
@@ -26,13 +26,11 @@ export default function RoutesPage() {
   // Filiais liberadas para o usuário (undefined = todas, para Master/Admin).
   const accessibleFilialIds = useAccessibleFilialIds(SYSTEM_MODULES.ROUTES);
 
-  // Sem filtro escolhido, a tela mostra TODAS as filiais liberadas — antes o
-  // estado inicial era a filial de origem, o que escondia as rotas das demais
-  // filiais habilitadas em "Gerenciar Acessos".
+  // Sem filtro escolhido (lista vazia), a tela mostra TODAS as filiais
+  // liberadas — antes o estado inicial era a filial de origem, o que escondia
+  // as rotas das demais filiais habilitadas em "Gerenciar Acessos".
   const [ searchQuery, setSearchQuery ] = useState("");
-  const [ selectedFilialId, setSelectedFilialId ] = useState<string | undefined>(
-    undefined,
-  );
+  const [ selectedFilialIds, setSelectedFilialIds ] = useState<string[]>([]);
   const [ dateRange, setDateRange ] = useState<DateRange | undefined>(
     undefined,
   );
@@ -49,13 +47,13 @@ export default function RoutesPage() {
     debouncedSearch ||
     dateRange?.from ||
     status ||
-    selectedFilialId;
+    selectedFilialIds.length > 0;
 
   function clearFilters() {
     setSearchQuery("");
     setDateRange(undefined);
     setStatus(undefined);
-    setSelectedFilialId(undefined);
+    setSelectedFilialIds([]);
   }
 
   return (
@@ -89,17 +87,16 @@ export default function RoutesPage() {
               </div>
             )}
 
-            {/* Seletor de filial para quem tem acesso a mais de uma */}
+            {/* Seletor de filiais (múltipla escolha) para quem enxerga mais de uma */}
             {canFilterByFilial && (
-              <SelectFilial
-                value={ selectedFilialId }
-                onValueChange={ (val) =>
-                  setSelectedFilialId(val === "ALL" ? undefined : val)
-                }
-                placeholder="Filtrar por filial"
-                className="w-full md:w-[220px]"
-                accessibleFilials={ accessibleFilialIds }
-              />
+              <div className="w-full md:w-[220px]">
+                <SelectFilials
+                  value={ selectedFilialIds }
+                  onChange={ setSelectedFilialIds }
+                  placeholder="Filtrar por filial"
+                  accessibleFilials={ accessibleFilialIds }
+                />
+              </div>
             )}
 
             <DateRangePicker
@@ -133,7 +130,7 @@ export default function RoutesPage() {
         <RoutesTable
           filters={ {
             customerName: !isMotorista ? debouncedSearch || undefined : undefined,
-            filialId: selectedFilialId,
+            filialIds: selectedFilialIds,
             startDate: dateRange?.from,
             endDate: dateRange?.to,
             status: !isMotorista ? status : undefined,

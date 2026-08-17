@@ -63,7 +63,10 @@ import { AddParticipantDialog } from "./AddParticipantDialog";
 // import { UpdateParticipantValuesDialog } from "./UpdateParticipantValuesDialog";
 import EditTrainingFinancialsDialog from "./EditTrainingFinancialsDialog";
 import { EditTrainingDialog } from "./EditTrainingDialog";
-import { TransferTraineeDialog } from "./TransferTraineeDialog";
+import {
+  TransferParticipantDialog,
+  TransferParticipant,
+} from "./TransferParticipantDialog";
 import { TrainingEnrollmentsSection } from "./TrainingEnrollmentsSection";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
@@ -118,10 +121,8 @@ export function TrainingDetailsDialog({
     useState(false);
 
   const [ isTransferDialogOpen, setIsTransferDialogOpen ] = useState(false);
-  const [ traineeToTransfer, setTraineeToTransfer ] = useState<{
-    customerId: string;
-    name: string;
-  } | null>(null);
+  const [ participantToTransfer, setParticipantToTransfer ] =
+    useState<TransferParticipant | null>(null);
 
   const { user } = useAuth();
   const [ isRestoring, setIsRestoring ] = useState(false);
@@ -171,6 +172,84 @@ export function TrainingDetailsDialog({
         (p: TrainingPayment) => p.payerType === "VOLUNTEER",
       ),
     };
+  }, [ selectedTraining ]);
+
+  // Pacientes modelo das duas gerações do modelo de dados: a inscrição
+  // unificada (Customer com isModel, usada desde a reformulação) e o registro
+  // legado Volunteer, ainda vinculado às turmas antigas. Unificar aqui garante
+  // que pagamento, remanejamento e cancelamento existam para os dois casos.
+  const modelParticipants = useMemo(() => {
+    const payments = Array.isArray(selectedTraining.TrainingPayment)
+      ? selectedTraining.TrainingPayment
+      : [];
+
+    const fromEnrollments = (selectedTraining.Enrollments || [])
+      .filter((enrollment) => enrollment.isModel)
+      .map((enrollment) => {
+        const payment =
+          payments.find((p) => p.enrollmentId === enrollment.enrollmentId) ||
+          payments.find((p) => p.customerId === enrollment.customerId);
+
+        return {
+          kind: "CUSTOMER" as const,
+          id: enrollment.customerId,
+          name: enrollment.Customer?.fullname || "Participante",
+          // Acumula os dois papéis: aparece também na lista de alunos, e a
+          // inscrição (com o pagamento) é uma só.
+          isAlsoTrainee: enrollment.isTrainee,
+          document:
+            enrollment.Customer?.cpf || enrollment.Customer?.cnpj || "N/A",
+          cellphone: enrollment.Customer?.cellphone || "N/A",
+          payment,
+          // Quem também é aluno tem um único pagamento, do tipo TRAINEE: o
+          // diálogo financeiro precisa do tipo real para achar o registro.
+          payerType: (payment?.payerType ?? "VOLUNTEER") as PayerType,
+          // O diálogo financeiro localiza o pagamento pelo id do pagador, que
+          // muda conforme a origem do dado: modelo do backfill guarda o
+          // volunteerId legado; os demais, o customerId.
+          paymentParticipantId:
+            payment?.volunteerId ?? payment?.customerId ?? enrollment.customerId,
+        };
+      });
+
+    // O backfill criou uma inscrição para cada Volunteer sem apagar o vínculo
+    // legado, então a mesma pessoa chega pelas duas vias. O documento é o que
+    // liga as duas representações — mesma regra usada na contagem de vagas da
+    // listagem de treinamentos.
+    const onlyDigits = (value?: string | null) =>
+      (value ?? "").replace(/\D/g, "");
+    const enrolledDocuments = new Set(
+      (selectedTraining.Enrollments || [])
+        .flatMap((enrollment) => [
+          enrollment.Customer?.cpf,
+          enrollment.Customer?.cnpj,
+        ])
+        .map(onlyDigits)
+        .filter(Boolean),
+    );
+
+    const fromVolunteers = (selectedTraining.Volunteers || [])
+      .filter((volunteer) => {
+        const document = onlyDigits(volunteer.documentNumber);
+        return !document || !enrolledDocuments.has(document);
+      })
+      .map((volunteer) => ({
+        kind: "VOLUNTEER" as const,
+        id: volunteer.volunteerId,
+        name: volunteer.name || "N/A",
+        isAlsoTrainee: false,
+        document: volunteer.documentNumber || "N/A",
+        cellphone: volunteer.cellphone || "N/A",
+        payment: payments.find(
+          (p) =>
+            p.payerType === "VOLUNTEER" &&
+            p.volunteerId === volunteer.volunteerId,
+        ),
+        payerType: "VOLUNTEER" as PayerType,
+        paymentParticipantId: volunteer.volunteerId,
+      }));
+
+    return [ ...fromEnrollments, ...fromVolunteers ];
   }, [ selectedTraining ]);
 
   const [ selectedParticipantId, setSelectedParticipantId ] = useState<
@@ -358,12 +437,49 @@ export function TrainingDetailsDialog({
     }
   };
 
-  // Cancela apenas a inscrição do aluno: ele sai da turma (libera a vaga) e o
-  // registro financeiro é mantido com status "Cancelado".
-  const onCancelParticipant = async (customerId: string, name: string) => {
+  // Remoção de uma inscrição unificada (usada pelos pacientes modelo, que podem
+  // não ter pagamento do tipo TRAINEE): o payload não leva dados de pagamento,
+  // senão o upsert do backend criaria um registro financeiro zerado para quem
+  // está justamente saindo da turma.
+  const onRemoveEnrollmentParticipant = async (
+    customerId: string,
+    name: string,
+  ) => {
+    if (
+      !window.confirm(`Tem certeza que deseja remover ${name} do treinamento?`)
+    )
+      return;
+
+    try {
+      const response = await UpdateTraining({
+        trainingId: selectedTraining.trainingId,
+        body: { removedTrainees: [ customerId ] },
+      });
+      if (response && response.statusCode === 200) {
+        toast.success("Participante removido com sucesso!");
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+        if (setSelectedTraining && response.data) {
+          setSelectedTraining(response.data);
+        }
+      } else {
+        toast.error(response?.message || "Erro ao remover participante.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao remover participante.");
+    }
+  };
+
+  // Cancela apenas a inscrição do participante (aluno ou paciente modelo): ele
+  // sai da turma (libera a vaga) e o registro financeiro é mantido com status
+  // "Cancelado".
+  const onCancelParticipant = async (participant: TransferParticipant) => {
+    const { kind, id, name, roleLabel } = participant;
+
     if (
       !window.confirm(
-        `Cancelar a inscrição de ${name} neste treinamento? A vaga será liberada e o registro financeiro ficará como "Cancelado".`,
+        `Cancelar a inscrição de ${name ?? "este participante"} neste treinamento? A vaga será liberada e o registro financeiro ficará como "Cancelado".`,
       )
     )
       return;
@@ -371,10 +487,13 @@ export function TrainingDetailsDialog({
     try {
       const response = await UpdateTraining({
         trainingId: selectedTraining.trainingId,
-        body: { canceledParticipants: [ customerId ] },
+        body:
+          kind === "CUSTOMER"
+            ? { canceledParticipants: [ id ] }
+            : { canceledVolunteers: [ id ] },
       });
       if (response && response.statusCode === 200) {
-        toast.success("Inscrição do aluno cancelada.");
+        toast.success(`Inscrição de ${roleLabel.toLowerCase()} cancelada.`);
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
         queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
         if (setSelectedTraining && response.data) {
@@ -389,8 +508,8 @@ export function TrainingDetailsDialog({
     }
   };
 
-  const handleOpenTransferDialog = (customerId: string, name: string) => {
-    setTraineeToTransfer({ customerId, name });
+  const handleOpenTransferDialog = (participant: TransferParticipant) => {
+    setParticipantToTransfer(participant);
     setIsTransferDialogOpen(true);
   };
 
@@ -937,10 +1056,12 @@ export function TrainingDetailsDialog({
                                 className="h-8 w-8 shrink-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                                 title="Remanejar para outro treinamento"
                                 onClick={ () =>
-                                  handleOpenTransferDialog(
-                                    trainee.customerId,
-                                    trainee.fullname,
-                                  )
+                                  handleOpenTransferDialog({
+                                    kind: "CUSTOMER",
+                                    id: trainee.customerId,
+                                    name: trainee.fullname,
+                                    roleLabel: "Aluno",
+                                  })
                                 }
                               >
                                 <ArrowRightLeft className="h-4 w-4" />
@@ -954,10 +1075,12 @@ export function TrainingDetailsDialog({
                                 className="h-8 w-8 shrink-0 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
                                 title="Cancelar inscrição do aluno"
                                 onClick={ () =>
-                                  onCancelParticipant(
-                                    trainee.customerId,
-                                    trainee.fullname,
-                                  )
+                                  onCancelParticipant({
+                                    kind: "CUSTOMER",
+                                    id: trainee.customerId,
+                                    name: trainee.fullname,
+                                    roleLabel: "Aluno",
+                                  })
                                 }
                               >
                                 <Ban className="h-4 w-4" />
@@ -998,7 +1121,7 @@ export function TrainingDetailsDialog({
                 <div className="flex justify-between items-center">
                   <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                     <User className="h-3 w-3" /> Pacientes Modelo (
-                    {selectedTraining.Volunteers?.length || 0})
+                    {modelParticipants.length})
                   </h4>
                   {canEditParticipants && (
                     <div className="flex items-center gap-2">
@@ -1022,13 +1145,9 @@ export function TrainingDetailsDialog({
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
-                  {selectedTraining.Volunteers?.length ? (
-                    selectedTraining.Volunteers.map((volunteer) => {
-                      const payment = selectedTraining.TrainingPayment?.find(
-                        (p) =>
-                          p.payerType === "VOLUNTEER" &&
-                          p.volunteerId === volunteer.volunteerId,
-                      );
+                  {modelParticipants.length ? (
+                    modelParticipants.map((model) => {
+                      const payment = model.payment;
                       const isPartialFullyPaid =
                         payment?.paymentStatus === "Parcial" &&
                         payment?.firstPaymentStatus === "Pago" &&
@@ -1038,32 +1157,46 @@ export function TrainingDetailsDialog({
                         : payment?.paymentStatus || "Pendente";
                       const canRemove =
                         canEditParticipants && status === "Pendente";
+                      const canCancel =
+                        canEditParticipants &&
+                        (status === "Pendente" || status === "Parcial");
+                      const transferTarget: TransferParticipant = {
+                        kind: model.kind,
+                        id: model.id,
+                        name: model.name,
+                        roleLabel: "Paciente Modelo",
+                      };
 
                       return (
                         <div
-                          key={ volunteer.volunteerId }
+                          key={ `${model.kind}-${model.id}` }
                           className="p-3 rounded-lg border bg-card flex items-center justify-between gap-3"
                         >
                           <div className="flex items-center gap-3 overflow-hidden">
                             <div className="h-8 w-8 min-w-[2rem] rounded-full bg-primary/10 flex items-center justify-center">
                               <span className="font-bold text-xs text-primary">
-                                {volunteer.name?.charAt(0) || "?"}
+                                {model.name?.charAt(0) || "?"}
                               </span>
                             </div>
                             <div className="text-sm overflow-hidden">
-                              <p className="font-medium truncate">
-                                {volunteer.name || "N/A"}
+                              <p className="font-medium truncate flex items-center gap-2">
+                                {model.name}
+                                {model.isAlsoTrainee && (
+                                  <span className="text-[10px] font-normal px-1.5 py-0.5 rounded border text-muted-foreground shrink-0">
+                                    também aluno
+                                  </span>
+                                )}
                               </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <FileText className="h-3 w-3 min-w-[0.75rem]" />{" "}
                                 <span className="truncate">
-                                  {volunteer.documentNumber || "N/A"}
+                                  {model.document}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <Phone className="h-3 w-3 min-w-[0.75rem]" />{" "}
                                 <span className="truncate">
-                                  {volunteer.cellphone || "N/A"}
+                                  {model.cellphone}
                                 </span>
                               </div>
                             </div>
@@ -1083,8 +1216,8 @@ export function TrainingDetailsDialog({
                               className="h-8 w-8 shrink-0"
                               onClick={ () =>
                                 handleOpenPaymentDialog(
-                                  "VOLUNTEER",
-                                  volunteer.volunteerId,
+                                  model.payerType,
+                                  model.paymentParticipantId,
                                 )
                               }
                             >
@@ -1093,16 +1226,48 @@ export function TrainingDetailsDialog({
                                 Gerenciar Pagamento
                               </span>
                             </Button>
+                            {canEditParticipants && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                title="Remanejar para outro treinamento"
+                                onClick={ () =>
+                                  handleOpenTransferDialog(transferTarget)
+                                }
+                              >
+                                <ArrowRightLeft className="h-4 w-4" />
+                                <span className="sr-only">Remanejar</span>
+                              </Button>
+                            )}
+                            {canCancel && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
+                                title="Cancelar inscrição do paciente modelo"
+                                onClick={ () =>
+                                  onCancelParticipant(transferTarget)
+                                }
+                              >
+                                <Ban className="h-4 w-4" />
+                                <span className="sr-only">
+                                  Cancelar inscrição
+                                </span>
+                              </Button>
+                            )}
                             {canRemove && (
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                                 onClick={ () =>
-                                  onRemoveParticipant(
-                                    "VOLUNTEER",
-                                    volunteer.volunteerId,
-                                  )
+                                  model.kind === "VOLUNTEER"
+                                    ? onRemoveParticipant("VOLUNTEER", model.id)
+                                    : onRemoveEnrollmentParticipant(
+                                      model.id,
+                                      model.name,
+                                    )
                                 }
                               >
                                 <X className="h-4 w-4" />
@@ -1275,15 +1440,14 @@ export function TrainingDetailsDialog({
         setSelectedTraining={ setSelectedTraining }
       />
 
-      <TransferTraineeDialog
+      <TransferParticipantDialog
         open={ isTransferDialogOpen }
         onOpenChange={ (value) => {
           setIsTransferDialogOpen(value);
-          if (!value) setTraineeToTransfer(null);
+          if (!value) setParticipantToTransfer(null);
         } }
         sourceTraining={ selectedTraining }
-        customerId={ traineeToTransfer?.customerId ?? null }
-        customerName={ traineeToTransfer?.name }
+        participant={ participantToTransfer }
         onSuccess={ (updated) => {
           if (setSelectedTraining) {
             setSelectedTraining(updated);
