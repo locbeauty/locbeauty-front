@@ -68,6 +68,7 @@ import { parseStringToCents } from "@/utils/parseStringToCents";
 import { useQuery } from "@tanstack/react-query";
 import { AdditionalCostsDialog } from "./AdditionalCostsDialog";
 import { centsToString } from "@/utils/centsToString";
+import { getApiErrorMessage } from "@/utils/getApiErrorMessage";
 import { queryClient } from "@/app/(main)/layout";
 import { SelectCustomer } from "./SelectCustomer";
 import { useAccess } from "@/contexts/access-provider";
@@ -533,7 +534,7 @@ export function CreateBookingForm() {
       queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
       window.scrollTo({ top: 0 });
     } else {
-      toast.warning(response.message);
+      toast.warning(getApiErrorMessage(response));
     }
   };
 

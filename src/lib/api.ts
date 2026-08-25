@@ -12,6 +12,7 @@ export interface ApiResponse<T = unknown> {
   statusCode: number;
   data?: T;
   message?: string;
+  details?: unknown;
 }
 export async function apiRequest<T = unknown>({
   endpoint,
