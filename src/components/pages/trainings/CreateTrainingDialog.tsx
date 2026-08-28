@@ -66,6 +66,7 @@ import {
 } from "@/services/checkouts.service";
 import { queryClient } from "@/app/(main)/layout";
 import { parseStringToCents } from "@/utils/parseStringToCents";
+import { buildRequiredCharges } from "@/utils/trainingCharges";
 import { useAuth } from "@/contexts/auth-provider";
 import { useAccess } from "@/contexts/access-provider";
 import { USER_ROLES } from "@/utils/constants";
@@ -196,32 +197,11 @@ export function CreateTrainingDialog({
     p: NewTrainingDataType["participants"][number],
     trainingType: "COMUM" | "MPT",
   ): TrainingChargePayload[] => {
-    const charges: TrainingChargePayload[] = [];
-
-    if (trainingType === "MPT") {
-      charges.push({
-        kind: "GARANTIA_VAGA",
-        description: "Garantia de vaga",
-        amountCents: parseStringToCents(p.placeGuaranteeValue || "0"),
-        isRequired: true,
-      });
-      // Disparos é cobrado apenas de pacientes modelos.
-      if (p.isModel) {
-        charges.push({
-          kind: "DISPAROS",
-          description: "Disparos",
-          amountCents: parseStringToCents(p.shotsValue || "0"),
-          isRequired: true,
-        });
-      }
-    } else {
-      charges.push({
-        kind: "BASE",
-        description: "Valor base",
-        amountCents: parseStringToCents(p.baseValue || "0"),
-        isRequired: true,
-      });
-    }
+    const charges = buildRequiredCharges(trainingType, p.isModel, {
+      base: parseStringToCents(p.baseValue || "0"),
+      placeGuarantee: parseStringToCents(p.placeGuaranteeValue || "0"),
+      shots: parseStringToCents(p.shotsValue || "0"),
+    });
 
     (p.extraCharges || []).forEach((ec) => {
       charges.push({

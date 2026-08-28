@@ -14,6 +14,8 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Check } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { GetAllTrainees } from "@/services/trainees.service";
 import { GetAllVolunteers } from "@/services/volunteers.service";
@@ -25,9 +27,17 @@ interface AddParticipantDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: "TRAINEE" | "VOLUNTEER";
-  onAdd: (id: string) => Promise<void>;
+  onAdd: (id: string, justification?: string) => Promise<void>;
   excludeIds?: string[];
+  /**
+   * Documentos (só dígitos) já inscritos na turma. O modelo é escolhido da
+   * lista legada de Volunteer, cujo id não compara com o customerId da
+   * inscrição — o documento é o que liga as duas representações.
+   */
+  excludeDocuments?: string[];
   filialId?: string;
+  /** Treinamento concluído: o backend exige justificativa para alterar valores. */
+  requireJustification?: boolean;
 }
 
 export function AddParticipantDialog({
@@ -36,11 +46,14 @@ export function AddParticipantDialog({
   type,
   onAdd,
   excludeIds = [],
+  excludeDocuments = [],
   filialId,
+  requireJustification,
 }: AddParticipantDialogProps) {
   const [ options, setOptions ] = useState<(Trainee | Volunteer)[]>([]);
   const [ isLoading, setIsLoading ] = useState(false);
   const [ selectedId, setSelectedId ] = useState<string | null>(null);
+  const [ justification, setJustification ] = useState("");
 
   const loadOptions = useCallback(async () => {
     setIsLoading(true);
@@ -68,23 +81,41 @@ export function AddParticipantDialog({
     if (open) {
       loadOptions();
       setSelectedId(null);
+      setJustification("");
     }
   }, [ open, type, loadOptions ]);
 
+  const trimmedJustification = justification.trim();
+
   const handleSelect = async (id: string) => {
+    if (requireJustification && !trimmedJustification) {
+      toast.warning(
+        "Informe a justificativa para alterar um treinamento concluído.",
+      );
+      return;
+    }
+
     setSelectedId(id);
-    await onAdd(id);
+    await onAdd(id, trimmedJustification || undefined);
     onOpenChange(false);
   };
 
-  const filteredOptions = options.filter(
-    (opt) =>
-      !excludeIds.includes(
-        type === "TRAINEE"
-          ? (opt as Trainee).customerId
-          : (opt as Volunteer).volunteerId,
-      ),
-  );
+  const onlyDigits = (value?: string | null) => (value ?? "").replace(/\D/g, "");
+  const excludedDocuments = new Set(excludeDocuments.filter(Boolean));
+
+  const filteredOptions = options.filter((opt) => {
+    if (type === "TRAINEE") {
+      const trainee = opt as Trainee;
+      if (excludeIds.includes(trainee.customerId)) return false;
+      const document = onlyDigits(trainee.cpf || trainee.cnpj);
+      return !document || !excludedDocuments.has(document);
+    }
+
+    const volunteer = opt as Volunteer;
+    if (excludeIds.includes(volunteer.volunteerId)) return false;
+    const document = onlyDigits(volunteer.documentNumber);
+    return !document || !excludedDocuments.has(document);
+  });
 
   return (
     <Dialog open={ open } onOpenChange={ onOpenChange }>
@@ -94,6 +125,21 @@ export function AddParticipantDialog({
             Adicionar {type === "TRAINEE" ? "Aluno" : "Modelo"}
           </DialogTitle>
         </DialogHeader>
+        {requireJustification && (
+          <div className="px-4 pb-3 space-y-1.5">
+            <Label htmlFor="add-participant-justification" className="text-xs">
+              Justificativa da alteração
+            </Label>
+            <Textarea
+              id="add-participant-justification"
+              value={ justification }
+              onChange={ (e) => setJustification(e.target.value) }
+              placeholder="Descreva o motivo da inclusão neste treinamento concluído"
+              className="resize-none"
+              rows={ 2 }
+            />
+          </div>
+        )}
         <Command className="overflow-hidden rounded-t-none border-t">
           <CommandInput
             placeholder={ `Buscar ${type === "TRAINEE" ? "aluno" : "modelo"}...` }

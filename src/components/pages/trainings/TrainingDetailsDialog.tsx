@@ -70,6 +70,7 @@ import {
 import { TrainingEnrollmentsSection } from "./TrainingEnrollmentsSection";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
+import { buildRequiredCharges } from "@/utils/trainingCharges";
 
 interface TrainingDetailsDialogProps {
   open: boolean;
@@ -79,6 +80,9 @@ interface TrainingDetailsDialogProps {
 }
 
 export type PayerType = "TRAINEE" | "VOLUNTEER";
+
+/** Documento sem máscara — é o que liga Volunteer legado e Customer inscrito. */
+const onlyDigits = (value?: string | null) => (value ?? "").replace(/\D/g, "");
 
 export function TrainingDetailsDialog({
   open,
@@ -174,6 +178,25 @@ export function TrainingDetailsDialog({
     };
   }, [ selectedTraining ]);
 
+  // O backfill criou uma inscrição para cada Volunteer sem apagar o vínculo
+  // legado, então a mesma pessoa chega pelas duas vias. O documento é o que
+  // liga as duas representações — mesma regra usada na contagem de vagas da
+  // listagem de treinamentos. Serve para deduplicar a lista de modelos e para
+  // não oferecer, na busca, quem já está inscrito.
+  const enrolledDocuments = useMemo(
+    () =>
+      new Set(
+        (selectedTraining.Enrollments || [])
+          .flatMap((enrollment) => [
+            enrollment.Customer?.cpf,
+            enrollment.Customer?.cnpj,
+          ])
+          .map(onlyDigits)
+          .filter(Boolean),
+      ),
+    [ selectedTraining ],
+  );
+
   // Pacientes modelo das duas gerações do modelo de dados: a inscrição
   // unificada (Customer com isModel, usada desde a reformulação) e o registro
   // legado Volunteer, ainda vinculado às turmas antigas. Unificar aqui garante
@@ -212,22 +235,6 @@ export function TrainingDetailsDialog({
         };
       });
 
-    // O backfill criou uma inscrição para cada Volunteer sem apagar o vínculo
-    // legado, então a mesma pessoa chega pelas duas vias. O documento é o que
-    // liga as duas representações — mesma regra usada na contagem de vagas da
-    // listagem de treinamentos.
-    const onlyDigits = (value?: string | null) =>
-      (value ?? "").replace(/\D/g, "");
-    const enrolledDocuments = new Set(
-      (selectedTraining.Enrollments || [])
-        .flatMap((enrollment) => [
-          enrollment.Customer?.cpf,
-          enrollment.Customer?.cnpj,
-        ])
-        .map(onlyDigits)
-        .filter(Boolean),
-    );
-
     const fromVolunteers = (selectedTraining.Volunteers || [])
       .filter((volunteer) => {
         const document = onlyDigits(volunteer.documentNumber);
@@ -250,7 +257,7 @@ export function TrainingDetailsDialog({
       }));
 
     return [ ...fromEnrollments, ...fromVolunteers ];
-  }, [ selectedTraining ]);
+  }, [ selectedTraining, enrolledDocuments ]);
 
   const [ selectedParticipantId, setSelectedParticipantId ] = useState<
     string | null
@@ -341,20 +348,37 @@ export function TrainingDetailsDialog({
     setIsAddParticipantDialogOpen(true);
   };
 
-  const onAddParticipant = async (id: string) => {
+  const onAddParticipant = async (id: string, justification?: string) => {
     const type = participantTypeToAdd;
+    const isTrainee = type === "TRAINEE";
     try {
+      // `addedParticipants` é o caminho da inscrição unificada: cria a
+      // TrainingEnrollment, o pagamento já vinculado a ela e as cobranças —
+      // por isso o participante passa a aparecer na lista de Inscrições e
+      // aceita cobrança. O bloco TrainingPayment NÃO vai junto: ele dispararia
+      // o upsert legado, criando um pagamento órfão sem inscrição.
+      //
+      // As cobranças nascem zeradas, na estrutura do tipo de treinamento; o
+      // valor é preenchido depois, na própria lista de Inscrições.
       const payload: UpdateTrainingPayload = {
         trainingStatus: selectedTraining.trainingStatus,
-        payerType: type,
-        traineeId: type === "TRAINEE" ? id : undefined,
-        customerId: type === "TRAINEE" ? id : undefined,
-        volunteerId: type === "VOLUNTEER" ? id : undefined,
-
-        TrainingPayment: getSafePaymentData(type, null),
-
-        addedTrainees: type === "TRAINEE" ? [ id ] : undefined,
-        addedVolunteers: type === "VOLUNTEER" ? [ id ] : undefined,
+        addedParticipants: [
+          {
+            // Modelo ainda vem da lista legada de Volunteer; o backend resolve
+            // o Customer correspondente.
+            ...(isTrainee ? { customerId: id } : { volunteerId: id }),
+            isTrainee,
+            isModel: !isTrainee,
+            charges: buildRequiredCharges(
+              selectedTraining.trainingType,
+              !isTrainee,
+            ),
+            paymentStatus: "Pendente",
+          },
+        ],
+        // Adicionar participante conta como alteração de valor: num treinamento
+        // concluído o backend exige justificativa, que o diálogo coleta.
+        ...(justification ? { justification } : {}),
       };
 
       const response = await UpdateTraining({
@@ -1414,10 +1438,16 @@ export function TrainingDetailsDialog({
         type={ participantTypeToAdd }
         onAdd={ onAddParticipant }
         filialId={ selectedTraining.sourceFilialId }
+        requireJustification={ requireValueJustification }
+        // Quem já está inscrito não deve ser oferecido de novo. Aluno casa por
+        // customerId; modelo vem da lista legada de Volunteer, cujo id não
+        // compara com o da inscrição — aí o documento é o elo.
         excludeIds={ [
+          ...(selectedTraining.Enrollments?.map((e) => e.customerId) || []),
           ...(selectedTraining.Trainees?.map((t) => t.customerId) || []),
           ...(selectedTraining.Volunteers?.map((v) => v.volunteerId) || []),
         ] }
+        excludeDocuments={ [ ...enrolledDocuments ] }
       />
 
       <EditTrainingFinancialsDialog

@@ -135,7 +135,9 @@ const initialErrors: LocalErrorsType = {
 
 export type UpdateTrainingPayload = {
   trainingStatus: string;
-  payerType: PayerType;
+  // Só é necessário para localizar o pagamento de um participante existente;
+  // quem apenas adiciona participante (`addedParticipants`) não envia.
+  payerType?: PayerType;
   // Edição dos detalhes do treinamento (equipamento, data, horário e local)
   gearId?: string;
   addressId?: string;
@@ -174,8 +176,12 @@ export type UpdateTrainingPayload = {
     amountCents: number;
     isRequired?: boolean;
   }[];
+  // Exatamente um entre customerId e volunteerId: o paciente modelo ainda é
+  // escolhido da lista legada de Volunteer, e o backend resolve o Customer
+  // correspondente antes de criar a inscrição.
   addedParticipants?: {
-    customerId: string;
+    customerId?: string;
+    volunteerId?: string;
     isTrainee: boolean;
     isModel: boolean;
     observations?: string | null;
@@ -206,7 +212,10 @@ export type UpdateTrainingPayload = {
     targetTrainingId: string;
   }[];
 
-  TrainingPayment: {
+  // Opcional: quem adiciona participante manda apenas `addedParticipants`, que
+  // já cria o pagamento vinculado à inscrição. Enviar este bloco junto dispara
+  // o upsert de pagamento legado e cria um registro órfão.
+  TrainingPayment?: {
     totalPrice: number;
     basePrice: number;
     additionalCost: number;
