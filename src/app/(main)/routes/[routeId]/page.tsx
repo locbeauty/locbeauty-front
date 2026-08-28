@@ -48,6 +48,34 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 type GpsValidationStatus = "idle" | "checking" | "close" | "far" | "error";
 
+/**
+ * Horário registrado em campo pelo motorista. Mostra a data junto quando o
+ * registro caiu em outro dia — locação de vários dias entrega e recolhe em
+ * datas diferentes, e só a hora seria ambígua.
+ */
+function formatMoment(
+  moment: Date | string | null | undefined,
+  referenceDate?: Date | string | null,
+): string {
+  if (!moment) return "—";
+
+  const value = new Date(moment);
+  if (isNaN(value.getTime())) return "—";
+
+  const time = value.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const reference = referenceDate ? new Date(referenceDate) : null;
+  const sameDay =
+    reference && !isNaN(reference.getTime())
+      ? value.toDateString() === reference.toDateString()
+      : false;
+
+  return sameDay ? time : `${value.toLocaleDateString("pt-BR")} ${time}`;
+}
+
 export default function RouteDetailsPage() {
   const { routeId } = useParams<{ routeId: string }>();
   const router = useRouter();
@@ -321,6 +349,23 @@ export default function RouteDetailsPage() {
               <p className="text-muted-foreground mb-0.5">Local de Destino</p>
               <p className="font-medium">{checkout?.Customer?.fullname ?? "—"}</p>
               {destinationLabel && <p className="text-muted-foreground">{destinationLabel}</p>}
+            </div>
+
+            {/* Horários reais registrados pelo motorista em campo, não os
+                previstos no agendamento. */}
+            <div className="border-t pt-3 grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-muted-foreground mb-0.5">Horário de Entrega</p>
+                <p className="font-medium tabular-nums">
+                  {formatMoment(checkout?.deliveredAt, checkout?.date)}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-0.5">Horário de Retirada</p>
+                <p className="font-medium tabular-nums">
+                  {formatMoment(checkout?.concludedAt, checkout?.date)}
+                </p>
+              </div>
             </div>
 
             <div className="border-t pt-3">

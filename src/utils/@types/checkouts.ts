@@ -64,6 +64,9 @@ export type Checkout = {
     filialName: string;
   };
   Address: Address;
+  /** Momento em que o motorista confirmou a entrega no local do cliente. */
+  deliveredAt?: Date | null;
+  /** Momento em que o equipamento foi recolhido (conclusão da rota). */
   concludedAt?: Date | null;
   isVisible?: boolean;
   driverLat?: number | null;
