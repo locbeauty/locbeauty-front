@@ -43,7 +43,25 @@ const ABBR_MONTHS = [
   "Jan",
 ];
 
-export function BookingsPerMachineCard() {
+const formatCurrency = (
+  value: number,
+  options?: Intl.NumberFormatOptions,
+) =>
+  value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    ...options,
+  });
+
+interface BookingsPerMachineCardProps {
+  /** "count": nº de agendamentos por mês. "revenue": faturamento recebido. */
+  metric?: "count" | "revenue";
+}
+
+export function BookingsPerMachineCard({
+  metric = "count",
+}: BookingsPerMachineCardProps) {
+  const isRevenue = metric === "revenue";
   const [ filials, setFilials ] = useState<Filial[]>([]);
   const [ gears, setGears ] = useState<Gear[]>([]);
 
@@ -151,7 +169,7 @@ export function BookingsPerMachineCard() {
 
         const formattedData = data.map((item) => ({
           date: ABBR_MONTHS[item.month - 1],
-          total: item.count,
+          total: isRevenue ? item.revenue / 100 : item.count,
         }));
         setYearlyData(formattedData);
       } catch (error) {
@@ -162,14 +180,20 @@ export function BookingsPerMachineCard() {
     }
 
     fetchMetrics();
-  }, [ selectedGearId, selectedYear, selectedFilialId ]);
+  }, [ selectedGearId, selectedYear, selectedFilialId, isRevenue ]);
+
+  const yearTotal = yearlyData.reduce((sum, item) => sum + item.total, 0);
 
   return (
     <Card className="col-span-1 md:col-span-2 relative h-fit">
       <CardHeader>
-        <CardTitle>Agendamentos por Máquina</CardTitle>
+        <CardTitle>
+          {isRevenue ? "Faturamento por Máquina" : "Agendamentos por Máquina"}
+        </CardTitle>
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
-          Hitórico anual de locações
+          {isRevenue
+            ? "Valor recebido por mês, rateado pelo preço da máquina"
+            : "Histórico anual de locações"}
           <div className="flex gap-2 flex-wrap">
             <Select
               value={ String(selectedYear) }
@@ -224,13 +248,31 @@ export function BookingsPerMachineCard() {
         </div>
       </CardHeader>
       <CardContent className="pl-0 ml-0">
+        <p className="px-6 pb-2 text-sm text-muted-foreground">
+          Total no ano:{" "}
+          <span className="font-bold text-foreground">
+            {isRevenue ? formatCurrency(yearTotal) : yearTotal}
+          </span>
+        </p>
         <CustomAreaChart
           data={ yearlyData.length > 0 ? yearlyData : [] }
           dataKey="total"
           height={ 150 }
           stroke="#7f2b83"
           fill="#7f2b83"
-          valueFormatter={ (value) => `${value}` }
+          valueFormatter={ (value) =>
+            isRevenue ? formatCurrency(value) : `${value}`
+          }
+          // Ticks compactos ("R$ 25 mil") para não cortar no eixo Y;
+          // o tooltip mantém o valor completo.
+          { ...(isRevenue && {
+            yTickFormatter: (value: number) =>
+              formatCurrency(value, {
+                notation: "compact",
+                maximumFractionDigits: 0,
+              }),
+            yAxisWidth: 72,
+          }) }
         />
       </CardContent>
     </Card>

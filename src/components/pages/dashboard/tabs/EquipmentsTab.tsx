@@ -10,6 +10,9 @@ export function EquipmentsTab() {
         <BookingsPerMachineCard />
       </div>
       <div>
+        <BookingsPerMachineCard metric="revenue" />
+      </div>
+      <div>
         <TopEquipmentsCard />
       </div>
     </div>

@@ -122,7 +122,7 @@ export function TopEquipmentsCard() {
             <TableRow>
               <TableHead>Equipamento</TableHead>
               <TableHead>Locações</TableHead>
-              <TableHead>Receita</TableHead>
+              <TableHead>Recebido</TableHead>
               {/* <TableHead>Taxa de Ocupação</TableHead> */}
               {/* <TableHead>Disponibilidade</TableHead> */}
             </TableRow>

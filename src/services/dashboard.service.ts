@@ -128,6 +128,8 @@ export async function getYearlyBookingsPerMachineMetric({
   yearlyData: {
     month: number;
     count: number;
+    /** Faturamento recebido das máquinas no mês, em centavos. */
+    revenue: number;
   }[];
 }> {
   const queryParams: Record<string, string> = {
@@ -146,6 +148,7 @@ export async function getYearlyBookingsPerMachineMetric({
     yearlyData: {
       month: number;
       count: number;
+      revenue: number;
     }[];
   }>({
     endpoint: "dashboard/metrics/bookings-per-machine/yearly",
