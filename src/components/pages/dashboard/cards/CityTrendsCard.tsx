@@ -26,6 +26,7 @@ import {
   FILIAL_COLOR_PALETTE,
   OTHERS_COLOR,
 } from "@/utils/filial-colors";
+import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
 
 interface Filial {
   filialId: string;
@@ -49,6 +50,9 @@ export function CityTrendsCard() {
   const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
   const [ loading, setLoading ] = useState(false);
 
+  // Só oferece as filiais liberadas no Controle de Acessos.
+  const onlyAccessible = useDashboardFilialFilter();
+
   useEffect(() => {
     async function fetchFilials() {
       try {
@@ -57,14 +61,14 @@ export function CityTrendsCard() {
           method: "GET",
         });
         if (data) {
-          setFilials(data);
+          setFilials(onlyAccessible(data));
         }
       } catch (error) {
         console.error("Failed to fetch filials", error);
       }
     }
     fetchFilials();
-  }, []);
+  }, [ onlyAccessible ]);
 
   useEffect(() => {
     async function fetchTrends() {

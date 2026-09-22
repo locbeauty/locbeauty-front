@@ -31,6 +31,7 @@ import {
 import { CustomFilterSelect } from "@/components/shared/CustomFilterSelect";
 import { apiRequest } from "@/lib/api";
 import { useEffect, useState } from "react";
+import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
 
 interface Filial {
   filialId: string;
@@ -49,6 +50,9 @@ export function TopCustomersCard() {
   const [ filials, setFilials ] = useState<Filial[]>([]);
   const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
   const [ availableYears, setAvailableYears ] = useState<string[]>([]);
+
+  // Só oferece as filiais liberadas no Controle de Acessos.
+  const onlyAccessible = useDashboardFilialFilter();
 
   useEffect(() => {
     async function fetchData() {
@@ -72,14 +76,14 @@ export function TopCustomersCard() {
           method: "GET",
         });
         if (data) {
-          setFilials(data);
+          setFilials(onlyAccessible(data));
         }
       } catch (error) {
         console.error("Failed to fetch filials", error);
       }
     }
     fetchData();
-  }, [ selectedYear ]);
+  }, [ selectedYear, onlyAccessible ]);
 
   const { data, isLoading } = useQuery({
     queryKey: [

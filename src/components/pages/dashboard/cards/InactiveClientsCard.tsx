@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/api";
 import { Loader2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatShareOfBase } from "@/utils/formatShareOfBase";
+import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
 
 interface Filial {
   filialId: string;
@@ -33,6 +34,9 @@ export function InactiveClientsCard() {
   const [ filials, setFilials ] = useState<Filial[]>([]);
   const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
 
+  // Só oferece as filiais liberadas no Controle de Acessos.
+  const onlyAccessible = useDashboardFilialFilter();
+
   useEffect(() => {
     async function fetchFilials() {
       try {
@@ -41,14 +45,14 @@ export function InactiveClientsCard() {
           method: "GET",
         });
         if (data) {
-          setFilials(data);
+          setFilials(onlyAccessible(data));
         }
       } catch (error) {
         console.error("Failed to fetch filials", error);
       }
     }
     fetchFilials();
-  }, []);
+  }, [ onlyAccessible ]);
 
   useEffect(() => {
     async function fetchMetric() {

@@ -37,6 +37,7 @@ import {
   CustomerSegment,
   getCustomerSegmentOption,
 } from "@/utils/customer-segments";
+import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
 
 interface Filial {
   filialId: string;
@@ -75,6 +76,9 @@ export function CustomerSegmentsCard() {
   );
   const [ filials, setFilials ] = useState<Filial[]>([]);
 
+  // Só oferece as filiais liberadas no Controle de Acessos.
+  const onlyAccessible = useDashboardFilialFilter();
+
   useEffect(() => {
     async function fetchFilials() {
       try {
@@ -83,14 +87,14 @@ export function CustomerSegmentsCard() {
           method: "GET",
         });
         if (data) {
-          setFilials(data);
+          setFilials(onlyAccessible(data));
         }
       } catch (error) {
         console.error("Failed to fetch filials", error);
       }
     }
     fetchFilials();
-  }, []);
+  }, [ onlyAccessible ]);
 
   const { data, isLoading } = useQuery({
     queryKey: [

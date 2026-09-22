@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { apiRequest } from "@/lib/api";
 import { getTopBookedGearsRanking } from "@/services/dashboard.service";
+import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
 
 interface Filial {
   filialId: string;
@@ -44,6 +45,9 @@ export function TopEquipmentsCard() {
   const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
   const [ topGears, setTopGears ] = useState<TopGear[]>([]);
 
+  // Só oferece as filiais liberadas no Controle de Acessos.
+  const onlyAccessible = useDashboardFilialFilter();
+
   // Fetch filials on mount
   useEffect(() => {
     async function fetchFilials() {
@@ -53,14 +57,14 @@ export function TopEquipmentsCard() {
           method: "GET",
         });
         if (data) {
-          setFilials(data);
+          setFilials(onlyAccessible(data));
         }
       } catch (error) {
         console.error("Failed to fetch filials", error);
       }
     }
     fetchFilials();
-  }, []);
+  }, [ onlyAccessible ]);
 
   // Fetch top gears
   useEffect(() => {

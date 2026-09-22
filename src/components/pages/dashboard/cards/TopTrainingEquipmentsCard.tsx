@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { apiRequest } from "@/lib/api";
 import { getTopTrainingEquipmentsMetric } from "@/services/dashboard.service";
+import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
 
 interface Filial {
   filialId: string;
@@ -43,6 +44,9 @@ export function TopTrainingEquipmentsCard() {
   const [ topEquipments, setTopEquipments ] = useState<TopEquipment[]>([]);
 
   // Fetch filials on mount
+  // Só oferece as filiais liberadas no Controle de Acessos.
+  const onlyAccessible = useDashboardFilialFilter();
+
   useEffect(() => {
     async function fetchFilials() {
       try {
@@ -51,14 +55,14 @@ export function TopTrainingEquipmentsCard() {
           method: "GET",
         });
         if (data) {
-          setFilials(data);
+          setFilials(onlyAccessible(data));
         }
       } catch (error) {
         console.error("Failed to fetch filials", error);
       }
     }
     fetchFilials();
-  }, []);
+  }, [ onlyAccessible ]);
 
   // Fetch top equipments
   useEffect(() => {

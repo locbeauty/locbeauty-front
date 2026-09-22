@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiRequest } from "@/lib/api";
+import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
 
 interface Filial {
   filialId: string;
@@ -54,6 +55,9 @@ export function DefaultsCard() {
   const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
 
   // Fetch available years and filials on mount
+  // Só oferece as filiais liberadas no Controle de Acessos.
+  const onlyAccessible = useDashboardFilialFilter();
+
   useEffect(() => {
     async function fetchFilterOptions() {
       try {
@@ -67,7 +71,7 @@ export function DefaultsCard() {
 
         setAvailableYears(yearsData.map(Number));
         if (filialsData.data) {
-          setFilials(filialsData.data);
+          setFilials(onlyAccessible(filialsData.data));
         }
       } catch (error) {
         console.error("Failed to fetch filter options", error);
@@ -75,7 +79,7 @@ export function DefaultsCard() {
     }
 
     fetchFilterOptions();
-  }, []);
+  }, [ onlyAccessible ]);
 
   // Fetch defaults data when filters change
   useEffect(() => {

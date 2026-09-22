@@ -32,7 +32,7 @@ export const CUSTOMER_SEGMENT_OPTIONS: CustomerSegmentOption[] = [
     value: "SEM_AGENDAMENTO_PROXIMO_MES",
     label: "Sem agendamento no próximo mês",
     description:
-      "Agendaram no mês, mas não têm nada marcado para o mês seguinte.",
+      "Agendaram nos últimos 3 meses, mas não têm nada marcado para o mês seguinte.",
   },
   {
     value: "SEM_AGENDAMENTO_ESTE_MES",

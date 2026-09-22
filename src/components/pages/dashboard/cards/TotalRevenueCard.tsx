@@ -31,6 +31,7 @@ import {
   buildFilialColorMap,
   FILIAL_COLOR_PALETTE,
 } from "@/utils/filial-colors";
+import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
 
 interface Filial {
   filialId: string;
@@ -61,6 +62,9 @@ export function TotalRevenueCard({
   const [ loading, setLoading ] = useState(false);
   const [ totalRevenue, setTotalRevenue ] = useState<number>(0);
 
+  // Só oferece as filiais liberadas no Controle de Acessos.
+  const onlyAccessible = useDashboardFilialFilter();
+
   // Sync internal year if prop changes
   useEffect(() => {
     if (selectedYear) {
@@ -77,14 +81,14 @@ export function TotalRevenueCard({
           method: "GET",
         });
         if (data) {
-          setFilials(data);
+          setFilials(onlyAccessible(data));
         }
       } catch (error) {
         console.error("Failed to fetch filials", error);
       }
     }
     fetchFilials();
-  }, []);
+  }, [ onlyAccessible ]);
 
   // Cor fixa por filial, compartilhada com o Ranking de filiais — a mesma
   // filial tem sempre a mesma cor em todos os gráficos do dashboard.

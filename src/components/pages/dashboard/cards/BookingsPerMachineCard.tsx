@@ -13,6 +13,7 @@ import {
 import { apiRequest } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { CustomAreaChart } from "../CustomAreaChart";
+import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
 
 interface Filial {
   filialId: string;
@@ -59,6 +60,9 @@ export function BookingsPerMachineCard() {
   >([]);
   const [ loading, setLoading ] = useState(false);
 
+  // Só oferece as filiais liberadas no Controle de Acessos.
+  const onlyAccessible = useDashboardFilialFilter();
+
   // Fetch Filials and Available Years on mount
   useEffect(() => {
     async function fetchFilterOptions() {
@@ -72,9 +76,11 @@ export function BookingsPerMachineCard() {
         ]);
 
         if (filialsData.data) {
-          setFilials(filialsData.data);
-          if (filialsData.data.length > 0) {
-            setSelectedFilialId(filialsData.data[0].filialId);
+          const visibleFilials = onlyAccessible(filialsData.data);
+
+          setFilials(visibleFilials);
+          if (visibleFilials.length > 0) {
+            setSelectedFilialId(visibleFilials[0].filialId);
           }
         }
 
@@ -84,7 +90,7 @@ export function BookingsPerMachineCard() {
       }
     }
     fetchFilterOptions();
-  }, []);
+  }, [ onlyAccessible ]);
 
   // Fetch Gears when Filial changes
   useEffect(() => {
