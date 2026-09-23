@@ -16,12 +16,14 @@ interface MobileMonthViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   openDetails: (_event: CalendarEvent) => void;
+  isEventClickable?: (_event: CalendarEvent) => boolean;
 }
 
 export function MobileMonthView({
   currentDate,
   events,
   openDetails,
+  isEventClickable,
 }: MobileMonthViewProps) {
   const daysInCurrentMonth = getMonthDays(currentDate);
 
@@ -90,7 +92,8 @@ export function MobileMonthView({
                           key={ id }
                           className={ cn(
                             "h-1.5 rounded-full transition-all hover:h-2",
-                            !isBirthday && "cursor-pointer",
+                            (!isBirthday || isEventClickable?.(event)) &&
+                              "cursor-pointer",
                             isTraining
                               ? "bg-purple-500"
                               : isNotice

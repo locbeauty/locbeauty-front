@@ -104,6 +104,13 @@ export async function GetAllCustomers(
   return response;
 }
 
+export async function GetCustomerById(customerId: string) {
+  const response = await apiRequest<Customer>({
+    endpoint: `customers/${customerId}`,
+  });
+  return response;
+}
+
 export interface ImportCustomersResult {
   successCount?: number;
   failedCount?: number;

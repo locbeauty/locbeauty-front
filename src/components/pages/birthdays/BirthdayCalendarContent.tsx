@@ -4,15 +4,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MonthView } from "../calendar/MonthView";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiResponse } from "@/lib/api";
 import { CalendarEvent } from "../calendar/bookingViewHelpers";
 import { GetBirthdays } from "@/services/birthdays.service";
+import { GetCustomerById } from "@/services/customers.service";
 import { BirthdayEvent } from "@/utils/@types/birthday";
+import { Customer } from "@/utils/@types/customer";
 import { useAccess } from "@/contexts/access-provider";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { USER_ROLES } from "@/utils/constants";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { CustomerDetailsDialog } from "../customers/view/CustomerDetailsDialog";
 
 export type BirthdayUserType = "all" | "customers" | "employees";
 
@@ -24,7 +28,7 @@ export function BirthdayCalendarContent({
   userType?: BirthdayUserType;
 }) {
   const { user } = useAuth();
-  const { accesses } = useAccess();
+  const { accesses, can } = useAccess();
 
   // A visibilidade dos aniversários (clientes E colaboradores) é regida
   // apenas pelo módulo BIRTHDAYS: cada usuário enxerga os aniversariantes
@@ -99,14 +103,75 @@ export function BirthdayCalendarContent({
   );
   const allEvents: CalendarEvent[] = [ ...birthdays ];
 
+  // Abrir os detalhes do cliente exige acesso ao cadastro (CUSTOMERS canView)
+  // em alguma filial do cliente — ver o aniversário não basta. O backend
+  // aplica a mesma regra em GET /customers/:customerId.
+  const canOpenCustomer = useCallback(
+    (event: CalendarEvent) => {
+      if (!("originalBirthdate" in event)) return false;
+      const birthday = event as BirthdayEvent;
+      return (
+        birthday.type === "CUSTOMER" &&
+        (birthday.filialIds ?? []).some((filialId) =>
+          can(SYSTEM_MODULES.CUSTOMERS, "canView", filialId),
+        )
+      );
+    },
+    [ can ],
+  );
+
+  const [ selectedCustomerId, setSelectedCustomerId ] = useState<
+    string | null
+  >(null);
+
+  const { data: customerData, isFetching: isFetchingCustomer } = useQuery<
+    ApiResponse<Customer>,
+    Error
+  >({
+    queryKey: [ "get-customer", selectedCustomerId ],
+    queryFn: () => GetCustomerById(selectedCustomerId!),
+    enabled: !!selectedCustomerId,
+  });
+
+  const selectedCustomer =
+    customerData && customerData.statusCode < 400
+      ? (customerData.data ?? null)
+      : null;
+
+  useEffect(() => {
+    if (customerData && customerData.statusCode >= 400) {
+      toast.error(
+        customerData.message || "Não foi possível carregar o cliente.",
+      );
+      setSelectedCustomerId(null);
+    }
+  }, [ customerData ]);
+
+  const handleOpenDetails = (event: CalendarEvent) => {
+    if (canOpenCustomer(event)) {
+      setSelectedCustomerId((event as BirthdayEvent).id);
+    }
+  };
+
   return (
     <Card className="overflow-hidden py-0">
       <CardContent className="p-0 relative">
         <MonthView
           currentDate={ currentDate }
           events={ allEvents }
-          openDetails={ () => {} }
+          openDetails={ handleOpenDetails }
+          isEventClickable={ canOpenCustomer }
         />
+        {!!selectedCustomerId && isFetchingCustomer && !selectedCustomer && (
+          <div className="absolute inset-0 bg-background/50 flex items-center justify-center backdrop-blur-sm z-50">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm font-medium text-muted-foreground">
+                Carregando cliente...
+              </p>
+            </div>
+          </div>
+        )}
         {isLoading && (
           <div className="absolute inset-0 bg-background/50 flex items-center justify-center backdrop-blur-sm z-50">
             <div className="flex flex-col items-center gap-2">
@@ -123,6 +188,17 @@ export function BirthdayCalendarContent({
           </div>
         )}
       </CardContent>
+
+      {/* Sem handleToggleUpdateCustomerDialog: somente leitura nesta tela.
+          Só abre com o cliente carregado, pois o BookingHistoryCard busca os
+          agendamentos pelo customerId assim que o diálogo abre. */}
+      <CustomerDetailsDialog
+        selectedCustomer={ selectedCustomer }
+        isCustomerDetailsModalOpen={ !!selectedCustomerId && !!selectedCustomer }
+        handleToggleCustomerDetailsDialog={ (open) => {
+          if (!open) setSelectedCustomerId(null);
+        } }
+      />
     </Card>
   );
 }
