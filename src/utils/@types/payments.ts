@@ -27,7 +27,13 @@ export interface CheckoutPayment {
   secondPaymentStatus: "Pendente" | "Pago";
 }
 
-export type TrainingChargeKind = "BASE" | "GARANTIA_VAGA" | "DISPAROS" | "EXTRA";
+// BASE = valor do aluno e BASE_MODELO = valor do paciente modelo (treinamento comum).
+export type TrainingChargeKind =
+  | "BASE"
+  | "BASE_MODELO"
+  | "GARANTIA_VAGA"
+  | "DISPAROS"
+  | "EXTRA";
 
 export interface TrainingCharge {
   chargeId?: string;

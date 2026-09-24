@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { Volunteer } from "@/utils/@types/volunteer";
 import { Training } from "@/utils/@types/training";
 import { Filial } from "@/utils/@types/filials";
+import { TrainingPayment } from "@/utils/@types/payments";
+import { findVolunteerParticipation } from "@/utils/volunteerParticipation";
 import { RestoreConfirmationDialog } from "@/components/shared/RestoreConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
@@ -174,43 +176,32 @@ export function VolunteersTable({
 
     // Pending Payment Filter
     if (filterPending) {
-      const volunteersWithPending = new Set<string>();
-      allTrainings.forEach((training) => {
-        training.TrainingPayment?.forEach((p) => {
-          const isPending =
-            p.paymentMode === "AVista"
-              ? p.paymentStatus === "Pendente" ||
-                p.firstPaymentStatus === "Pendente"
-              : p.paymentStatus === "Pendente" ||
-                p.paymentStatus === "Parcial" ||
-                p.firstPaymentStatus === "Pendente" ||
-                p.secondPaymentStatus === "Pendente";
+      const isPending = (p?: TrainingPayment) =>
+        !!p &&
+        (p.paymentMode === "AVista"
+          ? p.paymentStatus === "Pendente" ||
+            p.firstPaymentStatus === "Pendente"
+          : p.paymentStatus === "Pendente" ||
+            p.paymentStatus === "Parcial" ||
+            p.firstPaymentStatus === "Pendente" ||
+            p.secondPaymentStatus === "Pendente");
 
-          if (isPending && p.payerType === "VOLUNTEER") {
-            if (p.volunteerId) volunteersWithPending.add(p.volunteerId);
-            else if (training.volunteerId)
-              volunteersWithPending.add(training.volunteerId);
-          }
-        });
-      });
-      result = result.filter((v) => volunteersWithPending.has(v.volunteerId));
+      result = result.filter((v) =>
+        allTrainings.some((t) =>
+          isPending(findVolunteerParticipation(t, v)?.payment),
+        ),
+      );
     }
 
     // Filial Filter
     if (filterFilial && filterFilial !== "all") {
-      const volunteersInFilial = new Set<string>();
-      allTrainings.forEach((training) => {
-        if (training.sourceFilialId === filterFilial) {
-          // Check all volunteers in this training
-          training.Volunteers?.forEach((v) =>
-            volunteersInFilial.add(v.volunteerId),
-          );
-          // Fallback to legacy single volunteerId
-          if (training.volunteerId)
-            volunteersInFilial.add(training.volunteerId);
-        }
-      });
-      result = result.filter((v) => volunteersInFilial.has(v.volunteerId));
+      result = result.filter((v) =>
+        allTrainings.some(
+          (t) =>
+            t.sourceFilialId === filterFilial &&
+            findVolunteerParticipation(t, v),
+        ),
+      );
     }
 
     return result.sort((a, b) => a.name.localeCompare(b.name));
@@ -423,7 +414,7 @@ export function VolunteersTable({
           const volunteerFilials = Array.from(
             new Set(
               allTrainings
-                .filter((t) => t.volunteerId === volunteer.volunteerId)
+                .filter((t) => findVolunteerParticipation(t, volunteer))
                 .map((t) => t.SourceFilial?.filialName)
                 .filter(Boolean),
             ),

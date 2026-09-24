@@ -21,13 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { apiRequest } from "@/lib/api";
-import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
-
-interface Filial {
-  filialId: string;
-  filialName: string;
-}
+import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
 const ABBR_MONTHS = [
   "Jan",
@@ -44,42 +38,27 @@ const ABBR_MONTHS = [
   "Dez",
 ];
 
-export function DefaultsCard() {
+export function DefaultsCard({
+  filialIds: generalFilialIds,
+}: {
+  filialIds: string[];
+}) {
   const [ data, setData ] = useState<{ date: string; total: number }[]>([]);
   const [ loading, setLoading ] = useState(true);
   const [ selectedYear, setSelectedYear ] = useState<number>(
     new Date().getFullYear(),
   );
   const [ availableYears, setAvailableYears ] = useState<number[]>([]);
-  const [ filials, setFilials ] = useState<Filial[]>([]);
-  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
+  // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
+  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
+  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
 
-  // Fetch available years and filials on mount
-  // Só oferece as filiais liberadas no Controle de Acessos.
-  const onlyAccessible = useDashboardFilialFilter();
-
+  // Fetch available years on mount
   useEffect(() => {
-    async function fetchFilterOptions() {
-      try {
-        const [ yearsData, filialsData ] = await Promise.all([
-          getAvailableYears(),
-          apiRequest<Filial[]>({
-            endpoint: "filials",
-            method: "GET",
-          }),
-        ]);
-
-        setAvailableYears(yearsData.map(Number));
-        if (filialsData.data) {
-          setFilials(onlyAccessible(filialsData.data));
-        }
-      } catch (error) {
-        console.error("Failed to fetch filter options", error);
-      }
-    }
-
-    fetchFilterOptions();
-  }, [ onlyAccessible ]);
+    getAvailableYears()
+      .then((years) => setAvailableYears(years.map(Number)))
+      .catch((error) => console.error("Failed to fetch filter options", error));
+  }, []);
 
   // Fetch defaults data when filters change
   useEffect(() => {
@@ -88,7 +67,7 @@ export function DefaultsCard() {
       try {
         const result = await getDefaultsOverTime({
           year: selectedYear,
-          filialId: selectedFilialId === "all" ? undefined : selectedFilialId,
+          filialIds,
         });
 
         // Transform data to include month names for chart
@@ -108,7 +87,7 @@ export function DefaultsCard() {
     if (selectedYear) {
       fetchData();
     }
-  }, [ selectedYear, selectedFilialId ]);
+  }, [ selectedYear, filialIds ]);
 
   // Calculate total for the year
   const totalValue = data.reduce((acc, curr) => acc + curr.total, 0);
@@ -139,19 +118,11 @@ export function DefaultsCard() {
             </SelectContent>
           </Select>
 
-          <Select value={ selectedFilialId } onValueChange={ setSelectedFilialId }>
-            <SelectTrigger className="w-[180px] h-8">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as filiais</SelectItem>
-              {filials.map((fil) => (
-                <SelectItem key={ fil.filialId } value={ fil.filialId }>
-                  {fil.filialName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DashboardFilialSelect
+            value={ filialIds }
+            onChange={ setFilialIds }
+            className="w-[180px] h-8"
+          />
         </CardDescription>
       </CardHeader>
       <CardContent>

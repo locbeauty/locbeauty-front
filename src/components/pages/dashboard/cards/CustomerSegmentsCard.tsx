@@ -25,7 +25,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
 import { GetAllCustomers } from "@/services/customers.service";
-import { apiRequest } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
@@ -37,12 +36,7 @@ import {
   CustomerSegment,
   getCustomerSegmentOption,
 } from "@/utils/customer-segments";
-import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
-
-interface Filial {
-  filialId: string;
-  filialName: string;
-}
+import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
 const MONTHS = [
   "Janeiro",
@@ -62,52 +56,37 @@ const MONTHS = [
 // Quantos clientes o card lista; o total do segmento vem sempre completo.
 const PREVIEW_SIZE = 10;
 
-export function CustomerSegmentsCard() {
+export function CustomerSegmentsCard({
+  filialIds: generalFilialIds,
+}: {
+  filialIds: string[];
+}) {
   const now = new Date();
 
   // "ALL" = sem recorte de segmento (mesma opção da aba Clientes).
   const [ segment, setSegment ] = useState<CustomerSegment | "ALL">("ALL");
-  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
+  // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
+  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
+  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
   const [ referenceMonth, setReferenceMonth ] = useState<number>(
     now.getMonth() + 1,
   );
   const [ referenceYear, setReferenceYear ] = useState<number>(
     now.getFullYear(),
   );
-  const [ filials, setFilials ] = useState<Filial[]>([]);
-
-  // Só oferece as filiais liberadas no Controle de Acessos.
-  const onlyAccessible = useDashboardFilialFilter();
-
-  useEffect(() => {
-    async function fetchFilials() {
-      try {
-        const { data } = await apiRequest<Filial[]>({
-          endpoint: "filials",
-          method: "GET",
-        });
-        if (data) {
-          setFilials(onlyAccessible(data));
-        }
-      } catch (error) {
-        console.error("Failed to fetch filials", error);
-      }
-    }
-    fetchFilials();
-  }, [ onlyAccessible ]);
 
   const { data, isLoading } = useQuery({
     queryKey: [
       "customer-segment",
       segment,
-      selectedFilialId,
+      filialIds,
       referenceMonth,
       referenceYear,
     ],
     queryFn: () =>
       GetAllCustomers(
         {
-          filialId: selectedFilialId === "all" ? "" : selectedFilialId,
+          filialId: filialIds,
           // Sem segmento não há mês de referência: o recorte é a base inteira.
           ...(segment === "ALL"
             ? {}
@@ -199,22 +178,11 @@ export function CustomerSegmentsCard() {
               </>
             )}
 
-            <Select
-              value={ selectedFilialId }
-              onValueChange={ setSelectedFilialId }
-            >
-              <SelectTrigger className="w-[160px] h-8">
-                <SelectValue placeholder="Filial" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as filiais</SelectItem>
-                {filials.map((filial) => (
-                  <SelectItem key={ filial.filialId } value={ filial.filialId }>
-                    {filial.filialName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <DashboardFilialSelect
+              value={ filialIds }
+              onChange={ setFilialIds }
+              className="h-8"
+            />
           </div>
         </CardDescription>
       </CardHeader>

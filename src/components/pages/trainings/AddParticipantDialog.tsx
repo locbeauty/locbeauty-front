@@ -14,6 +14,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,12 @@ interface AddParticipantDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: "TRAINEE" | "VOLUNTEER";
-  onAdd: (id: string, justification?: string) => Promise<void>;
+  /** `bothRoles`: o participante entra como aluno e paciente modelo. */
+  onAdd: (
+    id: string,
+    justification?: string,
+    bothRoles?: boolean,
+  ) => Promise<void>;
   excludeIds?: string[];
   /**
    * Documentos (só dígitos) já inscritos na turma. O modelo é escolhido da
@@ -54,6 +60,7 @@ export function AddParticipantDialog({
   const [ isLoading, setIsLoading ] = useState(false);
   const [ selectedId, setSelectedId ] = useState<string | null>(null);
   const [ justification, setJustification ] = useState("");
+  const [ bothRoles, setBothRoles ] = useState(false);
 
   const loadOptions = useCallback(async () => {
     setIsLoading(true);
@@ -82,6 +89,7 @@ export function AddParticipantDialog({
       loadOptions();
       setSelectedId(null);
       setJustification("");
+      setBothRoles(false);
     }
   }, [ open, type, loadOptions ]);
 
@@ -96,7 +104,7 @@ export function AddParticipantDialog({
     }
 
     setSelectedId(id);
-    await onAdd(id, trimmedJustification || undefined);
+    await onAdd(id, trimmedJustification || undefined, bothRoles);
     onOpenChange(false);
   };
 
@@ -140,6 +148,13 @@ export function AddParticipantDialog({
             />
           </div>
         )}
+        <label className="px-4 pb-3 flex items-center gap-2 text-sm cursor-pointer">
+          <Checkbox
+            checked={ bothRoles }
+            onCheckedChange={ (c) => setBothRoles(c === true) }
+          />
+          {type === "TRAINEE" ? "Também é paciente modelo" : "Também é aluno"}
+        </label>
         <Command className="overflow-hidden rounded-t-none border-t">
           <CommandInput
             placeholder={ `Buscar ${type === "TRAINEE" ? "aluno" : "modelo"}...` }

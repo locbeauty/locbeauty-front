@@ -9,6 +9,7 @@ function parseCheckoutDates(checkout: Record<string, any>): Checkout {
     ...(checkout as Checkout),
     date: new Date(checkout.date),
     concludedAt: checkout.concludedAt ? new Date(checkout.concludedAt) : null,
+    createdAt: checkout.createdAt ? new Date(checkout.createdAt) : undefined,
     cancellationDate: checkout.cancellationDate
       ? new Date(checkout.cancellationDate)
       : null,

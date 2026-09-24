@@ -118,12 +118,13 @@ export async function getFilialBookingsRanking({
 
 export async function getYearlyBookingsPerMachineMetric({
   year,
-  filialId,
-  gearId,
+  filialIds,
+  gearIds,
 }: {
   year: number;
-  filialId?: string;
-  gearId?: string;
+  filialIds?: string[];
+  /** gearIds de um nome de máquina (um por filial). */
+  gearIds?: string[];
 }): Promise<{
   yearlyData: {
     month: number;
@@ -132,16 +133,16 @@ export async function getYearlyBookingsPerMachineMetric({
     revenue: number;
   }[];
 }> {
-  const queryParams: Record<string, string> = {
+  const queryParams: Record<string, string | string[]> = {
     year: String(year),
   };
 
-  if (filialId) {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
-  if (gearId) {
-    queryParams.gearId = gearId;
+  if (gearIds?.length) {
+    queryParams.gearId = gearIds;
   }
 
   const { data } = await apiRequest<{
@@ -165,12 +166,12 @@ export async function getYearlyBookingsPerMachineMetric({
 
 export async function getInactiveClientsMetric({
   year,
-  filialId,
+  filialIds,
   startMonth,
   endMonth,
 }: {
   year: number;
-  filialId?: string;
+  filialIds?: string[];
   startMonth: number;
   endMonth: number;
 }): Promise<{
@@ -185,14 +186,14 @@ export async function getInactiveClientsMetric({
     totalRentals: number;
   }[];
 }> {
-  const queryParams: Record<string, string> = {
+  const queryParams: Record<string, string | string[]> = {
     year: String(year),
     startMonth: String(startMonth),
     endMonth: String(endMonth),
   };
 
-  if (filialId && filialId !== "all") {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
   const { data } = await apiRequest<{
@@ -220,12 +221,12 @@ export async function getInactiveClientsMetric({
 
 export async function getActiveClientsMetric({
   year,
-  filialId,
+  filialIds,
   startMonth,
   endMonth,
 }: {
   year: number;
-  filialId?: string;
+  filialIds?: string[];
   startMonth: number;
   endMonth: number;
 }): Promise<{
@@ -233,14 +234,14 @@ export async function getActiveClientsMetric({
   /** Clientes com status "Ativo" — mesma contagem do gráfico de status. */
   activeClients: number;
 }> {
-  const queryParams: Record<string, string> = {
+  const queryParams: Record<string, string | string[]> = {
     year: String(year),
     startMonth: String(startMonth),
     endMonth: String(endMonth),
   };
 
-  if (filialId && filialId !== "all") {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
   const { data } = await apiRequest<{
@@ -311,11 +312,11 @@ export async function getCityRankingMetric({
 
 export async function getTopCustomersMetric({
   year,
-  filialId,
+  filialIds,
   limit,
 }: {
   year: number;
-  filialId?: string;
+  filialIds?: string[];
   limit?: number;
 }): Promise<{
   topCustomers: {
@@ -328,12 +329,12 @@ export async function getTopCustomersMetric({
     customerStatus: string;
   }[];
 }> {
-  const queryParams: Record<string, string> = {
+  const queryParams: Record<string, string | string[]> = {
     year: String(year),
   };
 
-  if (filialId && filialId !== "all") {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
   if (limit) {
@@ -456,16 +457,16 @@ export async function getClientsAtRiskMetric({
 }
 
 export async function getCustomerStatusMetric({
-  filialId,
+  filialIds,
 }: {
-  filialId?: string;
+  filialIds?: string[];
 }): Promise<{
   data: { status: string; count: number }[];
 }> {
-  const queryParams: Record<string, string> = {};
+  const queryParams: Record<string, string | string[]> = {};
 
-  if (filialId && filialId !== "all") {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
   const { data } = await apiRequest<{
@@ -517,19 +518,19 @@ export async function getTopNeighborhoodsMetric({
 
 export async function getDefaultsOverTime({
   year,
-  filialId,
+  filialIds,
 }: {
   year: number;
-  filialId?: string;
+  filialIds?: string[];
 }): Promise<{
   data: { month: number; count: number }[];
 }> {
-  const queryParams: Record<string, string> = {
+  const queryParams: Record<string, string | string[]> = {
     year: String(year),
   };
 
-  if (filialId && filialId !== "all") {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
   const { data } = await apiRequest<{
@@ -549,11 +550,11 @@ export async function getDefaultsOverTime({
 
 export async function getTopBookedGearsRanking({
   year,
-  filialId,
+  filialIds,
   limit,
 }: {
   year: number;
-  filialId?: string;
+  filialIds?: string[];
   limit?: number;
 }): Promise<{
   ranking: {
@@ -563,12 +564,12 @@ export async function getTopBookedGearsRanking({
     occupancyRate: number;
   }[];
 }> {
-  const queryParams: Record<string, string> = {
+  const queryParams: Record<string, string | string[]> = {
     year: String(year),
   };
 
-  if (filialId && filialId !== "all") {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
   if (limit) {
@@ -597,11 +598,11 @@ export async function getTopBookedGearsRanking({
 
 export async function getTopTraineesMetric({
   year,
-  filialId,
+  filialIds,
   limit,
 }: {
   year: number;
-  filialId?: string;
+  filialIds?: string[];
   limit?: number;
 }): Promise<{
   topTrainees: {
@@ -610,12 +611,12 @@ export async function getTopTraineesMetric({
     count: number;
   }[];
 }> {
-  const queryParams: Record<string, string> = {
+  const queryParams: Record<string, string | string[]> = {
     year: String(year),
   };
 
-  if (filialId && filialId !== "all") {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
   if (limit) {
@@ -643,11 +644,11 @@ export async function getTopTraineesMetric({
 
 export async function getTopVolunteersMetric({
   year,
-  filialId,
+  filialIds,
   limit,
 }: {
   year: number;
-  filialId?: string;
+  filialIds?: string[];
   limit?: number;
 }): Promise<{
   topVolunteers: {
@@ -656,12 +657,12 @@ export async function getTopVolunteersMetric({
     count: number;
   }[];
 }> {
-  const queryParams: Record<string, string> = {
+  const queryParams: Record<string, string | string[]> = {
     year: String(year),
   };
 
-  if (filialId && filialId !== "all") {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
   if (limit) {
@@ -689,11 +690,11 @@ export async function getTopVolunteersMetric({
 
 export async function getTopTrainingEquipmentsMetric({
   year,
-  filialId,
+  filialIds,
   limit,
 }: {
   year: number;
-  filialId?: string;
+  filialIds?: string[];
   limit?: number;
 }): Promise<{
   topEquipments: {
@@ -702,12 +703,12 @@ export async function getTopTrainingEquipmentsMetric({
     count: number;
   }[];
 }> {
-  const queryParams: Record<string, string> = {
+  const queryParams: Record<string, string | string[]> = {
     year: String(year),
   };
 
-  if (filialId && filialId !== "all") {
-    queryParams.filialId = filialId;
+  if (filialIds?.length) {
+    queryParams.filialId = filialIds;
   }
 
   if (limit) {

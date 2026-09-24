@@ -16,21 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { apiRequest } from "@/lib/api";
 import { getTopTrainingEquipmentsMetric } from "@/services/dashboard.service";
-import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
-
-interface Filial {
-  filialId: string;
-  filialName: string;
-}
+import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
 interface TopEquipment {
   gearId: string;
@@ -38,31 +25,15 @@ interface TopEquipment {
   count: number;
 }
 
-export function TopTrainingEquipmentsCard() {
-  const [ filials, setFilials ] = useState<Filial[]>([]);
-  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
+export function TopTrainingEquipmentsCard({
+  filialIds: generalFilialIds,
+}: {
+  filialIds: string[];
+}) {
+  // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
+  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
+  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
   const [ topEquipments, setTopEquipments ] = useState<TopEquipment[]>([]);
-
-  // Fetch filials on mount
-  // Só oferece as filiais liberadas no Controle de Acessos.
-  const onlyAccessible = useDashboardFilialFilter();
-
-  useEffect(() => {
-    async function fetchFilials() {
-      try {
-        const { data } = await apiRequest<Filial[]>({
-          endpoint: "filials",
-          method: "GET",
-        });
-        if (data) {
-          setFilials(onlyAccessible(data));
-        }
-      } catch (error) {
-        console.error("Failed to fetch filials", error);
-      }
-    }
-    fetchFilials();
-  }, [ onlyAccessible ]);
 
   // Fetch top equipments
   useEffect(() => {
@@ -71,7 +42,7 @@ export function TopTrainingEquipmentsCard() {
         const currentYear = new Date().getFullYear();
         const { topEquipments } = await getTopTrainingEquipmentsMetric({
           year: currentYear,
-          filialId: selectedFilialId === "all" ? undefined : selectedFilialId,
+          filialIds,
         });
         setTopEquipments(topEquipments);
       } catch (error) {
@@ -79,7 +50,7 @@ export function TopTrainingEquipmentsCard() {
       }
     }
     fetchTopEquipments();
-  }, [ selectedFilialId ]);
+  }, [ filialIds ]);
 
   return (
     <Card className="col-span-1 relative">
@@ -91,19 +62,7 @@ export function TopTrainingEquipmentsCard() {
               Top 5 equipamentos em treinamentos em {new Date().getFullYear()}
             </CardDescription>
           </div>
-          <Select value={ selectedFilialId } onValueChange={ setSelectedFilialId }>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Todas" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as filiais</SelectItem>
-              {filials.map((fil) => (
-                <SelectItem key={ fil.filialId } value={ fil.filialId }>
-                  {fil.filialName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DashboardFilialSelect value={ filialIds } onChange={ setFilialIds } />
         </div>
       </CardHeader>
       <CardContent>

@@ -75,7 +75,10 @@ export interface GetAllCustomersFilters {
 }
 
 export async function GetAllCustomers(
-  filters?: GetAllCustomersFilters,
+  // Uma ou várias filiais (o dashboard filtra por várias).
+  filters?: Omit<GetAllCustomersFilters, "filialId"> & {
+    filialId?: string | string[];
+  },
   pagination?: { page: number; limit: number },
 ) {
   const queryParams: Record<string, string> = {

@@ -25,6 +25,7 @@ import { TrainingPayment } from "@/utils/@types/payments";
 import { Filial } from "@/utils/@types/filials";
 import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { normalizeGearName } from "@/utils/groupGearsByName";
+import { getModelShare } from "@/utils/trainingCharges";
 import { UpdateTrainingPayload } from "./TrainingPaymentMethodDialog";
 import { Button } from "@/components/ui/button";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
@@ -62,9 +63,15 @@ function getTrainingPaymentStatus(training: Training): AggregatePaymentStatus {
   const payments = training.TrainingPayment || [];
   if (payments.length === 0) return null;
 
-  // Pagamentos cancelados/reembolsados não contam para o agregado.
+  // Pagamentos cancelados/reembolsados não contam para o agregado: o status
+  // do treinamento sai dos demais participantes. O reembolso feito pelo
+  // diálogo de pagamento só marca `wasRefunded` (o status continua o das
+  // parcelas), por isso a flag também conta.
   const active = payments.filter(
-    (p) => p.paymentStatus !== "Cancelado" && p.paymentStatus !== "Reembolsado",
+    (p) =>
+      !p.wasRefunded &&
+      p.paymentStatus !== "Cancelado" &&
+      p.paymentStatus !== "Reembolsado",
   );
   if (active.length === 0) return "Cancelado";
 
@@ -175,8 +182,25 @@ export function TrainingsTable({
     return trainees.length + extraModels;
   };
 
+  // Alunos / pacientes modelo inscritos (a mesma pessoa pode contar nos dois).
+  const countRole = (t: Training, role: "isTrainee" | "isModel") => {
+    if (t.Enrollments?.length) return t.Enrollments.filter((e) => e[role]).length;
+    return (role === "isTrainee" ? t.Trainees : t.Volunteers)?.length ?? 0;
+  };
+
   const getTrainingTotal = (t: Training) =>
     (t.TrainingPayment || []).reduce((acc, p) => acc + (p.totalPrice || 0), 0);
+
+  const getModelTotal = (t: Training) =>
+    (t.TrainingPayment || []).reduce(
+      (acc, p) =>
+        acc +
+        getModelShare(
+          p,
+          t.Enrollments?.find((e) => e.enrollmentId === p.enrollmentId),
+        ),
+      0,
+    );
 
   const getTraineeNames = (t: Training) =>
     (t.Enrollments || [])
@@ -579,7 +603,7 @@ export function TrainingsTable({
       </div>
 
       <div className="border rounded-lg w-full overflow-x-auto hidden md:block">
-        <table className="min-w-[800px] w-full">
+        <table className="min-w-[1100px] w-full">
           <thead className="bg-muted">
             <tr>
               <th className="text-left p-3 font-medium">Data</th>
@@ -587,8 +611,11 @@ export function TrainingsTable({
               <th className="text-left p-3 font-medium">Equipamento</th>
               <th className="text-center p-3 font-medium">Tipo</th>
               <th className="text-center p-3 font-medium">Vagas</th>
+              <th className="text-center p-3 font-medium">Alunos</th>
+              <th className="text-center p-3 font-medium">Pacientes</th>
               <th className="text-center p-3 font-medium">Horário</th>
-              <th className="text-right p-3 font-medium">Valor total</th>
+              <th className="text-right p-3 font-medium">Valor aluno</th>
+              <th className="text-right p-3 font-medium">Valor paciente</th>
               <th className="text-center p-3 font-medium">Pagamento</th>
               <th className="text-center p-3 font-medium">Status</th>
               <th className="text-center p-3 font-medium">Detalhes</th>
@@ -597,7 +624,7 @@ export function TrainingsTable({
           <tbody>
             {sortedTrainings.length === 0 && (
               <tr>
-                <td className="text-center p-4" colSpan={ 10 }>
+                <td className="text-center p-4" colSpan={ 13 }>
                   {trainings
                     ? "Nenhum treinamento encontrado."
                     : "Carregando..."}
@@ -627,10 +654,21 @@ export function TrainingsTable({
                   {getFilledSlots(training)}/{training.capacity ?? 15}
                 </td>
                 <td className="p-3 text-center text-sm">
+                  {countRole(training, "isTrainee")}
+                </td>
+                <td className="p-3 text-center text-sm">
+                  {countRole(training, "isModel")}
+                </td>
+                <td className="p-3 text-center text-sm">
                   {formatDuration(training.hourInMinutes)}
                 </td>
                 <td className="p-3 text-right text-sm font-medium">
-                  {centsToStringWithCurrencyMark(getTrainingTotal(training))}
+                  {centsToStringWithCurrencyMark(
+                    getTrainingTotal(training) - getModelTotal(training),
+                  )}
+                </td>
+                <td className="p-3 text-right text-sm font-medium">
+                  {centsToStringWithCurrencyMark(getModelTotal(training))}
                 </td>
                 <td className="p-3 text-center text-sm">
                   {(() => {
@@ -753,9 +791,15 @@ export function TrainingsTable({
                   itemInfo: getModelNames(training) || "N/A",
                 },
                 {
-                  itemLabel: "Valor: ",
+                  itemLabel: "Valor aluno: ",
                   itemInfo: centsToStringWithCurrencyMark(
-                    getTrainingTotal(training),
+                    getTrainingTotal(training) - getModelTotal(training),
+                  ),
+                },
+                {
+                  itemLabel: "Valor paciente: ",
+                  itemInfo: centsToStringWithCurrencyMark(
+                    getModelTotal(training),
                   ),
                 },
                 { itemLabel: "Status: ", itemInfo: training.trainingStatus },

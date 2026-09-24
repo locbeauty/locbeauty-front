@@ -176,6 +176,7 @@ export function CreateTrainingDialog({
           isModel: false,
           observations: "",
           baseValue: "",
+          modelValue: "",
           placeGuaranteeValue: "",
           shotsValue: "",
           extraCharges: [],
@@ -197,8 +198,9 @@ export function CreateTrainingDialog({
     p: NewTrainingDataType["participants"][number],
     trainingType: "COMUM" | "MPT",
   ): TrainingChargePayload[] => {
-    const charges = buildRequiredCharges(trainingType, p.isModel, {
+    const charges = buildRequiredCharges(trainingType, p, {
       base: parseStringToCents(p.baseValue || "0"),
+      model: parseStringToCents(p.modelValue || "0"),
       placeGuarantee: parseStringToCents(p.placeGuaranteeValue || "0"),
       shots: parseStringToCents(p.shotsValue || "0"),
     });
@@ -273,6 +275,9 @@ export function CreateTrainingDialog({
         toast.warning(response.message, { style: { fontSize: "1rem" } });
       } else {
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        // Quem entrou como aluno/modelo aparece nas abas "Alunos" e "Pacientes modelo".
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-volunteers" ] });
         queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
         toast.success(response.message, { style: { fontSize: "1rem" } });
         reset(emptyDefaults());
@@ -714,20 +719,44 @@ function ParticipantCard({
             )}
           </>
         ) : (
-          <div className="space-y-1">
-            <Label>Valor base</Label>
-            <PriceInput
-              withLabel={ false }
-              value={
-                (watch(
-                  `${base}.baseValue` as "participants.0.baseValue",
-                ) as string) || ""
-              }
-              onChange={ (v) =>
-                setValue(`${base}.baseValue` as "participants.0.baseValue", v)
-              }
-            />
-          </div>
+          // Um valor por papel: quem é aluno e paciente modelo tem os dois.
+          <>
+            {isTrainee && (
+              <div className="space-y-1">
+                <Label>Valor aluno</Label>
+                <PriceInput
+                  withLabel={ false }
+                  value={
+                    (watch(
+                      `${base}.baseValue` as "participants.0.baseValue",
+                    ) as string) || ""
+                  }
+                  onChange={ (v) =>
+                    setValue(`${base}.baseValue` as "participants.0.baseValue", v)
+                  }
+                />
+              </div>
+            )}
+            {isModel && (
+              <div className="space-y-1">
+                <Label>Valor paciente modelo</Label>
+                <PriceInput
+                  withLabel={ false }
+                  value={
+                    (watch(
+                      `${base}.modelValue` as "participants.0.modelValue",
+                    ) as string) || ""
+                  }
+                  onChange={ (v) =>
+                    setValue(
+                      `${base}.modelValue` as "participants.0.modelValue",
+                      v,
+                    )
+                  }
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
 

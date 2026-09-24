@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TrainingChargeKind } from "@/utils/@types/payments";
 
 // --- Schemas Auxiliares ---
 
@@ -118,7 +119,8 @@ export const TrainingParticipantSchema = z.object({
   observations: z.string().optional().nullable(),
 
   // Valores em string (mascarados no input); convertidos para centavos no submit.
-  baseValue: z.string().optional(), // treinamento COMUM
+  baseValue: z.string().optional(), // treinamento COMUM: valor do aluno
+  modelValue: z.string().optional(), // treinamento COMUM: valor do paciente modelo
   placeGuaranteeValue: z.string().optional(), // MPT: garantia de vaga
   shotsValue: z.string().optional(), // MPT: disparos
   extraCharges: z.array(ExtraChargeSchema), // "Adicionar cobrança"
@@ -145,9 +147,9 @@ export const NewTrainingSchema = z
     buildingNumber: z.string().min(1, { message: "Número é obrigatório" }),
     addressComplement: z.string().optional().nullable(),
 
+    // Pode ser criado sem participantes (nem aluno nem paciente modelo).
     participants: z
       .array(TrainingParticipantSchema)
-      .min(1, { message: "Adicione ao menos um participante" })
       .max(15, { message: "Máximo de 15 vagas por turma" }),
   })
   .superRefine((data, ctx) => {
@@ -183,7 +185,7 @@ export type NewTrainingDataType = z.infer<typeof NewTrainingSchema>;
 
 // --- Payload enviado ao backend (create) ---
 export interface TrainingChargePayload {
-  kind: "BASE" | "GARANTIA_VAGA" | "DISPAROS" | "EXTRA";
+  kind: TrainingChargeKind;
   description: string;
   amountCents: number;
   isRequired?: boolean;

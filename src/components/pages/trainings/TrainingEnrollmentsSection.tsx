@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import PriceInput from "@/components/shared/PriceInput";
 
@@ -14,6 +15,7 @@ import { UpdateTraining } from "@/services/trainings.service";
 import { queryClient } from "@/app/(main)/layout";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { centsToString } from "@/utils/centsToString";
+import { buildRequiredCharges } from "@/utils/trainingCharges";
 import { toast } from "sonner";
 
 import { Training, TrainingEnrollment } from "@/utils/@types/training";
@@ -37,7 +39,8 @@ interface ChargeRow {
 }
 
 const KIND_LABEL: Record<TrainingChargeKind, string> = {
-  BASE: "Valor base",
+  BASE: "Valor aluno",
+  BASE_MODELO: "Valor paciente modelo",
   GARANTIA_VAGA: "Garantia de vaga",
   DISPAROS: "Disparos",
   EXTRA: "Cobrança adicional",
@@ -107,6 +110,8 @@ function EnrollmentCard({
     enrollment.observations ?? "",
   );
   const [ charges, setCharges ] = useState<ChargeRow[]>(initialCharges);
+  const [ isTrainee, setIsTrainee ] = useState(enrollment.isTrainee);
+  const [ isModel, setIsModel ] = useState(enrollment.isModel);
   const [ justification, setJustification ] = useState("");
   const [ savingObs, setSavingObs ] = useState(false);
   const [ savingCharges, setSavingCharges ] = useState(false);
@@ -118,6 +123,9 @@ function EnrollmentCard({
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+    // Quem entrou como aluno/modelo aparece nas abas "Alunos" e "Pacientes modelo".
+    queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
+    queryClient.invalidateQueries({ queryKey: [ "get-all-volunteers" ] });
     queryClient.invalidateQueries({
       queryKey: [ "get-training-value-changes" ],
     });
@@ -158,6 +166,8 @@ function EnrollmentCard({
         trainingId: training.trainingId,
         body: {
           customerId: enrollment.customerId,
+          isTrainee,
+          isModel,
           charges: charges.map((c) => ({
             kind: c.kind,
             description: c.description || KIND_LABEL[c.kind],
@@ -192,6 +202,29 @@ function EnrollmentCard({
   const removeCharge = (index: number) =>
     setCharges((prev) => prev.filter((_, i) => i !== index));
 
+  // Mudar o papel ajusta as cobranças obrigatórias: entra (zerada) a que o
+  // novo papel exige e sai a que nenhum papel restante exige. Só vale depois
+  // de "Salvar cobranças", que grava papéis e cobranças juntos.
+  const changeRoles = (roles: { isTrainee: boolean; isModel: boolean }) => {
+    if (!roles.isTrainee && !roles.isModel) return;
+    setIsTrainee(roles.isTrainee);
+    setIsModel(roles.isModel);
+
+    const required = buildRequiredCharges(training.trainingType, roles);
+    const requiredKinds = new Set(required.map((c) => c.kind));
+    setCharges((prev) => [
+      ...prev.filter((c) => !c.isRequired || requiredKinds.has(c.kind)),
+      ...required
+        .filter((r) => !prev.some((c) => c.kind === r.kind))
+        .map((r) => ({
+          kind: r.kind,
+          description: r.description,
+          value: "",
+          isRequired: true,
+        })),
+    ]);
+  };
+
   const updateCharge = (index: number, patch: Partial<ChargeRow>) =>
     setCharges((prev) =>
       prev.map((c, i) => (i === index ? { ...c, ...patch } : c)),
@@ -203,18 +236,41 @@ function EnrollmentCard({
         <span className="font-semibold text-sm">
           {enrollment.Customer?.fullname || "Participante"}
         </span>
-        <div className="flex gap-1">
-          {enrollment.isTrainee && (
-            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+        {disabled ? (
+          <div className="flex gap-1">
+            {enrollment.isTrainee && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                Aluno
+              </Badge>
+            )}
+            {enrollment.isModel && (
+              <Badge variant="outline" className="bg-green-50 text-green-700">
+                Paciente modelo
+              </Badge>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <Checkbox
+                checked={ isTrainee }
+                onCheckedChange={ (c) =>
+                  changeRoles({ isTrainee: c === true, isModel })
+                }
+              />
               Aluno
-            </Badge>
-          )}
-          {enrollment.isModel && (
-            <Badge variant="outline" className="bg-green-50 text-green-700">
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <Checkbox
+                checked={ isModel }
+                onCheckedChange={ (c) =>
+                  changeRoles({ isTrainee, isModel: c === true })
+                }
+              />
               Paciente modelo
-            </Badge>
-          )}
-        </div>
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Observação */}

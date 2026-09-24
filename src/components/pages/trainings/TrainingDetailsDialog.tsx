@@ -348,9 +348,16 @@ export function TrainingDetailsDialog({
     setIsAddParticipantDialogOpen(true);
   };
 
-  const onAddParticipant = async (id: string, justification?: string) => {
+  const onAddParticipant = async (
+    id: string,
+    justification?: string,
+    bothRoles?: boolean,
+  ) => {
     const type = participantTypeToAdd;
-    const isTrainee = type === "TRAINEE";
+    // O tipo da lista diz de onde vem o id; `bothRoles` soma o outro papel.
+    const isFromTraineeList = type === "TRAINEE";
+    const isTrainee = isFromTraineeList || !!bothRoles;
+    const isModel = !isFromTraineeList || !!bothRoles;
     try {
       // `addedParticipants` é o caminho da inscrição unificada: cria a
       // TrainingEnrollment, o pagamento já vinculado a ela e as cobranças —
@@ -366,13 +373,13 @@ export function TrainingDetailsDialog({
           {
             // Modelo ainda vem da lista legada de Volunteer; o backend resolve
             // o Customer correspondente.
-            ...(isTrainee ? { customerId: id } : { volunteerId: id }),
+            ...(isFromTraineeList ? { customerId: id } : { volunteerId: id }),
             isTrainee,
-            isModel: !isTrainee,
-            charges: buildRequiredCharges(
-              selectedTraining.trainingType,
-              !isTrainee,
-            ),
+            isModel,
+            charges: buildRequiredCharges(selectedTraining.trainingType, {
+              isTrainee,
+              isModel,
+            }),
             paymentStatus: "Pendente",
           },
         ],
@@ -389,6 +396,9 @@ export function TrainingDetailsDialog({
       if (response && response.statusCode === 200) {
         toast.success("Participante adicionado com  sucesso!");
         queryClient.invalidateQueries({ queryKey: [ "get-all-trainings" ] });
+        // Quem entrou como aluno/modelo aparece nas abas "Alunos" e "Pacientes modelo".
+        queryClient.invalidateQueries({ queryKey: [ "get-all-trainees" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-volunteers" ] });
         if (setSelectedTraining && response.data) {
           setSelectedTraining(response.data);
         }
@@ -756,6 +766,15 @@ export function TrainingDetailsDialog({
                     )}
                   </span>
                 </div>
+                {selectedTraining.createdAt && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Criado em{" "}
+                    {new Date(selectedTraining.createdAt).toLocaleString("pt-BR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </p>
+                )}
               </div>
               <div className="flex gap-2 ml-auto items-center">
                 {canEditParticipants && (

@@ -1,51 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getActiveClientsMetric } from "@/services/dashboard.service";
-import { apiRequest } from "@/lib/api";
 import { Loader2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatShareOfBase } from "@/utils/formatShareOfBase";
-import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
+import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
-interface Filial {
-  filialId: string;
-  filialName: string;
-}
-
-export function ActiveClientsCard() {
+export function ActiveClientsCard({
+  filialIds: generalFilialIds,
+}: {
+  filialIds: string[];
+}) {
   const [ metric, setMetric ] = useState<{
     totalClients: number;
     activeClients: number;
   } | null>(null);
   const [ loading, setLoading ] = useState(true);
-  const [ filials, setFilials ] = useState<Filial[]>([]);
-  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
-
-  // Só oferece as filiais liberadas no Controle de Acessos.
-  const onlyAccessible = useDashboardFilialFilter();
-
-  useEffect(() => {
-    async function fetchFilials() {
-      try {
-        const { data } = await apiRequest<Filial[]>({
-          endpoint: "filials",
-          method: "GET",
-        });
-        if (data) {
-          setFilials(onlyAccessible(data));
-        }
-      } catch (error) {
-        console.error("Failed to fetch filials", error);
-      }
-    }
-    fetchFilials();
-  }, [ onlyAccessible ]);
+  // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
+  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
+  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
 
   useEffect(() => {
     async function fetchMetric() {
@@ -56,7 +28,7 @@ export function ActiveClientsCard() {
           year: now.getFullYear(),
           startMonth: 1,
           endMonth: 12,
-          filialId: selectedFilialId,
+          filialIds,
         });
         setMetric(data);
       } catch (error) {
@@ -67,7 +39,7 @@ export function ActiveClientsCard() {
     }
 
     fetchMetric();
-  }, [ selectedFilialId ]);
+  }, [ filialIds ]);
 
   return (
     <Card>
@@ -77,19 +49,11 @@ export function ActiveClientsCard() {
           Clientes Ativos
         </CardTitle>
         <div className="flex items-center gap-2">
-          <Select value={ selectedFilialId } onValueChange={ setSelectedFilialId }>
-            <SelectTrigger className="w-[140px] h-8">
-              <SelectValue placeholder="Filial" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              {filials.map((filial) => (
-                <SelectItem key={ filial.filialId } value={ filial.filialId }>
-                  {filial.filialName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DashboardFilialSelect
+            value={ filialIds }
+            onChange={ setFilialIds }
+            className="h-8"
+          />
         </div>
       </CardHeader>
       <CardContent>

@@ -1211,6 +1211,17 @@ export function BookingDetailsDialog({
                         </div>
                       </div>
                     )}
+                    {selectedCheckout.createdAt && (
+                      <div className="space-y-1 border-t pt-3 mt-3">
+                        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                          <Calendar className="h-3 w-3" /> Criado em
+                        </div>
+                        <div className="font-medium">
+                          {formatDate(selectedCheckout.createdAt)} às{" "}
+                          {formatTime(selectedCheckout.createdAt)}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

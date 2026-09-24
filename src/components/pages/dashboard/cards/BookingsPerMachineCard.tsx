@@ -10,22 +10,12 @@ import {
   getAvailableYears,
   getYearlyBookingsPerMachineMetric,
 } from "@/services/dashboard.service";
-import { apiRequest } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { CustomAreaChart } from "../CustomAreaChart";
-import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
-
-interface Filial {
-  filialId: string;
-  filialName: string;
-}
-
-interface Gear {
-  gearId: string;
-  gearName: string;
-  sourceFilialId?: string;
-  filialId?: string;
-}
+import { DashboardFilialSelect } from "../DashboardFilialSelect";
+import { GearFilterSelect } from "@/components/pages/bookings/GearFilterSelect";
+import { useAccessibleFilialIds } from "@/hooks/useAccessibleFilialIds";
+import { SYSTEM_MODULES } from "@/utils/@types/access";
 
 const ABBR_MONTHS = [
   "Jan",
@@ -56,21 +46,27 @@ const formatCurrency = (
 interface BookingsPerMachineCardProps {
   /** "count": nº de agendamentos por mês. "revenue": faturamento recebido. */
   metric?: "count" | "revenue";
+  /** Filtros gerais da aba: o card começa (e é reposto) por eles e pode refinar. */
+  filialIds: string[];
+  gearIds?: string[];
+  year: number;
 }
 
 export function BookingsPerMachineCard({
   metric = "count",
+  filialIds: generalFilialIds,
+  gearIds: generalGearIds,
+  year: generalYear,
 }: BookingsPerMachineCardProps) {
   const isRevenue = metric === "revenue";
-  const [ filials, setFilials ] = useState<Filial[]>([]);
-  const [ gears, setGears ] = useState<Gear[]>([]);
 
-  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("");
-  const [ selectedGearId, setSelectedGearId ] = useState<string>("");
+  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
+  const [ gearIds, setGearIds ] = useState(generalGearIds);
+  const [ selectedYear, setSelectedYear ] = useState(generalYear);
+  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
+  useEffect(() => setGearIds(generalGearIds), [ generalGearIds ]);
+  useEffect(() => setSelectedYear(generalYear), [ generalYear ]);
 
-  const [ selectedYear, setSelectedYear ] = useState<number>(
-    new Date().getFullYear(),
-  );
   const [ availableYears, setAvailableYears ] = useState<number[]>([]);
 
   const [ yearlyData, setYearlyData ] = useState<
@@ -78,92 +74,24 @@ export function BookingsPerMachineCard({
   >([]);
   const [ loading, setLoading ] = useState(false);
 
-  // Só oferece as filiais liberadas no Controle de Acessos.
-  const onlyAccessible = useDashboardFilialFilter();
+  // Máquinas das filiais que o usuário pode ver. A máquina é escolhida por
+  // nome (todos os gearIds dela); o recorte por filial fica no backend.
+  const accessibleFilialIds = useAccessibleFilialIds(SYSTEM_MODULES.DASHBOARD);
 
-  // Fetch Filials and Available Years on mount
   useEffect(() => {
-    async function fetchFilterOptions() {
-      try {
-        const [ filialsData, yearsData ] = await Promise.all([
-          apiRequest<Filial[]>({
-            endpoint: "filials",
-            method: "GET",
-          }),
-          getAvailableYears(),
-        ]);
-
-        if (filialsData.data) {
-          const visibleFilials = onlyAccessible(filialsData.data);
-
-          setFilials(visibleFilials);
-          if (visibleFilials.length > 0) {
-            setSelectedFilialId(visibleFilials[0].filialId);
-          }
-        }
-
-        setAvailableYears(yearsData.map(Number));
-      } catch (error) {
-        console.error("Failed to fetch filter options", error);
-      }
-    }
-    fetchFilterOptions();
-  }, [ onlyAccessible ]);
-
-  // Fetch Gears when Filial changes
-  useEffect(() => {
-    async function fetchGears() {
-      if (!selectedFilialId) {
-        setGears([]);
-        return;
-      }
-      try {
-        const { data } = await apiRequest<Gear[]>({
-          endpoint: "gears",
-          method: "GET",
-        });
-
-        if (data) {
-          const filialGears = data.filter(
-            (g) =>
-              g.sourceFilialId === selectedFilialId ||
-              g.filialId === selectedFilialId,
-          );
-          setGears(
-            filialGears.map((g) => ({
-              gearId: g.gearId,
-              gearName: g.gearName,
-            })),
-          );
-          setYearlyData([]);
-
-          if (filialGears.length > 0) {
-            setSelectedGearId("all");
-          } else {
-            setSelectedGearId("");
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch gears", error);
-      }
-    }
-    fetchGears();
-  }, [ selectedFilialId ]);
+    getAvailableYears()
+      .then((years) => setAvailableYears(years.map(Number)))
+      .catch((error) => console.error("Failed to fetch available years", error));
+  }, []);
 
   // Fetch Metrics when inputs change
   useEffect(() => {
     async function fetchMetrics() {
-      if (!selectedFilialId || !selectedYear || !selectedGearId) {
-        setYearlyData([]);
-        return;
-      }
-
       setLoading(true);
       try {
-        // Fetch yearly data
         const { yearlyData: data } = await getYearlyBookingsPerMachineMetric({
-          gearId: selectedGearId === "all" ? undefined : selectedGearId,
-          filialId: selectedGearId === "all" ? selectedFilialId : undefined,
+          gearIds,
+          filialIds,
           year: Number(selectedYear),
         });
 
@@ -180,7 +108,7 @@ export function BookingsPerMachineCard({
     }
 
     fetchMetrics();
-  }, [ selectedGearId, selectedYear, selectedFilialId, isRevenue ]);
+  }, [ gearIds, selectedYear, filialIds, isRevenue ]);
 
   const yearTotal = yearlyData.reduce((sum, item) => sum + item.total, 0);
 
@@ -211,39 +139,13 @@ export function BookingsPerMachineCard({
               </SelectContent>
             </Select>
 
-            <Select
-              value={ selectedFilialId }
-              onValueChange={ setSelectedFilialId }
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Filial" />
-              </SelectTrigger>
-              <SelectContent>
-                {filials.map((filial) => (
-                  <SelectItem key={ filial.filialId } value={ filial.filialId }>
-                    {filial.filialName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <DashboardFilialSelect value={ filialIds } onChange={ setFilialIds } />
 
-            <Select
-              value={ selectedGearId }
-              onValueChange={ setSelectedGearId }
-              disabled={ !selectedFilialId }
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Máquina" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {gears.map((gear) => (
-                  <SelectItem key={ gear.gearId } value={ gear.gearId }>
-                    {gear.gearName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <GearFilterSelect
+              value={ gearIds }
+              onSelect={ setGearIds }
+              filialIds={ accessibleFilialIds }
+            />
           </div>
         </div>
       </CardHeader>

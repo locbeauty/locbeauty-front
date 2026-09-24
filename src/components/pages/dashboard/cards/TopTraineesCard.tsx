@@ -16,21 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { apiRequest } from "@/lib/api";
 import { getTopTraineesMetric } from "@/services/dashboard.service";
-import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
-
-interface Filial {
-  filialId: string;
-  filialName: string;
-}
+import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
 interface TopTrainee {
   traineeId: string;
@@ -38,31 +25,15 @@ interface TopTrainee {
   count: number;
 }
 
-export function TopTraineesCard() {
-  const [ filials, setFilials ] = useState<Filial[]>([]);
-  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
+export function TopTraineesCard({
+  filialIds: generalFilialIds,
+}: {
+  filialIds: string[];
+}) {
+  // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
+  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
+  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
   const [ topTrainees, setTopTrainees ] = useState<TopTrainee[]>([]);
-
-  // Fetch filials on mount
-  // Só oferece as filiais liberadas no Controle de Acessos.
-  const onlyAccessible = useDashboardFilialFilter();
-
-  useEffect(() => {
-    async function fetchFilials() {
-      try {
-        const { data } = await apiRequest<Filial[]>({
-          endpoint: "filials",
-          method: "GET",
-        });
-        if (data) {
-          setFilials(onlyAccessible(data));
-        }
-      } catch (error) {
-        console.error("Failed to fetch filials", error);
-      }
-    }
-    fetchFilials();
-  }, [ onlyAccessible ]);
 
   // Fetch top trainees
   useEffect(() => {
@@ -71,7 +42,7 @@ export function TopTraineesCard() {
         const currentYear = new Date().getFullYear();
         const { topTrainees } = await getTopTraineesMetric({
           year: currentYear,
-          filialId: selectedFilialId === "all" ? undefined : selectedFilialId,
+          filialIds,
         });
         setTopTrainees(topTrainees);
       } catch (error) {
@@ -79,7 +50,7 @@ export function TopTraineesCard() {
       }
     }
     fetchTopTrainees();
-  }, [ selectedFilialId ]);
+  }, [ filialIds ]);
 
   return (
     <Card className="col-span-1 relative">
@@ -91,19 +62,7 @@ export function TopTraineesCard() {
               Top 5 alunos por frequência em {new Date().getFullYear()}
             </CardDescription>
           </div>
-          <Select value={ selectedFilialId } onValueChange={ setSelectedFilialId }>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Todas" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as filiais</SelectItem>
-              {filials.map((fil) => (
-                <SelectItem key={ fil.filialId } value={ fil.filialId }>
-                  {fil.filialName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DashboardFilialSelect value={ filialIds } onChange={ setFilialIds } />
         </div>
       </CardHeader>
       <CardContent>

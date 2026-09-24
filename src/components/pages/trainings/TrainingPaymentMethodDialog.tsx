@@ -50,7 +50,11 @@ import { BookingPaymentStatusBadge } from "../bookings/common/BookingPaymentStat
 import { UpdateTraining } from "@/services/trainings.service";
 import { Training } from "@/utils/@types/training";
 import { InstallmentsEditor } from "@/components/shared/InstallmentsEditor";
-import { Installment, TrainingPayment } from "@/utils/@types/payments";
+import {
+  Installment,
+  TrainingChargeKind,
+  TrainingPayment,
+} from "@/utils/@types/payments";
 import {
   buildInstallments,
   deriveStatus,
@@ -171,7 +175,7 @@ export type UpdateTrainingPayload = {
   isTrainee?: boolean;
   isModel?: boolean;
   charges?: {
-    kind: "BASE" | "GARANTIA_VAGA" | "DISPAROS" | "EXTRA";
+    kind: TrainingChargeKind;
     description: string;
     amountCents: number;
     isRequired?: boolean;
@@ -186,7 +190,7 @@ export type UpdateTrainingPayload = {
     isModel: boolean;
     observations?: string | null;
     charges: {
-      kind: "BASE" | "GARANTIA_VAGA" | "DISPAROS" | "EXTRA";
+      kind: TrainingChargeKind;
       description: string;
       amountCents: number;
       isRequired?: boolean;

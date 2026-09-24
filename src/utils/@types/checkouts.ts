@@ -68,6 +68,8 @@ export type Checkout = {
   deliveredAt?: Date | null;
   /** Momento em que o equipamento foi recolhido (conclusão da rota). */
   concludedAt?: Date | null;
+  /** Momento em que o agendamento foi criado no sistema. */
+  createdAt?: Date;
   isVisible?: boolean;
   driverLat?: number | null;
   driverLng?: number | null;

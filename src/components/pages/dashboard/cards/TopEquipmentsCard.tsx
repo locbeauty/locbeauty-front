@@ -17,21 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { apiRequest } from "@/lib/api";
 import { getTopBookedGearsRanking } from "@/services/dashboard.service";
-import { useDashboardFilialFilter } from "@/hooks/useDashboardFilialFilter";
-
-interface Filial {
-  filialId: string;
-  filialName: string;
-}
+import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
 interface TopGear {
   gearName: string;
@@ -40,40 +27,26 @@ interface TopGear {
   occupancyRate: number;
 }
 
-export function TopEquipmentsCard() {
-  const [ filials, setFilials ] = useState<Filial[]>([]);
-  const [ selectedFilialId, setSelectedFilialId ] = useState<string>("all");
+export function TopEquipmentsCard({
+  filialIds: generalFilialIds,
+  year,
+}: {
+  filialIds: string[];
+  /** Ano do filtro geral da aba. */
+  year: number;
+}) {
+  // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
+  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
+  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
   const [ topGears, setTopGears ] = useState<TopGear[]>([]);
-
-  // Só oferece as filiais liberadas no Controle de Acessos.
-  const onlyAccessible = useDashboardFilialFilter();
-
-  // Fetch filials on mount
-  useEffect(() => {
-    async function fetchFilials() {
-      try {
-        const { data } = await apiRequest<Filial[]>({
-          endpoint: "filials",
-          method: "GET",
-        });
-        if (data) {
-          setFilials(onlyAccessible(data));
-        }
-      } catch (error) {
-        console.error("Failed to fetch filials", error);
-      }
-    }
-    fetchFilials();
-  }, [ onlyAccessible ]);
 
   // Fetch top gears
   useEffect(() => {
     async function fetchTopGears() {
       try {
-        const currentYear = new Date().getFullYear();
         const { ranking } = await getTopBookedGearsRanking({
-          year: currentYear,
-          filialId: selectedFilialId === "all" ? undefined : selectedFilialId,
+          year,
+          filialIds,
         });
         setTopGears(ranking);
       } catch (error) {
@@ -81,7 +54,7 @@ export function TopEquipmentsCard() {
       }
     }
     fetchTopGears();
-  }, [ selectedFilialId ]);
+  }, [ filialIds, year ]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -97,23 +70,10 @@ export function TopEquipmentsCard() {
           <div>
             <CardTitle>Equipamentos Mais Locados</CardTitle>
             <CardDescription>
-              Top 5 equipamentos por número de locações em{" "}
-              {new Date().getFullYear()}
+              Top 5 equipamentos por número de locações em {year}
             </CardDescription>
           </div>
-          <Select value={ selectedFilialId } onValueChange={ setSelectedFilialId }>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Todas as filiais" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as filiais</SelectItem>
-              {filials.map((fil) => (
-                <SelectItem key={ fil.filialId } value={ fil.filialId }>
-                  {fil.filialName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DashboardFilialSelect value={ filialIds } onChange={ setFilialIds } />
         </div>
       </CardHeader>
       <CardContent>

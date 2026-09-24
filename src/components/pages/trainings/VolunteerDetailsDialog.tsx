@@ -28,6 +28,7 @@ import { centsToStringWithCurrencyMark } from "@/utils/centsToString";
 import { Volunteer } from "@/utils/@types/volunteer";
 import { Training } from "@/utils/@types/training"; // Assuming Training type is available or needs to be defined
 import { BookingStatusBadge } from "@/components/pages/bookings/common/BookingStatusBadge";
+import { findVolunteerParticipation } from "@/utils/volunteerParticipation";
 
 export interface VolunteerDetailsDialogProps {
   isOpen: boolean;
@@ -68,9 +69,7 @@ export function VolunteerDetailsDialog({
 
   const trainingsList = useMemo(() => {
     if (!volunteer || !allTrainings) return [];
-    return allTrainings.filter((t) =>
-      t.Volunteers?.some((v) => v.volunteerId === volunteer.volunteerId),
-    );
+    return allTrainings.filter((t) => findVolunteerParticipation(t, volunteer));
   }, [ volunteer, allTrainings ]);
 
   const filteredTrainings = useMemo(() => {
@@ -264,12 +263,11 @@ export function VolunteerDetailsDialog({
               ) : (
                 <div className="flex flex-col gap-3">
                   {filteredTrainings.map((training) => {
-                    // Encontra o pagamento específico do modelo (VOLUNTEER)
-                    const payment = training.TrainingPayment?.find(
-                      (p) =>
-                        p.payerType === "VOLUNTEER" &&
-                        p.volunteerId === volunteer.volunteerId,
-                    );
+                    // Pagamento do modelo: legado (volunteerId) ou da inscrição.
+                    const payment = findVolunteerParticipation(
+                      training,
+                      volunteer,
+                    )?.payment;
 
                     return (
                       <div

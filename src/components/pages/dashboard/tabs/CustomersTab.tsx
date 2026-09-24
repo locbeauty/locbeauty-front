@@ -1,69 +1,34 @@
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { CustomPieChart } from "../CustomPieChart";
-import { Clock, Star } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useState } from "react";
 import { TopCustomersCard } from "@/components/pages/dashboard/cards/TopCustomersCard";
 import { DefaultsCard } from "../cards/DefaultsCard";
 import { InactiveClientsCard } from "../cards/InactiveClientsCard";
 import { ActiveClientsCard } from "../cards/ActiveClientsCard";
 import { CustomerStatusCard } from "../cards/CustomerStatusCard";
 import { CustomerSegmentsCard } from "../cards/CustomerSegmentsCard";
-import { useState } from "react";
-
-const MONTHS = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
+import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
 export function CustomersTab() {
-  const currentMonthIndex = new Date().getMonth();
-  const [ selectedMonth, setSelectedMonth ] = useState<string>(
-    MONTHS[currentMonthIndex].toLowerCase(),
-  );
-  const [ selectedYear, setSelectedYear ] = useState<string>(
-    String(new Date().getFullYear()),
-  );
+  // Filtro geral: aplica a todos os cards da aba (cada um ainda pode refinar).
+  const [ filialIds, setFilialIds ] = useState<string[]>([]);
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">Filtro geral:</span>
+        <DashboardFilialSelect value={ filialIds } onChange={ setFilialIds } />
+      </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <DefaultsCard />
+          <DefaultsCard filialIds={ filialIds } />
         </div>
         <div className="flex flex-col gap-4">
-          <InactiveClientsCard />
-          <ActiveClientsCard />
+          <InactiveClientsCard filialIds={ filialIds } />
+          <ActiveClientsCard filialIds={ filialIds } />
         </div>
       </div>
-      <CustomerStatusCard />
-      <CustomerSegmentsCard />
-      <TopCustomersCard />
+      <CustomerStatusCard filialIds={ filialIds } />
+      <CustomerSegmentsCard filialIds={ filialIds } />
+      <TopCustomersCard filialIds={ filialIds } />
     </div>
   );
 }
