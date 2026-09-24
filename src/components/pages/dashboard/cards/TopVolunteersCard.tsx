@@ -17,22 +17,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getTopVolunteersMetric } from "@/services/dashboard.service";
-import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
 interface TopVolunteer {
-  volunteerId: string;
+  customerId: string;
   name: string;
   count: number;
 }
 
 export function TopVolunteersCard({
-  filialIds: generalFilialIds,
+  filialIds,
 }: {
+  /** Filtro geral da aba (o card não tem filtro próprio). */
   filialIds: string[];
 }) {
-  // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
-  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
-  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
   const [ topVolunteers, setTopVolunteers ] = useState<TopVolunteer[]>([]);
 
   // Fetch top volunteers
@@ -62,7 +59,6 @@ export function TopVolunteersCard({
               Top 5 modelos por participação em {new Date().getFullYear()}
             </CardDescription>
           </div>
-          <DashboardFilialSelect value={ filialIds } onChange={ setFilialIds } />
         </div>
       </CardHeader>
       <CardContent>

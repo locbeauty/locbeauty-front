@@ -652,7 +652,7 @@ export async function getTopVolunteersMetric({
   limit?: number;
 }): Promise<{
   topVolunteers: {
-    volunteerId: string;
+    customerId: string;
     name: string;
     count: number;
   }[];
@@ -671,7 +671,7 @@ export async function getTopVolunteersMetric({
 
   const { data } = await apiRequest<{
     topVolunteers: {
-      volunteerId: string;
+      customerId: string;
       name: string;
       count: number;
     }[];

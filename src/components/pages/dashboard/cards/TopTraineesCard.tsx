@@ -17,7 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getTopTraineesMetric } from "@/services/dashboard.service";
-import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
 interface TopTrainee {
   traineeId: string;
@@ -26,13 +25,11 @@ interface TopTrainee {
 }
 
 export function TopTraineesCard({
-  filialIds: generalFilialIds,
+  filialIds,
 }: {
+  /** Filtro geral da aba (o card não tem filtro próprio). */
   filialIds: string[];
 }) {
-  // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
-  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
-  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
   const [ topTrainees, setTopTrainees ] = useState<TopTrainee[]>([]);
 
   // Fetch top trainees
@@ -62,7 +59,6 @@ export function TopTraineesCard({
               Top 5 alunos por frequência em {new Date().getFullYear()}
             </CardDescription>
           </div>
-          <DashboardFilialSelect value={ filialIds } onChange={ setFilialIds } />
         </div>
       </CardHeader>
       <CardContent>

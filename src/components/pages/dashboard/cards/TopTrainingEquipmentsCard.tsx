@@ -17,7 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getTopTrainingEquipmentsMetric } from "@/services/dashboard.service";
-import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
 interface TopEquipment {
   gearId: string;
@@ -26,13 +25,11 @@ interface TopEquipment {
 }
 
 export function TopTrainingEquipmentsCard({
-  filialIds: generalFilialIds,
+  filialIds,
 }: {
+  /** Filtro geral da aba (o card não tem filtro próprio). */
   filialIds: string[];
 }) {
-  // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
-  const [ filialIds, setFilialIds ] = useState(generalFilialIds);
-  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
   const [ topEquipments, setTopEquipments ] = useState<TopEquipment[]>([]);
 
   // Fetch top equipments
@@ -62,7 +59,6 @@ export function TopTrainingEquipmentsCard({
               Top 5 equipamentos em treinamentos em {new Date().getFullYear()}
             </CardDescription>
           </div>
-          <DashboardFilialSelect value={ filialIds } onChange={ setFilialIds } />
         </div>
       </CardHeader>
       <CardContent>
