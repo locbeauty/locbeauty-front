@@ -19,12 +19,17 @@ interface MonthViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   openDetails: (_event: CalendarEvent) => void;
+  // Aniversários não são clicáveis por padrão; quem usa o calendário pode
+  // liberar o clique em eventos específicos (ex.: clientes na tela de
+  // aniversariantes).
+  isEventClickable?: (_event: CalendarEvent) => boolean;
 }
 
 export function MonthView({
   currentDate,
   events,
   openDetails,
+  isEventClickable,
 }: MonthViewProps) {
   const daysInCurrentMonth = getMonthDays(currentDate);
 
@@ -34,6 +39,7 @@ export function MonthView({
         events={ events }
         currentDate={ currentDate }
         openDetails={ openDetails }
+        isEventClickable={ isEventClickable }
       />
       <div className="hidden md:block min-w-full">
         <CalendarMonthHeader />
@@ -107,7 +113,11 @@ export function MonthView({
                               : isNotice
                                 ? "bg-blue-800 text-white border-blue-900 text-sm truncate cursor-pointer"
                                 : isBirthday
-                                  ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-500 text-sm font-semibold whitespace-normal h-auto"
+                                  ? cn(
+                                    "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-500 text-sm font-semibold whitespace-normal h-auto",
+                                    isEventClickable?.(event) &&
+                                        "cursor-pointer hover:brightness-95",
+                                  )
                                   : cn(
                                     containerClass,
                                     "flex items-start gap-1 text-sm cursor-pointer truncate",

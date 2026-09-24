@@ -5,4 +5,5 @@ export interface BirthdayEvent {
   type: "CUSTOMER" | "EMPLOYEE";
   role: string;
   originalBirthdate: string;
+  filialIds: string[];
 }

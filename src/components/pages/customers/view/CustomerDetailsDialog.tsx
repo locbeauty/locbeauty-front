@@ -18,7 +18,8 @@ interface CustomerDetailsDialogProps {
     _openStatus: boolean,
     _customer: Customer | null,
   ) => void;
-  handleToggleUpdateCustomerDialog: (
+  // Opcional: sem ele o diálogo é somente leitura (sem "Editar Cliente").
+  handleToggleUpdateCustomerDialog?: (
     _openStatus: boolean,
     _customer: Customer | null,
   ) => void;
@@ -34,7 +35,7 @@ export function CustomerDetailsDialog({
 }: CustomerDetailsDialogProps) {
   function handleOpenUpdateCustomerDialog() {
     handleToggleCustomerDetailsDialog(false, null);
-    handleToggleUpdateCustomerDialog(true, selectedCustomer);
+    handleToggleUpdateCustomerDialog?.(true, selectedCustomer);
   }
 
   return (
@@ -70,15 +71,17 @@ export function CustomerDetailsDialog({
             />
           )}
           <DialogFooter className="pt-4">
-            <Can module={ SYSTEM_MODULES.CUSTOMERS } action="canEdit">
-              <Button
-                onClick={ handleOpenUpdateCustomerDialog }
-                className="gap-2"
-              >
-                <Pencil className="h-4 w-4" />
-                Editar Cliente
-              </Button>
-            </Can>
+            {handleToggleUpdateCustomerDialog && (
+              <Can module={ SYSTEM_MODULES.CUSTOMERS } action="canEdit">
+                <Button
+                  onClick={ handleOpenUpdateCustomerDialog }
+                  className="gap-2"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Editar Cliente
+                </Button>
+              </Can>
+            )}
             <Button
               variant="outline"
               onClick={ () =>
