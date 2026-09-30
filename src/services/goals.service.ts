@@ -15,9 +15,11 @@ export async function GetAllGoals({
     queryParams,
   });
 
-  if (!response.data) return [];
+  // Lança em vez de devolver []: o react-query guardaria a lista vazia como
+  // sucesso e apagaria as metas já carregadas.
+  if (response.statusCode !== 200) throw new Error(response.message);
 
-  return response.data;
+  return response.data ?? [];
 }
 
 export async function CreateGoal(body: CreateGoalDataWithMoneyInCents) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth-provider";
 import { useQuery } from "@tanstack/react-query";
@@ -92,7 +92,7 @@ export default function MetasMensaisPage() {
 
   // Sem filialId: as opções do filtro de filial saem destes dados, então a
   // busca traz todas as filiais e o filtro por filial é aplicado no cliente.
-  const { data, isLoading } = useQuery<Goal[]>({
+  const { data: goals, isPending, isLoadingError } = useQuery<Goal[]>({
     queryKey: [ "get-all-goals", isVisible ],
     queryFn: () =>
       GetAllGoals({
@@ -101,7 +101,16 @@ export default function MetasMensaisPage() {
     staleTime: 1000 * 60,
   });
 
-  const goals = data;
+  // Sem dados carregados, diz se está carregando ou se a busca falhou em vez
+  // de "Nenhuma meta".
+  const emptyStateProps = isPending
+    ? { title: "Carregando metas...", description: "" }
+    : isLoadingError
+      ? {
+        title: "Não foi possível carregar as metas",
+        description: "Verifique a conexão e recarregue a página.",
+      }
+      : {};
 
   const filteredGoals = useMemo(() => {
     if (!goals) return [];
@@ -359,7 +368,7 @@ export default function MetasMensaisPage() {
           <TabsContent value="money" className="mt-6">
             <div className="space-y-4">
               {moneyGoals.length === 0 ? (
-                <EmptyState />
+                <EmptyState { ...emptyStateProps } />
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {moneyGoals.map((meta) => (
@@ -373,7 +382,10 @@ export default function MetasMensaisPage() {
           <TabsContent value="gear" className="mt-6">
             <div className="space-y-4">
               {equipmentGoals.length === 0 ? (
-                <EmptyState title="Nenhuma meta de equipamento encontrada" />
+                <EmptyState
+                  title="Nenhuma meta de equipamento encontrada"
+                  { ...emptyStateProps }
+                />
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {equipmentGoals.map((meta) => (
