@@ -90,14 +90,12 @@ export default function MetasMensaisPage() {
   const filterMachine = watch("gear");
   const activeTab = watch("tab");
 
+  // Sem filialId: as opções do filtro de filial saem destes dados, então a
+  // busca traz todas as filiais e o filtro por filial é aplicado no cliente.
   const { data, isLoading } = useQuery<Goal[]>({
     queryKey: [ "get-all-goals", isVisible ],
     queryFn: () =>
       GetAllGoals({
-        filialId:
-          filterFilial === "GLOBAL" || !filterFilial
-            ? undefined
-            : filterFilial,
         isVisible: isVisible ? "false" : undefined,
       }),
     staleTime: 1000 * 60,

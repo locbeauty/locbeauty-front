@@ -3,14 +3,11 @@ import { CreateGoalDataWithMoneyInCents } from "@/lib/zod/CreateGoalValidation";
 import { Goal } from "@/utils/@types/goals";
 
 export async function GetAllGoals({
-  filialId,
   isVisible,
 }: {
-  filialId?: string;
   isVisible?: string;
 }): Promise<Goal[]> {
   const queryParams: Record<string, string> = {};
-  if (filialId) queryParams.filialId = filialId;
   if (isVisible) queryParams.isVisible = isVisible;
 
   const response = await apiRequest<Goal[]>({
