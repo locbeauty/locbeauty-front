@@ -25,15 +25,18 @@ interface ListPaginationProps {
   limit: number;
   totalItems: number;
   onPageChange: (page: number) => void;
-  /** Ao trocar o limite, o chamador deve voltar para a página 1. */
-  onLimitChange: (limit: number) => void;
+  /**
+   * Ao trocar o limite, o chamador deve voltar para a página 1. Sem ele, o
+   * seletor de itens por página não aparece (lista com tamanho fixo).
+   */
+  onLimitChange?: (limit: number) => void;
   /** Ex.: "cliente(s)", "agendamento(s)". */
   itemLabel?: string;
 }
 
 /**
  * Rodapé padrão de paginação das listas: contador de itens, seletor de
- * itens por página (15/30/50/75) e navegação por páginas numeradas.
+ * itens por página (15/30/50/75, opcional) e navegação por páginas numeradas.
  */
 export function ListPagination({
   page,
@@ -67,26 +70,28 @@ export function ListPagination({
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <div className="flex items-center gap-2 md:mr-4">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
-            Itens por página
-          </span>
-          <Select
-            value={ String(limit) }
-            onValueChange={ (value) => onLimitChange(Number(value)) }
-          >
-            <SelectTrigger className="h-8 w-[75px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <SelectItem key={ size } value={ String(size) }>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {onLimitChange && (
+          <div className="flex items-center gap-2 md:mr-4">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              Itens por página
+            </span>
+            <Select
+              value={ String(limit) }
+              onValueChange={ (value) => onLimitChange(Number(value)) }
+            >
+              <SelectTrigger className="h-8 w-[75px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <SelectItem key={ size } value={ String(size) }>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center gap-1">
           <Button

@@ -51,8 +51,8 @@ export default function CustomersPage() {
           </Can>
         </div>
 
-        {/* CustomersTable lê o parâmetro `segment` da URL (atalho vindo do
-            dashboard), e useSearchParams exige um limite de Suspense. */}
+        {/* CustomersTable lê segmento, mês/ano e filial da URL (atalho vindo
+            do dashboard), e useSearchParams exige um limite de Suspense. */}
         <Suspense fallback={ null }>
           <CustomersTable />
         </Suspense>

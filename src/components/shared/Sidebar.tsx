@@ -118,7 +118,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
         />
       </div>
       <p className="px-3 pt-3 text-center text-xs font-bold leading-tight text-white">
-        Sistema de Gestão - LocBeauty
+        Sistema de Gestão
       </p>
       <nav className="flex-1 overflow-auto py-4">
         <ul className="grid gap-1 px-2">

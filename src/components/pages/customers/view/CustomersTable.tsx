@@ -55,6 +55,7 @@ import {
   ListPagination,
   DEFAULT_PAGE_SIZE,
 } from "@/components/shared/ListPagination";
+import { ReferenceMonthYearSelect } from "@/components/shared/ReferenceMonthYearSelect";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import {
@@ -63,11 +64,31 @@ import {
   CustomerSegment,
 } from "@/utils/customer-segments";
 
-/** Segmento vindo da URL (link "Ver todos em Clientes" do dashboard). */
+// Os parâmetros abaixo chegam pelo link "Ver todos em Clientes" do dashboard.
+
 function parseSegmentParam(value: string | null): CustomerSegment | undefined {
   return CUSTOMER_SEGMENTS.includes(value as CustomerSegment)
     ? (value as CustomerSegment)
     : undefined;
+}
+
+function parseMonthParam(value: string | null): number | undefined {
+  const month = Number(value);
+  return Number.isInteger(month) && month >= 1 && month <= 12
+    ? month
+    : undefined;
+}
+
+function parseYearParam(value: string | null): number | undefined {
+  const year = Number(value);
+  // Mesmo piso que a API aceita.
+  return Number.isInteger(year) && year >= 2000 ? year : undefined;
+}
+
+/** Mês de referência padrão dos segmentos: o mês corrente. */
+function currentReference() {
+  const now = new Date();
+  return { referenceMonth: now.getMonth() + 1, referenceYear: now.getFullYear() };
 }
 
 export function CustomersTable() {
@@ -98,23 +119,34 @@ export function CustomersTable() {
     page: 1,
     limit: DEFAULT_PAGE_SIZE,
   });
-  const [ filters, setFilters ] = useState<GetAllCustomersFilters>({
+  const [ filters, setFilters ] = useState<GetAllCustomersFilters>(() => ({
     name: "",
     email: "",
     document: "",
     phone: "",
-    filialId: "",
+    filialId: searchParams.get("filialId") ?? "",
     status: undefined,
     segment: parseSegmentParam(searchParams.get("segment")),
     isTrainee: undefined,
-  });
+    referenceMonth:
+      parseMonthParam(searchParams.get("referenceMonth")) ??
+      currentReference().referenceMonth,
+    referenceYear:
+      parseYearParam(searchParams.get("referenceYear")) ??
+      currentReference().referenceYear,
+  }));
+
+  // Mês/ano só valem para os segmentos: sem segmento, não vão para a API.
+  const requestFilters: GetAllCustomersFilters = filters.segment
+    ? filters
+    : { ...filters, referenceMonth: undefined, referenceYear: undefined };
 
   const { data, isLoading } = useQuery<
     ApiResponse<{ items: Customer[]; total: number }>,
     Error
   >({
-    queryKey: [ "get-all-customers", filters, pagination ],
-    queryFn: () => GetAllCustomers(filters, pagination),
+    queryKey: [ "get-all-customers", requestFilters, pagination ],
+    queryFn: () => GetAllCustomers(requestFilters, pagination),
     staleTime: 1000 * 60, // 1 minute cache
   });
 
@@ -240,7 +272,7 @@ export function CustomersTable() {
 
   return (
     <>
-      <div className="flex flex-col gap-4 mb-4 md:flex-row items-center">
+      <div className="flex flex-col gap-4 mb-4 md:flex-row md:flex-wrap items-center">
         <div className="relative flex-1 max-w-xs">
           <Input
             placeholder="Filtrar por Nome"
@@ -330,7 +362,7 @@ export function CustomersTable() {
             <SelectItem value="Bloqueado">Bloqueado</SelectItem>
           </SelectContent>
         </Select>
-        {/* Segmentos calculados sobre o mês corrente. */}
+        {/* Segmentos calculados sobre o mês/ano de referência escolhido. */}
         <Select
           value={ filters.segment || "ALL" }
           onValueChange={ (value) =>
@@ -353,6 +385,21 @@ export function CustomersTable() {
             ))}
           </SelectContent>
         </Select>
+        {/* Mês/ano só fazem sentido com um segmento selecionado. */}
+        {filters.segment && (
+          <div className="flex items-center gap-2">
+            <ReferenceMonthYearSelect
+              month={ filters.referenceMonth ?? currentReference().referenceMonth }
+              year={ filters.referenceYear ?? currentReference().referenceYear }
+              onMonthChange={ (referenceMonth) =>
+                setFilters({ ...filters, referenceMonth })
+              }
+              onYearChange={ (referenceYear) =>
+                setFilters({ ...filters, referenceYear })
+              }
+            />
+          </div>
+        )}
         {(user?.role === USER_ROLES.MASTER ||
           user?.role === USER_ROLES.ADMIN) && (
           <div className="flex items-center space-x-2">
@@ -403,6 +450,7 @@ export function CustomersTable() {
                 status: undefined,
                 segment: undefined,
                 isTrainee: undefined,
+                ...currentReference(),
               })
             }
             className="px-2 lg:px-3"

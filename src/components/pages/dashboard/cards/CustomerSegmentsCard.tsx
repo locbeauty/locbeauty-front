@@ -24,13 +24,17 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
+import { ListPagination } from "@/components/shared/ListPagination";
+import { ReferenceMonthYearSelect } from "@/components/shared/ReferenceMonthYearSelect";
 import { GetAllCustomers } from "@/services/customers.service";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ExternalLink, Loader2, UserSearch } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { ROUTES } from "@/utils/routes";
+import { getMonthName } from "@/utils/getMonthName";
 import {
   CUSTOMER_SEGMENT_OPTIONS,
   CustomerSegment,
@@ -38,50 +42,38 @@ import {
 } from "@/utils/customer-segments";
 import { DashboardFilialSelect } from "../DashboardFilialSelect";
 
-const MONTHS = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
-
-// Quantos clientes o card lista; o total do segmento vem sempre completo.
-const PREVIEW_SIZE = 10;
+// Clientes por página do card; o total do segmento vem sempre completo.
+const PAGE_SIZE = 10;
 
 export function CustomerSegmentsCard({
   filialIds: generalFilialIds,
 }: {
   filialIds: string[];
 }) {
-  const now = new Date();
-
   // "ALL" = sem recorte de segmento (mesma opção da aba Clientes).
   const [ segment, setSegment ] = useState<CustomerSegment | "ALL">("ALL");
+  const [ page, setPage ] = useState(1);
   // Começa (e é reposto) pelo filtro geral da aba; o card pode refinar.
   const [ filialIds, setFilialIds ] = useState(generalFilialIds);
-  useEffect(() => setFilialIds(generalFilialIds), [ generalFilialIds ]);
-  const [ referenceMonth, setReferenceMonth ] = useState<number>(
-    now.getMonth() + 1,
+  useEffect(() => {
+    setFilialIds(generalFilialIds);
+    setPage(1);
+  }, [ generalFilialIds ]);
+  const [ referenceMonth, setReferenceMonth ] = useState(
+    () => new Date().getMonth() + 1,
   );
-  const [ referenceYear, setReferenceYear ] = useState<number>(
-    now.getFullYear(),
+  const [ referenceYear, setReferenceYear ] = useState(() =>
+    new Date().getFullYear(),
   );
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isPlaceholderData } = useQuery({
     queryKey: [
       "customer-segment",
       segment,
       filialIds,
       referenceMonth,
       referenceYear,
+      page,
     ],
     queryFn: () =>
       GetAllCustomers(
@@ -92,8 +84,10 @@ export function CustomerSegmentsCard({
             ? {}
             : { segment, referenceMonth, referenceYear }),
         },
-        { page: 1, limit: PREVIEW_SIZE },
+        { page, limit: PAGE_SIZE },
       ),
+    // Mantém a página atual na tela enquanto a próxima carrega.
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 60,
   });
 
@@ -102,15 +96,32 @@ export function CustomerSegmentsCard({
   const option =
     segment === "ALL" ? undefined : getCustomerSegmentOption(segment);
 
-  // Anos disponíveis: do ano corrente até 4 anos atrás.
-  const availableYears = Array.from(
-    { length: 5 },
-    (_, index) => now.getFullYear() - index,
-  );
+  // Toda troca de recorte volta para a primeira página.
+  function changeFilter<T>(setter: (value: T) => void) {
+    return (value: T) => {
+      setter(value);
+      setPage(1);
+    };
+  }
 
-  const isCurrentMonth =
-    referenceMonth === now.getMonth() + 1 &&
-    referenceYear === now.getFullYear();
+  // Leva o mesmo recorte para a aba Clientes. Ela filtra por uma filial só:
+  // com várias selecionadas aqui, segue sem filtro de filial.
+  function getCustomersHref() {
+    const params = new URLSearchParams();
+
+    if (segment !== "ALL") {
+      params.set("segment", segment);
+      params.set("referenceMonth", String(referenceMonth));
+      params.set("referenceYear", String(referenceYear));
+    }
+
+    if (filialIds.length === 1) {
+      params.set("filialId", filialIds[0]);
+    }
+
+    const query = params.toString();
+    return query ? `${ROUTES.CUSTOMERS}?${query}` : ROUTES.CUSTOMERS;
+  }
 
   return (
     <Card className="w-[89vw] md:w-auto">
@@ -124,9 +135,9 @@ export function CustomerSegmentsCard({
           <div className="flex flex-wrap items-center gap-2">
             <Select
               value={ segment }
-              onValueChange={ (value) =>
-                setSegment(value === "ALL" ? "ALL" : (value as CustomerSegment))
-              }
+              onValueChange={ changeFilter((value: string) =>
+                setSegment(value === "ALL" ? "ALL" : (value as CustomerSegment)),
+              ) }
             >
               <SelectTrigger className="w-[260px] h-8">
                 <SelectValue placeholder="Segmento" />
@@ -143,44 +154,18 @@ export function CustomerSegmentsCard({
 
             {/* Mês/ano só fazem sentido com um segmento selecionado. */}
             {segment !== "ALL" && (
-              <>
-                <Select
-                  value={ String(referenceMonth) }
-                  onValueChange={ (value) => setReferenceMonth(Number(value)) }
-                >
-                  <SelectTrigger className="w-[130px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MONTHS.map((month, index) => (
-                      <SelectItem key={ month } value={ String(index + 1) }>
-                        {month}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={ String(referenceYear) }
-                  onValueChange={ (value) => setReferenceYear(Number(value)) }
-                >
-                  <SelectTrigger className="w-[100px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableYears.map((year) => (
-                      <SelectItem key={ year } value={ String(year) }>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </>
+              <ReferenceMonthYearSelect
+                month={ referenceMonth }
+                year={ referenceYear }
+                onMonthChange={ changeFilter(setReferenceMonth) }
+                onYearChange={ changeFilter(setReferenceYear) }
+                triggerClassName="h-8"
+              />
             )}
 
             <DashboardFilialSelect
               value={ filialIds }
-              onChange={ setFilialIds }
+              onChange={ changeFilter(setFilialIds) }
               className="h-8"
             />
           </div>
@@ -193,17 +178,33 @@ export function CustomerSegmentsCard({
           </div>
         ) : (
           <>
-            <div className="mb-3">
-              <div className="text-2xl font-bold">{total}</div>
-              <p className="text-xs text-muted-foreground">
-                {total === 1 ? "cliente" : "clientes"}
-                {segment === "ALL"
-                  ? " na base"
-                  : ` em ${MONTHS[referenceMonth - 1].toLowerCase()} de ${referenceYear}`}
-              </p>
+            <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <div className="text-2xl font-bold">{total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {total === 1 ? "cliente" : "clientes"}
+                  {segment === "ALL"
+                    ? " na base"
+                    : ` em ${getMonthName(referenceMonth - 1).toLowerCase()} de ${referenceYear}`}
+                </p>
+              </div>
+
+              {total > 0 && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={ getCustomersHref() }>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Ver todos em Clientes
+                  </Link>
+                </Button>
+              )}
             </div>
 
-            <Table>
+            <Table
+              className={ cn(
+                "transition-opacity",
+                isPlaceholderData && "opacity-60",
+              ) }
+            >
               <TableHeader>
                 <TableRow>
                   <TableHead>Cliente</TableHead>
@@ -246,28 +247,14 @@ export function CustomerSegmentsCard({
               </TableBody>
             </Table>
 
-            {total > customers.length && (
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <span className="text-xs text-muted-foreground">
-                  Mostrando {customers.length} de {total}.
-                </span>
-                {/* A tela de Clientes sempre usa o mês corrente, então o
-                    atalho só aparece quando o card está nesse mesmo mês. */}
-                {(segment === "ALL" || isCurrentMonth) && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={
-                        segment === "ALL"
-                          ? ROUTES.CUSTOMERS
-                          : `${ROUTES.CUSTOMERS}?segment=${segment}`
-                      }
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Ver todos em Clientes
-                    </Link>
-                  </Button>
-                )}
-              </div>
+            {total > PAGE_SIZE && (
+              <ListPagination
+                page={ page }
+                limit={ PAGE_SIZE }
+                totalItems={ total }
+                onPageChange={ setPage }
+                itemLabel="cliente(s)"
+              />
             )}
           </>
         )}
