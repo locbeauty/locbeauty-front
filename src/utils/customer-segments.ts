@@ -1,6 +1,6 @@
 /**
  * Segmentos de acompanhamento de clientes, calculados sobre um mês de
- * referência (por padrão, o mês corrente). Espelha
+ * referência (por padrão, o mês corrente no horário de Brasília). Espelha
  * `src/utils/customer-segments.ts` do backend — mantenha os dois em sincronia.
  *
  * Agendamentos cancelados não contam como "agendou": quem teve a locação
@@ -26,7 +26,8 @@ export const CUSTOMER_SEGMENT_OPTIONS: CustomerSegmentOption[] = [
   {
     value: "NOVOS_DO_MES",
     label: "Novos do mês",
-    description: "Clientes cadastrados no mês.",
+    description:
+      "Clientes cadastrados no mês, sem agendamento ou treinamento anterior.",
   },
   {
     value: "SEM_AGENDAMENTO_PROXIMO_MES",
