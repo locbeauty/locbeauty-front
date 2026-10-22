@@ -188,6 +188,16 @@ export function TrainingsTable({
     return (role === "isTrainee" ? t.Trainees : t.Volunteers)?.length ?? 0;
   };
 
+  // Divisão das vagas ocupadas entre alunos e pacientes modelo (as vagas da
+  // turma continuam compartilhadas).
+  const getSlotsByRole = (t: Training) => {
+    const trainees = countRole(t, "isTrainee");
+    const models = countRole(t, "isModel");
+    return `${trainees} ${trainees === 1 ? "aluno" : "alunos"} · ${models} ${
+      models === 1 ? "paciente" : "pacientes"
+    }`;
+  };
+
   const getTrainingTotal = (t: Training) =>
     (t.TrainingPayment || []).reduce((acc, p) => acc + (p.totalPrice || 0), 0);
 
@@ -651,7 +661,12 @@ export function TrainingsTable({
                   </Badge>
                 </td>
                 <td className="p-3 text-center text-sm">
-                  {getFilledSlots(training)}/{training.capacity ?? 15}
+                  <div>
+                    {getFilledSlots(training)}/{training.capacity ?? 15}
+                  </div>
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">
+                    {getSlotsByRole(training)}
+                  </div>
                 </td>
                 <td className="p-3 text-center text-sm">
                   {countRole(training, "isTrainee")}
@@ -780,7 +795,7 @@ export function TrainingsTable({
                 },
                 {
                   itemLabel: "Vagas: ",
-                  itemInfo: `${getFilledSlots(training)}/${training.capacity ?? 15}`,
+                  itemInfo: `${getFilledSlots(training)}/${training.capacity ?? 15} (${getSlotsByRole(training)})`,
                 },
                 {
                   itemLabel: "Aluno(s): ",
