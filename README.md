@@ -1,6 +1,6 @@
 # LocBeauty — Front-end
 
-Interface web do **Sistema de Gestão LocBeauty**, que cuida da locação de equipamentos estéticos entre filiais: agenda de locações, clientes, equipamentos, funcionários, treinamentos, metas, rotas dos motoristas e dashboard de métricas.
+Interface web do **Sistema de Gestão LocBeauty**, que cuida da locação de equipamentos estéticos entre filiais: agenda de locações, clientes, equipamentos, funcionários, treinamentos, metas, rotas dos motoristas e dashboard de métricas
 
 Este projeto consome a API do repositório [`locbeauty-fastify`](https://github.com/locbeauty/locbeauty-fastify). Ela precisa estar rodando para o front funcionar.
 
