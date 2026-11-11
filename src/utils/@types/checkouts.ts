@@ -76,6 +76,42 @@ export type Checkout = {
   driverLocationAt?: Date | null;
 };
 
+/**
+ * Registro de auditoria de um agendamento apagado: retrato do agendamento no
+ * momento da exclusão (valores em centavos).
+ */
+export type CheckoutDeletionLog = {
+  id: string;
+  checkoutId: string;
+  filialId: string;
+  Filial: { filialId: string; filialName: string };
+  customerId: string | null;
+  customerName: string;
+  checkoutDate: string;
+  startHourInMinutes: number;
+  totalDurationInMinutes: number;
+  gearNames: string;
+  totalPrice: number;
+  checkoutStatus: CheckoutStatuses;
+  paymentStatus:
+    | "Pendente"
+    | "Parcial"
+    | "Pago"
+    | "Cortesia"
+    | "Reembolsado"
+    | "Cancelado"
+    | null;
+  isCourtesy: boolean;
+  /** Contexto da exclusão (ex.: "Importação revertida #a1b2c3"). */
+  notes: string | null;
+  deletedByEmployeeId: string | null;
+  deletedByName: string;
+  restoredAt: string | null;
+  restoredByName: string | null;
+  /** Momento da exclusão. */
+  createdAt: string;
+};
+
 export type CheckoutValueChange = {
   id: string;
   checkoutId: string;

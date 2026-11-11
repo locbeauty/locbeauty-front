@@ -1,5 +1,9 @@
 import { apiRequest, ApiResponse } from "@/lib/api";
-import { Checkout, CheckoutValueChange } from "@/utils/@types/checkouts";
+import {
+  Checkout,
+  CheckoutDeletionLog,
+  CheckoutValueChange,
+} from "@/utils/@types/checkouts";
 import { CheckoutStatuses } from "@/utils/constants";
 
 // Helper function to parse date strings into Date objects
@@ -274,6 +278,34 @@ export async function DeleteCheckout(checkoutId: string) {
     method: "DELETE",
   });
   return response;
+}
+
+export interface GetDeletedCheckoutsFilters {
+  filialIds?: string[];
+  customerName?: string;
+  deletedByName?: string;
+}
+
+/** Auditoria: agendamentos apagados, do mais recente para o mais antigo. */
+export async function GetDeletedCheckouts(
+  filters?: GetDeletedCheckoutsFilters,
+  pagination?: { page: number; limit: number },
+): Promise<ApiResponse<{ items: CheckoutDeletionLog[]; total: number }>> {
+  return apiRequest<{ items: CheckoutDeletionLog[]; total: number }>({
+    endpoint: "audit/deleted-checkouts",
+    queryParams: {
+      ...(filters?.filialIds && filters.filialIds.length > 0
+        ? { filialIds: filters.filialIds }
+        : {}),
+      ...(filters?.customerName ? { customerName: filters.customerName } : {}),
+      ...(filters?.deletedByName
+        ? { deletedByName: filters.deletedByName }
+        : {}),
+      ...(pagination
+        ? { page: String(pagination.page), limit: String(pagination.limit) }
+        : {}),
+    },
+  });
 }
 
 export interface AddCheckoutPaymentBody {

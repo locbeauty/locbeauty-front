@@ -85,6 +85,7 @@ import { SYSTEM_MODULES } from "@/utils/@types/access";
 import { formatDate, formatTime, workingHours } from "../bookingViewHelpers";
 import { parseStringToCents } from "@/utils/parseStringToCents";
 import { minutesToHHMM } from "@/utils/minutesToHHMM";
+import { deriveStatus } from "@/utils/installments";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormProvider, useForm } from "react-hook-form";
 import { SelectEmployee } from "@/components/shared/SelectEmployee";
@@ -615,6 +616,8 @@ export function BookingDetailsDialog({
 
       queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
       queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+      // Cancelar encerra a cobrança: o cliente pode sair da inadimplência.
+      queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
     }
   }
 
@@ -647,18 +650,25 @@ export function BookingDetailsDialog({
         concludedAt: null,
         cancellationDate: wasCanceled ? null : prev.cancellationDate,
         // Reabertura de cancelado: o backend devolve o pagamento "Cancelado"
-        // para "Pendente".
+        // ao estado anterior — cortesia continua cortesia e, no restante, o
+        // status volta a ser o que as parcelas dizem (entrada paga = Parcial).
         CheckoutPayment:
           wasCanceled &&
           prev.CheckoutPayment &&
           prev.CheckoutPayment.paymentStatus === "Cancelado"
-            ? { ...prev.CheckoutPayment, paymentStatus: "Pendente" }
+            ? {
+              ...prev.CheckoutPayment,
+              paymentStatus: prev.isCourtesy
+                ? "Cortesia"
+                : deriveStatus(prev.CheckoutPayment.installments ?? []),
+            }
             : prev.CheckoutPayment,
       };
     });
 
     queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
     queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+    queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
   }
 
   async function handleDeleteCheckout() {
@@ -672,6 +682,9 @@ export function BookingDetailsDialog({
         toast.success("Agendamento excluído com sucesso.");
         onOpenChange(false);
         queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+        // A exclusão entra no registro da Auditoria.
+        queryClient.invalidateQueries({ queryKey: [ "deleted-checkouts" ] });
       } else {
         toast.error(response.message || "Erro ao excluir agendamento.");
       }

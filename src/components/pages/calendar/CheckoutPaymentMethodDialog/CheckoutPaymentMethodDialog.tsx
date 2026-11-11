@@ -1013,7 +1013,12 @@ export function CheckoutPaymentMethodDialog({
         selectedCheckout.totalPrice -
         (selectedCheckout?.CheckoutPayment?.firstPaymentAmount || 0);
       setCheckoutStatus(selectedCheckout.checkoutStatus);
-      setPaymentStatus(payment.paymentStatus);
+      // `isCourtesy` é a fonte da verdade da cortesia: um agendamento marcado
+      // como cortesia abre como "Cortesia" mesmo que o status salvo esteja
+      // defasado — senão salvar o modal desmarcaria a cortesia sem avisar.
+      setPaymentStatus(
+        selectedCheckout.isCourtesy ? "Cortesia" : payment.paymentStatus,
+      );
       setPaymentMode(payment.paymentMode);
 
       // Initialize Refund State
@@ -1284,6 +1289,8 @@ export function CheckoutPaymentMethodDialog({
         setSelectedCheckout(updatedCheckout);
         queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
         queryClient.invalidateQueries({ queryKey: [ "get-all-goals" ] });
+        // Pagar ou virar cortesia pode tirar o cliente da inadimplência.
+        queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
 
         toast.success("Pagamento atualizado com sucesso!");
         queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });

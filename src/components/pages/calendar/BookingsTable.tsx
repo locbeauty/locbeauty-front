@@ -181,6 +181,8 @@ export function BookingsTable({ filters }: BookingsTableProps) {
       ) {
         toast.success("Agendamento restaurado com sucesso.");
         queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+        queryClient.invalidateQueries({ queryKey: [ "deleted-checkouts" ] });
       } else {
         toast.error(response.message || "Erro ao restaurar agendamento.");
       }
@@ -206,6 +208,9 @@ export function BookingsTable({ filters }: BookingsTableProps) {
       ) {
         toast.success("Agendamento excluído com sucesso.");
         queryClient.invalidateQueries({ queryKey: [ "get-all-checkouts" ] });
+        queryClient.invalidateQueries({ queryKey: [ "get-all-customers" ] });
+        // A exclusão entra no registro da Auditoria.
+        queryClient.invalidateQueries({ queryKey: [ "deleted-checkouts" ] });
       } else {
         toast.error(response.message || "Erro ao excluir agendamento.");
       }
