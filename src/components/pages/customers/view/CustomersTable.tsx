@@ -1,6 +1,9 @@
 "use client";
 import { CustomerStatusBadge } from "@/components/shared/CustomerStatusBadge";
 import { FilialFilter } from "./FilialFilter";
+import { RentedGearsBadges } from "./RentedGearsBadges";
+import { NewCustomerSince } from "./NewCustomerSince";
+import { GearFilterSelect } from "@/components/pages/bookings/GearFilterSelect";
 import { ResponsiveCard } from "@/components/shared/ResponsiveCard";
 import { Eye, Pencil, X, Trash2, RefreshCcw } from "lucide-react";
 import {
@@ -152,6 +155,9 @@ export function CustomersTable() {
 
   const customers = data?.data?.items || [];
   const totalCustomers = data?.data?.total || 0;
+  // Em "Novos do mês", mostra a data que colocou o cliente no mês: sem ela, o
+  // "Último Agendamento" (que pode ser futuro) parece ser de outro mês.
+  const showNewSince = filters.segment === "NOVOS_DO_MES";
 
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
@@ -335,6 +341,11 @@ export function CustomersTable() {
             setFilters({ ...filters, filialId: value === "ALL" ? "" : value })
           }
         />
+        {/* Clientes com locação em andamento da máquina (em qualquer filial). */}
+        <GearFilterSelect
+          value={ filters.gearIds }
+          onSelect={ (gearIds) => setFilters({ ...filters, gearIds }) }
+        />
         <Select
           value={ filters.status || "ALL" }
           onValueChange={ (value) =>
@@ -433,6 +444,7 @@ export function CustomersTable() {
           filters.email ||
           filters.document ||
           filters.filialId ||
+          filters.gearIds?.length ||
           filters.status ||
           filters.segment ||
           filters.isTrainee ||
@@ -446,6 +458,7 @@ export function CustomersTable() {
                 document: "",
                 phone: "",
                 filialId: "",
+                gearIds: undefined,
                 isVisible: undefined,
                 status: undefined,
                 segment: undefined,
@@ -468,6 +481,10 @@ export function CustomersTable() {
               <TableHead className="w-[300px] text-center">Email</TableHead>
               <TableHead className="text-center">Telefone</TableHead>
               <TableHead className="text-center">Status</TableHead>
+              <TableHead>Equipamentos em locação</TableHead>
+              {showNewSince && (
+                <TableHead className="text-center">Novo desde</TableHead>
+              )}
               <TableHead className="text-center">Último Agendamento</TableHead>
               <TableHead className="text-center">Ações</TableHead>
             </TableRow>
@@ -545,6 +562,17 @@ export function CustomersTable() {
                     <TableCell className="p-3 text-center text-sm">
                       <CustomerStatusBadge status={ customer.customerStatus } />
                     </TableCell>
+                    <TableCell className="p-3 text-sm">
+                      <RentedGearsBadges
+                        gears={ customer.rentedGears }
+                        className="max-w-[260px]"
+                      />
+                    </TableCell>
+                    {showNewSince && (
+                      <TableCell className="p-3 text-center text-sm">
+                        <NewCustomerSince customer={ customer } />
+                      </TableCell>
+                    )}
                     <TableCell className="p-3 text-center text-sm">
                       {customer.lastBooking
                         ? format(new Date(customer.lastBooking), "dd/MM/yyyy")
@@ -718,6 +746,28 @@ export function CustomersTable() {
                           />
                         ), // Cast/Hack if itemInfo expects string|number only, checking type def needed
                       },
+                      {
+                        itemLabel: "Equipamentos em locação",
+                        itemInfo: (
+                          <RentedGearsBadges
+                            gears={ customer.rentedGears }
+                            className="justify-end"
+                          />
+                        ),
+                      },
+                      ...(showNewSince
+                        ? [
+                          {
+                            itemLabel: "Novo desde",
+                            itemInfo: (
+                              <NewCustomerSince
+                                customer={ customer }
+                                className="items-end"
+                              />
+                            ),
+                          },
+                        ]
+                        : []),
                       {
                         itemLabel: "Último Agendamento",
                         itemInfo: customer.lastBooking

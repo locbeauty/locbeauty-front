@@ -17,6 +17,8 @@ const ROLE_DEFAULT_ROUTES: Record<string, string> = {
 interface RouteGuardProps {
   module: SYSTEM_MODULES;
   action?: keyof AccessPermissions;
+  /** Cargos que acessam a página mesmo sem a permissão do módulo. */
+  allowedRoles?: string[];
   children: ReactNode;
   fallback?: ReactNode;
 }
@@ -24,13 +26,15 @@ interface RouteGuardProps {
 export function RouteGuard({
   module,
   action = "canView",
+  allowedRoles,
   children,
   fallback,
 }: RouteGuardProps) {
   const { can, accesses } = useAccess();
   const { user } = useAuth();
   const router = useRouter();
-  const hasAccess = can(module, action);
+  const hasAccess =
+    can(module, action) || !!allowedRoles?.includes(user?.role ?? "");
 
   useEffect(() => {
     if (!hasAccess) {

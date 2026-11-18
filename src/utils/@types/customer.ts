@@ -38,4 +38,17 @@ export interface Customer {
   updatedAt: Date;
   Addresses: Address[];
   isTrainee: boolean;
+  /** Máquinas com locação em andamento, da mais para a menos (listagem de clientes). */
+  rentedGears?: RentedGear[];
+  /**
+   * Data (só dia) da primeira locação não cancelada nem excluída — define o
+   * mês do cliente em "Novos do mês" (listagem de clientes).
+   */
+  firstBooking?: string | null;
+}
+
+export interface RentedGear {
+  gearName: string;
+  /** Quantidade de agendamentos em andamento com a máquina. */
+  rentals: number;
 }

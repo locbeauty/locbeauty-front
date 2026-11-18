@@ -72,6 +72,8 @@ export interface GetAllCustomersFilters {
   referenceMonth?: number;
   /** Ano de referência do segmento. Sem ele, vale o ano corrente. */
   referenceYear?: number;
+  /** Só clientes com locação em andamento da máquina (todos os gearIds do mesmo nome). */
+  gearIds?: string[];
 }
 
 export async function GetAllCustomers(

@@ -14,15 +14,23 @@ import { DarkModeSwitcher } from "@/components/shared/DarkModeSwitcher";
 import { useAuth } from "@/contexts/auth-provider";
 import Link from "next/link";
 import { User } from "lucide-react";
-import { Can } from "@/components/auth/Can";
+import { useAccess } from "@/contexts/access-provider";
 import { SYSTEM_MODULES } from "@/utils/@types/access";
+import { canViewDeletedCheckoutsAudit } from "@/utils/audit-access";
 
 export function UserDropdown() {
   const { user, isLoading, handleLogout } = useAuth();
+  const { can } = useAccess();
 
   if (isLoading || !user) {
     return <LoaderCircle className="animate-spin" />;
   }
+
+  // A Auditoria abre para quem tem o módulo (importações) ou para os cargos
+  // que veem os agendamentos excluídos (Master, Gerente e Comercial).
+  const canOpenAudit =
+    can(SYSTEM_MODULES.AUDITORIA, "canView") ||
+    canViewDeletedCheckoutsAudit(user.role);
   const nameInitials =
     user.fullname
       ?.split(" ")
@@ -76,7 +84,7 @@ export function UserDropdown() {
           </Button>
         </DropdownMenuItem>
 
-        <Can module={ SYSTEM_MODULES.AUDITORIA } action="canView">
+        {canOpenAudit && (
           <DropdownMenuItem asChild>
             <Button
               variant="ghost"
@@ -89,7 +97,7 @@ export function UserDropdown() {
               </Link>
             </Button>
           </DropdownMenuItem>
-        </Can>
+        )}
 
         <DropdownMenuSeparator />
         <DarkModeSwitcher />

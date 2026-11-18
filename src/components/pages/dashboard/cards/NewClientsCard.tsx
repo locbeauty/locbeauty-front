@@ -95,7 +95,10 @@ export function NewClientsCard({
       <CardHeader>
         <CardTitle>Novos Clientes</CardTitle>
         <CardDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span>Evolução de novos clientes por mês</span>
+          {/* Mesma regra do filtro "Novos do mês" da aba Clientes. */}
+          <span>
+            Por mês da 1ª locação (ou do cadastro, para quem ainda não locou)
+          </span>
           <div className="flex items-center gap-2">
             <Select
               value={ selectedFilialId }

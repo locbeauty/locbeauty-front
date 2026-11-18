@@ -53,15 +53,24 @@ export function DeletedCheckoutsTable() {
   const debouncedCustomerName = useDebounce(customerName);
   const debouncedDeletedByName = useDebounce(deletedByName);
 
-  // Filiais que o usuário pode ver na Auditoria — restringe o seletor.
+  // Mesmo recorte do backend: filial de origem + filiais cuja Agenda ou
+  // Auditoria o usuário pode ver. Restringe o seletor.
   const accessibleFilialIds = useMemo(() => {
     if (user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.MASTER) {
       return undefined;
     }
 
     const permissions = accesses
-      .filter((a) => a.module === SYSTEM_MODULES.AUDITORIA && a.canView)
+      .filter(
+        (a) =>
+          (a.module === SYSTEM_MODULES.CALENDAR ||
+            a.module === SYSTEM_MODULES.AUDITORIA) &&
+          a.canView,
+      )
       .map((a) => a.filialId);
+
+    const sourceFilialId = user?.SourceFilial?.filialId ?? user?.sourceFilialId;
+    if (sourceFilialId) permissions.push(sourceFilialId);
 
     return Array.from(new Set(permissions));
   }, [ user, accesses ]);

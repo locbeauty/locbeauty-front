@@ -27,7 +27,7 @@ export const CUSTOMER_SEGMENT_OPTIONS: CustomerSegmentOption[] = [
     value: "NOVOS_DO_MES",
     label: "Novos do mês",
     description:
-      "Clientes cadastrados no mês, sem agendamento ou treinamento anterior.",
+      "Primeira locação no mês (ou cadastro no mês, para quem ainda não locou), sem agendamento ou treinamento anterior.",
   },
   {
     value: "SEM_AGENDAMENTO_PROXIMO_MES",
