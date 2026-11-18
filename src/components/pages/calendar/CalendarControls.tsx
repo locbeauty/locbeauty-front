@@ -15,12 +15,11 @@ import { Dispatch, SetStateAction } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { SelectFilials } from "@/components/shared/SelectFilials";
-import { SelectGears } from "@/components/shared/SelectGears";
+import { CalendarGearFilter } from "./CalendarGearFilter";
 import { DateRangePicker } from "@/components/ui/DatePicker";
 import type { DateRange } from "react-day-picker";
 import { useAuth } from "@/contexts/auth-provider";
 import { USER_ROLES } from "@/utils/constants";
-import { useAccessibleFilialIds } from "@/hooks/useAccessibleFilialIds";
 
 interface CalendarControlsProps {
   setCurrentDate: Dispatch<SetStateAction<Date>>;
@@ -54,8 +53,6 @@ export function CalendarControls({
   setSelectedDateRange = () => {},
 }: CalendarControlsProps) {
   const { user } = useAuth();
-  // Não-Master/Admin só veem as máquinas das filiais a que têm acesso.
-  const accessibleFilialIds = useAccessibleFilialIds();
 
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -117,10 +114,12 @@ export function CalendarControls({
           )}
           {user?.role !== USER_ROLES.MOTORISTA && (
             <div className="w-[200px]">
-              <SelectGears
+              <CalendarGearFilter
+                viewType={ viewType }
+                currentDate={ currentDate }
+                selectedFilialIds={ selectedFilialIds }
                 value={ selectedGearIds }
                 onChange={ setSelectedGearIds }
-                filialIds={ accessibleFilialIds }
               />
             </div>
           )}

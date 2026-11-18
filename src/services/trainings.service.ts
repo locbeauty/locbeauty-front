@@ -23,10 +23,16 @@ export async function GetTrainingById(trainingId: string) {
   return response;
 }
 
-export async function GetAllTrainings(isVisible?: string, filialId?: string) {
-  const queryParams: Record<string, string> = {};
+export async function GetAllTrainings(
+  isVisible?: string,
+  filialId?: string,
+  /** Várias filiais (filtro da agenda); o servidor inclui as vinculadas. */
+  filialIds?: string[],
+) {
+  const queryParams: Record<string, string | string[]> = {};
   if (isVisible) queryParams.isVisible = isVisible;
-  if (filialId) queryParams.filialID = filialId;
+  if (filialIds && filialIds.length > 0) queryParams.filialIds = filialIds;
+  else if (filialId) queryParams.filialID = filialId;
 
   const response = await apiRequest<Training[]>({
     endpoint: "trainings",

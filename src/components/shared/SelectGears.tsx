@@ -31,6 +31,7 @@ import { useHoverOpen } from "@/hooks/useHoverOpen";
 import { useMounted } from "@/hooks/useMounted";
 import { cn } from "@/lib/utils";
 import {
+  GearLike,
   GearNameGroup,
   groupGearsByName,
 } from "@/utils/groupGearsByName";
@@ -44,6 +45,8 @@ interface SelectGearsProps {
   className?: string;
   /** Restringe as opções às máquinas dessas filiais (undefined = todas). */
   filialIds?: string[];
+  /** Opções já montadas por quem usa (dispensa a busca por `filialIds`). */
+  options?: GearLike[];
 }
 
 export function SelectGears({
@@ -52,6 +55,7 @@ export function SelectGears({
   placeholder,
   className,
   filialIds,
+  options: providedOptions,
 }: SelectGearsProps) {
   const isMounted = useMounted();
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -61,9 +65,10 @@ export function SelectGears({
     queryKey: [ "get-all-gears-select", filialIds ],
     queryFn: () => GetAllGears({ filialIds }),
     staleTime: 1000 * 60,
+    enabled: !providedOptions,
   });
 
-  const options = data?.data || [];
+  const options: GearLike[] = providedOptions ?? data?.data ?? [];
 
   if (!isMounted) {
     return <div className={ cn("h-9 w-full", className) } />;
@@ -114,7 +119,7 @@ export function SelectGears({
   );
 }
 
-function triggerLabel(value: string[], options: Gear[], placeholder?: string) {
+function triggerLabel(value: string[], options: GearLike[], placeholder?: string) {
   if (value.length === 0) {
     return <span>{placeholder || "Todas as máquinas"}</span>;
   }
@@ -143,7 +148,7 @@ function triggerLabel(value: string[], options: Gear[], placeholder?: string) {
 }
 
 interface GearsListProps {
-  options: Gear[];
+  options: GearLike[];
   value: string[];
   onChange: (ids: string[]) => void;
 }

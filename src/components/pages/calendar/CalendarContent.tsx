@@ -4,22 +4,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DayView } from "./DayView";
 import { WeekView } from "./WeekView";
 import { MonthView } from "./MonthView";
-import { useAuth } from "@/contexts/auth-provider";
-import { USER_ROLES } from "@/utils/constants";
-import { useAccessibleFilialIds } from "@/hooks/useAccessibleFilialIds";
 import { Checkout } from "@/utils/@types/checkouts";
 import { useQuery } from "@tanstack/react-query";
-import { GetAllCheckouts } from "@/services/checkouts.service";
 import { useState, useMemo } from "react";
 import { ApiResponse } from "@/lib/api";
 import { Training } from "@/utils/@types/training";
-import { GetAllTrainings } from "@/services/trainings.service";
+import { CalendarEvent, getEventBasicInfo } from "./bookingViewHelpers";
+import { useCalendarEvents, useCalendarGearOptions } from "./useCalendarEvents";
 import {
-  CalendarEvent,
-  getEventBasicInfo,
-  getMonthDays,
-  getWeekDays,
-} from "./bookingViewHelpers";
+  checkoutUsesGearNames,
+  resolveSelectedGearNames,
+  trainingUsesGearNames,
+} from "@/utils/gearFilter";
 import { startOfDay, endOfDay } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { TrainingDetailsDialog } from "../trainings/TrainingDetailsDialog";
@@ -46,8 +42,6 @@ export function CalendarContent({
   selectedGearIds,
   selectedDateRange,
 }: CalendarContentProps) {
-  const { user } = useAuth();
-
   const [ selectedTraining, setSelectedTraining ] = useState<Training | null>(
     null,
   );
@@ -58,91 +52,13 @@ export function CalendarContent({
   const [ isNoticeDetailsDialogOpen, setIsNoticeDetailsDialogOpen ] =
     useState(false);
 
-  const accessibleFilialIds = useAccessibleFilialIds();
+  // Agendamentos e treinamentos do período (filial já filtrada no servidor).
+  const { startDate, endDate, finalFilialIds, checkouts, trainings, isLoading } =
+    useCalendarEvents({ viewType, currentDate, selectedFilialIds });
 
-  // Calcula startDate e endDate conforme viewType
-  const { startDate, endDate } = useMemo(() => {
-    if (!currentDate) return { startDate: undefined, endDate: undefined };
-
-    let start: Date;
-    let end: Date;
-
-    if (viewType === "dia") {
-      start = new Date(currentDate);
-      start.setHours(0, 0, 0, 0);
-      end = new Date(currentDate);
-      end.setHours(23, 59, 59, 999);
-    } else if (viewType === "semana") {
-      const days = getWeekDays(currentDate);
-      start = days[0];
-      start.setHours(0, 0, 0, 0);
-      end = days[days.length - 1];
-      end.setHours(23, 59, 59, 999);
-    } else {
-      // mes
-      const days = getMonthDays(currentDate);
-      start = days[0];
-      start.setHours(0, 0, 0, 0);
-      end = days[days.length - 1];
-      end.setHours(23, 59, 59, 999);
-    }
-
-    return { startDate: start, endDate: end };
-  }, [ viewType, currentDate ]);
-
-  const finalFilialIds = useMemo(() => {
-    const isRestricted = accessibleFilialIds !== undefined;
-
-    // No specific selection → "Todas" (respecting RBAC for restricted users)
-    if (selectedFilialIds.length === 0) return accessibleFilialIds;
-
-    // Restricted users: intersect selection with what they can access
-    if (isRestricted && accessibleFilialIds) {
-      const filtered = selectedFilialIds.filter((id) =>
-        accessibleFilialIds.includes(id),
-      );
-      return filtered.length > 0 ? filtered : [ "NO_ACCESS" ];
-    }
-
-    return selectedFilialIds;
-  }, [ selectedFilialIds, accessibleFilialIds ]);
-
-  const isMotorista = user?.role === USER_ROLES.MOTORISTA;
-
-  const params = Object.fromEntries(
-    Object.entries({
-      filialIds: finalFilialIds,
-      startDate: startDate?.toISOString(),
-      endDate: endDate?.toISOString(),
-      limit: "1000",
-      ...(isMotorista && user?.employeeId ? { driverId: user.employeeId } : {}),
-    }).filter(([ _, v ]) => v !== undefined),
-  ) as Record<string, string | string[]>;
-
-  const { data, isLoading } = useQuery<
-    ApiResponse<{ items: Checkout[]; total: number }>,
-    Error
-  >({
-    queryKey: [ "get-all-checkouts", finalFilialIds, startDate, endDate, isMotorista ? user?.employeeId : null ],
-    queryFn: () =>
-      GetAllCheckouts({
-        queryParams: params,
-      }),
-    enabled: !!user,
-    staleTime: 1000 * 60,
-  });
-
-  // Notices/trainings only support a single filial server-side, so we fetch
-  // them and apply the multi-filial filter on the client. Sem seleção
-  // explícita o escopo continua sendo o das filiais liberadas (mandar
-  // `undefined` fazia a agenda listar avisos/treinamentos de TODAS as filiais).
+  // Sem seleção explícita o escopo continua sendo o das filiais liberadas
+  // (mandar `undefined` fazia a agenda listar avisos de TODAS as filiais).
   const noticeFilialIds = finalFilialIds;
-
-  const trainingsData = useQuery<ApiResponse<Training[]>, Error>({
-    queryKey: [ "get-all-trainings" ],
-    queryFn: () => GetAllTrainings(),
-    staleTime: 1000 * 60,
-  });
 
   const noticesData = useQuery<ApiResponse<Notice[]>, Error>({
     queryKey: [ "get-notices", startDate, endDate, noticeFilialIds ],
@@ -156,34 +72,27 @@ export function CalendarContent({
     staleTime: 1000 * 60,
   });
 
-  const checkouts = data?.data?.items || [];
-  const trainings = trainingsData.data?.data || [];
   const notices = noticesData.data?.data || [];
 
-  // O escopo por permissão é aplicado no servidor; aqui só entra o filtro
-  // escolhido explicitamente na tela.
-  const filialFilteredTrainings =
-    selectedFilialIds.length === 0
-      ? trainings
-      : trainings.filter((t) =>
-        (finalFilialIds ?? selectedFilialIds).includes(t.sourceFilialId),
-      );
-
-  // Filtro de máquinas (client-side): quando ativo, mostra só eventos que usam
-  // a(s) máquina(s) selecionada(s). Avisos não têm máquina, então são ocultados.
+  // Filtro de equipamentos (no navegador): mostra só os eventos com o(s)
+  // equipamento(s) escolhido(s), comparando pelo NOME exibido no evento — o
+  // mesmo equipamento tem vários registros (por filial, recadastro) e o
+  // agendamento pode usar o de outra filial. Avisos não têm equipamento,
+  // então são ocultados.
+  const gearOptions = useCalendarGearOptions(checkouts, trainings);
+  const selectedGearNames = useMemo(
+    () => resolveSelectedGearNames(selectedGearIds, gearOptions),
+    [ selectedGearIds, gearOptions ],
+  );
   const isGearFilterActive = selectedGearIds.length > 0;
 
   const gearFilteredCheckouts = !isGearFilterActive
     ? checkouts
-    : checkouts.filter((c) =>
-      c.Bookings.some(
-        (b) => b.status === "ACTIVE" && selectedGearIds.includes(b.Gear.gearId),
-      ),
-    );
+    : checkouts.filter((c) => checkoutUsesGearNames(c, selectedGearNames));
 
   const gearFilteredTrainings = !isGearFilterActive
-    ? filialFilteredTrainings
-    : filialFilteredTrainings.filter((t) => selectedGearIds.includes(t.gearId));
+    ? trainings
+    : trainings.filter((t) => trainingUsesGearNames(t, selectedGearNames));
 
   const gearFilteredNotices = isGearFilterActive ? [] : notices;
 
